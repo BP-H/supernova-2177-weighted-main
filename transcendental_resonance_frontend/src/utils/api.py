@@ -300,6 +300,12 @@ async def combined_search(query: str) -> list[Dict[str, Any]]:
     return results
 
 
+async def get_resonance_summary(name: str) -> Optional[Dict[str, Any]]:
+    """Return resonance metrics and optional MIDI for ``name``."""
+    params = {"name": name}
+    return await api_call("GET", "/resonance-summary", params)
+
+
 async def get_flagged_items() -> list[Dict[str, Any]]:
     """Return content flagged for moderation."""
     return await api_call("GET", "/moderation/flags") or []

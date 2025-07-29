@@ -890,12 +890,14 @@ def main() -> None:
         render_landing_page()
         return
 
+        # Define all pages and their corresponding module paths
+    # Order: Validation, Voting, Agents, Resonance Music, Social
     pages = {
         "Validation": "validation",
         "Voting": "voting",
         "Agents": "agents",
+        "Resonance Music": "resonance_music", # Correctly placed and named
         "Social": "social",
-        "Resonance Music": "resonance_music",
     }
 
     # Initialize session state for layout control
@@ -911,9 +913,6 @@ def main() -> None:
     stats_open = st.session_state["stats_open"]
 
     # Define column widths based on sidebar open/closed state
-    # A wider left column when open, narrow when closed (for toggle button only)
-    # A wider right column when open, narrow when closed
-    # Center column takes remaining space
     left_w = 2.5 if nav_open else 0.2
     right_w = 1.5 if stats_open else 0.2
     center_w = 10 - left_w - right_w # Adjust total width as needed, ensuring sum is reasonable for Streamlit
@@ -934,7 +933,8 @@ def main() -> None:
             choice = option_menu(
                 menu_title=None,
                 options=list(pages.keys()),
-                icons=["check2-square", "graph-up", "robot", "people", "music-note"],
+                # Combined icons, ensuring "music-note-beamed" is used for Resonance Music
+                icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
                 orientation="vertical",
                 key="main_nav_menu" # Unique key for this menu
             )
@@ -942,7 +942,8 @@ def main() -> None:
 
             # Environment and Settings (moved from original st.sidebar)
             st.header("Environment")
-            secrets = get_st_secrets() # Assuming get_st_secrets is defined elsewhere in ui.py
+            # Assuming get_st_secrets is defined globally in ui.py
+            secrets = get_st_secrets()
             database_url = secrets.get("DATABASE_URL")
             secret_key = secrets.get("SECRET_KEY")
 
@@ -960,23 +961,207 @@ def main() -> None:
 
             st.divider()
             st.subheader("Settings")
-            demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True, key="mode_radio")
+            demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True, key="mode_radio_global")
             demo_mode = demo_mode_choice == "Demo"
             theme_selector("Theme") # Assuming theme_selector is defined elsewhere in ui.py
 
             # Assuming VCConfig is imported and available
-            # VCConfig.HIGH_RISK_THRESHOLD = st.slider(
-            #     "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05, key="risk_slider"
-            # )
+            if 'VCConfig' in globals() and VCConfig is not None:
+                VCConfig.HIGH_RISK_THRESHOLD = st.slider(
+                    "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05, key="risk_slider_global"
+                )
+            else:
+                st.info("VCConfig not available for High Risk Threshold setting.")
 
             # File uploader and Run Analysis button (moved from original st.sidebar)
             st.markdown("---") # Visual separator
             st.markdown("Upload validations JSON (drag/drop)")
-            uploaded_file = st.file_uploader("", type="json", key="file_uploader") # Label removed, markdown used
-            run_clicked = st.button("Run Analysis", key="run_analysis_btn")
-            # You'll need to handle the logic for uploaded_file and run_clicked elsewhere,
-            # likely by passing them to the validation page or handling them in a global state.
-            # For simplicity, this example just moves the widgets.
+            uploaded_file = st.file_uploader("", type="json", key="file_uploader_global")
+            run_clicked = st.button("Run Analysis", key="run_analysis_btn_global")
+            
+            # Agent Playground, Governance View, Dev Tools (moved from original st.sidebar)
+            st.divider()
+            st.subheader("Agent Playground")
+            agent_names = list(AGENT_REGISTRY.keys()) if 'AGENT_REGISTRY' in globals() else []
+            agent_choice = st.selectbox("Agent", agent_names, key="agent_select_global")
+            agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description") if agent_choice else None
+            if agent_desc:
+                st.caption(agent_desc)
+            render_api_key_ui() # Assuming this renders into the current container
+            # The backend_choice, api_key, event_type, payload_txt, run_agent_clicked
+            # variables from the original sidebar logic need to be handled.
+            # For this replacement, we assume render_api_key_ui() handles its own internal state
+            # or returns values that are then used by a global agent execution logic.
+            # If these were directly used by run_agent_clicked, that logic needs to be adapted.
+            # For simplicity of this replacement, we assume the widgets are rendered.
+            event_type = st.text_input("Event", value="LLM_INCOMING", key="event_type_global")
+            payload_txt = st.text_area("Payload JSON", value="{}", height=100, key="payload_json_global")
+            run_agent_clicked = st.button("Run Agent", key="run_agent_btn_global")
+            render_simulation_stubs() # Assuming this renders into the current container
+
+            st.divider()
+            governance_view = st.checkbox(
+                "Governance View", value=st.session_state.get("governance_view", False), key="governance_view_global"
+            )
+            st.session_state["governance_view"] = governance_view
+
+            show_dev = st.checkbox("Dev Tools", key="dev_tools_global")
+            if show_dev:
+                dev_tabs = st.tabs(
+                    [
+                        "Fork Universe",
+                        "Universe State Viewer",
+                        "Run Introspection Audit",
+                        "Agent Logs",
+                        "Inject Event",
+                        "Session Inspector",
+                        "Playground",
+                    ], key="dev_tabs_global"
+                )
+
+                # Dev Tools Tab Content (ensure these are adapted to the current container)
+                with dev_tabs[0]: # Fork Universe
+                    if cosmic_nexus and SessionLocal and Harmonizer:
+                        with SessionLocal() as db:
+                            user = db.query(Harmonizer).first()
+                            if user and st.button("Fork with Mock Config", key="fork_mock_config_btn"):
+                                try:
+                                    fork_id = cosmic_nexus.fork_universe(
+                                        user, {"entropy_threshold": 0.5}
+                                    )
+                                    st.success(f"Forked universe {fork_id}")
+                                except Exception as exc:
+                                    st.error(f"Fork failed: {exc}")
+                            elif not user:
+                                st.info("No users available to fork")
+                    else:
+                        st.info("Fork operation unavailable")
+
+                with dev_tabs[1]: # Universe State Viewer
+                    if SessionLocal and UniverseBranch:
+                        with SessionLocal() as db:
+                            records = (
+                                db.query(UniverseBranch)
+                                .order_by(UniverseBranch.timestamp.desc())
+                                .limit(5)
+                                .all()
+                            )
+                            if records:
+                                for r in records:
+                                    st.write(
+                                        {
+                                            "id": r.id,
+                                            "status": r.status,
+                                            "timestamp": r.timestamp,
+                                        }
+                                    )
+                            else:
+                                st.write("No forks recorded")
+                    else:
+                        st.info("Database unavailable")
+
+                with dev_tabs[2]: # Run Introspection Audit
+                    hid = st.text_input("Hypothesis ID", key="audit_id_global")
+                    if st.button("Run Audit", key="run_audit_btn_global") and hid:
+                        if dispatch_route and SessionLocal:
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = _run_async(
+                                            dispatch_route(
+                                                "trigger_full_audit",
+                                                {"hypothesis_id": hid},
+                                                db=db,
+                                            )
+                                        )
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        elif run_full_audit and SessionLocal:
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = run_full_audit(hid, db)
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        else:
+                            st.info("Audit functionality unavailable")
+
+                with dev_tabs[3]: # Agent Logs
+                    log_path = Path("logchain_main.log")
+                    if not log_path.exists():
+                        log_path = Path("remix_logchain.log")
+                    if log_path.exists():
+                        try:
+                            lines = log_path.read_text().splitlines()[-100:]
+                            st.text("\n".join(lines))
+                        except Exception as exc:
+                            st.error(f"Log read failed: {exc}")
+                    else:
+                        st.info("No log file found")
+
+                with dev_tabs[4]: # Inject Event
+                    event_json = st.text_area(
+                        "Event JSON", value="{}", height=150, key="inject_event_global"
+                    )
+                    if st.button("Process Event", key="process_event_btn_global"):
+                        if agent:
+                            try:
+                                event = json.loads(event_json or "{}")
+                                agent.process_event(event)
+                                st.success("Event processed")
+                            except Exception as exc:
+                                st.error(f"Event failed: {exc}")
+                        else:
+                            st.info("Agent unavailable")
+
+                with dev_tabs[5]: # Session Inspector
+                    st.write("Available agents:", list(AGENT_REGISTRY.keys()) if 'AGENT_REGISTRY' in globals() else [])
+                    if cosmic_nexus:
+                        st.write(
+                            "Sub universes:",
+                            list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
+                        )
+                    if (
+                        agent
+                        and InMemoryStorage
+                        and isinstance(agent.storage, InMemoryStorage)
+                    ):
+                        st.write(
+                            f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
+                        )
+                    elif agent:
+                        try:
+                            user_count = len(agent.storage.get_all_users())
+                        except Exception:
+                            user_count = "?"
+                        st.write(f"User count: {user_count}")
+
+                with dev_tabs[6]: # Playground
+                    flow_txt = st.text_area(
+                        "Agent Flow JSON",
+                        "[]",
+                        height=150,
+                        key="flow_json_global",
+                    )
+                    if st.button("Run Flow", key="run_flow_btn_global"):
+                        try:
+                            steps = json.loads(flow_txt or "[]")
+                            results = []
+                            for step in steps:
+                                a_name = step.get("agent")
+                                agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                                evt = step.get("event", {})
+                                if agent_cls:
+                                    backend_fn = get_backend("dummy")
+                                    a = agent_cls(llm_backend=backend_fn)
+                                    results.append(a.process_event(evt))
+                            st.json(results)
+                        except Exception as exc:
+                            st.error(f"Flow execution failed: {exc}")
 
         else:
             # When navigation is collapsed, still remember the choice
@@ -989,16 +1174,13 @@ def main() -> None:
         if stats_open:
             st.markdown("### Quick Stats")
             st.write(f"Runs: {st.session_state.get('run_count', 0)}")
-            # Assuming AGENT_REGISTRY is available globally
             st.write(f"Proposals: {len(AGENT_REGISTRY) if 'AGENT_REGISTRY' in globals() else 'N/A'}")
-            # Add more quick stats here if desired
+            # Add more quick stats here if desired (e.g., from other pages' data)
 
     # --- Center Column (Main Page Content) ---
     with center_col:
-        # Render the main UI elements that are common to all pages (like the title)
-        # render_main_ui() # This function needs to be adapted to render into a container, or its content moved here
-        # For now, let's just put the title here directly.
-        st.title("🤗//⚡//superNova_2177") # Moved and simplified from render_main_ui()
+        # Main app title
+        st.title("🤗//⚡//superNova_2177")
 
         # Dynamically import and render the selected page's main function
         try:
@@ -1007,8 +1189,12 @@ def main() -> None:
             )
             page_main = getattr(module, "main", None)
             if callable(page_main):
-                # Pass the center_col as the main container for the page
-                page_main(main_container=center_col)
+                # Pass the center_col as the main container for all pages
+                # For Validation page, we also pass the left_col as its specific sidebar
+                if choice == "Validation":
+                    render_validation_ui(sidebar=left_col, main_container=center_col)
+                else:
+                    page_main(main_container=center_col)
             else:
                 st.error(f"Page '{choice}' is missing a main() function.")
         except Exception as exc:
@@ -1017,11 +1203,3 @@ def main() -> None:
             st.error(f"❌ Error loading page '{choice}':")
             st.text(tb)
             print(tb, file=sys.stderr)
-
-
-
-
-if __name__ == "__main__":
-    main()
-
-

@@ -8,35 +8,21 @@ from __future__ import annotations
 import asyncio
 import base64
 import os
-from typing import Any
-
-from streamlit_autorefresh import st_autorefresh
+from typing import Any, Optional, Dict
 
 import requests
 import streamlit as st
 from streamlit_helpers import alert, centered_container
 from streamlit_autorefresh import st_autorefresh
-from status_indicator import render_status_icon
+from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
+from utils.api import get_resonance_summary, dispatch_route # Import get_resonance_summary and dispatch_route from utils.api
 
-try:
-    from frontend_bridge import dispatch_route
-except Exception:  # pragma: no cover - optional dependency
-    dispatch_route = None  # type: ignore
-
+# BACKEND_URL is defined in utils.api, but we keep it here for direct requests calls if needed
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
-def _check_backend() -> bool:
-    """Return ``True`` if the backend is reachable."""
-    try:
-        resp = requests.get(f"{BACKEND_URL}/healthz", timeout=3)
-        resp.raise_for_status() # This is generally more robust than checking for status_code == 200
-    except Exception:
-        return False
-    return True
-
-
 def _run_async(coro):
+    """Execute ``coro`` regardless of event loop state."""
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -49,35 +35,19 @@ def _run_async(coro):
 
 def main(main_container=None) -> None:
     """Render music generation and summary widgets."""
-    st_autorefresh(interval=30000, key="status_ping")
 
     if main_container is None:
         main_container = st
 
-    # Auto-refresh for backend health check
-    st_autorefresh(interval=5000, key="health-ping")
+    # Auto-refresh for backend health check (global, outside main_container)
+    st_autorefresh(interval=30000, key="status_ping")
 
+    # Render global backend status indicator in the sidebar
     with st.sidebar:
-        # Render the global backend status indicator using the modular component
-        render_status_icon(endpoint="/healthz") # Assuming /healthz is the correct health check endpoint for your backend
+        render_status_icon(endpoint="/healthz") # Assuming /healthz is the correct health check endpoint
 
-    # The general page-level backend check and alert should come after the sidebar rendering,
-    # as they are not part of the sidebar's content but rather overall page status.
-    # This part is not in the provided diff, but is crucial for the overall logic.
-    # Example (from previous full resolve):
-    # backend_ok = check_backend(endpoint="/healthz")
-    # if not backend_ok:
-    #     alert(
-    #         f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
-    #         "error",
-    #     )
-
-    profile = st.selectbox(
-        "Select resonance profile",
-        ["default", "high_harmony", "high_entropy"],
-    )
-
-    # Display alert if backend is not reachable
+    # Display alert if backend is not reachable (check once per rerun)
+    backend_ok = check_backend(endpoint="/healthz") # Use the modular check_backend
     if not backend_ok:
         alert(
             f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
@@ -88,59 +58,78 @@ def main(main_container=None) -> None:
         st.subheader("Resonance Music")
         centered_container()
 
-        profile = st.selectbox(
-            "Select resonance profile",
-            ["default", "high_harmony", "high_entropy"],
-        )
-        midi_placeholder = st.empty()
+        profile_options = ["default", "high_harmony", "high_entropy"]
+        # Also include the "Solar Echoes", "Quantum Drift", "Ether Pulse" from the other branch
+        track_options = ["Solar Echoes", "Quantum Drift", "Ether Pulse"]
+        combined_options = list(set(profile_options + track_options)) # Remove duplicates
 
-        if st.button("Generate music") and dispatch_route:
+        choice = st.selectbox(
+            "Select a track or resonance profile",
+            combined_options,
+            index=0, # Default to first option
+            placeholder="tracks or resonance profiles",
+            key="resonance_profile_select"
+        )
+        
+        midi_placeholder = st.empty() # Placeholder for MIDI audio player
+
+        # --- Generate Music Section ---
+        if st.button("Generate music", key="generate_music_btn"):
+            if not backend_ok: # Check backend status before attempting generation
+                alert(f"Cannot generate music: Backend service unreachable at {BACKEND_URL}.", "error")
+                return
+
             with st.spinner("Generating..."):
                 try:
+                    # Use dispatch_route for consistency with other backend calls
                     result = _run_async(
-                        dispatch_route("generate_midi", {"profile": profile})
+                        dispatch_route("generate_midi", {"profile": choice}) # Use 'choice' for profile/track
                     )
-                except Exception:  # Catch all exceptions for feedback
-                    alert(
-                        f"Generation failed: Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
-                        "error",
-                    )
-                else:
-                    midi_b64 = (
-                        result.get("midi_base64") if isinstance(result, dict) else None
-                    )
+                    midi_b64 = result.get("midi_base64") if isinstance(result, dict) else None
+                    
                     if midi_b64:
                         midi_bytes = base64.b64decode(midi_b64)
                         midi_placeholder.audio(midi_bytes, format="audio/midi")
-                        st.toast("Music generated!") # Success toast
+                        st.toast("Music generated!")
                     else:
-                        alert("No MIDI data returned", "warning")
+                        alert("No MIDI data returned from generation.", "warning")
+                except Exception as exc:
+                    alert(f"Music generation failed: {exc}. Ensure backend is running and 'generate_midi' route is available.", "error")
 
-        if st.button("Fetch resonance summary"):
-            try:
-                resp = requests.get(f"{BACKEND_URL}/resonance-summary", timeout=5)
-                resp.raise_for_status()
-                data = resp.json()
-                st.json(data.get("metrics", {}))
-                st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
-                st.toast("Summary loaded!") # Success toast
-            except Exception:  # Catch all exceptions for feedback
-                alert(
-                    f"Failed to load summary: Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
-                    "error",
-                )
-                if midi_b64:
-                    midi_bytes = base64.b64decode(midi_b64)
-                    midi_placeholder.audio(midi_bytes, format="audio/midi")
-                else:
-                    alert("No MIDI data returned", "warning")
+        # --- Fetch Resonance Summary Section ---
+        if st.button("Fetch resonance summary", key="fetch_summary_btn"):
+            if not backend_ok: # Check backend status before attempting fetch
+                alert(f"Cannot fetch summary: Backend service unreachable at {BACKEND_URL}.", "error")
+                return
 
-    if st.button("Fetch resonance summary"):
-        try:
-            resp = requests.get(f"{BACKEND_URL}/resonance-summary", timeout=5)
-            resp.raise_for_status()
-            data = resp.json()
-            st.json(data.get("metrics", {}))
-            st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
-        except Exception as exc:  # pragma: no cover - best effort
-            alert(f"Failed to load summary: {exc}", "error")
+            with st.spinner("Fetching summary..."):
+                try:
+                    # Use the modular get_resonance_summary from utils.api
+                    data = _run_async(get_resonance_summary(choice)) # Use 'choice' for summary
+                    
+                    if data:
+                        metrics = data.get("metrics", {})
+                        midi_bytes_count = data.get("midi_bytes", 0) # Assuming this is a count, not actual bytes here
+                        
+                        st.subheader("Metrics")
+                        # Display metrics in a table for better readability
+                        if metrics:
+                            st.table({"metric": list(metrics.keys()), "value": list(metrics.values())})
+                        else:
+                            st.info("No metrics available for this profile.")
+                        
+                        st.write(f"Associated MIDI bytes (count/size): {midi_bytes_count}")
+
+                        # If the summary also returns MIDI bytes (e.g., for preview), play it
+                        summary_midi_b64 = data.get("midi_base64")
+                        if summary_midi_b64:
+                            summary_midi_bytes = base64.b64decode(summary_midi_b64)
+                            st.audio(summary_midi_bytes, format="audio/midi", key="summary_audio_player")
+                            st.info("Playing associated MIDI from summary.")
+
+                        st.toast("Summary loaded!")
+                    else:
+                        alert("No summary data returned for this profile.", "warning")
+
+                except Exception as exc:
+                    alert(f"Failed to load summary: {exc}. Ensure backend is running and 'resonance-summary' route is available.", "error")
