@@ -376,6 +376,10 @@ By default the demo listens on port `8888`. Set `STREAMLIT_PORT` or pass
 Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
 Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
 
+A small simulation form captures interactions between nodes. Enter a source, target,
+edge type and timestamp to build an in-memory `InfluenceGraph`. The graph preview and
+ancestor/descendant traces update as you submit events.
+
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
