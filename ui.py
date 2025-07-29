@@ -59,6 +59,9 @@ from streamlit_helpers import (
     header,
     theme_selector,
 )
+
+# Accent color used for button styling
+ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
 
@@ -833,6 +836,20 @@ def main() -> None:
     from importlib import import_module
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
+
+    # Inject global button styles
+    st.markdown(
+        f"""
+        <style>
+        .stButton>button {{
+            border-radius: 6px;
+            background-color: {ACCENT_COLOR};
+            color: white;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Unified health check using query params or PATH_INFO
     params = st.query_params
