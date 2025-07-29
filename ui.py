@@ -450,75 +450,90 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
-def render_validation_ui() -> None:
-    """Main entry point for the validation analysis UI."""
-    header("superNova_2177 Validation Analyzer", layout="wide")
+def render_validation_ui(sidebar: "st.delta_generator.DeltaGenerator" | None = None,
+                          main: "st.delta_generator.DeltaGenerator" | None = None) -> None:
+    """Main entry point for the validation analysis UI.
 
-    ts_placeholder = st.empty()
-    if "session_start_ts" not in st.session_state:
-        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
-            timespec="seconds"
+    Parameters
+    ----------
+    sidebar:
+        Container where navigation/environment settings should render.
+    main:
+        Container for the primary feed area.
+    """
+    if sidebar is None:
+        sidebar = st.sidebar
+    if main is None:
+        main = st
+
+    with main:
+        header("superNova_2177 Validation Analyzer", layout="wide")
+
+        ts_placeholder = st.empty()
+        if "session_start_ts" not in st.session_state:
+            st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+                timespec="seconds"
+            )
+        ts_placeholder.markdown(
+            f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
+            unsafe_allow_html=True,
         )
-    ts_placeholder.markdown(
-        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
-        unsafe_allow_html=True,
-    )
-    if "diary" not in st.session_state:
-        st.session_state["diary"] = []
-    if "analysis_diary" not in st.session_state:
-        st.session_state["analysis_diary"] = []
-    if "run_count" not in st.session_state:
-        st.session_state["run_count"] = 0
-    if "last_result" not in st.session_state:
-        st.session_state["last_result"] = None
-    if "last_run" not in st.session_state:
-        st.session_state["last_run"] = None
-    if "agent_output" not in st.session_state:
-        st.session_state["agent_output"] = None
-    if "theme" not in st.session_state:
-        st.session_state["theme"] = "light"
-    apply_theme(st.session_state["theme"])
-    centered_container()
+        if "diary" not in st.session_state:
+            st.session_state["diary"] = []
+        if "analysis_diary" not in st.session_state:
+            st.session_state["analysis_diary"] = []
+        if "run_count" not in st.session_state:
+            st.session_state["run_count"] = 0
+        if "last_result" not in st.session_state:
+            st.session_state["last_result"] = None
+        if "last_run" not in st.session_state:
+            st.session_state["last_run"] = None
+        if "agent_output" not in st.session_state:
+            st.session_state["agent_output"] = None
+        if "theme" not in st.session_state:
+            st.session_state["theme"] = "light"
+        apply_theme(st.session_state["theme"])
+        centered_container()
 
-    st.markdown(
-        "Upload a JSON file with a `validations` array, paste JSON below, "
-        "or enable demo mode to see the pipeline in action."
-    )
-    disclaimer = (
-        "\u26a0\ufe0f Metrics like Harmony Score and Resonance are purely symbolic "
-        "and carry no monetary value. See README.md lines 12–13 for the full "
-        "disclaimer."
-    )
-    st.markdown(
-        f"<span title='{disclaimer}'><em>{disclaimer}</em></span>",
-        unsafe_allow_html=True,
-    )
+        st.markdown(
+            "Upload a JSON file with a `validations` array, paste JSON below, "
+            "or enable demo mode to see the pipeline in action."
+        )
+        disclaimer = (
+            "\u26a0\ufe0f Metrics like Harmony Score and Resonance are purely symbolic "
+            "and carry no monetary value. See README.md lines 12–13 for the full "
+            "disclaimer."
+        )
+        st.markdown(
+            f"<span title='{disclaimer}'><em>{disclaimer}</em></span>",
+            unsafe_allow_html=True,
+        )
 
-    view = st.selectbox("View", ["force", "circular", "grid"], index=0)
+        view = st.selectbox("View", ["force", "circular", "grid"], index=0)
 
-    if "validations_json" not in st.session_state:
-        st.session_state["validations_json"] = ""
+        if "validations_json" not in st.session_state:
+            st.session_state["validations_json"] = ""
 
-    validations_input = st.text_area(
-        "Validations JSON",
-        value=st.session_state["validations_json"],
-        height=200,
-        key="validations_editor",
-    )
-    if st.button("Reset to Demo"):
-        try:
-            with open(sample_path) as f:
-                demo_data = json.load(f)
-            st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
-        except FileNotFoundError:
-            alert("Demo file not found", "warning")
-        st.rerun()
+        validations_input = st.text_area(
+            "Validations JSON",
+            value=st.session_state["validations_json"],
+            height=200,
+            key="validations_editor",
+        )
+        if st.button("Reset to Demo"):
+            try:
+                with open(sample_path) as f:
+                    demo_data = json.load(f)
+                st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
+            except FileNotFoundError:
+                alert("Demo file not found", "warning")
+            st.rerun()
 
-    secrets = get_st_secrets()
-    secret_key = secrets.get("SECRET_KEY")
-    database_url = secrets.get("DATABASE_URL")
+secrets = get_st_secrets()
+secret_key = secrets.get("SECRET_KEY")
+database_url = secrets.get("DATABASE_URL")
 
-    with st.sidebar:
+    with sidebar:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
@@ -881,29 +896,65 @@ def main() -> None:
     }
 
     render_main_ui()
-    with st.sidebar:
-        choice = option_menu(
-            menu_title=None,
-            options=list(pages.keys()),
-            icons=["check2-square", "graph-up", "robot", "people"],
-            orientation="vertical",
-        )
 
-    try:
-        module = import_module(
-            f"transcendental_resonance_frontend.pages.{pages[choice]}"
-        )
-        page_main = getattr(module, "main", None)
-        if callable(page_main):
-            page_main()
+    if "nav_open" not in st.session_state:
+        st.session_state["nav_open"] = True
+    if "stats_open" not in st.session_state:
+        st.session_state["stats_open"] = True
+
+    nav_open = st.session_state["nav_open"]
+    stats_open = st.session_state["stats_open"]
+
+    left_w = 1 if nav_open else 0.15
+    right_w = 1 if stats_open else 0.15
+    left_col, center_col, right_col = st.columns([left_w, 2.5, right_w])
+
+    def _toggle(key: str) -> None:
+        st.session_state[key] = not st.session_state.get(key, True)
+
+    with left_col:
+        st.button("☰", on_click=_toggle, args=("nav_open",))
+        if nav_open:
+            choice = option_menu(
+                menu_title=None,
+                options=list(pages.keys()),
+                icons=["check2-square", "graph-up", "robot", "people"],
+                orientation="vertical",
+            )
+            st.session_state["nav_choice"] = choice
         else:
-            st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception as exc:
-        import traceback
-        tb = traceback.format_exc()
-        st.error(f"❌ Error loading page '{choice}':")
-        st.text(tb)
-        print(tb, file=sys.stderr)
+            choice = st.session_state.get("nav_choice", list(pages.keys())[0])
+
+    with right_col:
+        st.button("Stats", on_click=_toggle, args=("stats_open",))
+        if stats_open:
+            st.markdown("### Quick Stats")
+            st.write(f"Runs: {st.session_state.get('run_count', 0)}")
+            st.write(f"Proposals: {len(AGENT_REGISTRY)}")
+
+    with center_col:
+        try:
+            module = import_module(
+                f"transcendental_resonance_frontend.pages.{pages[choice]}"
+            )
+            page_main = getattr(module, "main", None)
+            if callable(page_main):
+                if choice == "Validation":
+                    render_validation_ui(
+                        sidebar=left_col,
+                        main=center_col,
+                    )
+                else:
+                    page_main()
+            else:
+                st.error(f"Page '{choice}' is missing a main() function.")
+        except Exception as exc:
+            import traceback
+            tb = traceback.format_exc()
+            st.error(f"❌ Error loading page '{choice}':")
+            st.text(tb)
+            print(tb, file=sys.stderr)
+
 
 
 if __name__ == "__main__":
