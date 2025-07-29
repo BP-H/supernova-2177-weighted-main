@@ -33,6 +33,7 @@ from .pages import (
     validator_graph_page,
     debug_panel_page,
     video_chat_page,
+    moderation_page,
 )  # register all pages
 from .utils.api import (
     api_call,

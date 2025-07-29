@@ -2470,9 +2470,11 @@ def get_music_generator(
 
 from login_router import router as login_router
 from video_chat_router import router as video_chat_router
+from moderation_router import router as moderation_router
 
 app.include_router(login_router)
 app.include_router(video_chat_router)
+app.include_router(moderation_router)
 
 
 # Endpoints (Full implementation from FastAPI files, enhanced)
@@ -2704,6 +2706,12 @@ def get_system_status(
         },
         "mission": "To create order and meaning from chaos through collective resonance.",
     }
+
+
+@app.get("/healthz", tags=["System"])
+def healthz():
+    """Simple health check endpoint."""
+    return {"status": "ok"}
 
 
 @app.get("/universe/info", tags=["System"])
