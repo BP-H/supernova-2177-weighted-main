@@ -124,22 +124,29 @@ def inject_global_styles() -> None:
     )
 
 
-def theme_selector(label: str = "Theme") -> str:
-    """Render a radio selector for the app theme and return the choice."""
+def theme_selector(label: str = "Theme", key_suffix: str = "") -> str:
+    """Render a theme selector with unique keys."""
     if "theme" not in st.session_state:
-        st.session_state["theme"] = "light"
-    options = ["Light", "Dark", "Codex"]
-    current = st.session_state["theme"].capitalize()
-    idx = options.index(current) if current in options else 0
-    choice = st.radio(
-        label,
-        options,
-        index=idx,
-        horizontal=True,
-    )
-    st.session_state["theme"] = choice.lower()
-    apply_theme(st.session_state["theme"])
-    return st.session_state["theme"]
+        st.session_state["theme"] = "dark"
+
+    unique_key = f"theme_selector_{key_suffix}_{id(st)}"
+
+    try:
+        choice = st.radio(
+            label,
+            ["Light", "Dark", "Codex"],
+            index=1
+            if st.session_state["theme"] == "dark"
+            else (2 if st.session_state["theme"] == "codex" else 0),
+            horizontal=True,
+            key=unique_key,
+        )
+        st.session_state["theme"] = choice.lower()
+        apply_theme(st.session_state["theme"])
+        return st.session_state["theme"]
+    except Exception as e:  # pragma: no cover - UI errors
+        st.error(f"Theme selector error: {e}")
+        return "dark"
 
 
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":
