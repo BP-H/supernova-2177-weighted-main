@@ -481,6 +481,7 @@ During development, you can also open `/ui/debug_panel` in the NiceGUI
 frontend to interactively invoke these routes. The panel lists every
 registered name with a JSON payload editor and uses `dispatch_route` under
 the hood.
+Moderators can visit `/moderation` to review flagged posts in the new Moderation Dashboard.
  
 ### Frontend Bridge & Social Hooks
 
