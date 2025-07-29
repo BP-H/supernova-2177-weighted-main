@@ -56,9 +56,20 @@ def render_main_ui() -> None:
     st.write("UI initialization complete.")
 
 
+def render_modern_layout() -> None:
+    """Render a small demo verifying the modern CSS styles."""
+    inject_global_styles()
+    st.markdown(
+        "<div class='custom-container'>Modern layout loaded.</div>",
+        unsafe_allow_html=True,
+    )
+    st.button("Primary Action")
+
+
 __all__ = [
     "summarize_text",
     "parse_summary",
     "load_rfc_entries",
     "render_main_ui",
+    "render_modern_layout",
 ]
