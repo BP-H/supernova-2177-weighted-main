@@ -12,3 +12,4 @@
 - Added `?healthz=1` query parameter for UI health checks.
 - Removed legacy monkey patch for `/healthz`.
 - Added simulation event form with InfluenceGraph preview.
+- Added moderation page with real-time flag updates.
