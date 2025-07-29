@@ -118,11 +118,22 @@ def inject_global_styles() -> None:
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         }
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
         .stButton>button {
             border-radius: 6px;
             background: linear-gradient(90deg, var(--primary-color, #0A84FF), #2F70FF);
             color: var(--text-color, #FFFFFF);
             transition: filter 0.2s ease-in-out;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            border: none;
         }
         .stButton>button:hover {
             filter: brightness(1.1);

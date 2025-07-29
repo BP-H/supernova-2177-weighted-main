@@ -14,6 +14,14 @@ import math
 import sys
 import traceback
 
+from modern_ui_components import (
+    render_modern_layout,
+    render_modern_header,
+    render_modern_sidebar,
+    render_validation_card,
+    render_stats_section,
+)
+
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -249,6 +257,10 @@ def run_analysis(validations, *, layout: str = "force"):
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
+
+    st.subheader("Validations")
+    for entry in validations:
+        render_validation_card(entry)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -1206,7 +1218,57 @@ def main() -> None:
             print(tb, file=sys.stderr)
         log("DEBUG: Exiting center_col") # Added debug log
 
-    log("DEBUG: End of main function") # Added debug log
+log("DEBUG: End of main function") # Added debug log
+
+
+def main() -> None:
+    """Simplified modern UI entrypoint."""
+    from importlib import import_module
+
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+    render_modern_layout()
+
+    params = st.query_params
+    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
+    if "1" in params.get("healthz", []) or path_info == "/healthz":
+        st.write("ok")
+        st.stop()
+        return
+
+    pages = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
+
+    choice = render_modern_sidebar(pages)
+    render_modern_header("superNova_2177")
+
+    if not PAGES_DIR.is_dir():
+        st.error("Pages directory not found")
+        render_landing_page()
+        return
+
+    module = import_module(
+        f"transcendental_resonance_frontend.pages.{pages[choice]}"
+    )
+    page_main = getattr(module, "main", None)
+    if callable(page_main):
+        if choice == "Validation":
+            render_validation_ui()
+        else:
+            page_main()
+    else:
+        st.error(f"Page '{choice}' is missing a main() function.")
+
+    render_stats_section(
+        {
+            "runs": st.session_state.get("run_count", 0),
+            "proposals": len(AGENT_REGISTRY) if 'AGENT_REGISTRY' in globals() else 'N/A',
+        }
+    )
 
 
 if __name__ == "__main__":
