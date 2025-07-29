@@ -1,0 +1,6 @@
+2025-07-29 13:21:49,475 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'citation_uri' (scientific_utils.py:74) | 감사합니다!
+2025-07-29 13:21:49,475 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'assumptions' (scientific_utils.py:74) | 감사합니다!
+2025-07-29 13:21:49,475 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'validation_notes' (scientific_utils.py:74) | 감사합니다!
+2025-07-29 13:36:16,265 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'citation_uri' (scientific_utils.py:74) | 감사합니다!
+2025-07-29 13:36:16,266 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'assumptions' (scientific_utils.py:74) | 감사합니다!
+2025-07-29 13:36:16,266 | WARNING | ScriptRunner.scriptThread | calculate_creative_leap_score docstring missing 'validation_notes' (scientific_utils.py:74) | 감사합니다!
