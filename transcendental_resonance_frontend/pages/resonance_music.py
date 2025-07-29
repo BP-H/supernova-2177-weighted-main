@@ -10,6 +10,8 @@ import base64
 import os
 from typing import Any
 
+from streamlit_autorefresh import st_autorefresh
+
 import requests
 import streamlit as st
 from streamlit_helpers import alert, centered_container
@@ -20,6 +22,15 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+
+def backend_online() -> bool:
+    """Return True if the backend health check succeeds."""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/healthz", timeout=2)
+        return resp.status_code == 200
+    except Exception:
+        return False
 
 
 def _run_async(coro):
@@ -35,6 +46,13 @@ def _run_async(coro):
 
 def main() -> None:
     """Render music generation and summary widgets."""
+
+    st_autorefresh(interval=5000, key="health-ping")
+    indicator_color = "green" if backend_online() else "red"
+    st.markdown(
+        f"Backend: <span style='color:{indicator_color};font-size:1.2rem;'>\u25CF</span>",
+        unsafe_allow_html=True,
+    )
 
     st.subheader("Resonance Music")
     centered_container()
@@ -70,5 +88,8 @@ def main() -> None:
             data = resp.json()
             st.json(data.get("metrics", {}))
             st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
-        except Exception as exc:  # pragma: no cover - best effort
-            alert(f"Failed to load summary: {exc}", "error")
+        except Exception:  # pragma: no cover - best effort
+            alert(
+                "Backend service unreachable. Please ensure the backend server is running at http://localhost:8000.",
+                "error",
+            )
