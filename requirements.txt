@@ -46,4 +46,4 @@ websockets
 plotly
 pyvis
 streamlit-option-menu
-streamlit-aggrid
+streamlit-aggrid>=1.1.7
