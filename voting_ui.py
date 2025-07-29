@@ -13,6 +13,17 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
+BOX_CSS = """
+<style>
+.tab-box {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+</style>
+"""
+
 
 def _run_async(coro):
     try:
@@ -34,6 +45,7 @@ def render_proposals_tab() -> None:
         )
         return
     with st.container():
+        st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         if st.button("Refresh Proposals"):
             with st.spinner("Working on it..."):
                 try:
@@ -111,6 +123,7 @@ def render_proposals_tab() -> None:
                 st.toast("Success!")
             except Exception as exc:
                 alert(f"Vote failed: {exc}", "error")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_governance_tab() -> None:
@@ -122,6 +135,7 @@ def render_governance_tab() -> None:
         )
         return
     with st.container():
+        st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         if st.button("Refresh Votes"):
             with st.spinner("Working on it..."):
                 try:
@@ -158,6 +172,7 @@ def render_governance_tab() -> None:
                     st.toast("Success!")
                 except Exception as exc:
                     alert(f"Record failed: {exc}", "error")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_agent_ops_tab() -> None:
@@ -169,6 +184,7 @@ def render_agent_ops_tab() -> None:
         )
         return
     with st.container():
+        st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         if st.button("Reload Agent List"):
             with st.spinner("Working on it..."):
                 try:
@@ -213,7 +229,7 @@ def render_agent_ops_tab() -> None:
                 st.toast("Success!")
             except Exception as exc:
                 alert(f"Step failed: {exc}", "error")
-
+        st.markdown("</div>", unsafe_allow_html=True)
 
 def render_logs_tab() -> None:
     """Provide simple audit trace explanation."""
@@ -224,6 +240,7 @@ def render_logs_tab() -> None:
         )
         return
     with st.container():
+        st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         trace_text = st.text_area("Audit Trace JSON", value="{}", height=200)
         if st.button("Explain Trace"):
             try:
@@ -238,6 +255,7 @@ def render_logs_tab() -> None:
                         st.toast("Success!")
                     except Exception as exc:
                         alert(f"Explain failed: {exc}", "error")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_voting_tab() -> None:
