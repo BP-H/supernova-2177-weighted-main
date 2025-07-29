@@ -877,6 +877,7 @@ def main() -> None:
         "Validation": "validation",
         "Voting": "voting",
         "Agents": "agents",
+        "Resonance Music": "resonance_music",
         "Social": "social",
     }
 
@@ -885,7 +886,7 @@ def main() -> None:
         choice = option_menu(
             menu_title=None,
             options=list(pages.keys()),
-            icons=["check2-square", "graph-up", "robot", "people"],
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
             orientation="vertical",
         )
 

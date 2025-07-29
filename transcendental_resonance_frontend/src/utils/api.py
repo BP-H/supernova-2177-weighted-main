@@ -298,3 +298,9 @@ async def combined_search(query: str) -> list[Dict[str, Any]]:
             results.append({"type": "event", "label": label, "id": ev.get("id")})
 
     return results
+
+
+async def get_resonance_summary(name: str) -> Optional[Dict[str, Any]]:
+    """Return resonance metrics and optional MIDI for ``name``."""
+    params = {"name": name}
+    return await api_call("GET", "/resonance-summary", params)
