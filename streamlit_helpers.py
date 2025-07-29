@@ -67,6 +67,7 @@ def apply_theme(theme: str) -> None:
                 font-family: var(--font-family);
             }
             a { color: var(--primary-color); }
+
             </style>
         """
     else:
@@ -84,6 +85,7 @@ def apply_theme(theme: str) -> None:
                 color: var(--text-color);
                 font-family: var(--font-family);
             }
+
             </style>
         """
     st.markdown(css, unsafe_allow_html=True)
@@ -126,10 +128,13 @@ def theme_selector(label: str = "Theme") -> str:
     """Render a radio selector for the app theme and return the choice."""
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
+    options = ["Light", "Dark", "Codex"]
+    current = st.session_state["theme"].capitalize()
+    idx = options.index(current) if current in options else 0
     choice = st.radio(
         label,
-        ["Light", "Dark"],
-        index=(1 if st.session_state["theme"] == "dark" else 0),
+        options,
+        index=idx,
         horizontal=True,
     )
     st.session_state["theme"] = choice.lower()
