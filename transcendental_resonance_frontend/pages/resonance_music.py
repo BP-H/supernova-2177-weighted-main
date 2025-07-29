@@ -24,13 +24,14 @@ except Exception:  # pragma: no cover - optional dependency
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
-def backend_online() -> bool:
-    """Return True if the backend health check succeeds."""
+def _check_backend() -> bool:
+    """Return ``True`` if the backend is reachable."""
     try:
-        resp = requests.get(f"{BACKEND_URL}/healthz", timeout=2)
-        return resp.status_code == 200
+        resp = requests.get(f"{BACKEND_URL}/healthz", timeout=3)
+        resp.raise_for_status() # This is generally more robust than checking for status_code == 200
     except Exception:
         return False
+    return True
 
 
 def _run_async(coro):
@@ -57,6 +58,20 @@ def main() -> None:
     st.subheader("Resonance Music")
     centered_container()
 
+    backend_ok = _check_backend()
+    color = "green" if backend_ok else "red"
+    st.sidebar.markdown(
+        f"Backend status: <span style='font-size:1.2em;color:{color};'>\u25CF</span>",
+        unsafe_allow_html=True,
+    )
+    if backend_ok:
+        st.toast("Backend reachable")
+    else:
+        alert(
+            f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+            "error",
+        )
+
     profile = st.selectbox(
         "Select resonance profile",
         ["default", "high_harmony", "high_entropy"],
@@ -69,8 +84,11 @@ def main() -> None:
                 result = _run_async(
                     dispatch_route("generate_midi", {"profile": profile})
                 )
-            except Exception as exc:  # pragma: no cover - feedback
-                alert(f"Generation failed: {exc}", "error")
+            except Exception:  # pragma: no cover - feedback
+                alert(
+                    f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+                    "error",
+                )
             else:
                 midi_b64 = (
                     result.get("midi_base64") if isinstance(result, dict) else None
@@ -78,6 +96,7 @@ def main() -> None:
                 if midi_b64:
                     midi_bytes = base64.b64decode(midi_b64)
                     midi_placeholder.audio(midi_bytes, format="audio/midi")
+                    st.toast("Music generated")
                 else:
                     alert("No MIDI data returned", "warning")
 
@@ -88,8 +107,9 @@ def main() -> None:
             data = resp.json()
             st.json(data.get("metrics", {}))
             st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
+            st.toast("Summary loaded") # Keep the success toast
         except Exception:  # pragma: no cover - best effort
             alert(
-                "Backend service unreachable. Please ensure the backend server is running at http://localhost:8000.",
+                f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.", # Keep the dynamic error message
                 "error",
             )
