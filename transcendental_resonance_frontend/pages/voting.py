@@ -13,4 +13,4 @@ def main(main_container=None) -> None:
         main_container = st
 
     with main_container:
-        render_voting_tab()
+        render_voting_tab(main_container=main_container)
