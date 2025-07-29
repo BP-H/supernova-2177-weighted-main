@@ -22,6 +22,16 @@ except Exception:  # pragma: no cover - optional dependency
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
+def _check_backend() -> bool:
+    """Return ``True`` if the backend is reachable."""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/healthz", timeout=3)
+        resp.raise_for_status()
+    except Exception:
+        return False
+    return True
+
+
 def _run_async(coro):
     try:
         loop = asyncio.get_running_loop()
@@ -39,6 +49,20 @@ def main() -> None:
     st.subheader("Resonance Music")
     centered_container()
 
+    backend_ok = _check_backend()
+    color = "green" if backend_ok else "red"
+    st.sidebar.markdown(
+        f"Backend status: <span style='font-size:1.2em;color:{color};'>\u25CF</span>",
+        unsafe_allow_html=True,
+    )
+    if backend_ok:
+        st.toast("Backend reachable")
+    else:
+        alert(
+            f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+            "error",
+        )
+
     profile = st.selectbox(
         "Select resonance profile",
         ["default", "high_harmony", "high_entropy"],
@@ -51,8 +75,11 @@ def main() -> None:
                 result = _run_async(
                     dispatch_route("generate_midi", {"profile": profile})
                 )
-            except Exception as exc:  # pragma: no cover - feedback
-                alert(f"Generation failed: {exc}", "error")
+            except Exception:  # pragma: no cover - feedback
+                alert(
+                    f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+                    "error",
+                )
             else:
                 midi_b64 = (
                     result.get("midi_base64") if isinstance(result, dict) else None
@@ -60,6 +87,7 @@ def main() -> None:
                 if midi_b64:
                     midi_bytes = base64.b64decode(midi_b64)
                     midi_placeholder.audio(midi_bytes, format="audio/midi")
+                    st.toast("Music generated")
                 else:
                     alert("No MIDI data returned", "warning")
 
@@ -70,5 +98,9 @@ def main() -> None:
             data = resp.json()
             st.json(data.get("metrics", {}))
             st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
-        except Exception as exc:  # pragma: no cover - best effort
-            alert(f"Failed to load summary: {exc}", "error")
+            st.toast("Summary loaded")
+        except Exception:  # pragma: no cover - best effort
+            alert(
+                f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+                "error",
+            )
