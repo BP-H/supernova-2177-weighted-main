@@ -852,25 +852,26 @@ def main() -> None:
         render_landing_page()
         return
 
-    page_files = sorted(
-        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
-    )
-    if not page_files:
-        st.warning("No pages available — showing fallback UI.")
-        render_landing_page()
-        return
+    pages = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Social": "social",
+    }
 
     render_main_ui()
     with st.sidebar:
         choice = option_menu(
             menu_title=None,
-            options=page_files,
-            icons=["robot", "people", "graph-up", "check2-square"],
+            options=list(pages.keys()),
+            icons=["check2-square", "graph-up", "robot", "people"],
             orientation="vertical",
         )
 
     try:
-        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        module = import_module(
+            f"transcendental_resonance_frontend.pages.{pages[choice]}"
+        )
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
