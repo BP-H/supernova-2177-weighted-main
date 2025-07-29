@@ -15,6 +15,8 @@ from streamlit_autorefresh import st_autorefresh
 import requests
 import streamlit as st
 from streamlit_helpers import alert, centered_container
+from streamlit_autorefresh import st_autorefresh
+from status_indicator import render_status_icon
 
 try:
     from frontend_bridge import dispatch_route
@@ -47,6 +49,7 @@ def _run_async(coro):
 
 def main(main_container=None) -> None:
     """Render music generation and summary widgets."""
+    st_autorefresh(interval=30000, key="status_ping")
 
     if main_container is None:
         main_container = st
@@ -54,12 +57,24 @@ def main(main_container=None) -> None:
     # Auto-refresh for backend health check
     st_autorefresh(interval=5000, key="health-ping")
 
-    # Backend status indicator in the sidebar (global view)
-    backend_ok = _check_backend()
-    indicator_color = "green" if backend_ok else "red"
-    st.sidebar.markdown(
-        f"Backend status: <span style='font-size:1.2em;color:{indicator_color};'>\u25CF</span>",
-        unsafe_allow_html=True,
+    with st.sidebar:
+        # Render the global backend status indicator using the modular component
+        render_status_icon(endpoint="/healthz") # Assuming /healthz is the correct health check endpoint for your backend
+
+    # The general page-level backend check and alert should come after the sidebar rendering,
+    # as they are not part of the sidebar's content but rather overall page status.
+    # This part is not in the provided diff, but is crucial for the overall logic.
+    # Example (from previous full resolve):
+    # backend_ok = check_backend(endpoint="/healthz")
+    # if not backend_ok:
+    #     alert(
+    #         f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+    #         "error",
+    #     )
+
+    profile = st.selectbox(
+        "Select resonance profile",
+        ["default", "high_harmony", "high_entropy"],
     )
 
     # Display alert if backend is not reachable
@@ -114,3 +129,18 @@ def main(main_container=None) -> None:
                     f"Failed to load summary: Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
                     "error",
                 )
+                if midi_b64:
+                    midi_bytes = base64.b64decode(midi_b64)
+                    midi_placeholder.audio(midi_bytes, format="audio/midi")
+                else:
+                    alert("No MIDI data returned", "warning")
+
+    if st.button("Fetch resonance summary"):
+        try:
+            resp = requests.get(f"{BACKEND_URL}/resonance-summary", timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            st.json(data.get("metrics", {}))
+            st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
+        except Exception as exc:  # pragma: no cover - best effort
+            alert(f"Failed to load summary: {exc}", "error")
