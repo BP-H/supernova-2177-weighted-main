@@ -15,21 +15,26 @@ from typing import Literal
 import streamlit as st
 
 
-def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> None:
+def alert(
+    message: str,
+    level: Literal["warning", "error", "info"] = "info",
+    *,
+    show_icon: bool = True,
+) -> None:
     """Display a minimally intrusive alert box."""
     icons = {"warning": "\u26A0", "error": "\u274C", "info": "\u2139"}
     colors = {
-        "warning": ("#2c2b24", "#997a00"),
-        "error": ("#352626", "#cc0000"),
-        "info": ("#1f2d3d", "#1e88e5"),
+        "warning": ("#fff7e6", "#f0ad4e"),
+        "error": ("#fdecea", "#f44336"),
+        "info": ("#e8f4fd", "#1e88e5"),
     }
     bg_color, border_color = colors.get(level, colors["info"])
-    icon = icons.get(level, "")
+    icon_html = f"<span class='icon'>{icons.get(level, '')}</span>" if show_icon else ""
     st.markdown(
         f"<div class='custom-alert' style='border-left:4px solid {border_color};"
         f"background-color:{bg_color};padding:0.5em;border-radius:4px;"
         f"margin-bottom:1em;display:flex;align-items:center;gap:0.5rem;'>"
-        f"<span class='icon'>{icon}</span>{html.escape(message)}</div>",
+        f"{icon_html}{html.escape(message)}</div>",
         unsafe_allow_html=True,
     )
 
