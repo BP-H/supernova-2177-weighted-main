@@ -640,24 +640,28 @@ def render_validation_ui() -> None:
                 if st.button("Run Audit") and hid:
                     if dispatch_route and SessionLocal:
                         with SessionLocal() as db:
-                            try:
-                                result = _run_async(
-                                    dispatch_route(
-                                        "trigger_full_audit",
-                                        {"hypothesis_id": hid},
-                                        db=db,
+                            with st.spinner("Working on it..."):
+                                try:
+                                    result = _run_async(
+                                        dispatch_route(
+                                            "trigger_full_audit",
+                                            {"hypothesis_id": hid},
+                                            db=db,
+                                        )
                                     )
-                                )
-                                st.json(result)
-                            except Exception as exc:
-                                st.error(f"Audit failed: {exc}")
+                                    st.json(result)
+                                    st.toast("Success!")
+                                except Exception as exc:
+                                    st.error(f"Audit failed: {exc}")
                     elif run_full_audit and SessionLocal:
                         with SessionLocal() as db:
-                            try:
-                                result = run_full_audit(hid, db)
-                                st.json(result)
-                            except Exception as exc:
-                                st.error(f"Audit failed: {exc}")
+                            with st.spinner("Working on it..."):
+                                try:
+                                    result = run_full_audit(hid, db)
+                                    st.json(result)
+                                    st.toast("Success!")
+                                except Exception as exc:
+                                    st.error(f"Audit failed: {exc}")
                     else:
                         st.info("Audit functionality unavailable")
 
