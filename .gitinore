@@ -1,0 +1,9 @@
+# Python virtual environment
+venv/
+
+# Test files
+tests/
+
+# Python cache
+__pycache__/
+.pytest_cache/
