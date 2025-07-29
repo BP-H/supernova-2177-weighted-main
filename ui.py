@@ -14,6 +14,14 @@ import math
 import sys
 import traceback
 
+from modern_ui_components import (
+    render_modern_layout,
+    render_modern_header,
+    render_modern_sidebar,
+    render_validation_card,
+    render_stats_section,
+)
+
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -292,6 +300,10 @@ def run_analysis(validations, *, layout: str = "force"):
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
+
+    st.subheader("Validations")
+    for entry in validations:
+        render_validation_card(entry)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
