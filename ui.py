@@ -492,6 +492,56 @@ def boot_diagnostic_ui():
     st.subheader("Validation Analysis")
     run_analysis([], layout="force")
 
+def render_validation_content_safe(sidebar, main_container):
+    """Safe rendering with fallbacks and demo mode."""
+    with main_container:
+        st.title("🚀 superNova_2177 Validation Analyzer")
+        
+        # Demo mode toggle
+        col1, col2 = st.columns([3, 1])
+        with col2:
+            demo_mode = st.toggle("Demo Mode", value=True, key="demo_mode_toggle")
+        
+        if demo_mode:
+            st.info("🎮 Running in Demo Mode - Using sample data for testing")
+            
+            # Sample stats
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Runs", "0", delta="0")
+            with col2:
+                st.metric("Proposals", "12", delta="+2")
+            with col3:
+                st.metric("Success Rate", "94.2%", delta="+1.2%")
+            with col4:
+                st.metric("Accuracy", "98.5%", delta="+0.3%")
+            
+            # Sample validation form
+            st.subheader("📋 Validation Input")
+            
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                validation_text = st.text_area(
+                    "Validations JSON",
+                    value='{"sample": "validation", "status": "demo"}',
+                    height=200,
+                    key="demo_validation_input"
+                )
+            
+            with col2:
+                view_mode = st.selectbox("View Mode", ["force", "gentle", "analysis"], key="demo_view_mode")
+                
+                if st.button("🔍 Run Analysis", type="primary", key="demo_run_analysis"):
+                    st.success("✅ Demo analysis completed!")
+                    st.json({
+                        "result": "success",
+                        "score": 95.7,
+                        "recommendations": ["Optimize validation logic", "Add error handling"]
+                    })
+        else:
+            st.warning("⚠️ Live mode requires database connection")
+            st.info("Enable Demo Mode above to test the interface")
+
 
 def render_validation_ui(
     sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
