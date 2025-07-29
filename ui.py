@@ -492,6 +492,7 @@ def boot_diagnostic_ui():
     st.subheader("Validation Analysis")
     run_analysis([], layout="force")
 
+
 def render_validation_ui(
     sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
@@ -559,36 +560,6 @@ def render_validation_ui(
             else:
                 st.warning("⚠️ Live mode requires database connection")
                 st.info("Enable Demo Mode above to test the interface")
-        
-    except Exception as exc:
-        st.session_state["critical_error"] = str(exc)
-        st.error(f"Rendering Error: {str(exc)}")
-        if st.button("Clear Error & Restart", key="clear_error_restart"):
-            st.session_state.clear()
-            st.rerun()
-
-
-def render_validation_ui(
-    sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
-    main_container: Optional[st.delta_generator.DeltaGenerator] = None,
-) -> None:
-    """Main entry point for the validation analysis UI with error handling."""
-    if sidebar is None:
-        sidebar = st.sidebar
-    if main_container is None:
-        main_container = st
-
-    try:
-        # Check for critical errors first
-        if st.session_state.get("critical_error"):
-            st.error("Application Error: " + st.session_state["critical_error"])
-            if st.button("Reset Application", key="reset_app_critical"):
-                st.session_state.clear()
-                st.rerun()
-            return
-
-        # Render safe validation content
-        render_validation_content_safe(sidebar=sidebar, main_container=main_container)
         
     except Exception as exc:
         st.session_state["critical_error"] = str(exc)
