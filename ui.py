@@ -60,10 +60,60 @@ from streamlit_helpers import (
     theme_selector,
 )
 
+def load_css() -> None:
+    """Placeholder for loading custom CSS."""
+    pass
+
 # Accent color used for button styling
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+
+# Database fallback for local testing
+try:
+    from db_models import Harmonizer, SessionLocal, UniverseBranch
+    DATABASE_AVAILABLE = True
+except Exception:
+    DATABASE_AVAILABLE = False
+
+    class MockSessionLocal:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def query(self, *args):
+            return MockQuery()
+
+    class MockQuery:
+        def filter(self, *args):
+            return self
+        def first(self):
+            return None
+        def all(self):
+            return []
+
+    class MockHarmonizer:
+        id = 1
+        name = "Test Harmonizer"
+        config = "{}"
+
+    SessionLocal = MockSessionLocal
+    Harmonizer = MockHarmonizer
+    UniverseBranch = MockHarmonizer
+
+if not DATABASE_AVAILABLE:
+    st.session_state.setdefault(
+        "mock_data",
+        {
+            "validations": [],
+            "proposals": [
+                {"id": 1, "title": "Sample Proposal 1", "status": "active"},
+                {"id": 2, "title": "Sample Proposal 2", "status": "pending"},
+            ],
+            "runs": 0,
+            "success_rate": 94.2,
+        },
+    )
 
 
 def _run_async(coro):
@@ -82,13 +132,6 @@ try:
     from frontend_bridge import dispatch_route
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None
-
-try:
-    from db_models import Harmonizer, SessionLocal, UniverseBranch
-except Exception:  # pragma: no cover - missing ORM
-    SessionLocal = None  # type: ignore
-    Harmonizer = None  # type: ignore
-    UniverseBranch = None  # type: ignore
 
 try:
     from introspection.introspection_pipeline import run_full_audit
@@ -450,782 +493,81 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
-def render_demo_content(view: str) -> dict:
-    """Render the demo validation dataset and return the result."""
-    try:
-        with open(sample_path) as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        alert("Demo file not found, using default dataset.", "warning")
-        data = {"validations": [{"validator": "A", "target": "B", "score": 0.9}]}
-    st.session_state["validations_json"] = json.dumps(data, indent=2)
-    return run_analysis(data.get("validations", []), layout=view)
-
-
-def render_live_content(validations_input: str, uploaded_file, view: str) -> dict:
-    """Render live data supplied by the user and return the result."""
-    if validations_input.strip():
-        try:
-            data = json.loads(validations_input)
-        except json.JSONDecodeError as exc:
-            alert(f"Invalid JSON: {exc}", "error")
-            st.stop()
-    elif uploaded_file is not None:
-        data = json.load(uploaded_file)
-    else:
-        alert("Please upload a file or paste JSON.", "error")
-        st.stop()
-    st.session_state["validations_json"] = json.dumps(data, indent=2)
-    return run_analysis(data.get("validations", []), layout=view)
-
-
-def render_validation_content_safe(
-    sidebar: st.delta_generator.DeltaGenerator,
-    main_container: st.delta_generator.DeltaGenerator,
-) -> None:
-    """Render the validation UI content, handling demo and live modes."""
-
-    with main_container:
-        header("superNova_2177 Validation Analyzer", layout="wide")
-
-        ts_placeholder = st.empty()
-        if "session_start_ts" not in st.session_state:
-            st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
-                timespec="seconds"
-            )
-        ts_placeholder.markdown(
-            f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
-            unsafe_allow_html=True,
-        )
-        if "diary" not in st.session_state:
-            st.session_state["diary"] = []
-        if "analysis_diary" not in st.session_state:
-            st.session_state["analysis_diary"] = []
-        if "run_count" not in st.session_state:
-            st.session_state["run_count"] = 0
-        if "last_result" not in st.session_state:
-            st.session_state["last_result"] = None
-        if "last_run" not in st.session_state:
-            st.session_state["last_run"] = None
-        if "agent_output" not in st.session_state:
-            st.session_state["agent_output"] = None
-        if "theme" not in st.session_state:
-            st.session_state["theme"] = "light"
-        apply_theme(st.session_state["theme"])
-        centered_container()
-
-        st.markdown(
-            "Upload a JSON file with a `validations` array, paste JSON below, "
-            "or enable demo mode to see the pipeline in action."
-        )
-        disclaimer = (
-            "\u26a0\ufe0f Metrics like Harmony Score and Resonance are purely symbolic "
-            "and carry no monetary value. See README.md lines 12–13 for the full "
-            "disclaimer."
-        )
-        st.markdown(
-            f"<span title='{disclaimer}'><em>{disclaimer}</em></span>",
-            unsafe_allow_html=True,
-        )
-
-        view = st.selectbox("View", ["force", "circular", "grid"], index=0)
-
-        if "validations_json" not in st.session_state:
-            st.session_state["validations_json"] = ""
-
-        validations_input = st.text_area(
-            "Validations JSON",
-            value=st.session_state["validations_json"],
-            height=200,
-            key="validations_editor",
-        )
-        if st.button("Reset to Demo"):
-            try:
-                with open(sample_path) as f:
-                    demo_data = json.load(f)
-                st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
-            except FileNotFoundError:
-                alert("Demo file not found", "warning")
-            st.rerun()
-
-    secrets = get_st_secrets()
-    secret_key = secrets.get("SECRET_KEY")
-    database_url = secrets.get("DATABASE_URL")
-
-    with sidebar:
-        st.header("Environment")
-        st.write(f"Database URL: {database_url or 'not set'}")
-        st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {st.session_state['session_start_ts']} UTC")
-
-        if secret_key:
-            st.success("Secret key loaded")
-        else:
-            alert("SECRET_KEY missing", "warning")
-
-        st.divider()
-        st.subheader("Settings")
-        demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
-        demo_mode = demo_mode_choice == "Demo"
-        theme_selector("Theme")
-
-        VCConfig.HIGH_RISK_THRESHOLD = st.slider(
-            "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
-        )
-
-        uploaded_file = st.file_uploader(
-            "Upload validations JSON (drag/drop)", type="json"
-        )
-        run_clicked = st.button("Run Analysis")
-        rerun_clicked = False
-        if st.session_state.get("last_result") is not None:
-            rerun_clicked = st.button("Re-run This Dataset with New Thresholds")
-
-        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
-        if st.session_state.get("last_run"):
-            st.write(f"Last run: {st.session_state['last_run']}")
-        if st.button("Clear Memory"):
-            clear_memory(st.session_state)
-            st.session_state["diary"] = []
-        export_blob = export_latest_result(st.session_state)
-        st.download_button(
-            "Export Latest Result",
-            export_blob,
-            file_name="latest_result.json",
-        )
-        st.divider()
-
-        st.subheader("Agent Playground")
-        agent_names = list(AGENT_REGISTRY.keys())
-        agent_choice = st.selectbox("Agent", agent_names)
-        agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description")
-        if agent_desc:
-            st.caption(agent_desc)
-        api_info = render_api_key_ui()
-        backend_choice = api_info.get("model", "dummy")
-        api_key = api_info.get("api_key", "") or ""
-        event_type = st.text_input("Event", value="LLM_INCOMING")
-        payload_txt = st.text_area("Payload JSON", value="{}", height=100)
-        run_agent_clicked = st.button("Run Agent")
-        render_simulation_stubs()
-
-        st.divider()
-        governance_view = st.checkbox(
-            "Governance View", value=st.session_state.get("governance_view", False)
-        )
-        st.session_state["governance_view"] = governance_view
-
-        show_dev = st.checkbox("Dev Tools")
-        if show_dev:
-            dev_tabs = st.tabs(
-                [
-                    "Fork Universe",
-                    "Universe State Viewer",
-                    "Run Introspection Audit",
-                    "Agent Logs",
-                    "Inject Event",
-                    "Session Inspector",
-                    "Playground",
-                ]
-            )
-
-            with dev_tabs[0]:
-                if cosmic_nexus and SessionLocal and Harmonizer:
-                    with SessionLocal() as db:
-                        user = db.query(Harmonizer).first()
-                        if user and st.button("Fork with Mock Config"):
-                            try:
-                                fork_id = cosmic_nexus.fork_universe(
-                                    user, {"entropy_threshold": 0.5}
-                                )
-                                st.success(f"Forked universe {fork_id}")
-                            except Exception as exc:
-                                st.error(f"Fork failed: {exc}")
-                        elif not user:
-                            st.info("No users available to fork")
-                else:
-                    st.info("Fork operation unavailable")
-
-            with dev_tabs[1]:
-                if SessionLocal and UniverseBranch:
-                    with SessionLocal() as db:
-                        records = (
-                            db.query(UniverseBranch)
-                            .order_by(UniverseBranch.timestamp.desc())
-                            .limit(5)
-                            .all()
-                        )
-                        if records:
-                            for r in records:
-                                st.write(
-                                    {
-                                        "id": r.id,
-                                        "status": r.status,
-                                        "timestamp": r.timestamp,
-                                    }
-                                )
-                        else:
-                            st.write("No forks recorded")
-                else:
-                    st.info("Database unavailable")
-
-            with dev_tabs[2]:
-                hid = st.text_input("Hypothesis ID", key="audit_id")
-                if st.button("Run Audit") and hid:
-                    if dispatch_route and SessionLocal:
-                        with SessionLocal() as db:
-                            with st.spinner("Working on it..."):
-                                try:
-                                    result = _run_async(
-                                        dispatch_route(
-                                            "trigger_full_audit",
-                                            {"hypothesis_id": hid},
-                                            db=db,
-                                        )
-                                    )
-                                    st.json(result)
-                                    st.toast("Success!")
-                                except Exception as exc:
-                                    st.error(f"Audit failed: {exc}")
-                    elif run_full_audit and SessionLocal:
-                        with SessionLocal() as db:
-                            with st.spinner("Working on it..."):
-                                try:
-                                    result = run_full_audit(hid, db)
-                                    st.json(result)
-                                    st.toast("Success!")
-                                except Exception as exc:
-                                    st.error(f"Audit failed: {exc}")
-                    else:
-                        st.info("Audit functionality unavailable")
-
-            with dev_tabs[3]:
-                log_path = Path("logchain_main.log")
-                if not log_path.exists():
-                    log_path = Path("remix_logchain.log")
-                if log_path.exists():
-                    try:
-                        lines = log_path.read_text().splitlines()[-100:]
-                        st.text("\n".join(lines))
-                    except Exception as exc:
-                        st.error(f"Log read failed: {exc}")
-                else:
-                    st.info("No log file found")
-
-            with dev_tabs[4]:
-                event_json = st.text_area(
-                    "Event JSON", value="{}", height=150, key="inject_event"
-                )
-                if st.button("Process Event"):
-                    if agent:
-                        try:
-                            event = json.loads(event_json or "{}")
-                            agent.process_event(event)
-                            st.success("Event processed")
-                        except Exception as exc:
-                            st.error(f"Event failed: {exc}")
-                    else:
-                        st.info("Agent unavailable")
-
-            with dev_tabs[5]:
-                st.write("Available agents:", list(AGENT_REGISTRY.keys()))
-                if cosmic_nexus:
-                    st.write(
-                        "Sub universes:",
-                        list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
-                    )
-                if (
-                    agent
-                    and InMemoryStorage
-                    and isinstance(agent.storage, InMemoryStorage)
-                ):
-                    st.write(
-                        f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
-                    )
-                elif agent:
-                    try:
-                        user_count = len(agent.storage.get_all_users())
-                    except Exception:
-                        user_count = "?"
-                    st.write(f"User count: {user_count}")
-
-            with dev_tabs[6]:
-                flow_txt = st.text_area(
-                    "Agent Flow JSON",
-                    "[]",
-                    height=150,
-                    key="flow_json",
-                )
-                if st.button("Run Flow"):
-                    try:
-                        steps = json.loads(flow_txt or "[]")
-                        results = []
-                        for step in steps:
-                            a_name = step.get("agent")
-                            agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
-                            evt = step.get("event", {})
-                            if agent_cls:
-                                backend_fn = get_backend("dummy")
-                                a = agent_cls(llm_backend=backend_fn)
-                                results.append(a.process_event(evt))
-                        st.json(results)
-                    except Exception as exc:
-                        st.error(f"Flow execution failed: {exc}")
-
-    if run_clicked or rerun_clicked:
-        if run_clicked:
-            if demo_mode:
-                result = render_demo_content(view)
-            else:
-                result = render_live_content(validations_input, uploaded_file, view)
-        else:
-            try:
-                data = json.loads(st.session_state.get("validations_json", ""))
-            except Exception as exc:
-                alert(f"Stored validations invalid: {exc}", "error")
-                st.stop()
-            result = run_analysis(data.get("validations", []), layout=view)
-        prev_result = st.session_state.get("last_result")
-        diff = diff_results(prev_result, result)
-        st.session_state["run_count"] += 1
-        st.session_state["last_result"] = result
-        st.session_state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
-        st.session_state["analysis_diary"].append(
-            {
-                "timestamp": st.session_state["last_run"],
-                "score": result.get("integrity_analysis", {}).get(
-                    "overall_integrity_score"
-                ),
-                "risk": result.get("integrity_analysis", {}).get("risk_level"),
-            }
-        )
-        st.session_state["diary"].append(
-            {
-                "timestamp": st.session_state["last_run"],
-                "note": f"Run {st.session_state['run_count']} completed",
-            }
-        )
-        if diff:
-            st.subheader("Result Diff vs Previous Run")
-            st.code(diff)
-
-    if run_agent_clicked:
-        try:
-            payload = json.loads(payload_txt or "{}")
-        except Exception as exc:
-            alert(f"Invalid payload: {exc}", "error")
-        else:
-            backend_fn = get_backend(backend_choice.lower(), api_key or None)
-            if backend_fn is None:
-                alert("Invalid backend selected", "error")
-                st.session_state["agent_output"] = None
-                st.stop()
-            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
-            if agent_cls is None:
-                alert("Unknown agent selected", "error")
-            else:
-                try:
-                    if agent_choice == "CI_PRProtectorAgent":
-                        talker = backend_fn or (lambda p: p)
-                        agent = agent_cls(talker, llm_backend=backend_fn)
-                    elif agent_choice == "MetaValidatorAgent":
-                        agent = agent_cls({}, llm_backend=backend_fn)
-                    elif agent_choice == "GuardianInterceptorAgent":
-                        agent = agent_cls(llm_backend=backend_fn)
-                    else:
-                        agent = agent_cls(llm_backend=backend_fn)
-                    result = agent.process_event(
-                        {"event": event_type, "payload": payload}
-                    )
-                    st.session_state["agent_output"] = result
-                    st.success("Agent executed")
-                except Exception as exc:
-                    st.session_state["agent_output"] = {"error": str(exc)}
-                    alert(f"Agent error: {exc}", "error")
-
-    if st.session_state.get("agent_output") is not None:
-        st.subheader("Agent Output")
-        st.json(st.session_state["agent_output"])
-
-
 def render_validation_ui(
     sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
-    """Main entry point for the validation analysis UI."""
+    """Main entry point for the validation analysis UI with error handling."""
     if sidebar is None:
         sidebar = st.sidebar
     if main_container is None:
         main_container = st
 
     try:
+        # Check for critical errors first
+        if st.session_state.get("critical_error"):
+            st.error("Application Error: " + st.session_state["critical_error"])
+            if st.button("Reset Application", key="reset_app_critical"):
+                st.session_state.clear()
+                st.rerun()
+            return
+
+        # Render safe validation content
         render_validation_content_safe(sidebar=sidebar, main_container=main_container)
-    except Exception as exc:  # pragma: no cover - defensive
+        
+    except Exception as exc:
         st.session_state["critical_error"] = str(exc)
-        st.error(f"Critical error: {exc}")
-        if st.button("Reset Session"):
+        st.error(f"Rendering Error: {str(exc)}")
+        if st.button("Clear Error & Restart", key="clear_error_restart"):
             st.session_state.clear()
             st.rerun()
 
 
-import streamlit as st
-
 def main() -> None:
-    """Entry point for the Streamlit UI."""
-    import streamlit as st
-    from importlib import import_module
+    """Entry point with comprehensive error handling."""
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
 
-    st.set_page_config(page_title="superNova_2177", layout="wide")
-
-    # Inject global button styles
-    st.markdown(
-        f"""
-        <style>
-        .stButton>button {{
-            border-radius: 6px;
-            background-color: {ACCENT_COLOR};
-            color: white;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Unified health check using query params or PATH_INFO
-    params = st.query_params
-    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if (
-        "1" in params.get("healthz", [])
-        or path_info == "/healthz"
-    ):
-        st.write("ok")
-        st.stop()
-        return
-
-    st.title("🤗//⚡//Launching main()")
-
-    if not PAGES_DIR.is_dir():
-        st.error("Pages directory not found")
-        render_landing_page()
-        return
-
-        # Define all pages and their corresponding module paths
-    # Order: Validation, Voting, Agents, Resonance Music, Social
-    pages = {
-        "Validation": "validation",
-        "Voting": "voting",
-        "Agents": "agents",
-        "Resonance Music": "resonance_music", # Correctly placed and named
-        "Social": "social",
-    }
-
-    # Initialize session state for layout control
-    if "nav_open" not in st.session_state:
-        st.session_state["nav_open"] = True
-    if "stats_open" not in st.session_state:
-        st.session_state["stats_open"] = True
-    # Store chosen page for persistent selection when nav is collapsed
-    if "nav_choice" not in st.session_state:
-        st.session_state["nav_choice"] = list(pages.keys())[0]
-
-    nav_open = st.session_state["nav_open"]
-    stats_open = st.session_state["stats_open"]
-
-    # Define column widths based on sidebar open/closed state
-    left_w = 2.5 if nav_open else 0.2
-    right_w = 1.5 if stats_open else 0.2
-    center_w = 10 - left_w - right_w # Adjust total width as needed, ensuring sum is reasonable for Streamlit
-
-    # Create the column layout
-    left_col, center_col, right_col = st.columns([left_w, center_w, right_w])
-
-    # Helper function to toggle sidebar state
-    def _toggle_sidebar(key: str) -> None:
-        st.session_state[key] = not st.session_state.get(key, True)
-
-    # --- Left Column (Navigation & Settings) ---
-    with left_col:
-        # Navigation toggle button
-        st.button("☰", on_click=_toggle_sidebar, args=("nav_open",), key="toggle_nav_btn")
-        if nav_open:
-            # Navigation menu
-            choice = option_menu(
-                menu_title=None,
-                options=list(pages.keys()),
-                # Combined icons, ensuring "music-note-beamed" is used for Resonance Music
-                icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-                orientation="vertical",
-                key="main_nav_menu" # Unique key for this menu
-            )
-            st.session_state["nav_choice"] = choice
-
-            # Environment and Settings (moved from original st.sidebar)
-            st.header("Environment")
-            # Assuming get_st_secrets is defined globally in ui.py
-            secrets = get_st_secrets()
-            database_url = secrets.get("DATABASE_URL")
-            secret_key = secrets.get("SECRET_KEY")
-
-            st.write(f"Database URL: {database_url or 'not set'}")
-            st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-            # Ensure session_start_ts is initialized, as it's used here
-            if "session_start_ts" not in st.session_state:
-                st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
-            st.write(f"Session start: {st.session_state['session_start_ts']} UTC")
-
-            if secret_key:
-                st.success("Secret key loaded")
-            else:
-                alert("SECRET_KEY missing", "warning")
-
-            st.divider()
-            st.subheader("Settings")
-            demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True, key="mode_radio_global")
-            demo_mode = demo_mode_choice == "Demo"
-            theme_selector("Theme") # Assuming theme_selector is defined elsewhere in ui.py
-
-            # Assuming VCConfig is imported and available
-            if 'VCConfig' in globals() and VCConfig is not None:
-                VCConfig.HIGH_RISK_THRESHOLD = st.slider(
-                    "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05, key="risk_slider_global"
-                )
-            else:
-                st.info("VCConfig not available for High Risk Threshold setting.")
-
-            # File uploader and Run Analysis button (moved from original st.sidebar)
-            st.markdown("---") # Visual separator
-            st.markdown("Upload validations JSON (drag/drop)")
-            uploaded_file = st.file_uploader("", type="json", key="file_uploader_global")
-            run_clicked = st.button("Run Analysis", key="run_analysis_btn_global")
-            
-            # Agent Playground, Governance View, Dev Tools (moved from original st.sidebar)
-            st.divider()
-            st.subheader("Agent Playground")
-            agent_names = list(AGENT_REGISTRY.keys()) if 'AGENT_REGISTRY' in globals() else []
-            agent_choice = st.selectbox("Agent", agent_names, key="agent_select_global")
-            agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description") if agent_choice else None
-            if agent_desc:
-                st.caption(agent_desc)
-            render_api_key_ui() # Assuming this renders into the current container
-            # The backend_choice, api_key, event_type, payload_txt, run_agent_clicked
-            # variables from the original sidebar logic need to be handled.
-            # For this replacement, we assume render_api_key_ui() handles its own internal state
-            # or returns values that are then used by a global agent execution logic.
-            # If these were directly used by run_agent_clicked, that logic needs to be adapted.
-            # For simplicity of this replacement, we assume the widgets are rendered.
-            event_type = st.text_input("Event", value="LLM_INCOMING", key="event_type_global")
-            payload_txt = st.text_area("Payload JSON", value="{}", height=100, key="payload_json_global")
-            run_agent_clicked = st.button("Run Agent", key="run_agent_btn_global")
-            render_simulation_stubs() # Assuming this renders into the current container
-
-            st.divider()
-            governance_view = st.checkbox(
-                "Governance View", value=st.session_state.get("governance_view", False), key="governance_view_global"
-            )
-            st.session_state["governance_view"] = governance_view
-
-            show_dev = st.checkbox("Dev Tools", key="dev_tools_global")
-            if show_dev:
-                dev_tabs = st.tabs(
-                    [
-                        "Fork Universe",
-                        "Universe State Viewer",
-                        "Run Introspection Audit",
-                        "Agent Logs",
-                        "Inject Event",
-                        "Session Inspector",
-                        "Playground",
-                    ], key="dev_tabs_global"
-                )
-
-                # Dev Tools Tab Content (ensure these are adapted to the current container)
-                with dev_tabs[0]: # Fork Universe
-                    if cosmic_nexus and SessionLocal and Harmonizer:
-                        with SessionLocal() as db:
-                            user = db.query(Harmonizer).first()
-                            if user and st.button("Fork with Mock Config", key="fork_mock_config_btn"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
-                                    )
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
-                    else:
-                        st.info("Fork operation unavailable")
-
-                with dev_tabs[1]: # Universe State Viewer
-                    if SessionLocal and UniverseBranch:
-                        with SessionLocal() as db:
-                            records = (
-                                db.query(UniverseBranch)
-                                .order_by(UniverseBranch.timestamp.desc())
-                                .limit(5)
-                                .all()
-                            )
-                            if records:
-                                for r in records:
-                                    st.write(
-                                        {
-                                            "id": r.id,
-                                            "status": r.status,
-                                            "timestamp": r.timestamp,
-                                        }
-                                    )
-                            else:
-                                st.write("No forks recorded")
-                    else:
-                        st.info("Database unavailable")
-
-                with dev_tabs[2]: # Run Introspection Audit
-                    hid = st.text_input("Hypothesis ID", key="audit_id_global")
-                    if st.button("Run Audit", key="run_audit_btn_global") and hid:
-                        if dispatch_route and SessionLocal:
-                            with SessionLocal() as db:
-                                with st.spinner("Working on it..."):
-                                    try:
-                                        result = _run_async(
-                                            dispatch_route(
-                                                "trigger_full_audit",
-                                                {"hypothesis_id": hid},
-                                                db=db,
-                                            )
-                                        )
-                                        st.json(result)
-                                        st.toast("Success!")
-                                    except Exception as exc:
-                                        st.error(f"Audit failed: {exc}")
-                        elif run_full_audit and SessionLocal:
-                            with SessionLocal() as db:
-                                with st.spinner("Working on it..."):
-                                    try:
-                                        result = run_full_audit(hid, db)
-                                        st.json(result)
-                                        st.toast("Success!")
-                                    except Exception as exc:
-                                        st.error(f"Audit failed: {exc}")
-                        else:
-                            st.info("Audit functionality unavailable")
-
-                with dev_tabs[3]: # Agent Logs
-                    log_path = Path("logchain_main.log")
-                    if not log_path.exists():
-                        log_path = Path("remix_logchain.log")
-                    if log_path.exists():
-                        try:
-                            lines = log_path.read_text().splitlines()[-100:]
-                            st.text("\n".join(lines))
-                        except Exception as exc:
-                            st.error(f"Log read failed: {exc}")
-                    else:
-                        st.info("No log file found")
-
-                with dev_tabs[4]: # Inject Event
-                    event_json = st.text_area(
-                        "Event JSON", value="{}", height=150, key="inject_event_global"
-                    )
-                    if st.button("Process Event", key="process_event_btn_global"):
-                        if agent:
-                            try:
-                                event = json.loads(event_json or "{}")
-                                agent.process_event(event)
-                                st.success("Event processed")
-                            except Exception as exc:
-                                st.error(f"Event failed: {exc}")
-                        else:
-                            st.info("Agent unavailable")
-
-                with dev_tabs[5]: # Session Inspector
-                    st.write("Available agents:", list(AGENT_REGISTRY.keys()) if 'AGENT_REGISTRY' in globals() else [])
-                    if cosmic_nexus:
-                        st.write(
-                            "Sub universes:",
-                            list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
-                        )
-                    if (
-                        agent
-                        and InMemoryStorage
-                        and isinstance(agent.storage, InMemoryStorage)
-                    ):
-                        st.write(
-                            f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
-                        )
-                    elif agent:
-                        try:
-                            user_count = len(agent.storage.get_all_users())
-                        except Exception:
-                            user_count = "?"
-                        st.write(f"User count: {user_count}")
-
-                with dev_tabs[6]: # Playground
-                    flow_txt = st.text_area(
-                        "Agent Flow JSON",
-                        "[]",
-                        height=150,
-                        key="flow_json_global",
-                    )
-                    if st.button("Run Flow", key="run_flow_btn_global"):
-                        try:
-                            steps = json.loads(flow_txt or "[]")
-                            results = []
-                            for step in steps:
-                                a_name = step.get("agent")
-                                agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
-                                evt = step.get("event", {})
-                                if agent_cls:
-                                    backend_fn = get_backend("dummy")
-                                    a = agent_cls(llm_backend=backend_fn)
-                                    results.append(a.process_event(evt))
-                            st.json(results)
-                        except Exception as exc:
-                            st.error(f"Flow execution failed: {exc}")
-
-        else:
-            # When navigation is collapsed, still remember the choice
-            choice = st.session_state.get("nav_choice", list(pages.keys())[0])
-
-    # --- Right Column (Quick Stats) ---
-    with right_col:
-        # Stats toggle button
-        st.button("Stats", on_click=_toggle_sidebar, args=("stats_open",), key="toggle_stats_btn")
-        if stats_open:
-            st.markdown("### Quick Stats")
-            st.write(f"Runs: {st.session_state.get('run_count', 0)}")
-            st.write(f"Proposals: {len(AGENT_REGISTRY) if 'AGENT_REGISTRY' in globals() else 'N/A'}")
-            # Add more quick stats here if desired (e.g., from other pages' data)
-
-    # --- Center Column (Main Page Content) ---
-    with center_col:
-        log("DEBUG: Inside center_col") # Added debug log
-        # Main app title
-        st.title("🤗//⚡//superNova_2177")
-
-        # Dynamically import and render the selected page's main function
+        # Load CSS safely
         try:
-            module = import_module(
-                f"transcendental_resonance_frontend.pages.{pages[choice]}"
-            )
-            page_main = getattr(module, "main", None)
-            if callable(page_main):
-                # Pass the center_col as the main container for all pages
-                # For Validation page, we also pass the left_col as its specific sidebar
-                if choice == "Validation":
-                    render_validation_ui(sidebar=left_col, main_container=center_col)
-                else:
-                    page_main(main_container=center_col)
-            else:
-                st.error(f"Page '{choice}' is missing a main() function.")
-        except Exception as exc:
-            import traceback
-            tb = traceback.format_exc()
-            st.error(f"❌ Error loading page '{choice}':")
-            st.text(tb)
-            print(tb, file=sys.stderr)
-        log("DEBUG: Exiting center_col") # Added debug log
+            from components.modern_ui import load_css
+            load_css()
+        except Exception:
+            pass  # Fail silently
 
-    log("DEBUG: End of main function") # Added debug log
+        # Health check
+        params = st.query_params
+        if "1" in params.get("healthz", []):
+            st.write("ok")
+            st.stop()
+            return
+
+        # Initialize session state safely
+        if "initialized" not in st.session_state:
+            st.session_state.update({
+                "initialized": True,
+                "theme": "dark",
+                "demo_mode": True,
+                "errors": []
+            })
+
+        # Render main UI with error recovery
+        try:
+            render_validation_ui()
+        except Exception as e:
+            st.error(f"UI Rendering Error: {str(e)}")
+            st.code(f"Error details: {repr(e)}")
+            if st.button("🔄 Reset Application", key="reset_main_ui"):
+                st.session_state.clear()
+                st.rerun()
+
+    except Exception as e:
+        st.error(f"Critical Application Error: {str(e)}")
+        st.code(f"Stack trace: {repr(e)}")
 
 
 if __name__ == "__main__":
