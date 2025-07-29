@@ -96,10 +96,11 @@ def inject_global_styles() -> None:
     st.markdown(
         """
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body, .stApp {
             background-color: var(--background, #F0F2F6);
             color: var(--text-color, #333333);
-            font-family: var(--font-family, "Inter", sans-serif);
+            font-family: var(--font-family, 'Inter', sans-serif);
         }
         .custom-container {
             padding: 1rem;
@@ -117,7 +118,15 @@ def inject_global_styles() -> None:
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         }
-        .stButton>button {border-radius:6px; background-color: var(--primary-color, #0A84FF); color: var(--text-color, #FFFFFF);}
+        .stButton>button {
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--primary-color, #0A84FF), #2F70FF);
+            color: var(--text-color, #FFFFFF);
+            transition: filter 0.2s ease-in-out;
+        }
+        .stButton>button:hover {
+            filter: brightness(1.1);
+        }
         </style>
         """,
         unsafe_allow_html=True,
