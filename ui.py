@@ -529,9 +529,9 @@ def render_validation_ui(sidebar: "st.delta_generator.DeltaGenerator" | None = N
                 alert("Demo file not found", "warning")
             st.rerun()
 
-secrets = get_st_secrets()
-secret_key = secrets.get("SECRET_KEY")
-database_url = secrets.get("DATABASE_URL")
+    secrets = get_st_secrets()
+    secret_key = secrets.get("SECRET_KEY")
+    database_url = secrets.get("DATABASE_URL")
 
     with sidebar:
         st.header("Environment")
