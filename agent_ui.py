@@ -16,6 +16,32 @@ from voting_ui import (
 )
 from ui_utils import summarize_text, load_rfc_entries
 
+def render_agent_insights_tab() -> None:
+    """Display diary, RFC summaries and internal notes."""
+    st.subheader("Virtual Diary")
+    with st.expander("📘 Notes", expanded=False):
+        # Your code for the diary notes and export buttons goes here
+        st.write("Diary section placeholder.")
+
+    st.subheader("RFCs and Agent Insights")
+    with st.expander("Proposed RFCs", expanded=False):
+        # Your code for listing and summarizing RFCs goes here
+        st.write("RFCs section placeholder.")
+
+    st.subheader("Protocols")
+    with st.expander("Repository Protocols", expanded=False):
+        # Your code for listing protocol files goes here
+        st.write("Protocols section placeholder.")
+
+    notes_path = Path("AgentNotes.md")
+    if notes_path.exists():
+        notes_content = notes_path.read_text()
+    else:
+        notes_content = "No notes found."
+
+    with st.expander("Agent’s Internal Thoughts"):
+        st.markdown(notes_content)
+
 BOX_CSS = """
 <style>
 .tab-box {
