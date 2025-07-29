@@ -10,7 +10,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     AgGrid = None  # type: ignore
     GridOptionsBuilder = None  # type: ignore
-from streamlit_helpers import alert, inject_global_styles
+from streamlit_helpers import alert, inject_global_styles, theme_selector
 
 try:
     from frontend_bridge import dispatch_route
@@ -364,6 +364,7 @@ def render_voting_tab(main_container=None) -> None:
         main_container = st
 
     with main_container:
+        theme_selector("Theme")
         inject_global_styles()
         sub1, sub2, sub3, sub4 = st.tabs(
             [

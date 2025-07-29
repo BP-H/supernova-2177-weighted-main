@@ -53,13 +53,37 @@ def apply_theme(theme: str) -> None:
     if theme == "dark":
         css = """
             <style>
-            body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
+            @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
+            :root {
+                --background: #181818;
+                --secondary-bg: #242424;
+                --text-color: #e8e6e3;
+                --primary-color: #4a90e2;
+                --font-family: 'Iosevka', monospace;
+            }
+            body, .stApp {
+                background-color: var(--background);
+                color: var(--text-color);
+                font-family: var(--font-family);
+            }
+            a { color: var(--primary-color); }
             </style>
         """
     else:
         css = """
             <style>
-            body, .stApp { background-color: #ffffff; color: #000000; }
+            :root {
+                --background: #F0F2F6;
+                --secondary-bg: #FFFFFF;
+                --text-color: #333333;
+                --primary-color: #0A84FF;
+                --font-family: 'Inter', sans-serif;
+            }
+            body, .stApp {
+                background-color: var(--background);
+                color: var(--text-color);
+                font-family: var(--font-family);
+            }
             </style>
         """
     st.markdown(css, unsafe_allow_html=True)
@@ -71,8 +95,9 @@ def inject_global_styles() -> None:
         """
         <style>
         body, .stApp {
-            background-color: #F0F2F6;
-            font-family: "Inter", sans-serif;
+            background-color: var(--background, #F0F2F6);
+            color: var(--text-color, #333333);
+            font-family: var(--font-family, "Inter", sans-serif);
         }
         .custom-container {
             padding: 1rem;
@@ -80,16 +105,17 @@ def inject_global_styles() -> None:
             border: 1px solid rgba(0,0,0,0.05);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
+            background-color: var(--secondary-bg, #FFFFFF);
         }
         .card {
-            background-color: #FFFFFF;
+            background-color: var(--secondary-bg, #FFFFFF);
             padding: 1rem;
             border: 1px solid rgba(0,0,0,0.1);
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         }
-        .stButton>button {border-radius:6px;}
+        .stButton>button {border-radius:6px; background-color: var(--primary-color, #0A84FF); color: var(--text-color, #FFFFFF);}
         </style>
         """,
         unsafe_allow_html=True,
