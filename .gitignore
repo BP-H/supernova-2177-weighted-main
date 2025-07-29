@@ -3,6 +3,9 @@ venv/
 
 # Test files
 tests/
+!tests/
+!transcendental_resonance_frontend/tests/
+!tests/conftest.py
 
 # Python cache
 __pycache__/

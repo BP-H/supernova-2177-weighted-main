@@ -7,6 +7,11 @@ try:
 except Exception:  # pragma: no cover - streamlit not available
     st = None  # type: ignore
 
+from datetime import datetime
+from typing import Optional
+
+from causal_graph import InfluenceGraph
+
 # Mapping of display name -> (model identifier, session_state key)
 PROVIDERS = {
     "Dummy": ("dummy", None),
@@ -45,11 +50,61 @@ def render_api_key_ui(default: str = "Dummy") -> dict[str, str | None]:
     return {"model": model, "api_key": key_val or st.session_state.get(key_name)}
 
 
+def record_simulation_event(
+    session: dict,
+    source: str,
+    target: str,
+    edge_type: str,
+    timestamp: Optional[str] = None,
+) -> InfluenceGraph:
+    """Store an interaction and return the updated graph."""
+    graph: InfluenceGraph = session.setdefault("simulation_graph", InfluenceGraph())
+    events = session.setdefault("simulation_events", [])
+
+    try:
+        ts = datetime.fromisoformat(timestamp) if timestamp else datetime.utcnow()
+    except Exception:
+        ts = datetime.utcnow()
+
+    graph.add_interaction(source, target, edge_type=edge_type, timestamp=ts)
+    events.append({"source": source, "target": target, "edge_type": edge_type, "timestamp": ts})
+    return graph
+
+
 def render_simulation_stubs() -> None:
-    """Placeholder inputs for upcoming simulation features."""
+    """Interactive form to capture simple simulation events."""
     if st is None:
         return
-    with st.expander("Future Simulation Inputs", expanded=False):
-        st.text("Video upload - coming soon")
-        st.text("Causal event modeling - TODO")
-        st.text("Symbolic voting - TODO")
+
+    st.session_state.setdefault("simulation_graph", InfluenceGraph())
+    st.session_state.setdefault("simulation_events", [])
+
+    with st.expander("Simulation Event Input", expanded=False):
+        with st.form("sim_event_form"):
+            source = st.text_input("Source Node ID")
+            target = st.text_input("Target Node ID")
+            edge_type = st.text_input("Edge Type", value="follow")
+            ts_str = st.text_input("Timestamp (ISO)", value=datetime.utcnow().isoformat())
+            submitted = st.form_submit_button("Add Event")
+        if submitted:
+            record_simulation_event(st.session_state, source, target, edge_type, ts_str)
+            st.success("Event recorded")
+
+        graph: InfluenceGraph = st.session_state["simulation_graph"]
+        if graph.graph.number_of_edges() > 0:
+            try:
+                import networkx as nx  # type: ignore
+                import matplotlib.pyplot as plt  # type: ignore
+
+                fig, ax = plt.subplots()
+                pos = nx.spring_layout(graph.graph)
+                nx.draw_networkx(graph.graph, pos=pos, ax=ax)
+                st.pyplot(fig)
+            except Exception:
+                st.info("Install networkx and matplotlib for graph display")
+
+        trace_id = st.text_input("Trace Node", key="trace_node")
+        if trace_id:
+            st.write("Ancestors", graph.trace_to_ancestors(trace_id, max_depth=3))
+            st.write("Descendants", graph.trace_to_descendants(trace_id, max_depth=3))
+
