@@ -493,114 +493,35 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
-def render_validation_ui(sidebar=None, main_container=None, center_col=None):
-    """Render validation UI with error handling and fallbacks."""
+def render_validation_ui(
+    sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
+    main_container: Optional[st.delta_generator.DeltaGenerator] = None,
+) -> None:
+    """Main entry point for the validation analysis UI with error handling."""
+    if sidebar is None:
+        sidebar = st.sidebar
     if main_container is None:
         main_container = st
 
     try:
-        with main_container:
-            if st.session_state.get("critical_error"):
-                st.error("Application Error: " + st.session_state["critical_error"])
-                if st.button("Reset Application"):
-                    st.session_state.clear()
-                    st.rerun()
-                return
+        # Check for critical errors first
+        if st.session_state.get("critical_error"):
+            st.error("Application Error: " + st.session_state["critical_error"])
+            if st.button("Reset Application", key="reset_app_critical"):
+                st.session_state.clear()
+                st.rerun()
+            return
 
-            render_validation_content_safe()
-
-    except Exception as e:
-        st.error(f"Rendering Error: {str(e)}")
-        st.session_state["critical_error"] = str(e)
-        if st.button("Clear Error & Restart"):
+        # Render safe validation content
+        render_validation_content_safe(sidebar=sidebar, main_container=main_container)
+        
+    except Exception as exc:
+        st.session_state["critical_error"] = str(exc)
+        st.error(f"Rendering Error: {str(exc)}")
+        if st.button("Clear Error & Restart", key="clear_error_restart"):
             st.session_state.clear()
             st.rerun()
 
-
-def render_validation_content_safe():
-    """Safe rendering with fallbacks."""
-    st.title("🚀 superNova_2177 Validation Analyzer")
-
-    col1, col2 = st.columns([3, 1])
-    with col2:
-        demo_mode = st.toggle("Demo Mode", value=True)
-
-    if demo_mode:
-        st.info("🎮 Running in Demo Mode - Using sample data for testing")
-        render_demo_content()
-    else:
-        render_live_content()
-
-
-def render_demo_content():
-    """Render demo content with sample data."""
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric("Runs", "0", delta="0")
-    with col2:
-        st.metric("Proposals", "12", delta="+2")
-    with col3:
-        st.metric("Success Rate", "94.2%", delta="+1.2%")
-    with col4:
-        st.metric("Accuracy", "98.5%", delta="+0.3%")
-
-    st.subheader("📋 Validation Input")
-
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        validation_text = st.text_area(
-            "Validations JSON",
-            value='{"sample": "validation", "status": "demo"}',
-            height=200,
-        )
-
-    with col2:
-        st.selectbox("View Mode", ["force", "gentle", "analysis"])
-
-        if st.button("🔍 Run Analysis", type="primary"):
-            st.success("✅ Demo analysis completed!")
-            st.json(
-                {
-                    "result": "success",
-                    "score": 95.7,
-                    "recommendations": [
-                        "Optimize validation logic",
-                        "Add error handling",
-                    ],
-                }
-            )
-
-
-def render_live_content():
-    """Render live content when not in demo mode."""
-    st.warning("⚠️ Live mode requires database connection")
-
-    if not DATABASE_AVAILABLE:
-        st.error("Database not available. Please enable Demo Mode for testing.")
-        return
-
-    st.info("Live validation features would be rendered here")
-
-
-def render_dev_controls():
-    """Development controls for testing."""
-    if st.sidebar.checkbox("🛠️ Developer Mode"):
-        st.sidebar.subheader("Debug Info")
-        st.sidebar.json({
-            "session_state_keys": list(st.session_state.keys()),
-            "database_available": DATABASE_AVAILABLE,
-            "theme": st.session_state.get("theme", "unknown"),
-        })
-
-        if st.sidebar.button("Clear Session"):
-            st.session_state.clear()
-            st.rerun()
-
-        if st.sidebar.button("Trigger Test Error"):
-            raise Exception("Test error for debugging")
-
-import streamlit as st
 
 def main() -> None:
     """Entry point with comprehensive error handling."""
@@ -608,38 +529,39 @@ def main() -> None:
         st.set_page_config(
             page_title="superNova_2177",
             layout="wide",
-            initial_sidebar_state="expanded",
+            initial_sidebar_state="expanded"
         )
 
+        # Load CSS safely
         try:
+            from components.modern_ui import load_css
             load_css()
         except Exception:
-            st.warning("Custom CSS failed to load, using defaults")
+            pass  # Fail silently
 
+        # Health check
         params = st.query_params
         if "1" in params.get("healthz", []):
             st.write("ok")
             st.stop()
             return
 
+        # Initialize session state safely
         if "initialized" not in st.session_state:
-            st.session_state.update(
-                {
-                    "initialized": True,
-                    "theme": "dark",
-                    "demo_mode": True,
-                    "errors": [],
-                }
-            )
+            st.session_state.update({
+                "initialized": True,
+                "theme": "dark",
+                "demo_mode": True,
+                "errors": []
+            })
 
-        render_dev_controls()
-
+        # Render main UI with error recovery
         try:
             render_validation_ui()
         except Exception as e:
             st.error(f"UI Rendering Error: {str(e)}")
             st.code(f"Error details: {repr(e)}")
-            if st.button("🔄 Reset Application"):
+            if st.button("🔄 Reset Application", key="reset_main_ui"):
                 st.session_state.clear()
                 st.rerun()
 
