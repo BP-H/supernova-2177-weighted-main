@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 streamlit
 pytest
 pytest-asyncio>=0.23
@@ -42,3 +45,5 @@ kaleido
 websockets
 plotly
 pyvis
+streamlit-option-menu
+streamlit-aggrid
