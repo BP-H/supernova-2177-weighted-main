@@ -16,32 +16,6 @@ from voting_ui import (
 )
 from ui_utils import summarize_text, load_rfc_entries
 
-def render_agent_insights_tab() -> None:
-    """Display diary, RFC summaries and internal notes."""
-    st.subheader("Virtual Diary")
-    with st.expander("📘 Notes", expanded=False):
-        # Your code for the diary notes and export buttons goes here
-        st.write("Diary section placeholder.")
-
-    st.subheader("RFCs and Agent Insights")
-    with st.expander("Proposed RFCs", expanded=False):
-        # Your code for listing and summarizing RFCs goes here
-        st.write("RFCs section placeholder.")
-
-    st.subheader("Protocols")
-    with st.expander("Repository Protocols", expanded=False):
-        # Your code for listing protocol files goes here
-        st.write("Protocols section placeholder.")
-
-    notes_path = Path("AgentNotes.md")
-    if notes_path.exists():
-        notes_content = notes_path.read_text()
-    else:
-        notes_content = "No notes found."
-
-    with st.expander("Agent’s Internal Thoughts"):
-        st.markdown(notes_content)
-
 BOX_CSS = """
 <style>
 .tab-box {
@@ -54,10 +28,13 @@ BOX_CSS = """
 """
 
 
-def render_agent_insights_tab() -> None:
+def render_agent_insights_tab(main_container=None) -> None:
     """Display diary, RFC summaries and internal notes."""
+    if main_container is None:
+        main_container = st
+
     inject_global_styles()
-    with st.container():
+    with main_container:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         st.subheader("Virtual Diary")
         with st.expander("📘 Notes", expanded=False):
@@ -172,14 +149,10 @@ def render_agent_insights_tab() -> None:
                 "Agent Ops",
                 "Logs",
             ])
-            with tabs[0]:
-                render_proposals_tab()
-            with tabs[1]:
-                render_governance_tab()
-            with tabs[2]:
-                render_agent_ops_tab()
-            with tabs[3]:
-                render_logs_tab()
+            render_proposals_tab(main_container=tabs[0])
+            render_governance_tab(main_container=tabs[1])
+            render_agent_ops_tab(main_container=tabs[2])
+            render_logs_tab(main_container=tabs[3])
         else:
             st.info("Enable Governance View in the sidebar to see governance features.")
         st.markdown("</div>", unsafe_allow_html=True)
