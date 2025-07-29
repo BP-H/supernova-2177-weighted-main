@@ -382,6 +382,19 @@ ancestor/descendant traces update as you submit events.
 
 Use the **Resonance Music** page to generate simple MIDI snippets and view the metrics returned by the `/resonance-summary` endpoint.
 
+### Starting the Backend
+
+The API must be reachable at [http://localhost:8000](http://localhost:8000). Start it with:
+
+```bash
+uvicorn superNova_2177:app --reload --port 8000
+# or
+python superNova_2177.py
+```
+
+The Streamlit page expects this backend by default. If you run it elsewhere, set
+the `BACKEND_URL` environment variable so the UI can find the API.
+
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
