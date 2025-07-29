@@ -27,7 +27,7 @@ __all__ = [
     "validator_graph_page",
     "debug_panel_page",
     "video_chat_page",
-    "moderation_page",
+    "moderation_dashboard_page", # Keeping this name for clarity and consistency
 ]
 
 

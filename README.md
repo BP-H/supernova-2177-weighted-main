@@ -380,6 +380,21 @@ A small simulation form captures interactions between nodes. Enter a source, tar
 edge type and timestamp to build an in-memory `InfluenceGraph`. The graph preview and
 ancestor/descendant traces update as you submit events.
 
+Use the **Resonance Music** page to generate simple MIDI snippets and view the metrics returned by the `/resonance-summary` endpoint.
+
+### Starting the Backend
+
+The API must be reachable at [http://localhost:8000](http://localhost:8000). Start it with:
+
+```bash
+uvicorn superNova_2177:app --reload --port 8000
+# or
+python superNova_2177.py
+```
+
+The Streamlit page expects this backend by default. If you run it elsewhere, set
+the `BACKEND_URL` environment variable so the UI can find the API.
+
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
@@ -479,6 +494,7 @@ During development, you can also open `/ui/debug_panel` in the NiceGUI
 frontend to interactively invoke these routes. The panel lists every
 registered name with a JSON payload editor and uses `dispatch_route` under
 the hood.
+Moderators can visit `/moderation` to review flagged posts in the new Moderation Dashboard.
  
 ### Frontend Bridge & Social Hooks
 

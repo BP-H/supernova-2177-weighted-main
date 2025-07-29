@@ -2706,6 +2706,12 @@ def get_system_status(
     }
 
 
+@app.get("/healthz", tags=["System"])
+def healthz():
+    """Simple health check endpoint."""
+    return {"status": "ok"}
+
+
 @app.get("/universe/info", tags=["System"])
 def universe_info() -> Dict[str, str]:
     """Return details about the current database configuration."""
