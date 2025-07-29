@@ -298,3 +298,14 @@ async def combined_search(query: str) -> list[Dict[str, Any]]:
             results.append({"type": "event", "label": label, "id": ev.get("id")})
 
     return results
+
+
+async def get_flagged_items() -> list[Dict[str, Any]]:
+    """Return content flagged for moderation."""
+    return await api_call("GET", "/moderation/flags") or []
+
+
+async def perform_moderation_action(flag_id: str, action: str) -> Optional[Dict[str, Any]]:
+    """Send a moderation decision for the given flag."""
+    data = {"action": action}
+    return await api_call("POST", f"/moderation/flags/{flag_id}", data)
