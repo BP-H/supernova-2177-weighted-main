@@ -5,6 +5,7 @@
 
 from pathlib import Path
 import streamlit as st
+from streamlit_helpers import inject_global_styles
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
@@ -50,6 +51,7 @@ def load_rfc_entries(rfc_dir: Path):
 
 def render_main_ui() -> None:
     """Render a minimal placeholder for the Streamlit dashboard."""
+    inject_global_styles()
     st.title("superNova_2177")
     st.write("UI initialization complete.")
 

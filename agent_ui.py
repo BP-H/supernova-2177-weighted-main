@@ -1,9 +1,13 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 import json
 from pathlib import Path
 from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
+from streamlit_helpers import inject_global_styles
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
@@ -15,15 +19,17 @@ from ui_utils import summarize_text, load_rfc_entries
 
 def render_agent_insights_tab() -> None:
     """Display diary, RFC summaries and internal notes."""
+    inject_global_styles()
     st.subheader("Virtual Diary")
-    with st.expander("📘 Notes", expanded=False):
-        diary_note = st.text_input("Add note")
-        rfc_input = st.text_input("Referenced RFC IDs (comma separated)")
-        if st.button("Append Note"):
-            entry = {
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                "note": diary_note,
-            }
+    with st.container():
+        with st.expander("📘 Notes", expanded=False):
+            diary_note = st.text_input("Add note")
+            rfc_input = st.text_input("Referenced RFC IDs (comma separated)")
+            if st.button("Append Note"):
+                entry = {
+                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                    "note": diary_note,
+                }
             rfc_ids = [r.strip() for r in rfc_input.split(",") if r.strip()]
             if rfc_ids:
                 entry["rfc_ids"] = rfc_ids
@@ -54,10 +60,11 @@ def render_agent_insights_tab() -> None:
         )
 
     st.subheader("RFCs and Agent Insights")
-    with st.expander("Proposed RFCs", expanded=False):
-        rfc_dir = Path("rfcs")
-        filter_text = st.text_input("Filter RFCs")
-        preview_all = st.checkbox("Preview full text")
+    with st.container():
+        with st.expander("Proposed RFCs", expanded=False):
+            rfc_dir = Path("rfcs")
+            filter_text = st.text_input("Filter RFCs")
+            preview_all = st.checkbox("Preview full text")
 
         rfc_entries, rfc_index = load_rfc_entries(rfc_dir)
 
@@ -103,11 +110,12 @@ def render_agent_insights_tab() -> None:
                 st.markdown(rfc["text"], unsafe_allow_html=True)
 
     st.subheader("Protocols")
-    with st.expander("Repository Protocols", expanded=False):
-        proto_dir = Path("protocols")
-        files = sorted([p for p in proto_dir.glob("*.py") if p.is_file()])
-        for file in files:
-            st.markdown(f"- [{file.name}]({file.as_posix()})")
+    with st.container():
+        with st.expander("Repository Protocols", expanded=False):
+            proto_dir = Path("protocols")
+            files = sorted([p for p in proto_dir.glob("*.py") if p.is_file()])
+            for file in files:
+                st.markdown(f"- [{file.name}]({file.as_posix()})")
 
     notes_path = Path("AgentNotes.md")
     if notes_path.exists():
@@ -115,8 +123,9 @@ def render_agent_insights_tab() -> None:
     else:
         notes_content = "No notes found."
 
-    with st.expander("Agent’s Internal Thoughts"):
-        st.markdown(notes_content)
+    with st.container():
+        with st.expander("Agent’s Internal Thoughts"):
+            st.markdown(notes_content)
 
     if st.session_state.get("governance_view"):
         tabs = st.tabs([

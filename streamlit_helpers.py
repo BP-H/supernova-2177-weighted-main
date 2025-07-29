@@ -16,18 +16,20 @@ import streamlit as st
 
 
 def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> None:
-    """Display a styled Markdown alert box."""
+    """Display a minimally intrusive alert box."""
+    icons = {"warning": "\u26A0", "error": "\u274C", "info": "\u2139"}
     colors = {
-        "warning": ("#fff4e5", "#e6a700"),
-        "error": ("#ffe5e5", "#c80000"),
-        "info": ("#e5f2ff", "#0049b5"),
+        "warning": ("#2c2b24", "#997a00"),
+        "error": ("#352626", "#cc0000"),
+        "info": ("#1f2d3d", "#1e88e5"),
     }
     bg_color, border_color = colors.get(level, colors["info"])
+    icon = icons.get(level, "")
     st.markdown(
-        f"<div style='border-left: 4px solid {border_color}; "
-        f"background-color: {bg_color}; padding: 0.5em; "
-        f"border-radius: 0 4px 4px 0; margin-bottom: 1em;'>"
-        f"{html.escape(message)}</div>",
+        f"<div class='custom-alert' style='border-left:4px solid {border_color};"
+        f"background-color:{bg_color};padding:0.5em;border-radius:4px;"
+        f"margin-bottom:1em;display:flex;align-items:center;gap:0.5rem;'>"
+        f"<span class='icon'>{icon}</span>{html.escape(message)}</div>",
         unsafe_allow_html=True,
     )
 
@@ -56,6 +58,25 @@ def apply_theme(theme: str) -> None:
             </style>
         """
     st.markdown(css, unsafe_allow_html=True)
+
+
+def inject_global_styles() -> None:
+    """Inject custom CSS styling for containers and buttons."""
+    st.markdown(
+        """
+        <style>
+        .custom-container {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            margin-bottom: 1rem;
+        }
+        .stButton>button {border-radius:6px;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def theme_selector(label: str = "Theme") -> str:
@@ -88,4 +109,5 @@ __all__ = [
     "apply_theme",
     "theme_selector",
     "centered_container",
+    "inject_global_styles",
 ]

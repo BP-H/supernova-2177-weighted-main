@@ -53,6 +53,7 @@ def log(msg: str) -> None:
 
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
+from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -916,7 +917,13 @@ def main() -> None:
         return
 
     render_main_ui()
-    choice = st.sidebar.selectbox("Page", page_files)
+    with st.sidebar:
+        choice = option_menu(
+            menu_title=None,
+            options=page_files,
+            icons=["robot", "people", "graph-up", "check2-square"],
+            orientation="vertical",
+        )
 
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
