@@ -2,8 +2,9 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 [theme]
-primaryColor="#1E88E5"
-backgroundColor="#0E1117"
-secondaryBackgroundColor="#262730"
-textColor="#FAFAFA"
-font="sans serif"
+# Custom professional palette for the Streamlit app
+primaryColor = "#0A84FF"
+backgroundColor = "#F0F2F6"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#333333"
+font = "sans serif"
