@@ -47,3 +47,4 @@ plotly
 pyvis
 streamlit-option-menu
 streamlit-aggrid
+st-aggrid
