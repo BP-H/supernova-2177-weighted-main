@@ -3,9 +3,8 @@
 # Legal & Ethical Safeguards
 [theme]
 # Custom professional palette for the Streamlit app
-base = "dark"
-primaryColor = "#0A84FF"
-backgroundColor = "#1e1e1e"
-secondaryBackgroundColor = "#1e1e1e"
-textColor = "#f0f0f0"
-font = "Iosevka"
+primaryColor = "#4A90E2"
+backgroundColor = "#181818"
+secondaryBackgroundColor = "#242424"
+textColor = "#E8E6E3"
+font = "monospace"
