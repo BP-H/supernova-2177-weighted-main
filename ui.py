@@ -512,7 +512,7 @@ def render_validation_ui() -> None:
             st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
         except FileNotFoundError:
             alert("Demo file not found", "warning")
-        st.experimental_rerun()
+        st.rerun()
 
     secrets = get_st_secrets()
     secret_key = secrets.get("SECRET_KEY")
