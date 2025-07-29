@@ -1,2 +1,6 @@
 import streamlit as st
-st.title("It Works!")
+from ui_utils import render_modern_layout
+
+
+if __name__ == "__main__":
+    render_modern_layout()
