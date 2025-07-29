@@ -2,9 +2,9 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 [theme]
-# Custom professional palette for the Streamlit app
-primaryColor = "#0A84FF"
-backgroundColor = "#F0F2F6"
-secondaryBackgroundColor = "#FFFFFF"
-textColor = "#333333"
-font = "sans serif"
+# Default Codex-inspired dark palette
+primaryColor = "#19C37D"
+backgroundColor = "#202123"
+secondaryBackgroundColor = "#343541"
+textColor = "#ECECF1"
+font = "monospace"

@@ -49,8 +49,19 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def apply_theme(theme: str) -> None:
-    """Apply light or dark theme styles based on ``theme``."""
-    if theme == "dark":
+    """Apply light, dark or Codex-inspired theme styles."""
+    if theme == "codex":
+        css = """
+            <style>
+            @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
+            body, .stApp {
+                background-color: #202123;
+                color: #ECECF1;
+                font-family: 'Iosevka', monospace;
+            }
+            </style>
+        """
+    elif theme == "dark":
         css = """
             <style>
             body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
@@ -100,10 +111,13 @@ def theme_selector(label: str = "Theme") -> str:
     """Render a radio selector for the app theme and return the choice."""
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
+    options = ["Light", "Dark", "Codex"]
+    current = st.session_state["theme"].capitalize()
+    idx = options.index(current) if current in options else 0
     choice = st.radio(
         label,
-        ["Light", "Dark"],
-        index=(1 if st.session_state["theme"] == "dark" else 0),
+        options,
+        index=idx,
         horizontal=True,
     )
     st.session_state["theme"] = choice.lower()

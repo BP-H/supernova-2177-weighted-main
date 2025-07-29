@@ -34,6 +34,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#F8F8F2",
         "gradient": "linear-gradient(135deg, #FF0080 0%, #00F0FF 100%)",
     },
+    "codex": {
+        "primary": "#19C37D",
+        "accent": "#19C37D",
+        "background": "#202123",
+        "text": "#ECECF1",
+        "gradient": "linear-gradient(135deg, #202123 0%, #343541 100%)",
+    },
     "high_contrast": {
         "primary": "#000000",
         "accent": "#FFFF00",
@@ -79,6 +86,11 @@ def apply_global_styles() -> None:
         font_family = "'Orbitron', sans-serif"
         font_link = (
             "<link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap\" rel=\"stylesheet\">"
+        )
+    elif ACTIVE_THEME_NAME == "codex":
+        font_family = "'Iosevka', monospace"
+        font_link = (
+            "<link href=\"https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap\" rel=\"stylesheet\">"
         )
 
     ui.add_head_html(
