@@ -13,6 +13,8 @@ from typing import Any
 import requests
 import streamlit as st
 from streamlit_helpers import alert, centered_container
+from streamlit_autorefresh import st_autorefresh
+from status_indicator import render_status_icon
 
 try:
     from frontend_bridge import dispatch_route
@@ -35,9 +37,13 @@ def _run_async(coro):
 
 def main() -> None:
     """Render music generation and summary widgets."""
+    st_autorefresh(interval=30000, key="status_ping")
 
     st.subheader("Resonance Music")
     centered_container()
+
+    with st.sidebar:
+        render_status_icon()
 
     profile = st.selectbox(
         "Select resonance profile",
@@ -72,3 +78,4 @@ def main() -> None:
             st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
         except Exception as exc:  # pragma: no cover - best effort
             alert(f"Failed to load summary: {exc}", "error")
+
