@@ -7,3 +7,9 @@ tests/
 # Python cache
 __pycache__/
 .pytest_cache/
+
+# Additional ignores
+*.py[cod]
+.DS_Store
+.idea/
+.env/
