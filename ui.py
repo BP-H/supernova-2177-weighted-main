@@ -25,10 +25,8 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
-Network = None  # imported lazily in run_analysis
 # Register fallback watcher for environments that can't use inotify
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 
@@ -200,14 +198,6 @@ def diff_results(old: dict | None, new: dict) -> str:
     return "\n".join(diff)
 
 
-def render_pyvis_to_html(net: Any) -> str:
-    """Return the interactive HTML for a PyVis network."""
-    try:
-        return net.generate_html(notebook=False)
-    except AttributeError:  # pragma: no cover - fallback for old pyvis
-        return net.generate_html()
-
-
 def generate_explanation(result: dict) -> str:
     """Generate a human readable integrity summary."""
     integrity = result.get("integrity_analysis", {})
@@ -226,27 +216,17 @@ def generate_explanation(result: dict) -> str:
 
 def run_analysis(validations, *, layout: str = "force"):
     """Execute the validation integrity pipeline and display results."""
-    global nx, plt, go, Network
+    global nx, go
     if nx is None:
         try:
             import networkx as nx  # type: ignore
         except ImportError:
             nx = None
-    if plt is None:
-        try:
-            import matplotlib.pyplot as plt  # type: ignore
-        except ImportError:
-            plt = None
     if go is None:
         try:
             import plotly.graph_objects as go  # type: ignore
         except ImportError:
             go = None
-    if Network is None:
-        try:
-            from pyvis.network import Network  # type: ignore
-        except ImportError:
-            Network = None
     if analyze_validation_integrity is None or build_validation_graph is None:
         st.error(
             "Required analysis modules are missing. Please install optional dependencies."
@@ -424,44 +404,8 @@ def run_analysis(validations, *, layout: str = "force"):
                 )
             except Exception as exc:  # pragma: no cover - optional
                 logger.warning(f"Image export failed: {exc}")
-        elif Network is not None:
-            net = Network(height="450px", width="100%")
-            max_rep = max(reputations.values()) if reputations else 1.0
-            for u, v, w in edges:
-                for node in (u, v):
-                    if node not in net.node_ids:
-                        rep = reputations.get(node)
-                        size = 15 + (rep or 0) * 20
-                        color = "#4da6ff"
-                        net.add_node(node, label=node, size=size, color=color)
-                net.add_edge(u, v, value=w)
-            st.subheader("Validator Coordination Graph")
-            html_data = render_pyvis_to_html(net)
-            st.components.v1.html(html_data, height=500)
-            st.download_button(
-                "Download Interactive HTML",
-                html_data,
-                file_name="graph.html",
-            )
-        elif plt is not None:
-            weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
-            node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
-            node_colors = [reputations.get(n, 0.5) for n in G.nodes()]
-            fig, ax = plt.subplots()
-            nx.draw(
-                G,
-                pos,
-                with_labels=True,
-                width=weights,
-                node_size=node_sizes,
-                node_color=node_colors,
-                cmap=plt.cm.viridis,
-                ax=ax,
-            )
-            st.subheader("Validator Coordination Graph")
-            st.pyplot(fig)
         else:
-            st.info("Install matplotlib or pyvis for graph visualization")
+            st.info("Install plotly for graph visualization")
     elif edges:
         st.info("Install networkx for graph visualization")
 
