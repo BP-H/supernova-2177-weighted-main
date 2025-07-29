@@ -10,6 +10,8 @@ import base64
 import os
 from typing import Any
 
+from streamlit_autorefresh import st_autorefresh
+
 import requests
 import streamlit as st
 from streamlit_helpers import alert, centered_container
@@ -26,7 +28,7 @@ def _check_backend() -> bool:
     """Return ``True`` if the backend is reachable."""
     try:
         resp = requests.get(f"{BACKEND_URL}/healthz", timeout=3)
-        resp.raise_for_status()
+        resp.raise_for_status() # This is generally more robust than checking for status_code == 200
     except Exception:
         return False
     return True
@@ -45,6 +47,13 @@ def _run_async(coro):
 
 def main() -> None:
     """Render music generation and summary widgets."""
+
+    st_autorefresh(interval=5000, key="health-ping")
+    indicator_color = "green" if backend_online() else "red"
+    st.markdown(
+        f"Backend: <span style='color:{indicator_color};font-size:1.2rem;'>\u25CF</span>",
+        unsafe_allow_html=True,
+    )
 
     st.subheader("Resonance Music")
     centered_container()
@@ -98,9 +107,9 @@ def main() -> None:
             data = resp.json()
             st.json(data.get("metrics", {}))
             st.write(f"MIDI bytes: {data.get('midi_bytes', 0)}")
-            st.toast("Summary loaded")
+            st.toast("Summary loaded") # Keep the success toast
         except Exception:  # pragma: no cover - best effort
             alert(
-                f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
+                f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.", # Keep the dynamic error message
                 "error",
             )
