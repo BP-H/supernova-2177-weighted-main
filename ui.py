@@ -450,23 +450,40 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
-def render_validation_ui(
-    sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
-    main_container: Optional[st.delta_generator.DeltaGenerator] = None,
-) -> None:
-    """Main entry point for the validation analysis UI.
+def render_demo_content(view: str) -> dict:
+    """Render the demo validation dataset and return the result."""
+    try:
+        with open(sample_path) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        alert("Demo file not found, using default dataset.", "warning")
+        data = {"validations": [{"validator": "A", "target": "B", "score": 0.9}]}
+    st.session_state["validations_json"] = json.dumps(data, indent=2)
+    return run_analysis(data.get("validations", []), layout=view)
 
-    Parameters
-    ----------
-    sidebar:
-        Container where navigation/environment settings should render.
-    main_container:
-        Container for the primary feed area.
-    """
-    if sidebar is None:
-        sidebar = st.sidebar
-    if main_container is None:
-        main_container = st
+
+def render_live_content(validations_input: str, uploaded_file, view: str) -> dict:
+    """Render live data supplied by the user and return the result."""
+    if validations_input.strip():
+        try:
+            data = json.loads(validations_input)
+        except json.JSONDecodeError as exc:
+            alert(f"Invalid JSON: {exc}", "error")
+            st.stop()
+    elif uploaded_file is not None:
+        data = json.load(uploaded_file)
+    else:
+        alert("Please upload a file or paste JSON.", "error")
+        st.stop()
+    st.session_state["validations_json"] = json.dumps(data, indent=2)
+    return run_analysis(data.get("validations", []), layout=view)
+
+
+def render_validation_content_safe(
+    sidebar: st.delta_generator.DeltaGenerator,
+    main_container: st.delta_generator.DeltaGenerator,
+) -> None:
+    """Render the validation UI content, handling demo and live modes."""
 
     with main_container:
         header("superNova_2177 Validation Analyzer", layout="wide")
@@ -757,37 +774,18 @@ def render_validation_ui(
 
     if run_clicked or rerun_clicked:
         if run_clicked:
-            if validations_input.strip():
-                try:
-                    data = json.loads(validations_input)
-                    st.session_state["validations_json"] = json.dumps(data, indent=2)
-                except json.JSONDecodeError as exc:
-                    alert(f"Invalid JSON: {exc}", "error")
-                    st.stop()
-            elif demo_mode:
-                try:
-                    with open(sample_path) as f:
-                        data = json.load(f)
-                except FileNotFoundError:
-                    alert("Demo file not found, using default dataset.", "warning")
-                    data = {
-                        "validations": [{"validator": "A", "target": "B", "score": 0.9}]
-                    }
-                st.session_state["validations_json"] = json.dumps(data, indent=2)
-            elif uploaded_file is not None:
-                data = json.load(uploaded_file)
-                st.session_state["validations_json"] = json.dumps(data, indent=2)
+            if demo_mode:
+                result = render_demo_content(view)
             else:
-                alert("Please upload a file, paste JSON, or enable demo mode.", "error")
-                st.stop()
+                result = render_live_content(validations_input, uploaded_file, view)
         else:
             try:
                 data = json.loads(st.session_state.get("validations_json", ""))
             except Exception as exc:
                 alert(f"Stored validations invalid: {exc}", "error")
                 st.stop()
+            result = run_analysis(data.get("validations", []), layout=view)
         prev_result = st.session_state.get("last_result")
-        result = run_analysis(data.get("validations", []), layout=view)
         diff = diff_results(prev_result, result)
         st.session_state["run_count"] += 1
         st.session_state["last_result"] = result
@@ -848,6 +846,27 @@ def render_validation_ui(
     if st.session_state.get("agent_output") is not None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
+
+
+def render_validation_ui(
+    sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
+    main_container: Optional[st.delta_generator.DeltaGenerator] = None,
+) -> None:
+    """Main entry point for the validation analysis UI."""
+    if sidebar is None:
+        sidebar = st.sidebar
+    if main_container is None:
+        main_container = st
+
+    try:
+        render_validation_content_safe(sidebar=sidebar, main_container=main_container)
+    except Exception as exc:  # pragma: no cover - defensive
+        st.session_state["critical_error"] = str(exc)
+        st.error(f"Critical error: {exc}")
+        if st.button("Reset Session"):
+            st.session_state.clear()
+            st.rerun()
+
 
 import streamlit as st
 
