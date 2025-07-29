@@ -5,7 +5,11 @@ import asyncio
 import json
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder
+try:
+    from st_aggrid import AgGrid, GridOptionsBuilder
+except Exception:  # pragma: no cover - optional dependency
+    AgGrid = None  # type: ignore
+    GridOptionsBuilder = None  # type: ignore
 from streamlit_helpers import alert, inject_global_styles
 
 try:
@@ -38,6 +42,12 @@ def _run_async(coro):
 
 def render_proposals_tab() -> None:
     """Display proposal creation, listing and voting controls."""
+    if AgGrid is None or GridOptionsBuilder is None:
+        alert(
+            "st_aggrid is not installed – proposal features unavailable.",
+            "warning",
+        )
+        return
     if dispatch_route is None:
         alert(
             "Governance routes not enabled—enable them in config.",
@@ -188,6 +198,12 @@ def render_proposals_tab() -> None:
 
 def render_governance_tab() -> None:
     """Display generic vote registry operations."""
+    if AgGrid is None or GridOptionsBuilder is None:
+        alert(
+            "st_aggrid is not installed – governance features unavailable.",
+            "warning",
+        )
+        return
     if dispatch_route is None:
         alert(
             "Governance routes not enabled—enable them in config.",

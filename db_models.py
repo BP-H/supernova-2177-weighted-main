@@ -629,6 +629,18 @@ class TokenListing(Base):
 MarketplaceListing = TokenListing
 
 
+class FlaggedItem(Base):
+    """Content flagged for moderation review."""
+
+    __tablename__ = "flagged_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    reason = Column(String, nullable=False)
+    status = Column(String, default="pending", index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 def init_db() -> None:
     """Create all tables defined in this module."""
     Base.metadata.create_all(bind=engine)

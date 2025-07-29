@@ -55,3 +55,9 @@ and follow `disclaimers.LEGAL_ETHICAL_SAFEGUARDS` for community use.
 |`create_proposal`|Create a new proposal.|
 |`list_proposals`|List existing proposals.|
 |`vote_proposal`|Vote on a proposal.|
+
+## system
+
+| Route | Description |
+|-------|-------------|
+|`healthz`|Health check endpoint.|

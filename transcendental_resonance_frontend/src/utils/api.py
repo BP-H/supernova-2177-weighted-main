@@ -304,3 +304,14 @@ async def get_resonance_summary(name: str) -> Optional[Dict[str, Any]]:
     """Return resonance metrics and optional MIDI for ``name``."""
     params = {"name": name}
     return await api_call("GET", "/resonance-summary", params)
+
+
+async def get_flagged_items() -> list[Dict[str, Any]]:
+    """Return content flagged for moderation."""
+    return await api_call("GET", "/moderation/flags") or []
+
+
+async def perform_moderation_action(flag_id: str, action: str) -> Optional[Dict[str, Any]]:
+    """Send a moderation decision for the given flag."""
+    data = {"action": action}
+    return await api_call("POST", f"/moderation/flags/{flag_id}", data)
