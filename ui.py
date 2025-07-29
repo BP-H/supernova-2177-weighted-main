@@ -116,7 +116,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any
+from typing import Any, Optional
 
 from agent_ui import render_agent_insights_tab
 from llm_backends import get_backend
@@ -450,23 +450,25 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
-def render_validation_ui(sidebar: "st.delta_generator.DeltaGenerator" | None = None,
-                          main: "st.delta_generator.DeltaGenerator" | None = None) -> None:
+def render_validation_ui(
+    sidebar: Optional[st.delta_generator.DeltaGenerator] = None,
+    main_container: Optional[st.delta_generator.DeltaGenerator] = None,
+) -> None:
     """Main entry point for the validation analysis UI.
 
     Parameters
     ----------
     sidebar:
         Container where navigation/environment settings should render.
-    main:
+    main_container:
         Container for the primary feed area.
     """
     if sidebar is None:
         sidebar = st.sidebar
-    if main is None:
-        main = st
+    if main_container is None:
+        main_container = st
 
-    with main:
+    with main_container:
         header("superNova_2177 Validation Analyzer", layout="wide")
 
         ts_placeholder = st.empty()
