@@ -878,6 +878,7 @@ def main() -> None:
         "Voting": "voting",
         "Agents": "agents",
         "Social": "social",
+        "Resonance Music": "resonance_music",
     }
 
     render_main_ui()
@@ -885,7 +886,7 @@ def main() -> None:
         choice = option_menu(
             menu_title=None,
             options=list(pages.keys()),
-            icons=["check2-square", "graph-up", "robot", "people"],
+            icons=["check2-square", "graph-up", "robot", "people", "music-note"],
             orientation="vertical",
         )
 

@@ -380,6 +380,8 @@ A small simulation form captures interactions between nodes. Enter a source, tar
 edge type and timestamp to build an in-memory `InfluenceGraph`. The graph preview and
 ancestor/descendant traces update as you submit events.
 
+Use the **Resonance Music** page to generate simple MIDI snippets and view the metrics returned by the `/resonance-summary` endpoint.
+
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
