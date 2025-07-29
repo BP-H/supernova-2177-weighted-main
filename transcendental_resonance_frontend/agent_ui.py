@@ -1,4 +1,7 @@
-# transcendental_resonance_frontend/pages/agent_ui.py
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""Agent Insights tab renderer for the Transcendental Resonance frontend."""
 
 import streamlit as st
 
