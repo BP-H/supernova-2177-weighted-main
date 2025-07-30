@@ -664,7 +664,8 @@ try:
     from social_tabs import render_social_tab
 except ImportError:
     def render_social_tab():
-        st.info("Social features not available")
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
 
 try:
     from voting_ui import render_voting_tab
@@ -672,38 +673,11 @@ except ImportError:
     def render_voting_tab():
         st.info("Voting module not available")
 
+# Fallback implementation defined earlier in the file
 try:
     from agent_ui import render_agent_insights_tab
-except ImportError:
-    def render_agent_insights_tab():
-        st.subheader("🤖 Agent Insights")
-        st.info("Agent insights not available")
-
-
-try:
-    from llm_backends import get_backend
-except ImportError:
-    def get_backend(name, api_key=None):
-        return lambda x: {"response": "dummy"}
-
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:
-    AGENT_REGISTRY = {}
-
-try:
-    from agent_ui import render_agent_insights_tab
-except ImportError:
-    def render_agent_insights_tab():
-        st.subheader("🤖 Agent Insights")
-        st.info("Agent insights not available")
-
-try:
-    from social_tabs import render_social_tab
-except ImportError:
-    def render_social_tab():
-        st.subheader("👥 Social Features")
-        st.info("Social features module not available")
+except ImportError:  # pragma: no cover - optional dependency
+    pass
 
 try:
     from llm_backends import get_backend
