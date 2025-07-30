@@ -237,36 +237,37 @@ def render_landing_page():
         boot_diagnostic_ui()
 
 def inject_modern_styles() -> None:
-    """Inject a sleek dark theme inspired by modern IDEs."""
+    """Inject a futuristic dark theme with subtle neon accents."""
     st.markdown(
         """
         <style>
         .stApp {
-            background-color: #1e1e1e;
-            color: #ccc;
+            background: radial-gradient(circle at top left, #0d0d0d, #050505);
+            color: #d0d0d0;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
 
         .main .block-container {
-            background-color: #252525;
-            border: 1px solid #333;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
             padding: 2rem 3rem;
-            margin-top: 1rem;
+            margin: 1rem auto;
+            max-width: 1200px;
         }
 
         [data-testid="stSidebar"] {
-            background-color: #2d2d2d;
+            background: #111;
             color: #ccc;
         }
 
         [data-testid="stHorizontalMenu"] ul {
             display: flex;
             gap: 0.5rem;
-            background: #252525;
+            background: rgba(255,255,255,0.05);
             padding: 0.5rem 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         [data-testid="stHorizontalMenu"] a {
@@ -278,12 +279,12 @@ def inject_modern_styles() -> None:
         }
 
         [data-testid="stHorizontalMenu"] a:hover {
-            background: #333;
+            background: #222;
             color: #fff;
         }
 
         [data-testid="stHorizontalMenu"] .active a {
-            background: #4f8bf9;
+            background: linear-gradient(135deg, #007aff, #00e0ff);
             color: #fff;
         }
 
@@ -295,36 +296,39 @@ def inject_modern_styles() -> None:
         }
 
         .status-card {
-            background: #2d2d2d;
-            border: 1px solid #3a3a3a;
-            border-radius: 8px;
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
             padding: 1rem;
             text-align: center;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .status-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,224,255,0.2);
         }
 
         .stButton > button {
-            background-color: #4f8bf9;
+            background: linear-gradient(135deg, #007aff, #00e0ff);
             color: #fff;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
+            transition: box-shadow 0.2s, transform 0.2s;
         }
 
         .stButton > button:hover {
-            background-color: #699cfc;
+            box-shadow: 0 0 20px rgba(0,224,255,0.4);
+            transform: translateY(-1px);
         }
 
         input, textarea, select {
-            background-color: #2d2d2d;
+            background-color: #1a1a1a;
             color: #eee;
-            border: 1px solid #555;
-            border-radius: 6px;
+            border: 1px solid #333;
+            border-radius: 8px;
         }
 
         /* Modern scrollbar */
@@ -449,6 +453,7 @@ def _render_fallback(choice: str) -> None:
     if fallback_fn:
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
+
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -942,17 +947,11 @@ def render_validation_ui(
         }
         ui_layout.render_navbar(
             page_paths,
-            icons=[
-
-                "✅",
-                "📊",
-                "🤖",
-                "🎵",
-                "💬",
-                "👥",
-                "👤",
-            ],
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            key="navbar_validation",
         )
+
+
 
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
@@ -1241,16 +1240,10 @@ def main() -> None:
         }
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=[
-                "✅",
-                "📊",
-                "🤖",
-                "🎵",
-                "💬",
-                "👥",
-                "👤",
-            ],
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            key="navbar_main",
         )
+
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
         
@@ -1292,7 +1285,8 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui()
+                api_info = render_api_key_ui(key_prefix="devtools")
+
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")
