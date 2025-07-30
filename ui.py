@@ -154,7 +154,7 @@ def normalize_choice(choice: str) -> str:
 
 # Icons used in the navigation bar. Must be single-character emojis or
 # valid Bootstrap icon codes prefixed with ``"bi bi-"``.
-NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
+NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤", "✉️"]
 
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
@@ -1086,7 +1086,7 @@ def render_validation_ui(
         page_paths = {
             label: f"/pages/{mod}.py" for label, mod in PAGES.items()
         }
-        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
+        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤", "✉️"]
 
         # ...
 
