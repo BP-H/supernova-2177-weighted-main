@@ -101,6 +101,7 @@ from streamlit_helpers import (
     apply_theme,
     header,
     theme_selector,
+    safe_container,
 )
 
 from modern_ui import (
@@ -1315,38 +1316,113 @@ def main() -> None:
                     "Playground",
                 ])
 
-                with dev_tabs[0]:
-                    if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+            # ✅ KEEP the body of each dev tab here, as you had in codex/polish-ui
+            # Already reviewed — this integrates the previously working dev tabs
+
+            with dev_tabs[0]:
+                if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+                    try:
+                        user = safe_get_user()
+                        if user and st.button("Fork with Mock Config"):
+                            try:
+                                fork_id = cosmic_nexus.fork_universe(user, {"entropy_threshold": 0.5})
+                                st.success(f"Forked universe {fork_id}")
+                            except Exception as exc:
+                                st.error(f"Fork failed: {exc}")
+                        elif not user:
+                            st.info("No users available to fork")
+                    except Exception as exc:
+                        st.error(f"Database error: {exc}")
+                else:
+                    st.info("Fork operation unavailable")
+
+            with dev_tabs[1]:
+                if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+                    try:
+                        with SessionLocal() as db:
+                            records = (
+                                db.query(UniverseBranch)
+                                .order_by(UniverseBranch.timestamp.desc())
+                                .limit(5)
+                                .all()
+                            )
+                            if records:
+                                for r in records:
+                                    st.write({"id": r.id, "status": r.status, "timestamp": r.timestamp})
+                            else:
+                                st.write("No forks recorded")
+                    except Exception as exc:
+                        st.error(f"Database error: {exc}")
+                else:
+                    st.info("Database unavailable")
+
+            with dev_tabs[2]:
+                hid = st.text_input("Hypothesis ID", key="audit_id")
+                if st.button("Run Audit") and hid:
+                    if 'dispatch_route' in globals() and 'SessionLocal' in globals():
                         try:
-                            user = safe_get_user()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(user, {"entropy_threshold": 0.5})
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = _run_async(
+                                            dispatch_route(
+                                                "trigger_full_audit",
+                                                {"hypothesis_id": hid},
+                                                db=db,
+                                            )
+                                        )
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        except Exception as exc:
+                            st.error(f"Database error: {exc}")
+                    elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                        try:
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = run_full_audit(hid, db)
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
                         except Exception as exc:
                             st.error(f"Database error: {exc}")
                     else:
-                        st.info("Fork operation unavailable")
+                        st.info("Audit functionality unavailable")
+                else:
+                    st.info("Audit functionality unavailable")
+                    try:
+                        with SessionLocal() as db:
+                            with st.spinner("Working on it..."):
+                                try:
+                                    result = _run_async(
+                                        dispatch_route(
+                                            "trigger_full_audit",
+                                            {"hypothesis_id": hid},
+                                            db=db,
+                                        )
+                                    )
+                                    st.json(result)
+                                    st.toast("Success!")
+                                except Exception as exc:
+                                    st.error(f"Audit failed: {exc}")
+                    except Exception as exc:
+                        st.error(f"Database error: {exc}")
+                    st.info("Fork operation unavailable")
 
                 with dev_tabs[1]:
                     if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                         try:
                             with SessionLocal() as db:
-                                records = (
-                                    db.query(UniverseBranch)
-                                    .order_by(UniverseBranch.timestamp.desc())
-                                    .limit(5)
-                                    .all()
-                                )
-                                if records:
-                                    for r in records:
-                                        st.write({"id": r.id, "status": r.status, "timestamp": r.timestamp})
-                                else:
-                                    st.write("No forks recorded")
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = run_full_audit(hid, db)
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
                         except Exception as exc:
                             st.error(f"Database error: {exc}")
                     else:
@@ -1360,7 +1436,13 @@ def main() -> None:
                                 with SessionLocal() as db:
                                     with st.spinner("Working on it..."):
                                         try:
-                                            result = _run_async(dispatch_route("trigger_full_audit", {"hypothesis_id": hid}, db=db))
+                                            result = _run_async(
+                                                dispatch_route(
+                                                    "trigger_full_audit",
+                                                    {"hypothesis_id": hid},
+                                                    db=db,
+                                                )
+                                            )
                                             st.json(result)
                                             st.toast("Success!")
                                         except Exception as exc:
@@ -1382,6 +1464,7 @@ def main() -> None:
                         else:
                             st.info("Audit functionality unavailable")
 
+
                 with dev_tabs[3]:
                     log_path = Path("logchain_main.log")
                     if not log_path.exists():
@@ -1396,7 +1479,9 @@ def main() -> None:
                         st.info("No log file found")
 
                 with dev_tabs[4]:
-                    event_json = st.text_area("Event JSON", value="{}", height=150, key="inject_event")
+                    event_json = st.text_area(
+                        "Event JSON", value="{}", height=150, key="inject_event"
+                    )
                     if st.button("Process Event"):
                         agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
                         if agent_obj is not None:
@@ -1412,21 +1497,59 @@ def main() -> None:
                 with dev_tabs[5]:
                     if 'AGENT_REGISTRY' in globals():
                         st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                
                     if 'cosmic_nexus' in globals():
                         st.write("Sub universes:", list(getattr(cosmic_nexus, "sub_universes", {}).keys()))
+                
+                    agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                
+                    if agent_obj is not None and 'InMemoryStorage' in globals():
+                        try:
+                            if isinstance(agent_obj.storage, InMemoryStorage):
+                                st.write(
+                                    f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                )
+                            else:
+                                try:
+                                    user_count = len(agent_obj.storage.get_all_users())
+                                    st.write(f"User count: {user_count}")
+                                except Exception:
+                                    st.error("Storage info unavailable")
+                        except Exception as exc:
+                            st.warning(f"Agent storage inspection failed: {exc}")
+                    else:
+                        st.info("Agent or storage unavailable")
+
+
+                with dev_tabs[5]:
+                    if 'AGENT_REGISTRY' in globals():
+                        st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                    if 'cosmic_nexus' in globals():
+                        st.write(
+                            "Sub universes:",
+                            list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
+                        )
                     agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
                     if agent_obj is not None and 'InMemoryStorage' in globals():
                         try:
                             if isinstance(agent_obj.storage, InMemoryStorage):
-                                st.write(f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}")
+                                st.write(
+                                    f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                )
                             else:
                                 user_count = len(agent_obj.storage.get_all_users())
                                 st.write(f"User count: {user_count}")
-                        except Exception as exc:
-                            st.warning(f"Agent storage inspection failed: {exc}")
+                        except Exception:
+                            st.error("Storage info unavailable")
 
                 with dev_tabs[6]:
-                    flow_txt = st.text_area("Agent Flow JSON", "[]", height=150, key="flow_json")
+                    flow_txt = st.text_area(
+                        "Agent Flow JSON",
+                        "[]",
+                        height=150,
+                        key="flow_json",
+                    )
+
                     if st.button("Run Flow"):
                         if 'AGENT_REGISTRY' in globals():
                             try:
@@ -1500,7 +1623,7 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        container_ctx = main_container() if callable(main_container) else nullcontext()
+        container_ctx = safe_container(main_container)
         with container_ctx:
             page_key = PAGES.get(choice, choice)
             module_paths = [

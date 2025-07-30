@@ -4,7 +4,7 @@
 """Agent Insights tab renderer for the Transcendental Resonance frontend."""
 
 import streamlit as st
-from contextlib import nullcontext
+from streamlit_helpers import safe_container
 
 def render_agent_insights_tab(main_container=None):
     """
@@ -14,13 +14,7 @@ def render_agent_insights_tab(main_container=None):
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         st.subheader("Agent Insights")
         st.warning("Agent logic coming soon...")

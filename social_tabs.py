@@ -1,7 +1,6 @@
 import asyncio
 import streamlit as st
-from streamlit_helpers import alert
-from contextlib import nullcontext
+from streamlit_helpers import alert, safe_container
 
 
 def safe_markdown(text: str, **kwargs) -> None:
@@ -52,13 +51,7 @@ def render_social_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         st.subheader("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:

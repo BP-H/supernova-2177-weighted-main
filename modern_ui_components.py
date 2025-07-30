@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import streamlit as st
-from contextlib import nullcontext
 from typing import Optional
+from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
 
@@ -52,13 +52,7 @@ def render_modern_sidebar(
     """Render a navigation menu within ``container`` and return the selection."""
     if container is None:
         container = st
-    container_ctx = (
-        container()
-        if callable(container)
-        else container
-        if hasattr(container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(container)
     with container_ctx:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         choice = st.radio("Navigate", list(pages.keys()))
