@@ -16,9 +16,13 @@ import math
 import sys
 import traceback
 import sqlite3
+import inspect
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Any, Optional
+
+from frontend import ui_layout
+
 
 
 from modern_ui_components import (
@@ -99,7 +103,6 @@ sys.excepthook = global_exception_handler
 
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
-from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -115,6 +118,7 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
+from frontend.ui_layout import overlay_badge, render_title_bar
 
 # Optional modules used throughout the UI. Provide simple fallbacks
 # when the associated packages are not available.
@@ -338,162 +342,57 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
-def render_modern_validation_page():
-    """Render the main validation interface."""
-    try:
-        from transcendental_resonance_frontend.pages import validation
-        if hasattr(validation, "render"):
-            validation.render()
-            return
-        if hasattr(validation, "main"):
-            validation.main()
-            return
-    except Exception:
-        pass
+from frontend.ui_layout import render_title_bar, show_preview_badge
 
-    st.markdown(
-        """
-        <div style='text-align:center; padding:2rem 0;'>
-            <h1 style='font-size:3rem; color:#4f8bf9; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
-            <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def load_page_with_fallback(choice: str) -> None:
+    """Attempt to import and render a page by name with graceful fallback."""
+    PAGES = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
 
-    st.markdown(
-        """
-        <div class="status-grid">
-            <div class="status-card">
-                <div style='font-size:2rem;'>✅</div>
-                <div>System Online</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>🔍</div>
-                <div>Ready to Analyze</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>⚡</div>
-                <div>High Performance</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>🎯</div>
-                <div>Precision Mode</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    module = PAGES.get(choice)
+    if not module:
+        st.error(f"Unknown page: {choice}")
+        return
 
-    # Main content area
-    st.markdown(
-        """
-        <div style='background:#1e1e1e; border:1px solid #333; padding:2rem; border-radius:8px; margin:2rem 0;'>
-            <h2 style='color:#fff; text-align:center; margin-bottom:1.5rem;'>🔬 Validation Analysis Center</h2>
-            <p style='color:#bbb; text-align:center;'>Upload your validation data or use demo mode to experience the power of superNova_2177</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Interactive demo section
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        st.markdown("### 📊 Validation Input")
-
-        # Beautiful text area
-        st.text_area(
-            "Validation JSON Data",
-            value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
-            height=200,
-            help="Paste your validation data here or use the sample data",
-        )
-
-        # Modern toggle for demo mode
-        st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
-
-    with col2:
-        st.markdown("### ⚙️ Analysis Settings")
-
-        st.selectbox(
-            "Visualization Mode",
-            ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
-            help="Choose how to visualize the validation network",
-        )
-
-        st.slider(
-            "Confidence Threshold",
-            0.0,
-            1.0,
-            0.75,
-            help="Minimum confidence level for validation acceptance",
-        )
-
-        if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
-            with st.spinner("Loading..."):
-                # Simulate analysis
-                import time
-
-                time.sleep(2)
-
-                st.success("✅ Analysis completed successfully!")
-
-                # Display results
-                st.markdown("### 📈 Analysis Results")
-
-                result_col1, result_col2, result_col3 = st.columns(3)
-
-                with result_col1:
-                    st.metric("Consensus Score", "0.87", delta="0.12")
-                with result_col2:
-                    st.metric("Network Health", "94.2%", delta="2.3%")
-                with result_col3:
-                    st.metric("Validation Count", "1,247", delta="156")
-
-                # Beautiful results display
-                st.markdown(
-                    """
-                    <div style='background: rgba(76, 175, 80, 0.1); padding: 1.5rem; 
-                                border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3); margin-top: 1rem;'>
-                        <h4 style='color: #4CAF50; margin: 0 0 1rem 0;'>🎉 Excellent Validation Health!</h4>
-                        <p style='color: white; margin: 0;'>
-                            Your validation network shows strong consensus with high integrity scores. 
-                            The system detected no anomalies and recommends proceeding with confidence.
-                        </p>
-                    </div>
-                """,
-                    unsafe_allow_html=True,
-                )
-
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{module}",
+        module,
+    ]
 
 def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
     """
     Attempt to import and run a page module by name, with graceful fallback.
     Tries each candidate path and checks for `render()` or `main()` method.
+    Logs the traceback for any unexpected failure.
     """
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
-            if hasattr(page_mod, "render"):
-                page_mod.render()
-                return
-            elif hasattr(page_mod, "main"):
-                page_mod.main()
-                return
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
         except ImportError:
-            continue  # Try next path
+            continue  # Try next candidate module path
         except Exception as exc:
-            st.error(
-                f"⚠️ {choice} failed to load due to {exc.__class__.__name__}: {exc}"
-            )
+            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+            with st.expander("Show error details"):
+                st.exception(exc)
+            print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    _render_fallback(choice)
+    # Optional fallback renderer if defined elsewhere
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
-    """Render modern fallback if module isn't available or fails to load."""
+    """Render built-in fallback if module is missing or errors out."""
     fallback_pages = {
         "Validation": render_modern_validation_page,
         "Voting": render_modern_voting_page,
@@ -503,71 +402,55 @@ def _render_fallback(choice: str) -> None:
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
+        show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
-        st.error(f"No fallback available for page: {choice}")
+        st.warning(f"No fallback available for page: {choice}")
 
 
 def render_modern_validation_page():
-    """Fallback validation page with basic progress indicators."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("✅", "Validation Console")
-
-    status = st.empty()
-    prog = st.progress(0)
-    for i in range(1, 6):
-        status.write(f"Step {i} / 5")
-        prog.progress(i * 20)
-    st.success("Analysis placeholder complete")
+    st.markdown("**Timeline**")
+    st.markdown("- Task queued\n- Running analysis\n- Completed")
+    progress = st.progress(0)
+    for i in range(5):
+        st.sleep(0.1)
+        progress.progress((i + 1) / 5)
+    st.success("Status: OK")
 
 
 def render_modern_voting_page():
-    """Fallback voting page showing mock poll results."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🗳️", "Voting Dashboard")
-    votes = {"Option A": 60, "Option B": 25, "Option C": 15}
-    for name, val in votes.items():
-        st.write(f"{name} {val}% :thumbsup:")
-        st.progress(val / 100)
+    votes = {"Proposal A": 3, "Proposal B": 5}
+    total = sum(votes.values()) or 1
+    for label, count in votes.items():
+        st.write(f"{label}: {count} votes")
+        st.progress(count / total)
 
 
 def render_modern_agents_page():
-    """Fallback agents page with basic profiles."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🤖", "AI Agents")
-    cols = st.columns(3)
-    for col, agent in zip(cols, ["Meta", "Guardian", "Resonance"]):
+    agents = ["Guardian", "Oracle", "Resonance"]
+    cols = st.columns(len(agents))
+    for col, name in zip(cols, agents):
         with col:
             st.image("https://via.placeholder.com/80", width=80)
-            st.write(agent)
-            st.line_chart([1, 2, 1, 3])
+            st.write(name)
+            st.line_chart([1, 3, 2, 4])
 
 
 def render_modern_music_page():
-    """Fallback music page with waveform placeholder."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🎵", "Resonance Music")
-    st.audio(b"", format="audio/wav")
-    st.markdown("Harmonic signature: **A440**")
+    st.line_chart([0, 1, 0, -1, 0])
+    st.caption("Harmonic signature: A# minor")
 
 
 def render_modern_social_page():
-    """Fallback social page with trending hashtags."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("👥", "Social Network")
-    st.image("https://via.placeholder.com/40", width=40)
-    st.write("#hashtag1 #hashtag2")
-    st.success("Trending simulation running...")
+    st.markdown("😀 @alice #hello")
+    st.markdown("🔥 Trending: #resonance #ai")
+    st.success("Social feed placeholder loaded")
+
 
 
 
@@ -1161,18 +1044,23 @@ def main() -> None:
             "Social": "social",
         }
 
-        choice = option_menu(
-            menu_title=None,
-            options=list(PAGES.keys()),
+        choice = ui_layout.render_navbar(
+            PAGES,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-            orientation="horizontal",
-            key="main_nav_menu",
         )
 
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
         with left_col:
             render_status_icon()
+
+        with center_col:
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
+                f"pages.{PAGES[choice]}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
 
         with center_col:
             page_key = PAGES.get(choice, choice)
@@ -1327,7 +1215,7 @@ def main() -> None:
                         "Event JSON", value="{}", height=150, key="inject_event"
                     )
                     if st.button("Process Event"):
-                        agent_obj = st.session_state.get("agent_instance")
+                        agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
                         if agent_obj is not None:
                             try:
                                 event = json.loads(event_json or "{}")
@@ -1338,6 +1226,7 @@ def main() -> None:
                         else:
                             st.info("Agent unavailable")
 
+
                 with dev_tabs[5]:
                     if 'AGENT_REGISTRY' in globals():
                         st.write("Available agents:", list(AGENT_REGISTRY.keys()))
@@ -1346,18 +1235,19 @@ def main() -> None:
                             "Sub universes:",
                             list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                         )
-                    agent_obj = st.session_state.get("agent_instance")
+                    agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
                     if agent_obj is not None and 'InMemoryStorage' in globals():
-                        if isinstance(agent_obj.storage, InMemoryStorage):
-                            st.write(
-                                f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
-                            )
-                        else:
-                            try:
+                        try:
+                            if isinstance(agent_obj.storage, InMemoryStorage):
+                                st.write(
+                                    f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                )
+                            else:
                                 user_count = len(agent_obj.storage.get_all_users())
-                            except Exception:
-                                user_count = "?"
-                            st.write(f"User count: {user_count}")
+                                st.write(f"User count: {user_count}")
+                        except Exception:
+                            st.write("User count: ?")
+
 
                 with dev_tabs[6]:
                     flow_txt = st.text_area(
@@ -1405,19 +1295,20 @@ def main() -> None:
                     try:
                         if agent_choice == "CI_PRProtectorAgent":
                             talker = backend_fn or (lambda p: p)
-                            agent = agent_cls(talker, llm_backend=backend_fn)
+                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
                         elif agent_choice == "MetaValidatorAgent":
-                            agent = agent_cls({}, llm_backend=backend_fn)
+                            selected_agent = agent_cls({}, llm_backend=backend_fn)
                         elif agent_choice == "GuardianInterceptorAgent":
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
                         else:
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
 
-                        st.session_state["agent_instance"] = agent
+                        st.session_state["agent_instance"] = selected_agent
 
-                        result = agent.process_event(
+                        result = selected_agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
+
                         st.session_state["agent_output"] = result
                         st.success("Agent executed")
                     except Exception as exc:
@@ -1431,7 +1322,8 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        with main_container():
+        container_ctx = main_container() if callable(main_container) else nullcontext()
+        with container_ctx:
             page_key = PAGES.get(choice, choice)
             module_paths = [
                 f"transcendental_resonance_frontend.pages.{page_key}",
