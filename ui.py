@@ -22,12 +22,11 @@ import math
 import sys
 import traceback
 import sqlite3
-import inspect
 import importlib
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
-from typing import Any, Optional
+from typing import Optional
 from frontend import ui_layout
 
 
@@ -37,8 +36,6 @@ from modern_ui_components import (
 )
 from frontend.ui_layout import (
     main_container,
-    sidebar_container,
-    render_navbar,
     render_title_bar,
     show_preview_badge,
 )
@@ -74,6 +71,10 @@ PAGES = {
     "Social": "social",
     "Profile": "profile",
 }
+
+# Icons used in the navigation bar. Must be single-character emojis or
+# valid Bootstrap icon codes prefixed with ``"bi bi-"``.
+NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
@@ -115,11 +116,7 @@ from streamlit_helpers import (
 
 from modern_ui import (
     inject_modern_styles,
-    inject_premium_styles,
-    render_modern_header,
     render_stats_section,
-    open_card_container,
-    close_card_container,
 )
 
 # Apply global styles immediately
@@ -830,11 +827,16 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
+
+        # ...
+
         ui_layout.render_navbar(
             page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
-            key="navbar_sidebar_validation",
-        )
+            icons=NAV_ICONS,
+            key="navbar_sidebar_validation",  # or "navbar_main" depending on context
+)
+
 
 
 
@@ -1126,16 +1128,7 @@ def main() -> None:
         }
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=[
-                "✅",
-                "📊",
-                "🤖",
-                "🎵",
-                "💬",
-                "👥",
-                "👤",
-            ],
-            key="navbar_main",
+            icons=NAV_ICONS,
         )
 
         
