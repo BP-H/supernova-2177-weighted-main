@@ -8,20 +8,19 @@ from ui import render_validation_ui
 
 
 def main(main_container=None) -> None:
-    """Render the validation UI inside a container."""
-    container = main_container if main_container is not None else st.container()
+    """Render the validation UI inside ``main_container`` safely."""
+    if main_container is None:
+        main_container = st
 
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
 
-    try:
-        # Try to use the container as a context manager
-        with container:
-            render_validation_ui()
-    except AttributeError:
-        # If the container isn't a context manager, call directly
-        render_validation_ui()
-
-        render_validation_ui()
-    else:
+    with container_ctx:
         render_validation_ui(main_container=main_container)
 
 
