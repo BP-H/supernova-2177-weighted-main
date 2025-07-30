@@ -1163,93 +1163,84 @@ def main() -> None:
                 )
 
                 with dev_tabs[0]:
-                    if (
-                        "cosmic_nexus" in globals()
-                        and "SessionLocal" in globals()
-                        and "Harmonizer" in globals()
-                    ):
-                        try:
-                            user = safe_get_user()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
-                                    )
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
-                        except Exception as exc:
-                            st.error(f"Database error: {exc}")
-                    else:
-                        st.info("Fork operation unavailable")
+    if 'cosmic_nexus' in globals() and 'SessionLocal' in globals() and 'Harmonizer' in globals():
+        try:
+            user = safe_get_user()
+            if user and st.button("Fork with Mock Config"):
+                try:
+                    fork_id = cosmic_nexus.fork_universe(
+                        user, {"entropy_threshold": 0.5}
+                    )
+                    st.success(f"Forked universe {fork_id}")
+                except Exception as exc:
+                    st.error(f"Fork failed: {exc}")
+            elif not user:
+                st.info("No users available to fork")
+        except Exception as exc:
+            st.error(f"Database error: {exc}")
+    else:
+        st.info("Fork operation unavailable")
 
-                with dev_tabs[1]:
-                    if "SessionLocal" in globals() and "UniverseBranch" in globals():
+with dev_tabs[1]:
+    if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+        try:
+            with SessionLocal() as db:
+                records = (
+                    db.query(UniverseBranch)
+                    .order_by(UniverseBranch.timestamp.desc())
+                    .limit(5)
+                    .all()
+                )
+                if records:
+                    for r in records:
+                        st.write({
+                            "id": r.id,
+                            "status": r.status,
+                            "timestamp": r.timestamp,
+                        })
+                else:
+                    st.write("No forks recorded")
+        except Exception as exc:
+            st.error(f"Database error: {exc}")
+    else:
+        st.info("Database unavailable")
+
+with dev_tabs[2]:
+    hid = st.text_input("Hypothesis ID", key="audit_id")
+    if st.button("Run Audit") and hid:
+        if 'dispatch_route' in globals() and 'SessionLocal' in globals():
+            try:
+                with SessionLocal() as db:
+                    with st.spinner("Working on it..."):
                         try:
-                            with SessionLocal() as db:
-                                records = (
-                                    db.query(UniverseBranch)
-                                    .order_by(UniverseBranch.timestamp.desc())
-                                    .limit(5)
-                                    .all()
+                            result = _run_async(
+                                dispatch_route(
+                                    "trigger_full_audit",
+                                    {"hypothesis_id": hid},
+                                    db=db,
                                 )
-                                if records:
-                                    for r in records:
-                                        st.write({
-                                            "id": r.id,
-                                            "status": r.status,
-                                            "timestamp": r.timestamp,
-                                        })
-                                else:
-                                    st.write("No forks recorded")
+                            )
+                            st.json(result)
+                            st.toast("Success!")
                         except Exception as exc:
-                            st.error(f"Database error: {exc}")
-                    else:
-                        st.info("Database unavailable")
+                            st.error(f"Audit failed: {exc}")
+            except Exception as exc:
+                st.error(f"Database error: {exc}")
+        elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+            try:
+                with SessionLocal() as db:
+                    with st.spinner("Working on it..."):
+                        try:
+                            result = run_full_audit(hid, db)
+                            st.json(result)
+                            st.toast("Success!")
+                        except Exception as exc:
+                            st.error(f"Audit failed: {exc}")
+            except Exception as exc:
+                st.error(f"Database error: {exc}")
+        else:
+            st.info("Audit functionality unavailable")
 
-                with dev_tabs[2]:
-                    hid = st.text_input("Hypothesis ID", key="audit_id")
-                    if st.button("Run Audit") and hid:
-                        if (
-                            "dispatch_route" in globals()
-                            and "SessionLocal" in globals()
-                        ):
-                            try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = _run_async(
-                                                dispatch_route(
-                                                    "trigger_full_audit",
-                                                    {"hypothesis_id": hid},
-                                                    db=db,
-                                                )
-                                            )
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        elif (
-                            "run_full_audit" in globals()
-                            and "SessionLocal" in globals()
-                        ):
-                            try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = run_full_audit(hid, db)
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        else:
-                            st.info("Audit functionality unavailable")
 
                 with dev_tabs[3]:
                     log_path = Path("logchain_main.log")
