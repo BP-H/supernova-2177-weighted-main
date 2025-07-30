@@ -1,10 +1,16 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
+import pytest
+pytest.importorskip("nicegui")
+pytestmark = pytest.mark.requires_nicegui
+
 import asyncio
 import inspect
 import types
 import sys
 import importlib
-
-import pytest
 
 # Dummy NiceGUI components for testing
 class DummyElement:

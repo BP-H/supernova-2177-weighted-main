@@ -33,13 +33,33 @@ from frontend import ui_layout
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
-    render_modern_sidebar,
 )
+
+# Prefer modern sidebar render if available
+try:
+    from modern_ui_components import render_modern_sidebar
+except ImportError:
+    render_modern_sidebar = None
+
 from frontend.ui_layout import (
     main_container,
     render_title_bar,
     show_preview_badge,
+    render_profile_card,
+    render_sidebar_nav as _base_render_sidebar_nav,
 )
+
+
+def render_sidebar_nav(*args, **kwargs):
+    """Proxy to allow monkeypatching via `render_modern_sidebar` if available."""
+    if render_modern_sidebar and render_modern_sidebar is not render_sidebar_nav:
+        return render_modern_sidebar(*args, **kwargs)
+    return _base_render_sidebar_nav(*args, **kwargs)
+
+
+# Backwards compatibility alias
+render_modern_sidebar = render_sidebar_nav
+
 
 
 # Utility path handling
@@ -129,6 +149,7 @@ except ImportError:  # optional dependency fallback
     try:
         from frontend.ui_layout import render_title_bar
     except ImportError:
+
         def render_title_bar(*args, **kwargs):
             st.warning("⚠️ render_title_bar is unavailable.")
             return None
@@ -238,17 +259,65 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
+    # Overlay with quick start actions when no page modules are present
+    st.markdown(
+        """
+        <style>
+        .landing-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .landing-overlay-content {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(6px);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    overlay = st.container()
+    with overlay:
+        st.markdown(
+            "<div class='landing-overlay'><div class='landing-overlay-content'>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("### Quick Actions", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Create Proposal", key="landing_create_proposal"):
+                load_page_with_fallback(
+                    "Voting",
+                    [
+                        f"transcendental_resonance_frontend.pages.{PAGES['Voting']}",
+                        f"pages.{PAGES['Voting']}",
+                    ],
+                )
+        with col2:
+            if st.button("Run Validation", key="landing_run_validation"):
+                run_analysis([], layout="force")
+        st.markdown("</div></div>", unsafe_allow_html=True)
+
+
 def inject_modern_styles() -> None:
     """Backward compatible alias forwarding to :mod:`modern_ui`."""
     from modern_ui import inject_modern_styles as _impl
-    _impl()
 
+    _impl()
 
 
 # Backward compatibility alias
 def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
+
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
@@ -265,7 +334,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         ]
 
     # Validate PAGES_DIR existence
-    PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    PAGES_DIR = (
+        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    )
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -291,7 +362,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
                 continue
             except Exception as exc:  # Unexpected failure
-                logging.error("switch_page failed for %s: %s", rel_path, exc, exc_info=True)
+                logging.error(
+                    "switch_page failed for %s: %s", rel_path, exc, exc_info=True
+                )
                 last_exc = exc
                 continue
 
@@ -400,6 +473,39 @@ def render_modern_profile_page() -> None:
     st.toast("Profile management pending implementation.")
 
 
+def render_sidebar() -> str:
+    """Render the left sidebar with navigation and quick actions."""
+    user = safe_get_user()
+    avatar = getattr(user, "profile_pic", "https://via.placeholder.com/64")
+    username = getattr(user, "username", "Guest")
+
+    render_profile_card(username, avatar)
+
+    # Actions in a cleaner expander format
+    with st.sidebar.expander("Create Proposal"):
+        st.button("Create Proposal")
+    with st.sidebar.expander("Run Validation"):
+        st.button("Run Validation")
+
+    # Theme toggle
+    dark = st.sidebar.toggle("Dark Mode", value=st.session_state.get("theme") == "dark")
+    st.session_state["theme"] = "dark" if dark else "light"
+
+    # Environment tag
+    env = os.getenv("ENV", "development").lower()
+    env_tag = "🚀 Production" if env.startswith("prod") else "🧪 Development"
+    st.sidebar.markdown(env_tag)
+
+    # Navigation
+    icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
+    if "render_modern_sidebar" in globals():
+        choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+    else:
+        choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
+
+    return choice
+
+
 
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
@@ -481,8 +587,6 @@ try:
     from validator_reputation_tracker import update_validator_reputations
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
-
-
 
 
 def get_st_secrets() -> dict:
@@ -833,13 +937,16 @@ def render_validation_ui(
 
         # ...
 
-        choice = render_modern_sidebar(
+        choice = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         # Use 3-column layout for cleaner modern UX
-        left_col, center_col, _ = main_container.columns([1, 3, 1])  # omit right_col for simplicity
+        left_col, center_col, _ = main_container.columns(
+            [1, 3, 1]
+        )  # omit right_col for simplicity
 
         with center_col:
             st.info("Select a page above to continue.")
@@ -847,8 +954,6 @@ def render_validation_ui(
         with left_col:
             render_status_icon()
             render_developer_tools()
-
-
 
     except Exception as exc:
         st.error("Failed to load validation UI")
@@ -868,7 +973,7 @@ def render_developer_tools() -> None:
 
     with st.expander("Developer Tools"):
         # Frequently used action
-        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+        if "cosmic_nexus" in globals() and "Harmonizer" in globals():
             try:
                 user = safe_get_user()
                 if user and st.button("Fork with Mock Config"):
@@ -889,7 +994,7 @@ def render_developer_tools() -> None:
         # Less common diagnostics
         with st.expander("Diagnostics & Logs"):
             # Universe state viewer
-            if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+            if "SessionLocal" in globals() and "UniverseBranch" in globals():
                 try:
                     with SessionLocal() as db:
                         records = (
@@ -900,7 +1005,13 @@ def render_developer_tools() -> None:
                         )
                         if records:
                             for r in records:
-                                st.write({"id": r.id, "status": r.status, "timestamp": r.timestamp})
+                                st.write(
+                                    {
+                                        "id": r.id,
+                                        "status": r.status,
+                                        "timestamp": r.timestamp,
+                                    }
+                                )
                         else:
                             st.write("No forks recorded")
                 except Exception as exc:
@@ -911,13 +1022,17 @@ def render_developer_tools() -> None:
             # Run introspection audit
             hid = st.text_input("Hypothesis ID", key="audit_id")
             if st.button("Run Audit") and hid:
-                if 'dispatch_route' in globals() and 'SessionLocal' in globals():
+                if "dispatch_route" in globals() and "SessionLocal" in globals():
                     try:
                         with SessionLocal() as db:
                             with st.spinner("Working on it..."):
                                 try:
                                     result = _run_async(
-                                        dispatch_route("trigger_full_audit", {"hypothesis_id": hid}, db=db)
+                                        dispatch_route(
+                                            "trigger_full_audit",
+                                            {"hypothesis_id": hid},
+                                            db=db,
+                                        )
                                     )
                                     st.json(result)
                                     st.toast("Success!")
@@ -925,7 +1040,7 @@ def render_developer_tools() -> None:
                                     st.error(f"Audit failed: {exc}")
                     except Exception as exc:
                         st.error(f"Database error: {exc}")
-                elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                elif "run_full_audit" in globals() and "SessionLocal" in globals():
                     try:
                         with SessionLocal() as db:
                             with st.spinner("Working on it..."):
@@ -955,9 +1070,13 @@ def render_developer_tools() -> None:
 
             # Inject event
             with st.expander("Inject Event", expanded=False):
-                event_json = st.text_area("Event JSON", value="{}", height=150, key="inject_event")
+                event_json = st.text_area(
+                    "Event JSON", value="{}", height=150, key="inject_event"
+                )
                 if st.button("Process Event"):
-                    agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                    agent_obj = st.session_state.get("agent_instance") or globals().get(
+                        "agent"
+                    )
                     if agent_obj is not None:
                         try:
                             event = json.loads(event_json or "{}")
@@ -969,15 +1088,15 @@ def render_developer_tools() -> None:
                         st.toast("Agent unavailable")
 
             # Session inspector
-            if 'AGENT_REGISTRY' in globals():
+            if "AGENT_REGISTRY" in globals():
                 st.write("Available agents:", list(AGENT_REGISTRY.keys()))
-            if 'cosmic_nexus' in globals():
+            if "cosmic_nexus" in globals():
                 st.write(
                     "Sub universes:",
                     list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                 )
             agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
-            if agent_obj is not None and 'InMemoryStorage' in globals():
+            if agent_obj is not None and "InMemoryStorage" in globals():
                 try:
                     if isinstance(agent_obj.storage, InMemoryStorage):
                         st.write(
@@ -991,9 +1110,11 @@ def render_developer_tools() -> None:
 
         # Playground for quick flows
         with st.expander("Playground"):
-            flow_txt = st.text_area("Agent Flow JSON", "[]", height=150, key="flow_json")
+            flow_txt = st.text_area(
+                "Agent Flow JSON", "[]", height=150, key="flow_json"
+            )
             if st.button("Run Flow"):
-                if 'AGENT_REGISTRY' in globals():
+                if "AGENT_REGISTRY" in globals():
                     try:
                         steps = json.loads(flow_txt or "[]")
                         results = []
@@ -1024,7 +1145,7 @@ def main() -> None:
         st.info("Running in fallback mode")
 
     # Respond to lightweight health-check probes
-    params = st.query_params
+    params = st.experimental_get_query_params()
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
         "1" in params.get(HEALTH_CHECK_PARAM, [])
@@ -1039,6 +1160,27 @@ def main() -> None:
             page_title="superNova_2177",
             layout="wide",
             initial_sidebar_state="collapsed",
+        )
+        # Inject keyboard shortcuts for quick navigation
+        st.markdown(
+            """
+            <script>
+            document.addEventListener('keydown', function(e) {
+              const tag = document.activeElement.tagName;
+              if (tag === 'INPUT' || tag === 'TEXTAREA') { return; }
+              const params = new URLSearchParams(window.location.search);
+              if (e.key === 'N' || e.key === 'n') {
+                params.set('page', 'Voting');
+                window.location.search = params.toString();
+              }
+              if (e.key === 'V' || e.key === 'v') {
+                params.set('page', 'Validation');
+                window.location.search = params.toString();
+              }
+            });
+            </script>
+            """,
+            unsafe_allow_html=True,
         )
         inject_modern_styles()
 
@@ -1071,12 +1213,12 @@ def main() -> None:
             inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
-        
+
         try:
             apply_theme(st.session_state["theme"])
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
-        
+
         st.markdown(
             f"""
             <style>
@@ -1089,7 +1231,8 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        
+
+        # Setup: Pages and Icons
         PAGES = {
             "Validation": "validation",
             "Voting": "voting",
@@ -1099,18 +1242,36 @@ def main() -> None:
             "Social": "social",
             "Profile": "profile",
         }
-
-        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+        PAGES_DIR = (
+            Path(__file__).resolve().parent
+            / "transcendental_resonance_frontend"
+            / "pages"
+        )
         page_paths = {
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
-        choice = ui_layout.render_navbar(
+
+        # Determine page from query params and sidebar selection
+        query = st.experimental_get_query_params()
+        forced_page = query.get("page", [None])[0]
+
+        choice = render_modern_sidebar(
             page_paths,
-            icons=NAV_ICONS,
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
 
-        with st.sidebar:
+        if forced_page in page_paths:
+            choice = forced_page
+
+        st.experimental_set_query_params(page=choice)
+
+
+        # Page layout: left for tools, center for content
+        left_col, center_col, _ = st.columns([1, 3, 1])
+
+        # Sidebar functionality (left column)
+        with left_col:
             render_status_icon()
 
             with st.expander("Environment Details"):
@@ -1133,7 +1294,6 @@ def main() -> None:
 
             with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui(key_prefix="devtools")
-
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
 
@@ -1163,8 +1323,8 @@ def main() -> None:
 
             render_developer_tools()
 
-        container_ctx = safe_container(main_container)
-        with container_ctx:
+        # Center content area — dynamic page loading
+        with center_col:
             if choice:
                 page_key = PAGES.get(choice, choice)
                 module_paths = [
@@ -1177,8 +1337,57 @@ def main() -> None:
                     st.toast(f"Page not found: {choice}", icon="⚠️")
                     _render_fallback(choice)
             else:
-                st.info("Select a page above to continue.")
+                st.toast("Select a page above to continue.")  # modern, non-blocking feedback
                 _render_fallback("Validation")  # Default fallback page as a preview
+
+                # Run agent logic if triggered
+                if run_agent_clicked and "AGENT_REGISTRY" in globals():
+                    try:
+                        payload = json.loads(payload_txt or "{}")
+                    except Exception as exc:
+                        alert(f"Invalid payload: {exc}", "error")
+                    else:
+                        backend_fn = get_backend(backend_choice.lower(), api_key or None)
+                        if backend_fn is None:
+                            alert("Invalid backend selected", "error")
+                            st.session_state["agent_output"] = None
+                            st.stop()
+
+                        agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
+                        if agent_cls is None:
+                            alert("Unknown agent selected", "error")
+                        else:
+                            try:
+                                if agent_choice == "CI_PRProtectorAgent":
+                                    talker = backend_fn or (lambda p: p)
+                                    selected_agent = agent_cls(
+                                        talker, llm_backend=backend_fn
+                                    )
+                                elif agent_choice == "MetaValidatorAgent":
+                                    selected_agent = agent_cls({}, llm_backend=backend_fn)
+                                elif agent_choice == "GuardianInterceptorAgent":
+                                    selected_agent = agent_cls(llm_backend=backend_fn)
+                                else:
+                                    selected_agent = agent_cls(llm_backend=backend_fn)
+
+                                st.session_state["agent_instance"] = selected_agent
+                                result = selected_agent.process_event(
+                                    {"event": event_type, "payload": payload}
+                                )
+                                st.session_state["agent_output"] = result
+                                st.success("Agent executed")
+                            except Exception as exc:
+                                st.session_state["agent_output"] = {"error": str(exc)}
+                                alert(f"Agent error: {exc}", "error")
+
+                # Show agent output
+                if st.session_state.get("agent_output") is not None:
+                    st.subheader("Agent Output")
+                    st.json(st.session_state["agent_output"])
+
+                render_stats_section()
+                st.markdown(f"**Runs:** {st.session_state['run_count']}")
+
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
