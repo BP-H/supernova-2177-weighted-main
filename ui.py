@@ -1268,31 +1268,31 @@ def main() -> None:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
                             except Exception:
-                with dev_tabs[6]:
-                    flow_txt = st.text_area(
-                        "Agent Flow JSON",
-                        "[]",
-                        height=150,
-                        key="flow_json",
-                    )
-                    if st.button("Run Flow"):
-                        if 'AGENT_REGISTRY' in globals():
-                            try:
-                                steps = json.loads(flow_txt or "[]")
-                                results = []
-                                for step in steps:
-                                    a_name = step.get("agent")
-                                    agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
-                                    evt = step.get("event", {})
-                                    if agent_cls:
-                                        backend_fn = get_backend("dummy")
-                                        a = agent_cls(llm_backend=backend_fn)
-                                        results.append(a.process_event(evt))
-                                st.json(results)
-                            except Exception as exc:
-                                st.error(f"Flow execution failed: {exc}")
-                        else:
-                            st.info("Agent registry unavailable")
+                    with dev_tabs[6]:
+                        flow_txt = st.text_area(
+                            "Agent Flow JSON",
+                            "[]",
+                            height=150,
+                            key="flow_json",
+                        )
+                        if st.button("Run Flow"):
+                            if 'AGENT_REGISTRY' in globals():
+                                try:
+                                    steps = json.loads(flow_txt or "[]")
+                                    results = []
+                                    for step in steps:
+                                        a_name = step.get("agent")
+                                        agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                                        evt = step.get("event", {})
+                                        if agent_cls:
+                                            backend_fn = get_backend("dummy")
+                                            a = agent_cls(llm_backend=backend_fn)
+                                            results.append(a.process_event(evt))
+                                    st.json(results)
+                                except Exception as exc:
+                                    st.error(f"Flow execution failed: {exc}")
+                            else:
+                                st.info("Agent registry unavailable")
 
         with center_col:
             module_paths = [
