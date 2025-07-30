@@ -1570,8 +1570,13 @@ def main() -> None:
                 st.subheader("Agent Output")
                 st.json(st.session_state.get("agent_output"))
 
-            render_stats_section()
-            st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
+            stats = {
+                "runs": st.session_state.get("run_count", 0),
+                "proposals": st.session_state.get("proposal_count", "N/A"),
+                "success_rate": st.session_state.get("success_rate", "N/A"),
+                "accuracy": st.session_state.get("accuracy", "N/A"),
+            }
+            render_stats_section(stats)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
