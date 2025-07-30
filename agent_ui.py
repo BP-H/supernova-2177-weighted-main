@@ -88,7 +88,7 @@ def render_agent_insights_tab(main_container=None) -> None:
             with st.expander("Proposed RFCs", expanded=False):
                 rfc_dir = Path("rfcs")
                 filter_text = st.text_input("Filter RFCs")
-                preview_all = st.checkbox("Preview full text")
+                preview_all = st.toggle("Preview full text")
 
             rfc_entries, rfc_index = load_rfc_entries(rfc_dir)
 
@@ -130,7 +130,7 @@ def render_agent_insights_tab(main_container=None) -> None:
                     )
                     st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
                 st.markdown(f"[Read RFC]({cast(Path, rfc['path']).as_posix()})")
-                if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
+                if preview_all or st.toggle("Show details", key=f"show_{rfc['id']}"):
                     st.markdown(rfc["text"], unsafe_allow_html=True)
 
         st.subheader("Protocols")

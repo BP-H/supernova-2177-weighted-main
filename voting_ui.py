@@ -53,12 +53,6 @@ def _run_async(coro):
         return loop.run_until_complete(coro)
 
 
-def safe_markdown(text: str, **kwargs) -> None:
-    """Render Markdown text after stripping invalid characters."""
-    clean = text.encode("utf-8", errors="ignore").decode("utf-8")
-    st.markdown(clean, **kwargs)
-
-
 def render_proposals_tab(main_container=None) -> None:
     """Display proposal creation, listing and voting controls."""
     if main_container is None:
