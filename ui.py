@@ -118,7 +118,14 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
-from frontend.ui_layout import overlay_badge, render_title_bar
+try:
+    from frontend.ui_layout import overlay_badge, render_title_bar
+except ImportError:  # pragma: no cover - optional dependency
+    from frontend.ui_layout import render_title_bar
+
+    def overlay_badge(*args, **kwargs):
+        """Fallback overlay_badge when not available."""
+        return None
 
 # Optional modules used throughout the UI. Provide simple fallbacks
 # when the associated packages are not available.
@@ -1307,7 +1314,12 @@ def main() -> None:
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
         with main_container():
-            load_page_with_fallback(choice)
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
