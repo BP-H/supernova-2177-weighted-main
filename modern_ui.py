@@ -259,8 +259,6 @@ def render_validation_card() -> None:
         unsafe_allow_html=True,
     )
 
-
-def render_stats_section() -> None:
 def render_stats_section() -> None:
     """Display quick stats using a responsive flexbox layout."""
 
@@ -330,12 +328,6 @@ def render_stats_section() -> None:
                 <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
                 <div class='stats-value'>{value}</div>
                 <div class='stats-label'>{label}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
-
             </div>
             """,
             unsafe_allow_html=True,

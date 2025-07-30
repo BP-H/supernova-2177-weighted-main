@@ -9,6 +9,14 @@ import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
 
+if not hasattr(st, "experimental_page"):
+    def _noop_experimental_page(*_args, **_kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
+    st.experimental_page = _noop_experimental_page
+
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
@@ -34,13 +42,10 @@ from frontend import ui_layout
 
 try:
     from modern_ui_components import (
-        SIDEBAR_STYLES,
         render_validation_card,
         render_stats_section,
     )
 except Exception:  # pragma: no cover - optional dependency
-    SIDEBAR_STYLES = ""
-
     def render_validation_card(*_a, **_k):
         st.info("validation card unavailable")
 
@@ -503,6 +508,8 @@ def _render_fallback(choice: str) -> None:
         except Exception as exc:
             logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
 
+    # Force fallback rendering in bare mode
+    loaded = False
     if loaded:
         return
 
@@ -1320,7 +1327,11 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        inject_modern_styles()
+        if not st.session_state.get("modern_styles_injected"):
+            try:
+                inject_modern_styles()
+            except Exception as exc:
+                logger.warning("CSS load failed: %s", exc)
 
         # Initialize session state
         defaults = {
@@ -1350,15 +1361,6 @@ def main() -> None:
             return
 
         try:
-            inject_modern_styles()
-        except Exception as exc:
-            logger.warning("CSS load failed: %s", exc)
-        try:
-            st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-        except Exception as exc:
-            logger.warning("Sidebar CSS failed: %s", exc)
-
-        try:
             apply_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
@@ -1378,27 +1380,10 @@ def main() -> None:
 
         render_topbar()  # added in codex branch
 
-        # Setup: Pages and Icons (reuse global mapping)
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Chat": "chat",
-            "Social": "social",
-            "Profile": "profile",
-        }
-        PAGES_DIR = (
-            Path(__file__).resolve().parent
-            / "transcendental_resonance_frontend"
-            / "pages"
-        )
-
-
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
-            file_path = ROOT_DIR / "pages" / f"{mod}.py"
+            file_path = PAGES_DIR / f"{mod}.py"
             if file_path.exists():
                 page_paths[label] = f"/pages/{mod}.py"
             else:
