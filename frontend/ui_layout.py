@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """UI Layout Helpers
 
 Reusable Streamlit layout helpers and navigation components for pages.

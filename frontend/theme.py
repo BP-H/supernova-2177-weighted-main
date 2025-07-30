@@ -5,6 +5,11 @@
 
 from __future__ import annotations
 
+ACCENT_COLOR = "#00F0FF"  # Default fallback accent
+
+def get_accent_color() -> str:
+    """Return the current theme accent color."""
+    return ACCENT_COLOR
 
 def get_global_css(dark: bool) -> str:
     """Return ``:root`` CSS variables for dark or light mode."""

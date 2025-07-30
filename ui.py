@@ -60,6 +60,7 @@ from frontend.ui_layout import (
     render_profile_card,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
+from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -75,15 +76,24 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
+import logging
+
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as import_err:  # pragma: no cover - log fallback on import failure
+except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
     logging.getLogger(__name__).warning(
-        "Failed to import ensure_pages: %s", import_err
+        "Primary page_registry import failed: %s", import_err
     )
-    def ensure_pages(*_a, **_k):
-        logging.getLogger(__name__).warning("ensure_pages noop fallback used")
-        return None
+    try:
+        from utils.page_registry import ensure_pages  # type: ignore
+    except Exception as fallback_err:
+        logging.getLogger(__name__).warning(
+            "Secondary page_registry import also failed: %s", fallback_err
+        )
+        def ensure_pages(*_a, **_k):
+            logging.getLogger(__name__).warning("ensure_pages noop fallback used")
+            return None
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -1360,7 +1370,9 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        # Setup: Pages and Icons
+        render_topbar()  # added in codex branch
+
+        # Setup: Pages and Icons (reuse global mapping)
         PAGES = {
             "Validation": "validation",
             "Voting": "voting",
@@ -1375,6 +1387,7 @@ def main() -> None:
             / "transcendental_resonance_frontend"
             / "pages"
         )
+
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
