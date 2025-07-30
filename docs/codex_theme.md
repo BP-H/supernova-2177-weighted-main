@@ -26,3 +26,13 @@ secondaryBackgroundColor = "#002B36"
 textColor = "#E0FFFF"
 font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 ```
+
+### CSS Classes
+
+The `inject_modern_styles()` helper exposes a few utility classes:
+
+| Class | Purpose |
+|-------|---------|
+| `.gradient-btn` | Applies the gradient button styling with hover animations. |
+| `.sidebar-nav .nav-item` | Sidebar navigation element with soft highlights. |
+| `.sidebar-nav .icon` | Emoji icon wrapper used inside nav items. |

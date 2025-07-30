@@ -27,8 +27,6 @@ def inject_modern_styles() -> None:
             color: var(--text-color);
             font-family: 'Inter', 'Roboto', 'Urbanist', sans-serif;
         }
-
-        }
         .main .block-container {
             padding-top: 2rem;
             padding-left: 3rem;
@@ -92,6 +90,26 @@ def inject_modern_styles() -> None:
             font-family: 'Inter', sans-serif !important;
             margin-bottom: 0.75rem;
         }
+        .gradient-btn,
+        .stButton > button {
+            background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            color: #00111e !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 2rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
+            font-size: 0.95rem !important;
+            height: auto !important;
+        }
+        .gradient-btn:hover,
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
+            background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
+            filter: brightness(1.05);
+ 
         .stButton>button {
             background: rgba(255,255,255,0.05) !important;
             border: 1px solid rgba(255,255,255,0.15) !important;
@@ -117,19 +135,48 @@ def inject_modern_styles() -> None:
             border-radius: 8px !important;
         }
 
-        .sidebar-nav {
-            padding: 0;
-            margin: 0 0 1rem 0;
-        }
         .sidebar-nav .nav-item {
             padding: 0.4rem 0.8rem;
             border-radius: 8px;
             margin-bottom: 0.25rem;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
         }
 
         .sidebar-nav .nav-item.active {
             background: rgba(255,255,255,0.1);
+            color: var(--neon-accent);
+        }
+
+        .sidebar-nav .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav .icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main .block-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .gradient-btn,
+            .stButton > button {
+                width: 100%;
+            }
         }
 
         .profile-card {
