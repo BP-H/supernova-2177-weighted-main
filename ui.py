@@ -396,7 +396,11 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 continue
 
     # Fallback: import the module directly and call ``render`` or ``main``
+    attempted_paths = set()  # Track attempted paths to avoid infinite loops
     for module_path in module_paths:
+        if module_path in attempted_paths:
+            continue
+        attempted_paths.add(module_path)
         try:
             page_mod = importlib.import_module(module_path)
             for method_name in ("render", "main"):
