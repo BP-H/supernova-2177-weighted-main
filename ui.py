@@ -17,9 +17,6 @@ import sys
 import traceback
 
 from modern_ui_components import (
-    render_modern_layout,
-    render_modern_header,
-    render_modern_sidebar,
     render_validation_card,
     render_stats_section,
 )
@@ -27,7 +24,6 @@ from modern_ui_components import (
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
-from datetime import datetime
 from pathlib import Path
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -82,12 +78,12 @@ from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
-    centered_container,
     header,
     theme_selector,
 )
 
 from modern_ui import (
+    inject_modern_styles,
     inject_premium_styles,
     render_modern_header,
     render_stats_section,
@@ -189,7 +185,7 @@ def render_landing_page():
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-def inject_dark_theme() -> None:
+def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
         """
@@ -267,10 +263,21 @@ def inject_dark_theme() -> None:
             transform: translateY(-2px);
         }
 
+        /* Enhanced metrics styling */
+        [data-testid="stMetric"],
+        [data-testid="metric-container"] {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: none;
+        }
+
+        /* Sophisticated button styling */
         .stButton > button {
-            background-color: #4f8bf9;
+            background-color: #2d2d2d;
             color: #fff;
-            border: none;
+            border: 1px solid #3a3a3a;
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
@@ -278,17 +285,9 @@ def inject_dark_theme() -> None:
         }
 
         .stButton > button:hover {
-            background-color: #699cfc;
+            background-color: #4f8bf9;
+            border-color: #4f8bf9;
             transform: translateY(-2px);
-        }
-
-        /* Modern metrics */
-        [data-testid="metric-container"] {
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
-            padding: 1rem;
-            box-shadow: none;
         }
 
         /* Text styling */
@@ -325,19 +324,21 @@ def inject_dark_theme() -> None:
             background: #4f8bf9;
         }
 
-        /* Modern scrollbar */
+        /* Enhanced scrollbar styling */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #252525;
             border-radius: 10px;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #4f8bf9;
             border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #699cfc;
         }
 
         /* Animations */
@@ -345,7 +346,7 @@ def inject_dark_theme() -> None:
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
+        
         .main .block-container > div {
             animation: fadeIn 0.6s ease-out;
         }
@@ -408,7 +409,7 @@ def render_modern_validation_page():
         st.markdown("### 📊 Validation Input")
         
         # Beautiful text area
-        validation_data = st.text_area(
+        st.text_area(
             "Validation JSON Data",
             value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
             height=200,
@@ -416,25 +417,25 @@ def render_modern_validation_page():
         )
         
         # Modern toggle for demo mode
-        demo_mode = st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
+        st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
         
     with col2:
         st.markdown("### ⚙️ Analysis Settings")
         
-        view_mode = st.selectbox(
+        st.selectbox(
             "Visualization Mode",
             ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
             help="Choose how to visualize the validation network"
         )
         
-        confidence_threshold = st.slider(
+        st.slider(
             "Confidence Threshold",
             0.0, 1.0, 0.75,
             help="Minimum confidence level for validation acceptance"
         )
         
         if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
-            with st.spinner("🔍 Analyzing validation data..."):
+            with st.spinner("Loading..."):
                 # Simulate analysis
                 import time
                 time.sleep(2)
@@ -465,7 +466,6 @@ def render_modern_validation_page():
                     </div>
                 """, unsafe_allow_html=True)
 
-# In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
     """Load page with beautiful fallback."""
     # Define pages here since it's not global
@@ -479,15 +479,30 @@ def load_page_with_fallback(choice):
     
     try:
         page_module = pages[choice]
-        module_path = f"transcendental_resonance_frontend.pages.{page_module}"
-        page_mod = import_module(module_path)
-
-        if hasattr(page_mod, "main"):
-            page_mod.main()
-        elif hasattr(page_mod, "render"):
-            page_mod.render()
+        # Try both possible module paths
+        module_paths = [
+            f"transcendental_resonance_frontend.pages.{page_module}",
+            f"pages.{page_module}"
+        ]
+        
+        page_mod = None
+        for module_path in module_paths:
+            try:
+                page_mod = import_module(module_path)
+                break
+            except ImportError:
+                continue
+        
+        if page_mod:
+            if hasattr(page_mod, "main"):
+                page_mod.main()
+            elif hasattr(page_mod, "render"):
+                page_mod.render()
+            else:
+                raise ImportError("No main or render method found")
         else:
-            render_modern_validation_page()
+            raise ImportError("Module not found in any path")
+            
     except ImportError:
         # Beautiful fallback based on page choice
         if choice == "Validation":
@@ -502,29 +517,42 @@ def load_page_with_fallback(choice):
             render_modern_social_page()
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
+
 def render_modern_voting_page():
     """Modern voting page fallback."""
     st.markdown("# 🗳️ Voting Dashboard")
-    render_voting_tab()
+    try:
+        render_voting_tab()
+    except Exception:
+        st.info("🚧 Advanced voting features coming soon!")
 
 def render_modern_agents_page():
     """Modern agents page fallback."""
     st.markdown("# 🤖 AI Agents")
-    render_agent_insights_tab()
+    try:
+        render_agent_insights_tab()
+    except Exception:
+        st.info("🚧 Agent management system in development!")
 
 def render_modern_music_page():
     """Modern music page fallback."""
     st.markdown("# 🎵 Resonance Music")
     try:
         from transcendental_resonance_frontend.pages import resonance_music
-        resonance_music.main()
+        if hasattr(resonance_music, "main"):
+            resonance_music.main()
+        else:
+            raise RuntimeError("No main method available")
     except Exception:
         st.info("🚧 Harmonic resonance features coming soon!")
 
 def render_modern_social_page():
     """Modern social page fallback."""
     st.markdown("# 👥 Social Network")
-    render_social_tab()
+    try:
+        render_social_tab()
+    except Exception:
+        st.info("🚧 Social features in development!")
 
 # Add this to your main() function after st.set_page_config()
 
@@ -536,7 +564,22 @@ def load_css() -> None:
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from status_indicator import render_status_icon
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+
+# Optional UI utilities - provide fallbacks if not available
+try:
+    from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+except ImportError:  # pragma: no cover - optional dependency
+    def load_rfc_entries():
+        return []
+    
+    def parse_summary(text):
+        return {"summary": text[:100] + "..." if len(text) > 100 else text}
+    
+    def summarize_text(text):
+        return text[:200] + "..." if len(text) > 200 else text
+    
+    def render_main_ui():
+        st.info("Main UI utilities not available")
 
 # Database fallback for local testing
 try:
@@ -618,7 +661,7 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
+        
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
@@ -757,7 +800,7 @@ def run_analysis(validations, *, layout: str = "force"):
         if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
             print("✅ UI diagnostic agent active")
 
-    with st.spinner("Running analysis..."):
+    with st.spinner("Loading..."):
         result = analyze_validation_integrity(validations)
 
     st.subheader("Validations")
@@ -996,7 +1039,7 @@ def main() -> None:
         )
         
         # Apply dark theme styling
-        inject_dark_theme()
+        inject_modern_styles()
         
         # Initialize session state
         if "session_start_ts" not in st.session_state:
@@ -1030,7 +1073,7 @@ def main() -> None:
 
         # Apply modern styling
         try:
-            inject_premium_styles()
+            inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
 
