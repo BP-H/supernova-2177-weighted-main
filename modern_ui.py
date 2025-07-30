@@ -10,6 +10,8 @@ def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
@@ -59,7 +61,8 @@ def inject_modern_styles() -> None:
             padding: 1rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+            backdrop-filter: blur(8px);
 
             margin-bottom: 1rem;
             background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
@@ -138,6 +141,18 @@ def inject_modern_styles() -> None:
             border-radius: 12px;
             padding: 0.5rem 0.75rem;
             margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            [data-testid="stSidebar"] {
+                width: 14rem;
+            }
+        }
+
         }
         </style>
         """,
