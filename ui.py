@@ -359,7 +359,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 st.switch_page(rel_path)
                 return
             except StreamlitAPIException as exc:
-                st.warning(f"Switch failed for {choice}: {exc}")
+                st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
                 continue
             except Exception as exc:  # Unexpected failure
                 logging.error(
@@ -382,7 +382,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             logging.error("Error executing %s: %s", module_path, exc, exc_info=True)
             break
 
-    st.warning("Unable to load page. Showing preview.")
+    st.toast("Unable to load page. Showing preview.", icon="⚠️")
     if "_render_fallback" in globals():
         _render_fallback(choice)
     if last_exc:
@@ -414,7 +414,7 @@ def _render_fallback(choice: str) -> None:
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
-        st.warning(f"No fallback available for page: {choice}")
+        st.toast(f"No fallback available for page: {choice}", icon="⚠️")
 
 
 def render_modern_validation_page():
@@ -464,13 +464,13 @@ def render_modern_social_page():
 def render_modern_chat_page() -> None:
     """Simple placeholder page for the Chat section."""
     render_title_bar("💬", "Chat")
-    st.info("Chat module not yet implemented.")
+    st.toast("Chat module not yet implemented.")
 
 
 def render_modern_profile_page() -> None:
     """Placeholder profile page."""
     render_title_bar("👤", "Profile")
-    st.info("Profile management pending implementation.")
+    st.toast("Profile management pending implementation.")
 
 
 def render_sidebar() -> str:
@@ -985,11 +985,11 @@ def render_developer_tools() -> None:
                     except Exception as exc:
                         st.error(f"Fork failed: {exc}")
                 elif not user:
-                    st.info("No users available to fork")
+                    st.toast("No users available to fork")
             except Exception as exc:
                 st.error(f"Database error: {exc}")
         else:
-            st.info("Fork operation unavailable")
+            st.toast("Fork operation unavailable", icon="⚠️")
 
         # Less common diagnostics
         with st.expander("Diagnostics & Logs"):
@@ -1017,7 +1017,7 @@ def render_developer_tools() -> None:
                 except Exception as exc:
                     st.error(f"Database error: {exc}")
             else:
-                st.info("Database unavailable")
+                st.toast("Database unavailable", icon="⚠️")
 
             # Run introspection audit
             hid = st.text_input("Hypothesis ID", key="audit_id")
@@ -1053,7 +1053,7 @@ def render_developer_tools() -> None:
                     except Exception as exc:
                         st.error(f"Database error: {exc}")
                 else:
-                    st.info("Audit functionality unavailable")
+                    st.toast("Audit functionality unavailable", icon="⚠️")
 
             # Agent logs
             log_path = Path("logchain_main.log")
@@ -1066,7 +1066,7 @@ def render_developer_tools() -> None:
                 except Exception as exc:
                     st.error(f"Log read failed: {exc}")
             else:
-                st.info("No log file found")
+                st.toast("No log file found")
 
             # Inject event
             with st.expander("Inject Event", expanded=False):
@@ -1085,7 +1085,7 @@ def render_developer_tools() -> None:
                         except Exception as exc:
                             st.error(f"Event failed: {exc}")
                     else:
-                        st.info("Agent unavailable")
+                        st.toast("Agent unavailable")
 
             # Session inspector
             if "AGENT_REGISTRY" in globals():
@@ -1106,7 +1106,7 @@ def render_developer_tools() -> None:
                         user_count = len(agent_obj.storage.get_all_users())
                         st.write(f"User count: {user_count}")
                 except Exception:
-                    st.warning("Inspection failed")
+                    st.toast("Inspection failed", icon="⚠️")
 
         # Playground for quick flows
         with st.expander("Playground"):
@@ -1130,7 +1130,7 @@ def render_developer_tools() -> None:
                     except Exception as exc:
                         st.error(f"Flow execution failed: {exc}")
                 else:
-                    st.info("Agent registry unavailable")
+                    st.toast("Agent registry unavailable", icon="⚠️")
 
 
 def main() -> None:
@@ -1334,59 +1334,60 @@ def main() -> None:
                 try:
                     load_page_with_fallback(choice, module_paths)
                 except Exception:
-                    st.warning(f"Page not found: {choice}")
+                    st.toast(f"Page not found: {choice}", icon="⚠️")
                     _render_fallback(choice)
             else:
-                st.info("Select a page on the left to continue.")
-                _render_fallback("Validation")
+                st.toast("Select a page above to continue.")  # modern, non-blocking feedback
+                _render_fallback("Validation")  # Default fallback page as a preview
 
-            # Run agent logic if triggered
-            if run_agent_clicked and "AGENT_REGISTRY" in globals():
-                try:
-                    payload = json.loads(payload_txt or "{}")
-                except Exception as exc:
-                    alert(f"Invalid payload: {exc}", "error")
-                else:
-                    backend_fn = get_backend(backend_choice.lower(), api_key or None)
-                    if backend_fn is None:
-                        alert("Invalid backend selected", "error")
-                        st.session_state["agent_output"] = None
-                        st.stop()
-
-                    agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
-                    if agent_cls is None:
-                        alert("Unknown agent selected", "error")
+                # Run agent logic if triggered
+                if run_agent_clicked and "AGENT_REGISTRY" in globals():
+                    try:
+                        payload = json.loads(payload_txt or "{}")
+                    except Exception as exc:
+                        alert(f"Invalid payload: {exc}", "error")
                     else:
-                        try:
-                            if agent_choice == "CI_PRProtectorAgent":
-                                talker = backend_fn or (lambda p: p)
-                                selected_agent = agent_cls(
-                                    talker, llm_backend=backend_fn
+                        backend_fn = get_backend(backend_choice.lower(), api_key or None)
+                        if backend_fn is None:
+                            alert("Invalid backend selected", "error")
+                            st.session_state["agent_output"] = None
+                            st.stop()
+
+                        agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
+                        if agent_cls is None:
+                            alert("Unknown agent selected", "error")
+                        else:
+                            try:
+                                if agent_choice == "CI_PRProtectorAgent":
+                                    talker = backend_fn or (lambda p: p)
+                                    selected_agent = agent_cls(
+                                        talker, llm_backend=backend_fn
+                                    )
+                                elif agent_choice == "MetaValidatorAgent":
+                                    selected_agent = agent_cls({}, llm_backend=backend_fn)
+                                elif agent_choice == "GuardianInterceptorAgent":
+                                    selected_agent = agent_cls(llm_backend=backend_fn)
+                                else:
+                                    selected_agent = agent_cls(llm_backend=backend_fn)
+
+                                st.session_state["agent_instance"] = selected_agent
+                                result = selected_agent.process_event(
+                                    {"event": event_type, "payload": payload}
                                 )
-                            elif agent_choice == "MetaValidatorAgent":
-                                selected_agent = agent_cls({}, llm_backend=backend_fn)
-                            elif agent_choice == "GuardianInterceptorAgent":
-                                selected_agent = agent_cls(llm_backend=backend_fn)
-                            else:
-                                selected_agent = agent_cls(llm_backend=backend_fn)
+                                st.session_state["agent_output"] = result
+                                st.success("Agent executed")
+                            except Exception as exc:
+                                st.session_state["agent_output"] = {"error": str(exc)}
+                                alert(f"Agent error: {exc}", "error")
 
-                            st.session_state["agent_instance"] = selected_agent
-                            result = selected_agent.process_event(
-                                {"event": event_type, "payload": payload}
-                            )
-                            st.session_state["agent_output"] = result
-                            st.success("Agent executed")
-                        except Exception as exc:
-                            st.session_state["agent_output"] = {"error": str(exc)}
-                            alert(f"Agent error: {exc}", "error")
+                # Show agent output
+                if st.session_state.get("agent_output") is not None:
+                    st.subheader("Agent Output")
+                    st.json(st.session_state["agent_output"])
 
-            # Show agent output
-            if st.session_state.get("agent_output") is not None:
-                st.subheader("Agent Output")
-                st.json(st.session_state["agent_output"])
+                render_stats_section()
+                st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-            render_stats_section()
-            st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

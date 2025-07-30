@@ -96,9 +96,9 @@ class VibeSimulatorEngine:
         self.logger.log(level, text)
         if st is not None:
             if warn:
-                st.warning(text)
+                st.toast(text, icon="⚠️")
             else:
-                st.success(text)
+                st.toast(text)
 
     def _display_risk(self, risk: float) -> None:
         if risk > 0.7:

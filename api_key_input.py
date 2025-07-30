@@ -124,7 +124,7 @@ def render_simulation_stubs() -> None:
                 nx.draw_networkx(graph.graph, pos=pos, ax=ax)
                 st.pyplot(fig)
             except Exception:
-                st.info("Install networkx and matplotlib for graph display")
+                st.toast("Install networkx and matplotlib for graph display")
 
         trace_id = st.text_input("Trace Node", key="trace_node")
         if trace_id:

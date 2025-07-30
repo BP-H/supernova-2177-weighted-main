@@ -183,7 +183,7 @@ def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] 
                                 "value": list(metrics.values())
                             })
                         else:
-                            st.info("No metrics available for this profile.")
+                            st.toast("No metrics available for this profile.")
 
                         st.write(f"Associated MIDI bytes (count/size): {midi_bytes_count}")
 
@@ -191,14 +191,14 @@ def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] 
                         if summary_midi_b64:
                             summary_midi_bytes = base64.b64decode(summary_midi_b64)
                             st.audio(summary_midi_bytes, format="audio/midi", key="summary_audio_player")
-                            st.info("Playing associated MIDI from summary.")
+                            st.toast("Playing associated MIDI from summary.")
 
                         st.toast("Summary loaded!")
                 except Exception as exc:
                     alert(f"Summary fetch failed: {exc}", "error")
 
-                    else:
-                        st.info("No metrics available for this profile.")
+                        else:
+                        st.toast("No metrics available for this profile.")
 
                     st.write(f"Associated MIDI bytes (count/size): {midi_bytes_count}")
 
@@ -211,7 +211,7 @@ def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] 
                             format="audio/midi",
                             key="summary_audio_player",
                         )
-                        st.info("Playing associated MIDI from summary.")
+                        st.toast("Playing associated MIDI from summary.")
 
                     st.toast("Summary loaded!")
                 else:
