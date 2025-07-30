@@ -16,6 +16,18 @@ from contextlib import nullcontext
 import streamlit as st
 from modern_ui import inject_modern_styles
 
+# Shared CSS style for sections displayed in bordered boxes
+BOX_CSS = """
+<style>
+.tab-box {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+</style>
+"""
+
 
 def alert(
     message: str,
@@ -180,4 +192,5 @@ __all__ = [
     "centered_container",
     "safe_container",
     "inject_global_styles",
+    "BOX_CSS",
 ]
