@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import streamlit as st
-from typing import Optional
+from typing import Optional, Dict
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -18,12 +18,50 @@ except Exception:  # pragma: no cover - optional dependency
     option_menu = None  # type: ignore
     USE_OPTION_MENU = False
 
+# Sidebar styling for a dark glass look with hover and active states
+SIDEBAR_STYLES = """
+<style>
+.sidebar-nav {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 12px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+.sidebar-nav .nav-item {
+    color: #f0f4f8;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s ease;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.sidebar-nav .nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav .nav-item.selected {
+    background: rgba(255, 255, 255, 0.15);
+}
+@media (max-width: 768px) {
+    .sidebar-nav {
+        padding: 0.25rem;
+    }
+    .sidebar-nav .nav-item {
+        padding: 0.75rem;
+    }
+}
+</style>
+"""
+
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
     inject_modern_styles()
     st.markdown(
         """
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
         .glass-card {
             background: rgba(255,255,255,0.3);
@@ -56,30 +94,44 @@ def render_modern_header(title: str) -> None:
 
 
 def render_modern_sidebar(
-    pages: dict[str, str],
+    pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
-    icons: Optional[list[str]] = None,
+    icons: Optional[Dict[str, str]] = None,
+
 ) -> str:
-    """Render a vertical navigation menu and return the selected label."""
+    """Render a vertical navigation menu with optional icons."""
     if container is None:
         container = st.sidebar
 
+    state = getattr(st, "session_state", {})
+    if key not in state:
+        state[key] = list(pages.keys())[0]
+
     opts = list(pages.keys())
+    icon_map = icons or {}
+    session_key = f"sidebar_{id(pages)}"
+    st.session_state.setdefault(session_key, opts[0])
+
     container_ctx = safe_container(container)
     with container_ctx:
+        st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-        if USE_OPTION_MENU and option_menu is not None:
-            choice = option_menu(
-                menu_title=None,
-                options=opts,
-                icons=icons or ["dot"] * len(opts),
-                orientation="vertical",
-                key=f"sidebar_{id(pages)}",
-            )
-        else:
-            choice = st.radio("Navigate", opts, key=f"sidebar_{id(pages)}")
-        st.markdown("</div>", unsafe_allow_html=True)
-    return choice
+    if USE_OPTION_MENU and option_menu is not None:
+        choice = option_menu(
+            menu_title=None,
+            options=opts,
+            icons=icons or ["dot"] * len(opts),
+            orientation="vertical",
+            key=key,
+            default_index=opts.index(state.get(key, opts[0])),
+        )
+    else:
+        choice = st.radio("Navigate", opts, key=key, index=opts.index(state.get(key, opts[0])))
+    
+    state[key] = choice
+    st.markdown("</div>", unsafe_allow_html=True)
+    return state[key]
+
 
 
 def render_validation_card(entry: dict) -> None:

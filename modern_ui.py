@@ -13,11 +13,13 @@ def inject_modern_styles() -> None:
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
-            --bg-start: #020817; /* Deeper contrast, modern base tone */
-            --bg-end: #0d1b2a;   /* Soft blend into dark blue */
-            --text-color: #f0f4f8; /* Clear, readable white-blue */
-            --neon-accent: #00ffe1; /* Preserved neon styling from other UI rules */
+            --neon-accent: #00ffe1;
+            --bg-start: #05080f;
+            --bg-end: #020409;
+            --text-color: #f0f4f8;
+
         }
 
         body, .stApp {
@@ -90,26 +92,22 @@ def inject_modern_styles() -> None:
             font-family: 'Inter', sans-serif !important;
             margin-bottom: 0.75rem;
         }
-        .stButton > button {
-            background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
-
-            border: none !important;
-            border-radius: 10px !important;
-            color: #00111e !important;
+        .stButton>button {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            backdrop-filter: blur(8px) !important;
+            border-radius: 12px !important;
+            color: var(--text-color) !important;
             font-weight: 600 !important;
-            padding: 0.75rem 2rem !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
-
-            font-size: 0.95rem !important;
-            height: auto !important;
+            padding: 0.6rem 1.4rem !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+            transition: all 0.2s ease !important;
+            font-size: 0.9rem !important;
         }
-        .stButton > button:hover {
+        .stButton>button:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important;
+            background: rgba(255,255,255,0.08) !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
-            background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
-
-            filter: brightness(1.05);
         }
 
         input, textarea, select {
@@ -119,13 +117,30 @@ def inject_modern_styles() -> None:
             border-radius: 8px !important;
         }
 
+        .sidebar-nav {
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
         .sidebar-nav .nav-item {
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 8px;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
         }
 
         .sidebar-nav .nav-item.active {
             background: rgba(255,255,255,0.1);
+        }
+
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -136,6 +151,8 @@ def inject_modern_styles() -> None:
             [data-testid="stSidebar"] {
                 width: 14rem;
             }
+        }
+
         }
         </style>
         """,
