@@ -1,8 +1,11 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+import streamlit as st
 
-from transcendental_resonance_frontend.pages.validation import main
+def main():
+    st.title("Validation Module")
+    st.write("This page is under construction but live. ✅")
 
-if __name__ == "__main__":
-    main()
+# Optional for compatibility with render()
+render = main
