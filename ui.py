@@ -141,8 +141,6 @@ from modern_ui import (
     render_stats_section,
 )
 
-# Apply global styles immediately
-inject_modern_styles()
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
 except ImportError:  # optional dependency fallback
@@ -1282,8 +1280,13 @@ def main() -> None:
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
 
+
         if forced_page:
             choice = forced_page
+
+        # Default to Validation page if nothing selected
+        if not choice:
+            choice = "Validation"
 
 
         try:
@@ -1351,6 +1354,7 @@ def main() -> None:
 
         # Center content area — dynamic page loading
         with center_col:
+            # Render the selected page or show fallback when none selected
             if choice:
                 page_key = PAGES.get(choice, choice)
                 module_paths = [
