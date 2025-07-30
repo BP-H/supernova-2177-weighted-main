@@ -1300,7 +1300,8 @@ def main() -> None:
 
             st.divider()
             governance_view = st.toggle(
-                "Governance View", value=st.session_state.get("governance_view", False)
+                "Governance View",
+                value=st.session_state.get("governance_view", False),
             )
             st.session_state["governance_view"] = governance_view
 
