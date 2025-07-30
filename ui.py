@@ -1496,22 +1496,29 @@ def main() -> None:
                 with dev_tabs[5]:
                     if 'AGENT_REGISTRY' in globals():
                         st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                
                     if 'cosmic_nexus' in globals():
                         st.write("Sub universes:", list(getattr(cosmic_nexus, "sub_universes", {}).keys()))
+                
                     agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                
                     if agent_obj is not None and 'InMemoryStorage' in globals():
                         try:
                             if isinstance(agent_obj.storage, InMemoryStorage):
-                                st.write(f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}")
+                                st.write(
+                                    f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                )
                             else:
-                                user_count = len(agent_obj.storage.get_all_users())
-                                st.write(f"User count: {user_count}")
-                        except Exception:
-                            st.error("Storage info unavailable")
-                                user_count = len(agent_obj.storage.get_all_users())
-                                st.write(f"User count: {user_count}")
+                                try:
+                                    user_count = len(agent_obj.storage.get_all_users())
+                                    st.write(f"User count: {user_count}")
+                                except Exception:
+                                    st.error("Storage info unavailable")
                         except Exception as exc:
                             st.warning(f"Agent storage inspection failed: {exc}")
+                    else:
+                        st.info("Agent or storage unavailable")
+
 
                 with dev_tabs[5]:
                     if 'AGENT_REGISTRY' in globals():
