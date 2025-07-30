@@ -20,17 +20,47 @@ except Exception:  # pragma: no cover - optional dependency
 
 VOTING_CSS = """
 <style>
-.tab-box {
+.app-container { padding: 1rem; }
+.card {
+    background: #111;
+    border-radius: 12px;
     padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-bottom: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.tab-box:hover {
+.card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+.card input,
+.card textarea,
+.card select {
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+.button-primary > button {
+    background-color: #007aff;
+    color: #fff;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.button-primary > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,122,255,0.5);
+    filter: brightness(1.05);
+}
+.ag-theme-streamlit .ag-header,
+.ag-theme-streamlit .ag-header-viewport {
+    background-color: #007aff !important;
+}
+.ag-theme-streamlit .ag-header-cell-label {
+    color: #fff;
+    font-weight: bold;
+}
+.ag-grid-container {
+    max-height: 400px;
+    overflow-y: auto;
 }
 .app-container { padding: 1rem; }
 .card {
@@ -121,6 +151,7 @@ def render_proposals_tab(main_container=None) -> None:
             return
 
         safe_markdown("<div class='app-container'>", unsafe_allow_html=True)
+
         col1, col2 = st.columns([1, 1])
 
         with col1:
