@@ -4,7 +4,7 @@
 import asyncio
 import json
 import streamlit as st
-from streamlit_helpers import safe_container, BOX_CSS
+from streamlit_helpers import safe_container
 import pandas as pd
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder
@@ -18,19 +18,91 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
-BOX_CSS = """
+VOTING_CSS = """
 <style>
-.tab-box {
+.app-container { padding: 1rem; }
+.card {
+    background: #111;
+    border-radius: 12px;
     padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-bottom: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.tab-box:hover {
+.card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+.card input,
+.card textarea,
+.card select {
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+.button-primary > button {
+    background-color: #007aff;
+    color: #fff;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.button-primary > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,122,255,0.5);
+    filter: brightness(1.05);
+}
+.ag-theme-streamlit .ag-header,
+.ag-theme-streamlit .ag-header-viewport {
+    background-color: #007aff !important;
+}
+.ag-theme-streamlit .ag-header-cell-label {
+    color: #fff;
+    font-weight: bold;
+}
+.ag-grid-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.app-container { padding: 1rem; }
+.card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.card input,
+.card textarea,
+.card select {
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+.button-primary > button {
+    background-color: #1DA1F2;
+    color: #fff;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.button-primary > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(29,161,242,0.5);
+    filter: brightness(1.05);
+}
+.ag-theme-streamlit .ag-header,
+.ag-theme-streamlit .ag-header-viewport {
+    background-color: #1DA1F2 !important;
+}
+.ag-theme-streamlit .ag-header-cell-label {
+    color: #fff;
+    font-weight: bold;
+}
+.ag-grid-container {
+    max-height: 400px;
+    overflow-y: auto;
 }
 </style>
 """
@@ -78,57 +150,7 @@ def render_proposals_tab(main_container=None) -> None:
             )
             return
 
-        safe_markdown(
-            BOX_CSS
-            + """
-            <style>
-        .app-container { padding: 1rem; }
-        .card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .card input,
-        .card textarea,
-        .card select {
-            border-radius: 8px;
-            padding: 0.5rem;
-        }
-        .button-primary > button {
-            background-color: #1DA1F2;
-            color: #fff;
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .button-primary > button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(29,161,242,0.5);
-            filter: brightness(1.05);
-        }
-        .ag-theme-streamlit .ag-header,
-        .ag-theme-streamlit .ag-header-viewport {
-            background-color: #1DA1F2 !important;
-        }
-        .ag-theme-streamlit .ag-header-cell-label {
-            color: #fff;
-            font-weight: bold;
-        }
-        .ag-grid-container {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        </style>
-        <div class='app-container'>
-        """,
-        unsafe_allow_html=True,
-    )
+        safe_markdown("<div class='app-container'>", unsafe_allow_html=True)
 
         col1, col2 = st.columns([1, 1])
 
@@ -250,7 +272,7 @@ def render_governance_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown("<div class='tab-box'>", unsafe_allow_html=True)
             if st.button("Refresh Votes"):
                 with st.spinner("Working on it..."):
                     try:
@@ -309,7 +331,7 @@ def render_agent_ops_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown("<div class='tab-box'>", unsafe_allow_html=True)
             if st.button("Reload Agent List"):
                 with st.spinner("Working on it..."):
                     try:
@@ -371,7 +393,7 @@ def render_logs_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown("<div class='tab-box'>", unsafe_allow_html=True)
             trace_text = st.text_area("Audit Trace JSON", value="{}", height=200)
             if st.button("Explain Trace"):
                 try:
@@ -399,6 +421,7 @@ def render_voting_tab(main_container=None) -> None:
     container_ctx = safe_container(main_container)
     with container_ctx:
         inject_global_styles()
+        st.markdown(VOTING_CSS, unsafe_allow_html=True)
         sub1, sub2, sub3, sub4 = st.tabs(
             [
                 "Proposal Hub",
