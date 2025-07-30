@@ -382,7 +382,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         attempted_paths.add(module_path)
         filename = module_path.rsplit(".", 1)[-1] + ".py"
         candidate_files = [
-            Path.cwd() / "pages" / filename,
+            ROOT_DIR / "pages" / filename,
             PAGES_DIR / filename,
         ]
 
@@ -442,15 +442,16 @@ def _render_fallback(choice: str) -> None:
     except Exception:
         OFFLINE_MODE = False
 
-    slug = PAGES.get(choice, str(choice)).lower()
-    page_candidates = [
-        Path.cwd() / "pages" / f"{slug}.py",
-        ROOT_DIR / "pages" / f"{slug}.py",
-        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
-    ]
-
+    # Normalize and derive slug/module name
     slug = normalize_choice(choice)
     module = PAGES.get(slug, slug.lower())
+
+    # Candidate paths to try loading from
+    page_candidates = [
+        ROOT_DIR / "pages" / f"{slug}.py",
+        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+        Path.cwd() / "pages" / f"{slug}.py",
+    ]
 
     for page_file in page_candidates:
         if page_file.exists():
@@ -464,6 +465,7 @@ def _render_fallback(choice: str) -> None:
                 except Exception as exc:
                     st.error(f"Failed to load page {module}: {exc}")
             return
+
 
     # Prevent duplicate fallback rendering in session
     if st.session_state.get("_fallback_rendered") == slug:
@@ -1352,7 +1354,7 @@ def main() -> None:
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
-            file_path = Path.cwd() / "pages" / f"{mod}.py"
+            file_path = ROOT_DIR / "pages" / f"{mod}.py"
             if file_path.exists():
                 page_paths[label] = f"/pages/{mod}.py"
             else:
