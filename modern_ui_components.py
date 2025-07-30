@@ -13,7 +13,26 @@ from utils.paths import ROOT_DIR, PAGES_DIR
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
-from modern_ui import inject_modern_styles
+try:
+    from modern_ui import inject_modern_styles
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        return None
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import get_pages_dir
+except Exception:
+    try:  # type: ignore
+        from utils.page_registry import get_pages_dir  # type: ignore
+    except Exception:  # pragma: no cover - final fallback
+        def get_pages_dir() -> Path:
+            return (
+                Path(__file__).resolve().parent
+                / "transcendental_resonance_frontend"
+                / "pages"
+            )
+
+from frontend import theme
 from streamlit_javascript import st_javascript
 
 HAS_LUCIDE = importlib.util.find_spec("lucide-react") is not None
@@ -152,7 +171,8 @@ def render_modern_sidebar(
     page_dir_candidates = [
         Path.cwd() / "pages",
         ROOT_DIR / "pages",
-        PAGES_DIR,
+        Path(__file__).resolve().parent / "pages",
+        get_pages_dir(),
     ]
 
     existing_dirs = [d for d in page_dir_candidates if d.exists()]
@@ -301,17 +321,79 @@ def render_validation_card(entry: dict) -> None:
 
 
 def render_stats_section(stats: dict) -> None:
-    """Show quick statistics in a styled block."""
+    """Display quick stats using a responsive flexbox layout."""
+
+    accent = theme.get_accent_color()
+
     st.markdown(
         f"""
-        <div class='glass-card'>
-            <h4 style='margin-top:0'>Stats</h4>
-            <div>Runs: {stats.get('runs', 0)}</div>
-            <div>Proposals: {stats.get('proposals', 'N/A')}</div>
-        </div>
+        <style>
+        .stats-container {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+        }}
+        .stats-card {{
+            flex: 1 1 calc(25% - 1rem);
+            min-width: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }}
+        .stats-card:hover {{
+            transform: scale(1.02);
+        }}
+        .stats-value {{
+            color: {accent};
+            font-size: calc(1.5rem + 0.3vw);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }}
+        .stats-label {{
+            color: #888;
+            font-size: calc(0.8rem + 0.2vw);
+            font-weight: 500;
+        }}
+        @media (max-width: 768px) {{
+            .stats-card {{
+                flex: 1 1 calc(50% - 1rem);
+            }}
+        }}
+        @media (max-width: 480px) {{
+            .stats-card {{
+                flex: 1 1 100%;
+            }}
+        }}
+        </style>
         """,
         unsafe_allow_html=True,
     )
+
+    entries = [
+        ("🏃‍♂️", "Runs", stats.get("runs", 0)),
+        ("📝", "Proposals", stats.get("proposals", "N/A")),
+        ("⚡", "Success Rate", stats.get("success_rate", "N/A")),
+        ("🎯", "Accuracy", stats.get("accuracy", "N/A")),
+    ]
+
+    st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
+    for icon, label, value in entries:
+        st.markdown(
+            f"""
+            <div class='stats-card'>
+                <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
+                <div class='stats-value'>{value}</div>
+                <div class='stats-label'>{label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 __all__ = [

@@ -76,24 +76,39 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
+import logging
 from utils.paths import ROOT_DIR, PAGES_DIR
-
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
 try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+    from transcendental_resonance_frontend.src.utils.page_registry import (
+        ensure_pages,
+        get_pages_dir,
+    )
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
     logger.warning("Primary page_registry import failed: %s", import_err)
     try:
-        from utils.page_registry import ensure_pages  # type: ignore
-    except Exception as fallback_err:
+        from utils.page_registry import ensure_pages, get_pages_dir  # type: ignore
+    except Exception as fallback_err:  # pragma: no cover - final fallback
         logger.warning("Secondary page_registry import also failed: %s", fallback_err)
 
-        def ensure_pages(*_a, **_k):
-            logger.warning("ensure_pages noop fallback used")
+        def ensure_pages(*_args, **_kwargs) -> None:
+            logger.debug("ensure_pages noop fallback used")
             return None
+
+        def get_pages_dir() -> Path:
+            return Path(__file__).resolve().parents[2] / "pages"
+
+
+        def get_pages_dir() -> Path:
+            return (
+                Path(__file__).resolve().parent
+                / "transcendental_resonance_frontend"
+                / "pages"
+            )
+
 
 
 nx = None  # imported lazily in run_analysis
@@ -107,6 +122,8 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
+ROOT_DIR = Path(__file__).resolve().parent
+PAGES_DIR = get_pages_dir()
 
 # Mapping of navigation labels to page module names
 
@@ -136,7 +153,7 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
-# Tracks which fallback pages have been rendered in this session.
+# Tracks slugs of fallback pages rendered in this session.
 _fallback_rendered: set[str] = set()
 
 
@@ -173,10 +190,18 @@ from streamlit_helpers import (
     safe_container,
 )
 
-from modern_ui import (
-    render_stats_section,
-)
-from frontend.theme import inject_modern_styles
+try:
+    from modern_ui import (
+        inject_modern_styles,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        return None
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
+
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -377,6 +402,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 
     # Validate PAGES_DIR existence
+    PAGES_DIR = get_pages_dir()
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -445,25 +471,27 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
-    # Prevent rendering the same fallback repeatedly.
-    if choice in _fallback_rendered:
-        return
-    _fallback_rendered.add(choice)
-    try:
-        from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
-    except Exception:
-        OFFLINE_MODE = False
-      
     # Normalize and derive slug/module name
     normalized = normalize_choice(choice)
     slug = PAGES.get(normalized, str(normalized)).lower()
 
+    # Prevent rendering the same fallback repeatedly.
+    if slug in _fallback_rendered:
+        return
+    _fallback_rendered.add(slug)
+
+    try:
+        from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
+    except Exception:
+        OFFLINE_MODE = False
+
     # Candidate paths to try loading from
     page_candidates = [
         ROOT_DIR / "pages" / f"{slug}.py",
-        PAGES_DIR / f"{slug}.py",
+        get_pages_dir() / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
+
 
     loaded = False
     # Only try to load manually if st.experimental_page is available
@@ -494,14 +522,6 @@ def _render_fallback(choice: str) -> None:
 
     if loaded:
         return
-
-
-
-    # Prevent duplicate fallback rendering in session
-    if st.session_state.get("_fallback_rendered") == slug:
-        logger.debug("Duplicate fallback suppressed for %s", slug)
-        return
-    st.session_state["_fallback_rendered"] = slug
 
     # Map to fallback UI stubs
     fallback_pages = {
@@ -1373,6 +1393,15 @@ def main() -> None:
             label: f"/pages/{slug}.py" for label, slug in PAGES.items()
         }
 
+        # Optional: Warn if any page files are missing
+        missing_pages = [
+            label for label, slug in PAGES.items()
+            if not (ROOT_DIR / "pages" / f"{slug}.py").exists()
+        ]
+        if missing_pages:
+            st.warning("Missing pages: " + ", ".join(missing_pages))
+
+
         # Determine page from query params and sidebar selection
         try:
             query = st.query_params
@@ -1547,8 +1576,13 @@ def main() -> None:
                 st.subheader("Agent Output")
                 st.json(st.session_state.get("agent_output"))
 
-            render_stats_section()
-            st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
+            stats = {
+                "runs": st.session_state.get("run_count", 0),
+                "proposals": st.session_state.get("proposal_count", "N/A"),
+                "success_rate": st.session_state.get("success_rate", "N/A"),
+                "accuracy": st.session_state.get("accuracy", "N/A"),
+            }
+            render_stats_section(stats)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
