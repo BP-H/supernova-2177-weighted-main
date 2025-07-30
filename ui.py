@@ -339,6 +339,12 @@ from agent_ui import render_agent_insights_tab
 from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:
+    def render_social_tab():
+        # ... (use the code from my artifact)
 from voting_ui import render_voting_tab
 
 
