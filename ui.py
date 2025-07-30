@@ -189,7 +189,7 @@ def render_landing_page():
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-def inject_dark_theme() -> None:
+def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
         """
@@ -258,17 +258,42 @@ def inject_dark_theme() -> None:
             transform: translateY(-2px);
         }
 
+        [data-testid="stMetric"] {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
         .stButton > button {
-            background-color: #4f8bf9;
+            background-color: #2d2d2d;
             color: #fff;
-            border: none;
+            border: 1px solid #3a3a3a;
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
+            transition: background-color 0.2s, border-color 0.2s;
         }
 
         .stButton > button:hover {
-            background-color: #699cfc;
+            background-color: #4f8bf9;
+            border-color: #4f8bf9;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #252525;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
         </style>
         """,
@@ -911,7 +936,7 @@ def main() -> None:
         )
         
         # Apply dark theme styling
-        inject_dark_theme()
+        inject_modern_styles()
         
         # Initialize session state
         if "session_start_ts" not in st.session_state:
