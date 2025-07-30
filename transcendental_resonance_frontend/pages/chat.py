@@ -51,7 +51,7 @@ def render_chat_interface() -> None:
 def render_video_call_controls() -> None:
     """Placeholder video call controls."""
     if st.button("Start Video Call", key="start_video"):
-        st.info("Video call placeholder. Integration with WebRTC pending.")
+        st.toast("Video call placeholder. Integration with WebRTC pending.")
         st.empty()
 
 
@@ -60,7 +60,7 @@ def render_video_call_controls() -> None:
 def render_voice_chat_controls() -> None:
     """Placeholder voice call controls."""
     if st.button("Start Voice Call", key="start_voice"):
-        st.info("Voice call placeholder. Audio streaming integration pending.")
+        st.toast("Voice call placeholder. Audio streaming integration pending.")
         st.empty()
 
 
