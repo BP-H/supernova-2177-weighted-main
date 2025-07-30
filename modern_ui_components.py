@@ -8,12 +8,12 @@ from __future__ import annotations
 import streamlit as st
 from typing import Optional
 
-from modern_ui import inject_premium_styles
+from modern_ui import inject_modern_styles
 
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
-    inject_premium_styles()
+    inject_modern_styles()
     st.markdown(
         """
         <style>
