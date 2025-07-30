@@ -35,3 +35,45 @@ def test_render_modern_sidebar_default_container(monkeypatch):
     assert mui.render_modern_sidebar(pages) == "A"
     assert calls, "buttons rendered"
 
+
+class TrackingDict(dict):
+    def __init__(self, *a, **k):
+        self.calls = 0
+        super().__init__(*a, **k)
+
+    def __setitem__(self, key, value):
+        self.calls += 1
+        super().__setitem__(key, value)
+
+
+def test_render_modern_sidebar_state_changes(monkeypatch):
+    monkeypatch.setattr(mui, "USE_OPTION_MENU", False)
+    session = TrackingDict(sidebar_nav="A")
+
+    def dummy_radio(label, options, key=None, index=0):
+        return options[index]
+
+    dummy_st = types.SimpleNamespace(
+        markdown=lambda *a, **k: None,
+        radio=dummy_radio,
+        sidebar=types.SimpleNamespace(markdown=lambda *a, **k: None, radio=dummy_radio),
+        session_state=session,
+    )
+
+    monkeypatch.setattr(mui, "st", dummy_st)
+    pages = {"A": "a", "B": "b"}
+
+    # No change expected
+    mui.render_modern_sidebar(pages)
+    assert session.calls == 0
+
+    # Change returned value
+    def radio_b(label, options, key=None, index=0):
+        return options[1]
+
+    dummy_st.radio = radio_b
+    dummy_st.sidebar.radio = radio_b
+    mui.render_modern_sidebar(pages)
+    assert session["sidebar_nav"] == "B"
+    assert session.calls == 1
+
