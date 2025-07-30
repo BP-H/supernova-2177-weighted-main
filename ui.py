@@ -23,6 +23,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+import time
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -30,10 +31,20 @@ from typing import Optional
 from frontend import ui_layout
 
 
-from modern_ui_components import (
-    render_validation_card,
-    render_stats_section,
-)
+try:
+    from modern_ui_components import (
+        SIDEBAR_STYLES,
+        render_validation_card,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - optional dependency
+    SIDEBAR_STYLES = ""
+
+    def render_validation_card(*_a, **_k):
+        st.info("validation card unavailable")
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
 
 # Prefer modern sidebar render if available
 try:
@@ -351,7 +362,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         attempted_paths.add(module_path)
         page_file = Path.cwd() / "pages" / (module_path.rsplit(".", 1)[-1] + ".py")
         if page_file.exists():
-            rel_path = f"/pages/{page_file.stem}.py"
+            rel_path = f"pages/{page_file.stem}.py"
             try:
                 st.switch_page(rel_path)
                 return
@@ -420,7 +431,7 @@ def render_modern_validation_page():
     st.markdown("- Task queued\n- Running analysis\n- Completed")
     progress = st.progress(0)
     for i in range(5):
-        st.sleep(0.1)
+        time.sleep(0.1)
         progress.progress((i + 1) / 5)
     st.success("Status: OK")
 
