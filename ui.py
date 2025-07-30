@@ -58,9 +58,8 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = (
-    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-)
+ROOT_DIR = Path(__file__).resolve().parent
+PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 # Mapping of navigation labels to page module names
 
@@ -363,20 +362,59 @@ def inject_dark_theme() -> None:
 from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
+from frontend.ui_layout import render_title_bar, show_preview_badge
+from streamlit.errors import StreamlitAPIException
+from pathlib import Path
+import importlib
+import traceback
+import os
+import logging
+
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
-    """Import and run a page module, gracefully falling back when missing."""
+    """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
             st.error(f"Unknown page: {choice}")
+            if "_render_fallback" in globals():
+                _render_fallback(choice)
             return
         module_paths = [
             f"transcendental_resonance_frontend.pages.{module}",
             module,
         ]
 
-    import importlib
+    # Validate PAGES_DIR existence
+    if not PAGES_DIR.exists():
+        st.error(f"Pages directory not found: {PAGES_DIR}")
+        if "_render_fallback" in globals():
+            _render_fallback(choice)
+        return
+
+    # Track the last exception for reporting
+    last_exc: Exception | None = None
+    attempted_paths = set()  # Track attempted paths to avoid infinite loops
+
+    # First try switching pages using Streamlit's multipage support
     for module_path in module_paths:
+        if module_path in attempted_paths:
+            continue
+        attempted_paths.add(module_path)
+        page_file = Path(module_path.replace(".", "/") + ".py")
+        if page_file.exists():
+            rel_path = os.path.relpath(page_file, start=Path.cwd())
+            try:
+                st.switch_page(rel_path)
+                return
+            except StreamlitAPIException as exc:
+                st.warning(f"Switch failed for {choice}: {exc}")
+                continue
+            except Exception as exc:  # Unexpected failure
+                logging.error("switch_page failed for %s: %s", rel_path, exc, exc_info=True)
+                last_exc = exc
+                continue
+
+        # Fallback: import the module directly and call ``render`` or ``main``
         try:
             page_mod = importlib.import_module(module_path)
             for method_name in ("render", "main"):
@@ -385,15 +423,17 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                     return
         except ImportError:
             continue
-        except Exception as exc:  # pragma: no cover - unexpected UI failure
-            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
-            with st.expander("Show error details"):
-                st.exception(exc)
-            print("Traceback for debugging:\n", traceback.format_exc())
+        except Exception as exc:  # Unexpected failure
+            last_exc = exc
+            logging.error("Error executing %s: %s", module_path, exc, exc_info=True)
             break
 
+    st.warning("Unable to load page. Showing preview.")
     if "_render_fallback" in globals():
         _render_fallback(choice)
+    if last_exc:
+        with st.expander("Show error details"):
+            st.exception(last_exc)
 
 
 def _render_fallback(choice: str) -> None:
@@ -939,7 +979,10 @@ def render_validation_ui(
         main_container = st
 
     try:
-        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        page_paths = {
+            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
+            for label, mod in PAGES.items()
+        }
         ui_layout.render_navbar(
             page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
@@ -1233,7 +1276,10 @@ def main() -> None:
         }
         
         PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        page_paths = {
+            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
+            for label, mod in PAGES.items()
+        }
         choice = ui_layout.render_navbar(
             page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
