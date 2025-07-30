@@ -117,16 +117,23 @@ def _render_sidebar_nav(
     The selected page label is also stored in ``st.session_state`` using
     ``session_key`` so other components can react to the active page.
     """
-    opts = list(page_links.items()) if isinstance(page_links, dict) else [
-        (str(o), str(o)) for o in page_links
+    items = list(page_links.items()) if isinstance(page_links, dict) else [
+        (None, str(o)) for o in page_links
     ]
-    icon_list = list(icons or [None] * len(opts))
+    icon_list = list(icons or [None] * len(items))
     key = key or uuid4().hex
 
     # filter out paths that don't exist and show an error
     valid_opts = []
     valid_icons = []
-    for (label, path), icon in zip(opts, icon_list):
+    seen_slugs: set[str] = set()
+    for (label, path), icon in zip(items, icon_list):
+        slug = Path(path).stem.lower()
+        if slug in seen_slugs:
+            continue
+        seen_slugs.add(slug)
+        if not label:
+            label = Path(path).stem.replace("_", " ").title()
         rel = Path(path.lstrip("/"))
         candidates = [ROOT_DIR / rel, PAGES_DIR / rel.name]
         exists = any(c.with_suffix(".py").exists() for c in candidates)
@@ -135,9 +142,9 @@ def _render_sidebar_nav(
             continue
         valid_opts.append((label, path))
         valid_icons.append(icon)
-
-    opts = valid_opts
-    icon_list = valid_icons
+    sorted_pairs = sorted(zip(valid_opts, valid_icons), key=lambda p: p[0][0].lower())
+    opts = [p for p, _ in sorted_pairs]
+    icon_list = [ico for _, ico in sorted_pairs]
     if not opts:
         return ""
 
