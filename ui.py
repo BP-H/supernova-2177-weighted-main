@@ -126,17 +126,23 @@ HEALTH_CHECK_PARAM = "healthz"
 ROOT_DIR = Path(__file__).resolve().parent
 PAGES_DIR = get_pages_dir()
 
+
+def build_pages(pages_dir: Path) -> dict[str, str]:
+    """Return a mapping of sidebar labels to page slugs."""
+    pages: dict[str, str] = {}
+    for page_file in sorted(pages_dir.glob("*.py")):
+        if page_file.stem == "__init__":
+            continue
+        slug = page_file.stem
+        label = slug.replace("_", " ").title()
+        if label not in pages:
+            pages[label] = slug
+    return pages
+
+
 # Mapping of navigation labels to page module names
 
-PAGES = {
-    "Validation": "validation",
-    "Voting": "voting",
-    "Agents": "agents",
-    "Resonance Music": "resonance_music",
-    "Chat": "chat",
-    "Social": "social",
-    "Profile": "profile",
-}
+PAGES = build_pages(PAGES_DIR)
 
 # Case-insensitive lookup for labels
 _PAGE_LABELS = {label.lower(): label for label in PAGES}
