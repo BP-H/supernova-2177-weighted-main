@@ -57,6 +57,23 @@ def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
 
+# Global exception handler for Streamlit UI
+def global_exception_handler(exc_type, exc_value, exc_traceback) -> None:
+    """Handle all uncaught exceptions."""
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    st.error("Critical Application Error")
+    st.code(f"Error: {exc_value}")
+
+    if st.button("Emergency Reset"):
+        st.session_state.clear()
+        st.rerun()
+
+# Install global handler
+sys.excepthook = global_exception_handler
+
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
 from streamlit_option_menu import option_menu
@@ -588,7 +605,7 @@ def render_validation_ui(
                 st.rerun()
             return
 
-        # Render content directly - REMOVED 'with main_container:'
+        # Render content directly
         st.title("🚀 superNova_2177 Validation Analyzer")
         
         # Demo mode toggle
