@@ -4,7 +4,7 @@
 import asyncio
 import json
 import streamlit as st
-from streamlit_helpers import safe_container
+from streamlit_helpers import safe_container, BOX_CSS
 import pandas as pd
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder
@@ -17,17 +17,6 @@ try:
     from frontend_bridge import dispatch_route
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
-
-BOX_CSS = """
-<style>
-.tab-box {
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-</style>
-"""
 
 
 def _sanitize_markdown(text: str) -> str:

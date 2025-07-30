@@ -7,7 +7,12 @@ from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
-from streamlit_helpers import inject_global_styles, theme_selector, safe_container
+from streamlit_helpers import (
+    inject_global_styles,
+    theme_selector,
+    safe_container,
+    BOX_CSS,
+)
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
@@ -15,17 +20,6 @@ from voting_ui import (
     render_logs_tab,
 )
 from ui_utils import summarize_text, load_rfc_entries
-
-BOX_CSS = """
-<style>
-.tab-box {
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-</style>
-"""
 
 
 def render_agent_insights_tab(main_container=None) -> None:
