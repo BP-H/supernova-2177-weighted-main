@@ -33,18 +33,20 @@ def _run_async(coro):
         return loop.run_until_complete(coro)
 
 
-def main(main_container=None) -> None:
+def main(main_container=None, status_container=None) -> None:
     """Render music generation and summary widgets."""
 
     if main_container is None:
         main_container = st
+    if status_container is None:
+        status_container = st
 
     # Auto-refresh for backend health check (global, outside main_container)
     st_autorefresh(interval=30000, key="status_ping")
 
-    # Render global backend status indicator in the sidebar
-    with st.sidebar:
-        render_status_icon(endpoint="/healthz") # Assuming /healthz is the correct health check endpoint
+    # Render global backend status indicator in the provided container
+    with status_container:
+        render_status_icon(endpoint="/healthz")
 
     # Display alert if backend is not reachable (check once per rerun)
     backend_ok = check_backend(endpoint="/healthz") # Use the modular check_backend

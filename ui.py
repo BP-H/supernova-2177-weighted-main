@@ -95,6 +95,48 @@ from modern_ui import (
     close_card_container,
 )
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
+
+try:
+    from voting_ui import render_voting_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
+        st.info("Voting module not available")
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
+
+try:
+    from llm_backends import get_backend
+except ImportError:  # pragma: no cover - optional dependency
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy backend"}
+
 def render_landing_page():
     """Render fallback landing page when pages directory is missing."""
     st.title("🚀 superNova_2177")
@@ -143,74 +185,103 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
-# Fix for the import error in render_agent_insights_tab
-def render_agent_insights_tab():
-    """Fallback agent insights tab."""
-    st.subheader("🤖 Agent Insights")
-    st.info("Agent insights module not available. Install required dependencies.")
-    
-    # Show basic agent info if registry is available
-    if 'AGENT_REGISTRY' in globals() and AGENT_REGISTRY:
-        st.write("Available Agents:")
-        for name, info in AGENT_REGISTRY.items():
-            with st.expander(f"🔧 {name}"):
-                st.write(f"Description: {info.get('description', 'No description')}")
-                st.write(f"Class: {info.get('class', 'Unknown')}")
-    else:
-        st.warning("No agents registered")
+
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-def inject_modern_styles():
-    """Inject sleek modern styling."""
-    st.markdown("""
+def inject_dark_theme() -> None:
+    """Inject a sleek dark theme inspired by modern IDEs."""
+    st.markdown(
+        """
         <style>
-        /* Base dark theme */
         .stApp {
-            background: #1e1e1e;
+            background-color: #1e1e1e;
+            color: #ccc;
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
-        
-        /* Main container with glassmorphism */
+
         .main .block-container {
-            background: #252525;
+            background-color: #252525;
+            border: 1px solid #333;
             border-radius: 8px;
-            border: 1px solid #2d2d2d;
-            padding: 2rem;
+            padding: 2rem 3rem;
             margin-top: 1rem;
         }
-        
-        /* Sidebar modern styling */
-        .css-1d391kg {
-            background: #252525;
-            border-radius: 8px;
-            border: 1px solid #2d2d2d;
+
+        [data-testid="stSidebar"] {
+            background-color: #2d2d2d;
+            color: #ccc;
         }
-        
+
+        [data-testid="stHorizontalMenu"] ul {
+            display: flex;
+            gap: 0.5rem;
+            background: #252525;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        [data-testid="stHorizontalMenu"] a {
+            color: #ccc;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        [data-testid="stHorizontalMenu"] a:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        [data-testid="stHorizontalMenu"] .active a {
+            background: #4f8bf9;
+            color: #fff;
+        }
+
         /* Navigation tabs */
         .stSelectbox > div > div {
             background: #2d2d2d;
             border-radius: 6px;
             border: 1px solid #3a3a3a;
         }
-        
-        /* Modern buttons */
-        .stButton > button {
-            background: #4f8bf9;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-        
-        .stButton > button:hover {
+
+        .status-card {
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .status-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        
+
+        .stButton > button {
+            background-color: #4f8bf9;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .stButton > button:hover {
+            background-color: #699cfc;
+            transform: translateY(-2px);
+        }
+
         /* Modern metrics */
         [data-testid="metric-container"] {
             background: #2d2d2d;
@@ -219,19 +290,19 @@ def inject_modern_styles():
             padding: 1rem;
             box-shadow: none;
         }
-        
+
         /* Text styling */
         .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
             color: #f0f0f0;
         }
-        
+
         /* Error messages modern styling */
         .stAlert {
             background: #2d2d2d;
             border-radius: 8px;
             border: 1px solid #3a3a3a;
         }
-        
+
         /* File uploader */
         .stFileUploader {
             background: #252525;
@@ -239,7 +310,7 @@ def inject_modern_styles():
             border: 2px dashed #3a3a3a;
             padding: 2rem;
         }
-        
+
         /* Input fields */
         .stTextInput > div > div > input,
         .stTextArea > div > div > textarea {
@@ -248,105 +319,87 @@ def inject_modern_styles():
             border-radius: 6px;
             color: #f0f0f0;
         }
-        
+
         /* Slider styling */
         .stSlider > div > div > div {
             background: #4f8bf9;
         }
-        
+
         /* Modern scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: #252525;
             border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: #4f8bf9;
             border-radius: 10px;
         }
-        
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .main .block-container > div {
             animation: fadeIn 0.6s ease-out;
         }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
 def render_modern_validation_page():
-    """Render a beautiful modern validation page."""
-    st.markdown("""
-        <div style='text-align: center; padding: 2rem 0;'>
-            <h1 style='font-size: 3rem; color: #4f8bf9; margin-bottom: 0.5rem;'>
-                🚀 superNova_2177
-            </h1>
-            <p style='font-size: 1.2rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 2rem;'>
-                Advanced Validation Analysis Platform
-            </p>
+    """Render the main validation interface."""
+    st.markdown(
+        """
+        <div style='text-align:center; padding:2rem 0;'>
+            <h1 style='font-size:3rem; color:#4f8bf9; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
+            <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
         </div>
-    """, unsafe_allow_html=True)
-    
-    # Modern status cards
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background:#2d2d2d;
-                        border-radius:8px; border:1px solid #3a3a3a;'>
-                <h2 style='color:#4CAF50; margin:0; font-size:2rem;'>✅</h2>
-                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>System Online</h3>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="status-grid">
+            <div class="status-card">
+                <div style='font-size:2rem;'>✅</div>
+                <div>System Online</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
-                        border-radius:8px; border:1px solid #3a3a3a;'>
-                <h2 style='color:#2196F3; margin:0; font-size:2rem;'>🔍</h2>
-                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>Ready to Analyze</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>🔍</div>
+                <div>Ready to Analyze</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
-                        border-radius:8px; border:1px solid #3a3a3a;'>
-                <h2 style='color:#FFC107; margin:0; font-size:2rem;'>⚡</h2>
-                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>High Performance</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>⚡</div>
+                <div>High Performance</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
-            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
-                        border-radius:8px; border:1px solid #3a3a3a;'>
-                <h2 style='color:#9C27B0; margin:0; font-size:2rem;'>🎯</h2>
-                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>Precision Mode</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>🎯</div>
+                <div>Precision Mode</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Main content area
-    st.markdown("""
-        <div style='background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 20px; 
-                    border: 1px solid rgba(255, 255, 255, 0.1); margin: 2rem 0;'>
-            <h2 style='color: white; text-align: center; margin-bottom: 1.5rem;'>
-                🔬 Validation Analysis Center
-            </h2>
-            <p style='color: rgba(255, 255, 255, 0.8); text-align: center; font-size: 1.1rem;'>
-                Upload your validation data or use demo mode to experience the power of superNova_2177
-            </p>
+    st.markdown(
+        """
+        <div style='background:#1e1e1e; border:1px solid #333; padding:2rem; border-radius:8px; margin:2rem 0;'>
+            <h2 style='color:#fff; text-align:center; margin-bottom:1.5rem;'>🔬 Validation Analysis Center</h2>
+            <p style='color:#bbb; text-align:center;'>Upload your validation data or use demo mode to experience the power of superNova_2177</p>
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Interactive demo section
     col1, col2 = st.columns([2, 1])
@@ -467,8 +520,7 @@ def render_modern_social_page():
     st.markdown("# 👥 Social Network")
     st.info("🚧 Social features in development!")
 
-# Add this to your main() function after st.set_page_config():
-inject_modern_styles()
+# Add this to your main() function after st.set_page_config()
 
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
@@ -534,36 +586,47 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
 
 try:
     from social_tabs import render_social_tab
-except ImportError:
-    def render_social_tab():
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
         st.subheader("👥 Social Features")
         st.info("Social features module not available")
 
 try:
     from voting_ui import render_voting_tab
-except ImportError:
-    def render_voting_tab():
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
         st.info("Voting module not available")
 
-# Fallback implementation defined earlier in the file
 try:
     from agent_ui import render_agent_insights_tab
 except ImportError:  # pragma: no cover - optional dependency
-    pass
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
 
 try:
     from llm_backends import get_backend
-except ImportError:
+except ImportError:  # pragma: no cover - optional dependency
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
-
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:
-    AGENT_REGISTRY = {}
 
 
 def get_st_secrets() -> dict:
@@ -912,6 +975,13 @@ def main() -> None:
         st.stop()
         return
 
+    # Initialize database FIRST
+    try:
+        ensure_database_exists()
+    except Exception as e:
+        st.error(f"Database initialization failed: {e}")
+        st.info("Running in fallback mode")
+
     try:
         st.set_page_config(
             page_title="superNova_2177",
@@ -919,8 +989,8 @@ def main() -> None:
             initial_sidebar_state="expanded"
         )
         
-        # Apply modern styling
-        inject_modern_styles()
+        # Apply dark theme styling
+        inject_dark_theme()
         
         # Initialize session state
         if "session_start_ts" not in st.session_state:
@@ -995,20 +1065,23 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Main content with sidebar
-        main_col, sidebar_col = st.columns([3, 1])
-
-        with main_col:
+        left_col, center_col, right_col = st.columns([1, 3, 1])
+        
+        with center_col:
             # Load page content
             load_page_with_fallback(choice)
-
-        with sidebar_col:
+            
+        with left_col:
+            render_status_icon()
+            
             with st.expander("Environment Details"):
-                render_status_icon()
                 secrets = get_st_secrets()
-                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
 
             with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
@@ -1244,6 +1317,72 @@ def main() -> None:
             st.session_state.clear()
             st.rerun()
 
+# Add this section for database error handling
+import sqlite3
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
+
+def ensure_database_exists():
+    """Initialize database tables if they don't exist."""
+    try:
+        secrets = get_st_secrets()
+        db_url = secrets.get('DATABASE_URL', 'sqlite:///harmonizers.db')
+        engine = create_engine(db_url)
+        
+        with engine.connect() as conn:
+            try:
+                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='harmonizers';"))
+                table_exists = result.fetchone() is not None
+                
+                if not table_exists:
+                    # Create the harmonizers table
+                    conn.execute(text("""
+                        CREATE TABLE harmonizers (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username VARCHAR(50) UNIQUE NOT NULL,
+                            email VARCHAR(100) UNIQUE NOT NULL,
+                            hashed_password VARCHAR(255) NOT NULL,
+                            bio TEXT,
+                            profile_pic VARCHAR(255),
+                            is_active BOOLEAN DEFAULT 1,
+                            is_admin BOOLEAN DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            species VARCHAR(50) DEFAULT 'human',
+                            harmony_score FLOAT DEFAULT 0.0,
+                            creative_spark FLOAT DEFAULT 0.0,
+                            is_genesis BOOLEAN DEFAULT 0,
+                            consent_given BOOLEAN DEFAULT 0,
+                            cultural_preferences TEXT,
+                            engagement_streaks INTEGER DEFAULT 0,
+                            network_centrality FLOAT DEFAULT 0.0,
+                            karma_score FLOAT DEFAULT 0.0,
+                            last_passive_aura_timestamp TIMESTAMP
+                        );
+                    """))
+                    
+                    # Insert a default user
+                    conn.execute(text("""
+                        INSERT INTO harmonizers 
+                        (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                        VALUES 
+                        ('admin', 'admin@supernova.dev', 'hashed_password_here', 
+                         'Default admin user for superNova_2177', 1, 1, 1, 1);
+                    """))
+                    conn.commit()
+                return True
+            except Exception:
+                return False
+    except Exception:
+        return False
+
+def safe_get_user():
+    """Get user with proper error handling."""
+    try:
+        ensure_database_exists()
+        with SessionLocal() as db:
+            return db.query(Harmonizer).first()
+    except Exception:
+        return None
 
 if __name__ == "__main__":
     main()
