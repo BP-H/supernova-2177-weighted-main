@@ -23,6 +23,8 @@ import sys
 import traceback
 import sqlite3
 import inspect
+import importlib
+from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Any, Optional
@@ -72,6 +74,7 @@ PAGES = {
     "Social": "social",
     "Profile": "profile",
 }
+
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
@@ -359,15 +362,6 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
-
-from frontend.ui_layout import render_title_bar, show_preview_badge
-from streamlit.errors import StreamlitAPIException
-from pathlib import Path
-import importlib
-import traceback
-import os
-import logging
-
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
     if module_paths is None:
@@ -437,6 +431,11 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    try:
+        from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
+    except Exception:
+        OFFLINE_MODE = False
+
     fallback_pages = {
         "Validation": render_modern_validation_page,
         "Voting": render_modern_voting_page,
@@ -448,6 +447,8 @@ def _render_fallback(choice: str) -> None:
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
+        if OFFLINE_MODE:
+            st.info("Backend unavailable - offline mode active.")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -592,57 +593,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any, Optional
 
-# Optional modules used throughout the UI. Provide simple fallbacks when the associated packages are not available.
-
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:  # pragma: no cover - optional dependency
-    AGENT_REGISTRY = {}
-
-try:
-    from social_tabs import render_social_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_social_tab() -> None:
-        st.subheader("👥 Social Features")
-        st.info("Social features module not available")
-
-
-try:
-    from voting_ui import render_voting_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_voting_tab() -> None:
-        st.info("Voting module not available")
-
-
-try:
-    from agent_ui import render_agent_insights_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_agent_insights_tab() -> None:
-        st.subheader("🤖 Agent Insights")
-        st.info("Agent insights module not available. Install required dependencies.")
-        if AGENT_REGISTRY:
-            st.write("Available Agents:")
-            for name, info in AGENT_REGISTRY.items():
-                with st.expander(f"🔧 {name}"):
-                    st.write(
-                        f"Description: {info.get('description', 'No description')}"
-                    )
-                    st.write(f"Class: {info.get('class', 'Unknown')}")
-        else:
-            st.warning("No agents registered")
-
-
-try:
-    from llm_backends import get_backend
-except ImportError:  # pragma: no cover - optional dependency
-
-    def get_backend(name, api_key=None):
-        return lambda x: {"response": "dummy backend"}
 
 
 def get_st_secrets() -> dict:
@@ -1280,6 +1231,7 @@ def main() -> None:
             "Social": "social",
             "Profile": "profile",
         }
+
         
         PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {

@@ -48,3 +48,4 @@ pyvis
 streamlit-option-menu
 streamlit-aggrid>=1.1.7
 streamlit-autorefresh
+gtts
