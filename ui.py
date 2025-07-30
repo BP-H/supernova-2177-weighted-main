@@ -60,6 +60,14 @@ from streamlit_helpers import (
     theme_selector,
 )
 
+from modern_ui import (
+    inject_premium_styles,
+    render_modern_header,
+    render_stats_section,
+    open_card_container,
+    close_card_container,
+)
+
 # Accent color used for button styling
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
@@ -469,7 +477,7 @@ def render_validation_ui(
         main_container = st
 
     with main_container:
-        header("superNova_2177 Validation Analyzer", layout="wide")
+        render_modern_header()
 
         ts_placeholder = st.empty()
         if "session_start_ts" not in st.session_state:
@@ -496,6 +504,7 @@ def render_validation_ui(
             st.session_state["theme"] = "light"
         apply_theme(st.session_state["theme"])
         centered_container()
+        open_card_container()
 
         st.markdown(
             "Upload a JSON file with a `validations` array, paste JSON below, "
@@ -848,6 +857,8 @@ def render_validation_ui(
     if st.session_state.get("agent_output") is not None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
+    close_card_container()
+    render_stats_section()
 
 import streamlit as st
 
@@ -857,6 +868,7 @@ def main() -> None:
     from importlib import import_module
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    inject_premium_styles()
 
     # Inject global button styles
     st.markdown(
