@@ -14,3 +14,8 @@ def main(main_container=None) -> None:
 
     with main_container:
         render_validation_ui()
+
+
+def render() -> None:
+    """Wrapper to keep page loading consistent."""
+    main()
