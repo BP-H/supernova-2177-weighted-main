@@ -22,6 +22,8 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
 import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
@@ -84,7 +86,7 @@ def _render_sidebar_nav(
     valid_opts = []
     valid_icons = []
     for (label, path), icon in zip(opts, icon_list):
-        file_path = Path(path.lstrip("/")).with_suffix(".py")
+        file_path = (ROOT_DIR / path.lstrip("/")).with_suffix(".py")
         if not file_path.exists():
             st.sidebar.error(f"Page not found: {path}")
             continue

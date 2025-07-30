@@ -379,7 +379,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         attempted_paths.add(module_path)
         filename = module_path.rsplit(".", 1)[-1] + ".py"
         candidate_files = [
-            Path.cwd() / "pages" / filename,
+            ROOT_DIR / "pages" / filename,
             PAGES_DIR / filename,
         ]
 
@@ -443,7 +443,7 @@ def _render_fallback(choice: str) -> None:
     # Normalize and derive slug/module name
     slug = normalize_choice(choice)
     module = PAGES.get(slug, slug.lower())
-    page_file = Path.cwd() / "pages" / f"{module}.py"
+    page_file = ROOT_DIR / "pages" / f"{module}.py"
 
     # Skip fallback if page file is available
     if page_file.exists():
@@ -1347,7 +1347,7 @@ def main() -> None:
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
-            file_path = Path.cwd() / "pages" / f"{mod}.py"
+            file_path = ROOT_DIR / "pages" / f"{mod}.py"
             if file_path.exists():
                 page_paths[label] = f"/pages/{mod}.py"
             else:
