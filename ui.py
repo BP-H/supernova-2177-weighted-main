@@ -129,6 +129,7 @@ except ImportError:  # optional dependency fallback
     try:
         from frontend.ui_layout import render_title_bar
     except ImportError:
+
         def render_title_bar(*args, **kwargs):
             st.warning("⚠️ render_title_bar is unavailable.")
             return None
@@ -238,17 +239,65 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
+    # Overlay with quick start actions when no page modules are present
+    st.markdown(
+        """
+        <style>
+        .landing-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .landing-overlay-content {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(6px);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    overlay = st.container()
+    with overlay:
+        st.markdown(
+            "<div class='landing-overlay'><div class='landing-overlay-content'>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("### Quick Actions", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Create Proposal", key="landing_create_proposal"):
+                load_page_with_fallback(
+                    "Voting",
+                    [
+                        f"transcendental_resonance_frontend.pages.{PAGES['Voting']}",
+                        f"pages.{PAGES['Voting']}",
+                    ],
+                )
+        with col2:
+            if st.button("Run Validation", key="landing_run_validation"):
+                run_analysis([], layout="force")
+        st.markdown("</div></div>", unsafe_allow_html=True)
+
+
 def inject_modern_styles() -> None:
     """Backward compatible alias forwarding to :mod:`modern_ui`."""
     from modern_ui import inject_modern_styles as _impl
-    _impl()
 
+    _impl()
 
 
 # Backward compatibility alias
 def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
+
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
@@ -265,7 +314,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         ]
 
     # Validate PAGES_DIR existence
-    PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    PAGES_DIR = (
+        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    )
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -291,7 +342,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 st.warning(f"Switch failed for {choice}: {exc}")
                 continue
             except Exception as exc:  # Unexpected failure
-                logging.error("switch_page failed for %s: %s", rel_path, exc, exc_info=True)
+                logging.error(
+                    "switch_page failed for %s: %s", rel_path, exc, exc_info=True
+                )
                 last_exc = exc
                 continue
 
@@ -419,7 +472,6 @@ def render_sidebar() -> str:
     return choice
 
 
-
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
     pass
@@ -500,8 +552,6 @@ try:
     from validator_reputation_tracker import update_validator_reputations
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
-
-
 
 
 def get_st_secrets() -> dict:
@@ -858,7 +908,9 @@ def render_validation_ui(
         )
 
         # Use 3-column layout for cleaner modern UX
-        left_col, center_col, _ = main_container.columns([1, 3, 1])  # omit right_col for simplicity
+        left_col, center_col, _ = main_container.columns(
+            [1, 3, 1]
+        )  # omit right_col for simplicity
 
         with center_col:
             st.info("Select a page above to continue.")
@@ -866,8 +918,6 @@ def render_validation_ui(
         with left_col:
             render_status_icon()
             render_developer_tools()
-
-
 
     except Exception as exc:
         st.error("Failed to load validation UI")
@@ -887,7 +937,7 @@ def render_developer_tools() -> None:
 
     with st.expander("Developer Tools"):
         # Frequently used action
-        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+        if "cosmic_nexus" in globals() and "Harmonizer" in globals():
             try:
                 user = safe_get_user()
                 if user and st.button("Fork with Mock Config"):
@@ -908,7 +958,7 @@ def render_developer_tools() -> None:
         # Less common diagnostics
         with st.expander("Diagnostics & Logs"):
             # Universe state viewer
-            if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+            if "SessionLocal" in globals() and "UniverseBranch" in globals():
                 try:
                     with SessionLocal() as db:
                         records = (
@@ -919,7 +969,13 @@ def render_developer_tools() -> None:
                         )
                         if records:
                             for r in records:
-                                st.write({"id": r.id, "status": r.status, "timestamp": r.timestamp})
+                                st.write(
+                                    {
+                                        "id": r.id,
+                                        "status": r.status,
+                                        "timestamp": r.timestamp,
+                                    }
+                                )
                         else:
                             st.write("No forks recorded")
                 except Exception as exc:
@@ -930,13 +986,17 @@ def render_developer_tools() -> None:
             # Run introspection audit
             hid = st.text_input("Hypothesis ID", key="audit_id")
             if st.button("Run Audit") and hid:
-                if 'dispatch_route' in globals() and 'SessionLocal' in globals():
+                if "dispatch_route" in globals() and "SessionLocal" in globals():
                     try:
                         with SessionLocal() as db:
                             with st.spinner("Working on it..."):
                                 try:
                                     result = _run_async(
-                                        dispatch_route("trigger_full_audit", {"hypothesis_id": hid}, db=db)
+                                        dispatch_route(
+                                            "trigger_full_audit",
+                                            {"hypothesis_id": hid},
+                                            db=db,
+                                        )
                                     )
                                     st.json(result)
                                     st.toast("Success!")
@@ -944,7 +1004,7 @@ def render_developer_tools() -> None:
                                     st.error(f"Audit failed: {exc}")
                     except Exception as exc:
                         st.error(f"Database error: {exc}")
-                elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                elif "run_full_audit" in globals() and "SessionLocal" in globals():
                     try:
                         with SessionLocal() as db:
                             with st.spinner("Working on it..."):
@@ -974,9 +1034,13 @@ def render_developer_tools() -> None:
 
             # Inject event
             with st.expander("Inject Event", expanded=False):
-                event_json = st.text_area("Event JSON", value="{}", height=150, key="inject_event")
+                event_json = st.text_area(
+                    "Event JSON", value="{}", height=150, key="inject_event"
+                )
                 if st.button("Process Event"):
-                    agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                    agent_obj = st.session_state.get("agent_instance") or globals().get(
+                        "agent"
+                    )
                     if agent_obj is not None:
                         try:
                             event = json.loads(event_json or "{}")
@@ -988,15 +1052,15 @@ def render_developer_tools() -> None:
                         st.info("Agent unavailable")
 
             # Session inspector
-            if 'AGENT_REGISTRY' in globals():
+            if "AGENT_REGISTRY" in globals():
                 st.write("Available agents:", list(AGENT_REGISTRY.keys()))
-            if 'cosmic_nexus' in globals():
+            if "cosmic_nexus" in globals():
                 st.write(
                     "Sub universes:",
                     list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                 )
             agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
-            if agent_obj is not None and 'InMemoryStorage' in globals():
+            if agent_obj is not None and "InMemoryStorage" in globals():
                 try:
                     if isinstance(agent_obj.storage, InMemoryStorage):
                         st.write(
@@ -1010,9 +1074,11 @@ def render_developer_tools() -> None:
 
         # Playground for quick flows
         with st.expander("Playground"):
-            flow_txt = st.text_area("Agent Flow JSON", "[]", height=150, key="flow_json")
+            flow_txt = st.text_area(
+                "Agent Flow JSON", "[]", height=150, key="flow_json"
+            )
             if st.button("Run Flow"):
-                if 'AGENT_REGISTRY' in globals():
+                if "AGENT_REGISTRY" in globals():
                     try:
                         steps = json.loads(flow_txt or "[]")
                         results = []
@@ -1090,12 +1156,12 @@ def main() -> None:
             inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
-        
+
         try:
             apply_theme(st.session_state["theme"])
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
-        
+
         st.markdown(
             f"""
             <style>
@@ -1108,7 +1174,7 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        
+
         # Setup: Pages and Icons
         PAGES = {
             "Validation": "validation",
@@ -1119,7 +1185,11 @@ def main() -> None:
             "Social": "social",
             "Profile": "profile",
         }
-        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+        PAGES_DIR = (
+            Path(__file__).resolve().parent
+            / "transcendental_resonance_frontend"
+            / "pages"
+        )
         page_paths = {
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
@@ -1224,7 +1294,9 @@ def main() -> None:
                         try:
                             if agent_choice == "CI_PRProtectorAgent":
                                 talker = backend_fn or (lambda p: p)
-                                selected_agent = agent_cls(talker, llm_backend=backend_fn)
+                                selected_agent = agent_cls(
+                                    talker, llm_backend=backend_fn
+                                )
                             elif agent_choice == "MetaValidatorAgent":
                                 selected_agent = agent_cls({}, llm_backend=backend_fn)
                             elif agent_choice == "GuardianInterceptorAgent":
@@ -1249,7 +1321,6 @@ def main() -> None:
 
             render_stats_section()
             st.markdown(f"**Runs:** {st.session_state['run_count']}")
-
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
