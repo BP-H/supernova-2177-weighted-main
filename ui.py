@@ -1188,16 +1188,7 @@ def main() -> None:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
 
-    params = st.query_params
-    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if (
-        "1" in params.get(HEALTH_CHECK_PARAM, [])
-        or path_info == f"/{HEALTH_CHECK_PARAM}"
-    ):
-        st.write("ok")
-        st.stop()
-        return
-
+    # Respond to lightweight health-check probes
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
