@@ -60,6 +60,7 @@ from frontend.ui_layout import (
     render_profile_card,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
+from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -78,10 +79,12 @@ from pathlib import Path
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
 except Exception as import_err:  # pragma: no cover - runtime fallback
+    import logging
     logging.getLogger(__name__).warning(
         "Primary page_registry import failed: %s", import_err
     )
     from utils.page_registry import ensure_pages  # type: ignore
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -1358,7 +1361,9 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        # Setup: Pages and Icons
+        render_topbar()  # added in codex branch
+
+        # Setup: Pages and Icons (reuse global mapping)
         PAGES = {
             "Validation": "validation",
             "Voting": "voting",
@@ -1373,6 +1378,7 @@ def main() -> None:
             / "transcendental_resonance_frontend"
             / "pages"
         )
+
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
