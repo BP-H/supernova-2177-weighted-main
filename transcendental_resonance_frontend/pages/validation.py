@@ -9,7 +9,7 @@ from ui import render_validation_ui
 
 
 def main(main_container=None) -> None:
-    """Render the validation UI inside ``main_container`` safely."""
+    """Render the validation UI inside a container safely."""
     if main_container is None:
         main_container = st
 
@@ -25,8 +25,8 @@ def main(main_container=None) -> None:
         with container_ctx:
             render_validation_ui(main_container=main_container)
     except AttributeError:
+        # Fallback: in case container_ctx fails due to unexpected type
         render_validation_ui(main_container=main_container)
-
 
 def render() -> None:
     """Wrapper to keep page loading consistent."""
