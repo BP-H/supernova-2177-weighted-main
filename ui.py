@@ -952,6 +952,7 @@ def render_validation_ui(
                 "👥",
                 "👤",
             ],
+            key="navbar_sidebar",
         )
 
         # Page layout
@@ -1250,6 +1251,7 @@ def main() -> None:
                 "👥",
                 "👤",
             ],
+            key="navbar_main",
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
