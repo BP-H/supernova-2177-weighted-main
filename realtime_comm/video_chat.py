@@ -162,3 +162,8 @@ class VideoChatManager:
         self.track_face(user_id, frame)
         # TODO: run emotion recognition and language detection
         return FrameMetadata(emotion="neutral", lang="en")
+
+    def handle_chat(self, text: str, lang: str) -> None:
+        """Handle an incoming chat message."""
+        logging.debug("Chat (%s): %s", lang, text)
+

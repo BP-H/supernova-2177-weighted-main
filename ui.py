@@ -22,12 +22,11 @@ import math
 import sys
 import traceback
 import sqlite3
-import inspect
 import importlib
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
-from typing import Any, Optional
+from typing import Optional
 from frontend import ui_layout
 
 
@@ -38,10 +37,10 @@ from modern_ui_components import (
 )
 from frontend.ui_layout import (
     main_container,
-    sidebar_container,
     render_title_bar,
     show_preview_badge,
 )
+
 
 # Utility path handling
 from pathlib import Path
@@ -74,6 +73,10 @@ PAGES = {
     "Social": "social",
     "Profile": "profile",
 }
+
+# Icons used in the navigation bar. Must be single-character emojis or
+# valid Bootstrap icon codes prefixed with ``"bi bi-"``.
+NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
@@ -115,11 +118,7 @@ from streamlit_helpers import (
 
 from modern_ui import (
     inject_modern_styles,
-    inject_premium_styles,
-    render_modern_header,
     render_stats_section,
-    open_card_container,
-    close_card_container,
 )
 
 # Apply global styles immediately
@@ -830,18 +829,24 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 
+        # ...
 
         choice = render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
 
-        main_container.info("Select an option from the sidebar to continue.")
+        left_col, center_col, right_col = main_container.columns([1, 3, 1])
 
-        with sidebar:
+        with center_col:
+            st.info("Select a page above to continue.")
+
+        with left_col:
             render_status_icon()
             render_developer_tools()
+
 
 
     except Exception as exc:
@@ -1101,10 +1106,22 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Chat": "chat",
+            "Social": "social",
+            "Profile": "profile",
+        }
+
+        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+
         choice = render_modern_sidebar(
             page_paths,
             icons=[
@@ -1118,23 +1135,28 @@ def main() -> None:
             ],
         )
 
-        if choice:
-            page_key = PAGES.get(choice, choice)
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{page_key}",
-                f"pages.{page_key}",
-            ]
-            try:
-                load_page_with_fallback(choice, module_paths)
-            except Exception:
-                st.warning(f"Page not found: {choice}")
-                _render_fallback(choice)
-        else:
-            st.info("Select a page on the left to continue.")
-            _render_fallback("Validation")
+        left_col, center_col, right_col = st.columns([1, 3, 1])
 
-        with st.sidebar:
+        with center_col:
+            if choice:
+                page_key = PAGES.get(choice, choice)
+                module_paths = [
+                    f"transcendental_resonance_frontend.pages.{page_key}",
+                    f"pages.{page_key}",
+                ]
+                try:
+                    load_page_with_fallback(choice, module_paths)
+                except Exception:
+                    st.warning(f"Page not found: {choice}")
+                    _render_fallback(choice)
+            else:
+                st.info("Select a page on the left to continue.")
+                _render_fallback("Validation")
+
+        with left_col:
             render_status_icon()
+            render_developer_tools()
+
         
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
