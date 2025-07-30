@@ -17,9 +17,6 @@ import sys
 import traceback
 
 from modern_ui_components import (
-    render_modern_layout,
-    render_modern_header,
-    render_modern_sidebar,
     render_validation_card,
     render_stats_section,
 )
@@ -27,7 +24,6 @@ from modern_ui_components import (
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
-from datetime import datetime
 from pathlib import Path
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -82,17 +78,12 @@ from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
-    centered_container,
     header,
     theme_selector,
 )
 
 from modern_ui import (
     inject_premium_styles,
-    render_modern_header,
-    render_stats_section,
-    open_card_container,
-    close_card_container,
 )
 
 # Optional modules used throughout the UI. Provide simple fallbacks
@@ -408,7 +399,7 @@ def render_modern_validation_page():
         st.markdown("### 📊 Validation Input")
         
         # Beautiful text area
-        validation_data = st.text_area(
+        st.text_area(
             "Validation JSON Data",
             value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
             height=200,
@@ -416,18 +407,18 @@ def render_modern_validation_page():
         )
         
         # Modern toggle for demo mode
-        demo_mode = st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
+        st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
         
     with col2:
         st.markdown("### ⚙️ Analysis Settings")
         
-        view_mode = st.selectbox(
+        st.selectbox(
             "Visualization Mode",
             ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
             help="Choose how to visualize the validation network"
         )
         
-        confidence_threshold = st.slider(
+        st.slider(
             "Confidence Threshold",
             0.0, 1.0, 0.75,
             help="Minimum confidence level for validation acceptance"
@@ -530,7 +521,22 @@ def load_css() -> None:
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from status_indicator import render_status_icon
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+
+# Optional UI utilities - provide fallbacks if not available
+try:
+    from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+except ImportError:  # pragma: no cover - optional dependency
+    def load_rfc_entries():
+        return []
+    
+    def parse_summary(text):
+        return {"summary": text[:100] + "..." if len(text) > 100 else text}
+    
+    def summarize_text(text):
+        return text[:200] + "..." if len(text) > 200 else text
+    
+    def render_main_ui():
+        st.info("Main UI utilities not available")
 
 # Database fallback for local testing
 try:
@@ -612,7 +618,7 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
+        
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
