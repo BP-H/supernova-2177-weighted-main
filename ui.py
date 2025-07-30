@@ -338,18 +338,25 @@ def inject_dark_theme() -> None:
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
+    # Normalize choice label for slug-based matching
     choice = normalize_choice(choice)
+
     if module_paths is None:
         module = PAGES.get(choice)
+        if not module and choice.lower() in PAGES.values():
+            module = choice.lower()
+
         if not module:
             st.error(f"Unknown page: {choice}")
             if "_render_fallback" in globals():
                 _render_fallback(choice)
             return
+
         module_paths = [
             f"transcendental_resonance_frontend.pages.{module}",
-            module,
+            f"pages.{module}",
         ]
+
 
     # Validate PAGES_DIR existence
     PAGES_DIR = (
@@ -423,6 +430,15 @@ def _render_fallback(choice: str) -> None:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
+
+    slug = PAGES.get(choice, str(choice)).lower()
+    page_candidates = [
+        ROOT_DIR / "pages" / f"{slug}.py",
+        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+    ]
+    if any(p.exists() for p in page_candidates):
+        logger.debug("_render_fallback called but page exists: %s", slug)
+        return
 
     # Normalize and derive slug/module name
     slug = normalize_choice(choice)
@@ -553,16 +569,18 @@ def render_sidebar() -> str:
     # Navigation
     icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
     if "render_modern_sidebar" in globals():
-        choice = render_modern_sidebar(
+        choice_label = render_modern_sidebar(
             PAGES,
             container=st.sidebar,
             icons=icon_map,
             session_key="active_page",
         )
     else:
-        choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
+        choice_label = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
 
-    return normalize_choice(choice)
+    # Normalize and convert label to lowercase slug
+    return normalize_choice(PAGES.get(choice_label, choice_label))
+
 
 
 def load_css() -> None:
@@ -994,11 +1012,12 @@ def render_validation_ui(
 
         # ...
 
-        choice = render_sidebar_nav(
+        choice_label = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
             session_key="active_page",
         )
+        choice = PAGES.get(choice_label, str(choice_label)).lower()
 
         # Use 3-column layout for cleaner modern UX
         left_col, center_col, _ = main_container.columns(
@@ -1356,10 +1375,10 @@ def main() -> None:
             )
 
         # Ensure session state defaults are valid
-        if st.session_state.get("sidebar_nav") not in page_paths:
-            st.session_state["sidebar_nav"] = "Validation"
+        if st.session_state.get("sidebar_nav") not in page_paths.values():
+            st.session_state["sidebar_nav"] = "validation"
 
-        if forced_page not in page_paths:
+        if forced_page not in page_paths.values():
             forced_page = None
 
         # Determine selected label from sidebar or fallback
@@ -1458,6 +1477,7 @@ def main() -> None:
             else:
                 st.toast("Select a page above to continue.")
                 _render_fallback("Validation")
+
 
 
             # Run agent logic if triggered

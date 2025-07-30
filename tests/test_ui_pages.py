@@ -165,7 +165,7 @@ def test_main_defaults_to_validation(monkeypatch):
 
     ui.main()
 
-    assert params.get("page") == "Validation"
-    assert session.get("sidebar_nav") == "Validation"
+    assert params.get("page") == "validation"
+    assert session.get("sidebar_nav") == "validation"
     # Optional, if you also defined `loaded` earlier:
     # assert loaded.get("choice") == "Validation"
