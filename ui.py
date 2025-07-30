@@ -419,29 +419,6 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
     st.warning(f"Page not found: {choice}")
     if "_render_fallback" in globals():
         _render_fallback(choice)
-    for module_path in module_paths:
-        try:
-            page_mod = importlib.import_module(module_path)
-            for method_name in ("render", "main"):
-                if hasattr(page_mod, method_name):
-                    getattr(page_mod, method_name)()
-                    return
-                except ImportError:
-            continue  # Try next candidate module path
-                except Exception as exc:
-                    st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
-                    with st.expander("Show error details"):
-                        st.exception(exc)
-                    print("Traceback for debugging:\n", traceback.format_exc())
-                    break
-                    with st.expander("Show error details"):
-                        st.exception(exc)
-                    print("Traceback for debugging:\n", traceback.format_exc())
-                    break
-
-    st.warning(f"Page not found: {choice}")
-    if "_render_fallback" in globals():
-        _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
