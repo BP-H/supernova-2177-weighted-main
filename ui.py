@@ -466,6 +466,7 @@ def render_modern_validation_page():
                     </div>
                 """, unsafe_allow_html=True)
 
+# In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
     """Load page with beautiful fallback."""
     # Define pages here since it's not global
@@ -494,10 +495,10 @@ def load_page_with_fallback(choice):
                 continue
         
         if page_mod:
-            if hasattr(page_mod, "render"):
-                page_mod.render()
-            elif hasattr(page_mod, "main"):
+            if hasattr(page_mod, "main"):
                 page_mod.main()
+            elif hasattr(page_mod, "render"):
+                page_mod.render()
             else:
                 raise ImportError("No main or render method found")
         else:
@@ -520,7 +521,6 @@ def _render_fallback(choice: str) -> None:
         render_modern_music_page()
     elif choice == "Social":
         render_modern_social_page()
-
 def render_modern_voting_page():
     """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
