@@ -88,7 +88,11 @@ def _render_sidebar_nav(
     with container:
         if hasattr(st.sidebar, "page_link"):
             for (label, path), icon in zip(opts, icon_list):
-                st.sidebar.page_link(path, label=label, icon=icon, help=label)
+                try:
+                    st.sidebar.page_link(path, label=label, icon=icon, help=label)
+                except Exception:
+                    url = f"?page={label}"
+                    st.sidebar.link_button(label, url=url, icon=icon)
         elif USE_OPTION_MENU and option_menu is not None:
             choice = option_menu(
                 menu_title=None,
