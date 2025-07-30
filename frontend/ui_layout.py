@@ -17,21 +17,7 @@ UI Ideas:
 - Preview badge overlay for unfinished pages
 """
 
-"""
-
 from __future__ import annotations
-
-"""UI Layout Helpers
-
-Reusable Streamlit layout helpers and navigation components for pages.
-
-Features:
-- `main_container()` – returns a generic container for page content
-- `sidebar_container()` – accesses the sidebar container
-- `render_navbar(options, default=None)` – simple navigation UI (radio or option menu)
-- `render_title_bar(icon, label)` – renders a header with an icon
-- `show_preview_badge()` – floating badge for preview pages
-"""
 
 from typing import Dict, Iterable, Optional
 import streamlit as st
@@ -47,13 +33,20 @@ def main_container() -> st.delta_generator.DeltaGenerator:
     """Return a container for the main content area."""
     return st.container()
 
+    return st.container()
+
 
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
     """Return the sidebar container."""
     return st.sidebar
 
 
-def render_navbar(options: Iterable[str] | Dict[str, str], default: Optional[str] = None, icons: Optional[Iterable[str]] = None) -> str:
+def render_navbar(
+    options: Iterable[str] | Dict[str, str],
+    default: Optional[str] = None,
+    icons: Optional[Iterable[str]] = None,
+    key: str = "main_nav_menu"
+) -> str:
     """Render a navigation UI and return the selected label."""
     opts = list(options.keys()) if isinstance(options, dict) else list(options)
     index = 0
@@ -67,10 +60,14 @@ def render_navbar(options: Iterable[str] | Dict[str, str], default: Optional[str
             options=opts,
             icons=icon_list,
             orientation="horizontal",
-            key="main_nav_menu",
+            key=key,
         )
     else:
-        return st.radio("Navigation", opts, index=index)
+        if icons and len(list(icons)) == len(opts):
+            labels = [f"{icon} {label}" for icon, label in zip(icons, opts)]
+            choice = st.sidebar.radio("Navigate", labels, key=key)
+            return opts[labels.index(choice)]
+        return st.sidebar.radio("Navigate", opts, key=key)
 
 
 def render_title_bar(icon: str, label: str) -> None:
@@ -92,6 +89,15 @@ def show_preview_badge(text: str = "🚧 Preview Mode") -> None:
     )
 
 
+"""\
+## UI Ideas
+
+- Glassmorphism cards for data panels
+- Sidebar navigation with emoji icons
+- Animated progress bars for background tasks
+- Reaction badges for interactive elements
+"""
+
 __all__ = [
     "main_container",
     "sidebar_container",
@@ -99,4 +105,3 @@ __all__ = [
     "render_title_bar",
     "show_preview_badge",
 ]
-

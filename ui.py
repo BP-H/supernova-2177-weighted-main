@@ -118,6 +118,7 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
+from frontend.ui_layout import overlay_badge, render_title_bar
 
 # Optional modules used throughout the UI. Provide simple fallbacks
 # when the associated packages are not available.
@@ -341,14 +342,28 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
-from frontend import ui_layout
+from frontend.ui_layout import render_title_bar, show_preview_badge
 
+def load_page_with_fallback(choice: str) -> None:
+    """Attempt to import and render a page by name with graceful fallback."""
+    PAGES = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
 
-def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
-    """
-    Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
-    """
+    module = PAGES.get(choice)
+    if not module:
+        st.error(f"Unknown page: {choice}")
+        return
+
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{module}",
+        module,
+    ]
+
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
@@ -359,7 +374,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
                 page_mod.main()
                 return
         except ImportError:
-            continue  # Try next path
+            continue
         except Exception as exc:
             st.error(f"❌ Error loading page `{choice}`: {exc}")
             break
@@ -368,7 +383,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
 
 
 def _render_fallback(choice: str) -> None:
-    """Render modern fallback if module isn't available or fails to load."""
+    """Render built-in fallback if module is missing or errors out."""
     fallback_pages = {
         "Validation": render_modern_validation_page,
         "Voting": render_modern_voting_page,
@@ -378,71 +393,55 @@ def _render_fallback(choice: str) -> None:
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
+        show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
-        st.error(f"No fallback available for page: {choice}")
+        st.warning(f"No fallback available for page: {choice}")
 
 
 def render_modern_validation_page():
-    """Fallback validation page with basic progress indicators."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("✅", "Validation Console")
-
-    status = st.empty()
-    prog = st.progress(0)
-    for i in range(1, 6):
-        status.write(f"Step {i} / 5")
-        prog.progress(i * 20)
-    st.success("Analysis placeholder complete")
+    st.markdown("**Timeline**")
+    st.markdown("- Task queued\n- Running analysis\n- Completed")
+    progress = st.progress(0)
+    for i in range(5):
+        st.sleep(0.1)
+        progress.progress((i + 1) / 5)
+    st.success("Status: OK")
 
 
 def render_modern_voting_page():
-    """Fallback voting page showing mock poll results."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🗳️", "Voting Dashboard")
-    votes = {"Option A": 60, "Option B": 25, "Option C": 15}
-    for name, val in votes.items():
-        st.write(f"{name} {val}% :thumbsup:")
-        st.progress(val / 100)
+    votes = {"Proposal A": 3, "Proposal B": 5}
+    total = sum(votes.values()) or 1
+    for label, count in votes.items():
+        st.write(f"{label}: {count} votes")
+        st.progress(count / total)
 
 
 def render_modern_agents_page():
-    """Fallback agents page with basic profiles."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🤖", "AI Agents")
-    cols = st.columns(3)
-    for col, agent in zip(cols, ["Meta", "Guardian", "Resonance"]):
+    agents = ["Guardian", "Oracle", "Resonance"]
+    cols = st.columns(len(agents))
+    for col, name in zip(cols, agents):
         with col:
             st.image("https://via.placeholder.com/80", width=80)
-            st.write(agent)
-            st.line_chart([1, 2, 1, 3])
+            st.write(name)
+            st.line_chart([1, 3, 2, 4])
 
 
 def render_modern_music_page():
-    """Fallback music page with waveform placeholder."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("🎵", "Resonance Music")
-    st.audio(b"", format="audio/wav")
-    st.markdown("Harmonic signature: **A440**")
+    st.line_chart([0, 1, 0, -1, 0])
+    st.caption("Harmonic signature: A# minor")
 
 
 def render_modern_social_page():
-    """Fallback social page with trending hashtags."""
-    from frontend.ui_layout import render_title_bar, show_preview_badge
-
-    show_preview_badge()
     render_title_bar("👥", "Social Network")
-    st.image("https://via.placeholder.com/40", width=40)
-    st.write("#hashtag1 #hashtag2")
-    st.success("Trending simulation running...")
+    st.markdown("😀 @alice #hello")
+    st.markdown("🔥 Trending: #resonance #ai")
+    st.success("Social feed placeholder loaded")
+
 
 
 
