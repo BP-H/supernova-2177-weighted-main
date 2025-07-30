@@ -351,66 +351,23 @@ except ImportError:
 # With this safe import:
 try:
     from voting_ui import render_voting_tab
+    from agent_ui import render_agent_insights_tab
+    from social_tabs import render_social_tab
+    from llm_backends import get_backend
+    from protocols import AGENT_REGISTRY
 except ImportError:
+    # Create fallback functions
     def render_voting_tab():
-        """Fallback voting tab when voting_ui module is missing."""
-        st.subheader("🗳️ Voting System")
-        st.info("Voting module not available - using demo content")
-        
-        # Demo voting interface
-        st.markdown("### 📊 Active Proposals")
-        
-        # Sample proposals
-        proposals = [
-            {"id": 1, "title": "Increase validation threshold to 0.8", "votes": 89, "status": "Active", "progress": 75},
-            {"id": 2, "title": "Implement new consensus algorithm", "votes": 156, "status": "Pending", "progress": 45},
-            {"id": 3, "title": "Network upgrade to v2.1", "votes": 234, "status": "Approved", "progress": 100}
-        ]
-        
-        for proposal in proposals:
-            with st.container():
-                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-                
-                with col1:
-                    st.write(f"**{proposal['title']}**")
-                    st.progress(proposal['progress'] / 100)
-                    
-                with col2:
-                    st.metric("Votes", proposal['votes'])
-                    
-                with col3:
-                    status_color = {"Active": "🟡", "Pending": "🔵", "Approved": "🟢"}
-                    st.write(f"{status_color.get(proposal['status'], '⚪')} {proposal['status']}")
-                    
-                with col4:
-                    if proposal['status'] == "Active":
-                        if st.button("Vote", key=f"vote_{proposal['id']}"):
-                            st.success("Vote recorded!")
-                
-                st.divider()
-        
-        # Voting stats
-        st.markdown("### 🎯 Your Voting Power")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Available Votes", "25", delta="+5")
-        with col2:
-            st.metric("Proposals Voted", "12", delta="+3")
-        with col3:
-            st.metric("Voting Power", "0.8%", delta="+0.1%")
-        
-        # Submit new proposal
-        st.markdown("### 📝 Submit New Proposal")
-        proposal_title = st.text_input("Proposal Title")
-        proposal_desc = st.text_area("Description", height=100)
-        
-        if st.button("Submit Proposal", type="primary"):
-            if proposal_title and proposal_desc:
-                st.success("✅ Proposal submitted successfully!")
-                st.info("Your proposal will be reviewed and added to the voting queue.")
-            else:
-                st.error("Please fill in both title and description.")
+        st.info("Voting module not available")
+    
+    def render_agent_insights_tab():
+        st.info("Agent insights not available")
+    
+    def render_social_tab():
+        st.info("Social features not available")
+    
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy"}
 
 # Apply the same pattern to other missing imports:
 
