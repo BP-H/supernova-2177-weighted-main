@@ -169,3 +169,26 @@ def test_main_defaults_to_validation(monkeypatch):
     assert session.get("sidebar_nav") == "Validation"
     # Optional, if you also defined `loaded` earlier:
     # assert loaded.get("choice") == "Validation"
+
+
+def test_fallback_rendered_once(monkeypatch):
+    monkeypatch.setenv("UI_DEBUG_PRINTS", "0")
+    importlib.reload(ui)
+
+    # No-op patches for Streamlit usage within _render_fallback
+    monkeypatch.setattr(st, "toast", lambda *a, **k: None)
+    monkeypatch.setattr(ui, "show_preview_badge", lambda *a, **k: None)
+
+    called = {"count": 0}
+    monkeypatch.setattr(
+        ui,
+        "render_modern_validation_page",
+        lambda: called.__setitem__("count", called["count"] + 1),
+    )
+
+    ui._fallback_rendered.clear()
+    ui._render_fallback("Validation")
+    ui._render_fallback("Validation")
+
+    assert called["count"] == 1
+    assert "Validation" in ui._fallback_rendered

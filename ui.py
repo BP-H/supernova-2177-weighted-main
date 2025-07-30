@@ -113,6 +113,9 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
+# Tracks which fallback pages have been rendered in this session.
+_fallback_rendered: set[str] = set()
+
 
 def log(msg: str) -> None:
     if UI_DEBUG:
@@ -372,6 +375,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
                 try:
                     st.switch_page(rel_path)
+                    _fallback_rendered.clear()
                     return
                 except StreamlitAPIException as exc:
                     st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
@@ -390,6 +394,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             for method_name in ("render", "main"):
                 if hasattr(page_mod, method_name):
                     getattr(page_mod, method_name)()
+                    _fallback_rendered.clear()
                     return
         except ImportError:
             continue
@@ -410,6 +415,10 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    # Prevent rendering the same fallback repeatedly.
+    if choice in _fallback_rendered:
+        return
+    _fallback_rendered.add(choice)
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
