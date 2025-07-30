@@ -51,6 +51,8 @@ def header(title: str, *, layout: str = "centered") -> None:
 def safe_apply_theme(theme: str) -> None:
     """Apply theme with error handling."""
     try:
+        # Note: @import url for fonts is handled by apply_global_styles
+        # This function defines the CSS variables and app-wide styles.
         if theme.lower() == "dark":
             css = """
                 <style>
@@ -59,17 +61,35 @@ def safe_apply_theme(theme: str) -> None:
                     --secondary-bg: #242424;
                     --text-color: #e8e6e3;
                     --primary-color: #4a90e2;
-                    --font-family: monospace;
+                    --font-family: monospace; /* Consistent with main branch's dark theme */
                 }
                 .stApp {
                     background-color: var(--background);
                     color: var(--text-color);
                     font-family: var(--font-family);
                 }
-                a { color: var(--primary-color); }
+                a { color: var(--primary-color); } /* Explicitly include link color for consistency */
                 </style>
             """
-        else:
+        elif theme.lower() == "codex":
+            css = """
+                <style>
+                :root {
+                    --background: #202123;
+                    --secondary-bg: #343541;
+                    --text-color: #ECECF1;
+                    --primary-color: #19C37D;
+                    --font-family: 'Iosevka', monospace; /* Specific font for codex theme */
+                }
+                .stApp {
+                    background-color: var(--background);
+                    color: var(--text-color);
+                    font-family: var(--font-family);
+                }
+                a { color: var(--primary-color); } /* Explicitly include link color for consistency */
+                </style>
+            """
+        else: # Default light theme
             css = """
                 <style>
                 :root {
@@ -77,13 +97,14 @@ def safe_apply_theme(theme: str) -> None:
                     --secondary-bg: #FFFFFF;
                     --text-color: #333333;
                     --primary-color: #0A84FF;
-                    --font-family: sans-serif;
+                    --font-family: 'Inter', sans-serif; /* Consistent with apply_global_styles' default */
                 }
                 .stApp {
                     background-color: var(--background);
                     color: var(--text-color);
                     font-family: var(--font-family);
                 }
+                a { color: var(--primary-color); } /* Explicitly include link color for consistency */
                 </style>
             """
         st.markdown(css, unsafe_allow_html=True)
