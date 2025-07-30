@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """UI Layout Helpers
 
 Reusable Streamlit layout helpers and navigation components for pages.
@@ -22,8 +25,7 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
-
-ROOT_DIR = Path(__file__).resolve().parents[1]
+from utils.paths import ROOT_DIR, PAGES_DIR
 import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
@@ -86,8 +88,10 @@ def _render_sidebar_nav(
     valid_opts = []
     valid_icons = []
     for (label, path), icon in zip(opts, icon_list):
-        file_path = (ROOT_DIR / path.lstrip("/")).with_suffix(".py")
-        if not file_path.exists():
+        rel = Path(path.lstrip("/"))
+        candidates = [ROOT_DIR / rel, PAGES_DIR / rel.name]
+        exists = any(c.with_suffix(".py").exists() for c in candidates)
+        if not exists:
             st.sidebar.error(f"Page not found: {path}")
             continue
         valid_opts.append((label, path))

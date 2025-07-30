@@ -11,12 +11,26 @@ from ui import render_validation_ui
 inject_modern_styles()
 
 
-if hasattr(st, "experimental_page"):
-    @st.experimental_page("Validation")
-    def main(main_container=None) -> None:
-        """Render the validation UI inside a container safely."""
-        if main_container is None:
-            main_container = st
+def _page_decorator(func):
+    if hasattr(st, "experimental_page"):
+        return st.experimental_page("Validation")(func)
+    return func
+
+
+@_page_decorator
+def main(main_container=None) -> None:
+    """Render the validation UI inside a container safely."""
+    if main_container is None:
+        main_container = st
+
+    container_ctx = safe_container(main_container)
+
+    try:
+        with container_ctx:
+            render_validation_ui(main_container=main_container)
+    except AttributeError:
+        render_validation_ui(main_container=main_container)
+
 
         container_ctx = safe_container(main_container)
 
