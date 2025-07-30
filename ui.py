@@ -400,6 +400,25 @@ def render_modern_profile_page() -> None:
     st.info("Profile management pending implementation.")
 
 
+def render_sidebar() -> str:
+    """Render the left sidebar with navigation and quick actions."""
+    user = safe_get_user()
+    avatar = getattr(user, "profile_pic", "https://via.placeholder.com/64")
+    username = getattr(user, "username", "Guest")
+    st.sidebar.image(avatar, width=48)
+    st.sidebar.markdown(f"**{username}**", unsafe_allow_html=True)
+    st.sidebar.button("Create Proposal")
+    st.sidebar.button("Run Validation")
+    dark = st.sidebar.toggle("Dark Mode", value=st.session_state.get("theme") == "dark")
+    st.session_state["theme"] = "dark" if dark else "light"
+    env = os.getenv("ENV", "development").lower()
+    env_tag = "🚀 Production" if env.startswith("prod") else "🧪 Development"
+    st.sidebar.markdown(env_tag)
+    icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
+    choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+    return choice
+
+
 
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
@@ -1106,38 +1125,17 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Chat": "chat",
-            "Social": "social",
-            "Profile": "profile",
-        }
+        choice = render_sidebar()
 
-        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-        page_paths = {
-            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
-            for label, mod in PAGES.items()
-        }
+        if st.session_state.get("agent_output") is not None:
+            st.subheader("Agent Output")
+            st.json(st.session_state["agent_output"])
 
-        choice = render_modern_sidebar(
-            page_paths,
-            icons=[
-                "✅",
-                "📊",
-                "🤖",
-                "🎵",
-                "💬",
-                "👥",
-                "👤",
-            ],
-        )
+        render_stats_section()
+        st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        left_col, center_col, right_col = st.columns([1, 3, 1])
-
-        with center_col:
+        container_ctx = safe_container(main_container)
+        with container_ctx:
             if choice:
                 page_key = PAGES.get(choice, choice)
                 module_paths = [
@@ -1152,122 +1150,6 @@ def main() -> None:
             else:
                 st.info("Select a page on the left to continue.")
                 _render_fallback("Validation")
-
-        with left_col:
-            render_status_icon()
-            render_developer_tools()
-
-        
-            with st.expander("Environment Details"):
-                secrets = get_st_secrets()
-                info_text = (
-                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
-                    f"ENV: {os.getenv('ENV', 'dev')} | "
-                    f"Session: {st.session_state['session_start_ts']} UTC"
-                )
-                st.info(info_text)
-        
-            with st.expander("Application Settings"):
-                demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
-                theme_selector("Theme")
-        
-            with st.expander("Data Management"):
-                uploaded_file = st.file_uploader("Upload JSON", type="json")
-                if st.button("Run Analysis"):
-                    st.success("Analysis complete!")
-        
-            with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui(key_prefix="devtools")
-
-                backend_choice = api_info.get("model", "dummy")
-                api_key = api_info.get("api_key", "") or ""
-
-                if AGENT_REGISTRY:
-                    agent_choice = st.selectbox(
-                        "Agent",
-                        sorted(AGENT_REGISTRY.keys()),
-                        key="devtools_agent_select",
-                    )
-                else:
-                    agent_choice = None
-                    st.info("No agents registered")
-
-                event_type = st.text_input("Event", value="LLM_INCOMING")
-                payload_txt = st.text_area("Payload JSON", value="{}", height=100)
-                run_agent_clicked = st.button("Run Agent")
-
-        
-            with st.expander("Simulation Tools"):
-                render_simulation_stubs()
-        
-            st.divider()
-            governance_view = st.toggle(
-                "Governance View",
-                value=st.session_state.get("governance_view", False),
-            )
-            st.session_state["governance_view"] = governance_view
-        
-            render_developer_tools()
-
-        if run_agent_clicked and "AGENT_REGISTRY" in globals():
-
-            try:
-                payload = json.loads(payload_txt or "{}")
-            except Exception as exc:
-                alert(f"Invalid payload: {exc}", "error")
-            else:
-                backend_fn = get_backend(backend_choice.lower(), api_key or None)
-                if backend_fn is None:
-                    alert("Invalid backend selected", "error")
-                    st.session_state["agent_output"] = None
-                    st.stop()
-
-                agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
-                if agent_cls is None:
-                    alert("Unknown agent selected", "error")
-                else:
-                    try:
-                        if agent_choice == "CI_PRProtectorAgent":
-                            talker = backend_fn or (lambda p: p)
-                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
-                        elif agent_choice == "MetaValidatorAgent":
-                            selected_agent = agent_cls({}, llm_backend=backend_fn)
-                        elif agent_choice == "GuardianInterceptorAgent":
-                            selected_agent = agent_cls(llm_backend=backend_fn)
-                        else:
-                            selected_agent = agent_cls(llm_backend=backend_fn)
-
-                        st.session_state["agent_instance"] = selected_agent
-
-                        result = selected_agent.process_event(
-                            {"event": event_type, "payload": payload}
-                        )
-
-                        st.session_state["agent_output"] = result
-                        st.success("Agent executed")
-                    except Exception as exc:
-                        st.session_state["agent_output"] = {"error": str(exc)}
-                        alert(f"Agent error: {exc}", "error")
-
-        if st.session_state.get("agent_output") is not None:
-            st.subheader("Agent Output")
-            st.json(st.session_state["agent_output"])
-
-        render_stats_section()
-        st.markdown(f"**Runs:** {st.session_state['run_count']}")
-
-        container_ctx = safe_container(main_container)
-        with container_ctx:
-            if choice:  # Only attempt to load if a page is selected
-                page_key = PAGES.get(choice, choice)
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                load_page_with_fallback(choice, module_paths)
-            else:
-                st.info("Select a page above to continue.")
-                _render_fallback("Validation")  # Default fallback page as a preview
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

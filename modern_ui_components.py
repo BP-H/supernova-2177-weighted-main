@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import streamlit as st
-from typing import Optional
+from typing import Optional, Dict
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -56,30 +56,28 @@ def render_modern_header(title: str) -> None:
 
 
 def render_modern_sidebar(
-    pages: dict[str, str],
+    pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
-    icons: Optional[list[str]] = None,
+    icons: Optional[Dict[str, str]] = None,
 ) -> str:
-    """Render a vertical navigation menu and return the selected label."""
+    """Render a vertical navigation menu with optional icons."""
     if container is None:
         container = st.sidebar
 
     opts = list(pages.keys())
+    icon_map = icons or {}
+    session_key = f"sidebar_{id(pages)}"
+    st.session_state.setdefault(session_key, opts[0])
+
     container_ctx = safe_container(container)
     with container_ctx:
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-        if USE_OPTION_MENU and option_menu is not None:
-            choice = option_menu(
-                menu_title=None,
-                options=opts,
-                icons=icons or ["dot"] * len(opts),
-                orientation="vertical",
-                key=f"sidebar_{id(pages)}",
-            )
-        else:
-            choice = st.radio("Navigate", opts, key=f"sidebar_{id(pages)}")
+        for label in opts:
+            icon = icon_map.get(label, "")
+            if st.button(f"{icon} {label}", key=f"{session_key}_{label}", help=label):
+                st.session_state[session_key] = label
         st.markdown("</div>", unsafe_allow_html=True)
-    return choice
+    return st.session_state.get(session_key, opts[0])
 
 
 def render_validation_card(entry: dict) -> None:

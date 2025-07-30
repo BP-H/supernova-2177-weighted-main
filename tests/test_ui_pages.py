@@ -83,4 +83,3 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     ui.main()
 
     assert fallback_called.get("choice") == "Ghost"
-    assert tab_calls, "Developer tools tabs should render"
