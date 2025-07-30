@@ -36,4 +36,10 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
             )
             logger.info("Created placeholder page module %s", file_path.name)
 
-__all__ = ["ensure_pages"]
+def get_pages_dir() -> Path:
+    """Return the canonical directory for Streamlit page modules."""
+
+    return Path(__file__).resolve().parents[2] / "pages"
+
+
+__all__ = ["ensure_pages", "get_pages_dir"]

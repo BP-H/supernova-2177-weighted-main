@@ -82,26 +82,27 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as exc:  # pragma: no cover - best effort fallback
-    logger.error("Failed to import ensure_pages: %s", exc)
-
-    def ensure_pages(*_args, **_kwargs) -> None:
-        """Fallback no-op when page registry utilities are unavailable."""
-        logger.debug("ensure_pages fallback invoked")
-
-
-try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+    from transcendental_resonance_frontend.src.utils.page_registry import (
+        ensure_pages,
+        get_pages_dir,
+    )
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
     logger.warning("Primary page_registry import failed: %s", import_err)
-    try:
-        from utils.page_registry import ensure_pages  # type: ignore
-    except Exception as fallback_err:
+    try:  # type: ignore
+        from utils.page_registry import ensure_pages, get_pages_dir  # type: ignore
+    except Exception as fallback_err:  # pragma: no cover - final fallback
         logger.warning("Secondary page_registry import also failed: %s", fallback_err)
+
         def ensure_pages(*_a, **_k):
             logger.warning("ensure_pages noop fallback used")
             return None
+
+        def get_pages_dir() -> Path:
+            return (
+                Path(__file__).resolve().parent
+                / "transcendental_resonance_frontend"
+                / "pages"
+            )
 
 
 nx = None  # imported lazily in run_analysis
@@ -116,7 +117,7 @@ HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
 ROOT_DIR = Path(__file__).resolve().parent
-PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = get_pages_dir()
 
 # Mapping of navigation labels to page module names
 
@@ -182,11 +183,17 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
 )
+try:
+    from modern_ui import (
+        inject_modern_styles,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        return None
 
-from modern_ui import (
-    inject_modern_styles,
-    render_stats_section,
-)
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -387,9 +394,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 
     # Validate PAGES_DIR existence
-    PAGES_DIR = (
-        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-    )
+    PAGES_DIR = get_pages_dir()
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -474,7 +479,7 @@ def _render_fallback(choice: str) -> None:
     # Candidate paths to try loading from
     page_candidates = [
         ROOT_DIR / "pages" / f"{slug}.py",
-        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+        get_pages_dir() / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
@@ -1379,20 +1384,6 @@ def main() -> None:
         render_topbar()  # added in codex branch
 
         # Setup: Pages and Icons (reuse global mapping)
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Chat": "chat",
-            "Social": "social",
-            "Profile": "profile",
-        }
-        PAGES_DIR = (
-            Path(__file__).resolve().parent
-            / "transcendental_resonance_frontend"
-            / "pages"
-        )
 
 
         page_paths: dict[str, str] = {}
