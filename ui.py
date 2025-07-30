@@ -391,11 +391,13 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                     return
                 except StreamlitAPIException as exc:
                     st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    logger.debug("File exists but switch failed: %s", page_file)
                     break
                 except Exception as exc:
                     logging.error(
                         "switch_page failed for %s: %s", rel_path, exc, exc_info=True
                     )
+                    logger.debug("File exists but switch failed: %s", page_file)
                     last_exc = exc
                     break
 
@@ -474,18 +476,16 @@ def _render_fallback(choice: str) -> None:
         "social": render_modern_social_page,
         "profile": render_modern_profile_page,
     }
-
     fallback_fn = fallback_pages.get(slug)
     if fallback_fn:
+        logger.debug("Rendering fallback for %s", slug)
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
+
     else:
         st.toast(f"No fallback available for page: {choice}", icon="⚠️")
-
-
-
 
 def render_modern_validation_page():
     render_title_bar("✅", "Validation Console")
