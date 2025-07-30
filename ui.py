@@ -362,6 +362,45 @@ def inject_dark_theme() -> None:
 from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
+def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None:
+    """Attempt to import and render a page by name with graceful fallback."""
+    if module_paths is None:
+        module = PAGES.get(choice)
+        if not module:
+            st.error(f"Unknown page: {choice}")
+            return
+        module_paths = [
+            f"transcendental_resonance_frontend.pages.{module}",
+            module,
+        ]
+
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    Logs the traceback for any unexpected failure.
+    """
+    import importlib
+    for module_path in module_paths:
+        try:
+            page_mod = importlib.import_module(module_path)
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
+        except ImportError:
+            continue  # Try next candidate module path
+        except Exception as exc:
+            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+            with st.expander("Show error details"):
+                st.exception(exc)
+            print("Traceback for debugging:\n", traceback.format_exc())
+            break
+
+    # Optional fallback renderer if defined elsewhere
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
+
+
 def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
     """Switch to the first existing page referenced in ``module_paths``."""
     for module_path in module_paths:
@@ -1191,19 +1230,20 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Social": "social",
-        }
+            PAGES = {
+                "Validation": "validation",
+                "Voting": "voting",
+                "Agents": "agents",
+                "Resonance Music": "resonance_music",
+                "Social": "social",
+            }
 
-        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
-        ui_layout.render_navbar(
-            page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-        )
+            PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+            page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+            choice = ui_layout.render_navbar(
+                page_paths,
+                icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            )
 
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
