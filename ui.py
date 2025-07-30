@@ -88,7 +88,7 @@ from streamlit_helpers import (
 )
 
 from modern_ui import (
-    inject_premium_styles,
+    inject_modern_styles,
     render_modern_header,
     render_stats_section,
     open_card_container,
@@ -355,7 +355,7 @@ def render_modern_validation_page():
         )
         
         if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
-            with st.spinner("🔍 Analyzing validation data..."):
+            with st.spinner("Loading..."):
                 # Simulate analysis
                 import time
                 time.sleep(2)
@@ -672,7 +672,7 @@ def run_analysis(validations, *, layout: str = "force"):
         if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
             print("✅ UI diagnostic agent active")
 
-    with st.spinner("Running analysis..."):
+    with st.spinner("Loading..."):
         result = analyze_validation_integrity(validations)
 
     st.subheader("Validations")
@@ -945,7 +945,7 @@ def main() -> None:
 
         # Apply modern styling
         try:
-            inject_premium_styles()
+            inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
 
