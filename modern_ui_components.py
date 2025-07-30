@@ -181,13 +181,11 @@ def render_modern_sidebar(
 
         exists = any((d / f"{slug}.py").exists() for d in page_dir_candidates if d.exists())
 
-        if exists:
-
-            valid_pages[label] = page_ref
-
-        else:
-
+        if not exists:
             missing_pages.append(label)
+
+        # Always include the page so fallback placeholders can render
+        valid_pages[label] = page_ref
 
     if missing_pages:
 

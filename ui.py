@@ -121,6 +121,9 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
+# Tracks which fallback pages have been rendered in this session.
+_fallback_rendered: set[str] = set()
+
 
 def log(msg: str) -> None:
     if UI_DEBUG:
@@ -388,14 +391,17 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
                 try:
                     st.switch_page(rel_path)
+                    _fallback_rendered.clear()
                     return
                 except StreamlitAPIException as exc:
                     st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    logger.debug("File exists but switch failed: %s", page_file)
                     break
                 except Exception as exc:
                     logging.error(
                         "switch_page failed for %s: %s", rel_path, exc, exc_info=True
                     )
+                    logger.debug("File exists but switch failed: %s", page_file)
                     last_exc = exc
                     break
 
@@ -406,6 +412,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             for method_name in ("render", "main"):
                 if hasattr(page_mod, method_name):
                     getattr(page_mod, method_name)()
+                    _fallback_rendered.clear()
                     return
         except ImportError:
             continue
@@ -426,37 +433,39 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    # Prevent rendering the same fallback repeatedly.
+    if choice in _fallback_rendered:
+        return
+    _fallback_rendered.add(choice)
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
 
-    slug = PAGES.get(choice, str(choice)).lower()
-    page_candidates = [
-        ROOT_DIR / "pages" / f"{slug}.py",
-        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
-    ]
-    if any(p.exists() for p in page_candidates):
-        logger.debug("_render_fallback called but page exists: %s", slug)
-        return
-
     # Normalize and derive slug/module name
     slug = normalize_choice(choice)
     module = PAGES.get(slug, slug.lower())
-    page_file = ROOT_DIR / "pages" / f"{module}.py"
 
-    # Skip fallback if page file is available
-    if page_file.exists():
-        logger.debug("Fallback skipped because %s exists", page_file)
-        spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
-        if spec and spec.loader:
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            try:
-                spec.loader.exec_module(mod)
-            except Exception as exc:
-                st.error(f"Failed to load page {module}: {exc}")
-        return
+    # Candidate paths to try loading from
+    page_candidates = [
+        ROOT_DIR / "pages" / f"{slug}.py",
+        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+        Path.cwd() / "pages" / f"{slug}.py",
+    ]
+
+    for page_file in page_candidates:
+        if page_file.exists():
+            logger.debug("Fallback loading %s from %s", module, page_file)
+            spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                try:
+                    spec.loader.exec_module(mod)
+                except Exception as exc:
+                    st.error(f"Failed to load page {module}: {exc}")
+            return
+
 
     # Prevent duplicate fallback rendering in session
     if st.session_state.get("_fallback_rendered") == slug:
@@ -474,18 +483,16 @@ def _render_fallback(choice: str) -> None:
         "social": render_modern_social_page,
         "profile": render_modern_profile_page,
     }
-
     fallback_fn = fallback_pages.get(slug)
     if fallback_fn:
+        logger.debug("Rendering fallback for %s", slug)
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
+
     else:
         st.toast(f"No fallback available for page: {choice}", icon="⚠️")
-
-
-
 
 def render_modern_validation_page():
     render_title_bar("✅", "Validation Console")
