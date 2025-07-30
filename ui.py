@@ -396,9 +396,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
             print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    # Optional fallback renderer if defined elsewhere
-    if "_render_fallback" in globals():
-        _render_fallback(choice)
+    st.warning("Unable to load page. Showing preview.")
+    _render_fallback(choice)
 
 
 def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
@@ -409,6 +408,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
             st.switch_page(page_file)
             return
     st.error(f"Page not found: {choice}")
+    st.warning("Unable to load page. Showing preview.")
+    _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
