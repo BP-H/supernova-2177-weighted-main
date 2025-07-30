@@ -946,6 +946,7 @@ def render_validation_ui(
             for label, mod in PAGES.items()
         }
 
+
         ui_layout.render_navbar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
@@ -1239,11 +1240,18 @@ def main() -> None:
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
-
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
-            key="navbar_main",
+            icons=[
+                "✅",
+                "📊",
+                "🤖",
+                "🎵",
+                "💬",
+                "👥",
+                "👤",
+            ],
+            key="main_nav_menu_sub",
         )
 
         
