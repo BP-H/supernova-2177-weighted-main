@@ -13,7 +13,7 @@ import html
 from typing import Literal
 
 import streamlit as st
-from modern_ui import inject_premium_styles
+from modern_ui import inject_modern_styles
 
 
 def alert(
@@ -119,8 +119,8 @@ def apply_theme(theme: str) -> None:
 
 
 def inject_global_styles() -> None:
-    """Deprecated wrapper that forwards to :func:`modern_ui.inject_premium_styles`."""
-    inject_premium_styles()
+    """Deprecated wrapper that forwards to :func:`modern_ui.inject_modern_styles`."""
+    inject_modern_styles()
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:
