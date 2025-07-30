@@ -5,6 +5,21 @@
 
 import streamlit as st
 
+try:  # pragma: no cover - optional dependency
+    from streamlit_lottie import st_lottie
+    HAS_LOTTIE = True
+except Exception:  # pragma: no cover - graceful fallback
+    st_lottie = None  # type: ignore
+    HAS_LOTTIE = False
+
+
+def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "🚀") -> None:
+    """Display a Lottie animation if available, otherwise show a fallback icon."""
+    if HAS_LOTTIE and st_lottie is not None:
+        st_lottie(url, height=height)
+    else:
+        st.markdown(f"<div style='font-size:{height // 4}px'>{fallback}</div>", unsafe_allow_html=True)
+
 
 def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
@@ -68,8 +83,8 @@ def inject_modern_styles() -> None:
         }
         .card:hover,
         .custom-container:hover {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-            transform: translateY(-3px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 8px var(--neon-accent);
+            transform: translateY(-3px) scale(1.02);
 
         }
         h1, h2, h3, h4, h5, h6 {
@@ -123,9 +138,9 @@ def inject_modern_styles() -> None:
             font-size: 0.9rem !important;
         }
         .stButton>button:hover {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important, 0 0 6px var(--neon-accent) !important;
             background: rgba(255,255,255,0.08) !important;
-            transform: translateY(-1px) !important;
+            transform: translateY(-1px) scale(1.03) !important;
         }
 
         input, textarea, select {
@@ -329,6 +344,7 @@ def close_card_container() -> None:
 
 
 __all__ = [
+    "render_lottie_animation",
     "inject_modern_styles",
     "inject_premium_styles",
     "render_modern_header",
