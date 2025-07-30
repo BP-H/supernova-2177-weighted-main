@@ -16,6 +16,13 @@ from typing import Dict, Iterable, Optional
 import logging
 from io import BytesIO
 
+import requests
+
+try:
+    from aiortc import RTCPeerConnection
+except Exception:  # pragma: no cover - optional dependency
+    RTCPeerConnection = None
+
 try:
     from gtts import gTTS
 except Exception:  # pragma: no cover - optional dependency
@@ -52,27 +59,39 @@ class VideoChatManager:
     def __init__(self, generative_service: Optional[GenerativeAIService] = None) -> None:
         self.active_streams: list[VideoStream] = []
         self.generative_service = generative_service
+        self.peer_connections: Dict[str, RTCPeerConnection] = {}
 
     def start_call(self, user_ids: Iterable[str]) -> None:
         """Initialize a new call between ``user_ids``."""
-        # TODO: set up peer connections via WebRTC
         for uid in user_ids:
             self.active_streams.append(VideoStream(user_id=uid, track_id=""))
+            if RTCPeerConnection:
+                self.peer_connections[uid] = RTCPeerConnection()
 
     def end_call(self) -> None:
         """Terminate the current call and clean up resources."""
-        # TODO: close peer connections and release streams
+        for pc in list(self.peer_connections.values()):
+            try:
+                if hasattr(pc, "close"):
+                    pc.close()
+            except Exception:
+                pass
+        self.peer_connections.clear()
         self.active_streams.clear()
 
     def share_screen(self, user_id: str) -> None:
         """Begin screen sharing for ``user_id``."""
-        # TODO: negotiate screen track
-        pass
+        stream = next((s for s in self.active_streams if s.user_id == user_id), None)
+        if stream:
+            stream.track_id = "screen"
+        # Actual WebRTC negotiation is outside the scope of this stub
 
     def record_call(self, destination: Optional[str] = None) -> None:
         """Start recording the active call to ``destination``."""
-        # TODO: write WebRTC data to file
-        pass
+        if not destination:
+            destination = "call_recording.webm"
+        logging.info("Recording call to %s", destination)
+        # Actual recording implementation would capture frames from peer connections
 
     def transmit_voice(self, text: str) -> str:
         """Send synthesized voice to call participants."""
@@ -88,10 +107,28 @@ class VideoChatManager:
 
     def translate_audio(self, user_id: str, target_lang: str, text: str) -> None:
         """Overlay ``text`` in ``target_lang`` and optionally play audio."""
-        self.update_translation_overlay(user_id, text, target_lang)
+        translated = text
+        try:
+            url = "https://translate.googleapis.com/translate_a/single"
+            params = {
+                "client": "gtx",
+                "sl": "auto",
+                "tl": target_lang,
+                "dt": "t",
+                "q": text,
+            }
+            resp = requests.get(url, params=params, timeout=5)
+            if resp.ok:
+                data = resp.json()
+                translated = "".join(part[0] for part in data[0])
+        except Exception as exc:  # pragma: no cover - network errors
+            logging.error("Translation failed: %s", exc)
+
+        self.update_translation_overlay(user_id, translated, target_lang)
+
         if gTTS:
             try:
-                tts = gTTS(text, lang=target_lang)
+                tts = gTTS(translated, lang=target_lang)
                 fp = BytesIO()
                 tts.write_to_fp(fp)
                 fp.seek(0)
@@ -103,14 +140,14 @@ class VideoChatManager:
             except Exception as e:  # pragma: no cover - depends on system audio
                 logging.error(f"TTS playback failed: {e}")
         else:
-            self.transmit_voice(text)
+            self.transmit_voice(translated)
 
     def update_translation_overlay(self, user_id: str, text: str, lang: str) -> None:
         """Overlay ``text`` in ``lang`` on ``user_id``'s stream."""
         stream = next((s for s in self.active_streams if s.user_id == user_id), None)
         if stream:
             stream.translation_overlay = text
-        # TODO: render text on video frame in real time
+        # This method would draw ``text`` onto the video frame in a real implementation
 
     def track_face(self, user_id: str, frame: bytes) -> None:
         """Stub facial landmark tracking for ``user_id``."""

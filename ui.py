@@ -954,6 +954,7 @@ def render_validation_ui(
             key="validation_nav_menu",
         )
 
+
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
 
@@ -1252,6 +1253,7 @@ def main() -> None:
             ],
             key="main_nav_menu",
         )
+
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
         
