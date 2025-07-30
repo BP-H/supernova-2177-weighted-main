@@ -33,13 +33,24 @@ from frontend import ui_layout
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
-    render_modern_sidebar,
 )
 from frontend.ui_layout import (
     main_container,
+    render_sidebar_nav as _base_render_sidebar_nav,
     render_title_bar,
     show_preview_badge,
 )
+
+
+def render_sidebar_nav(*args, **kwargs):
+    """Proxy to allow monkeypatching via ``render_modern_sidebar``."""
+    if globals().get("render_modern_sidebar") is not render_sidebar_nav:
+        return globals()["render_modern_sidebar"](*args, **kwargs)
+    return _base_render_sidebar_nav(*args, **kwargs)
+
+
+# Backwards compatibility for tests expecting ``render_modern_sidebar``.
+render_modern_sidebar = render_sidebar_nav
 
 
 # Utility path handling
@@ -415,7 +426,11 @@ def render_sidebar() -> str:
     env_tag = "🚀 Production" if env.startswith("prod") else "🧪 Development"
     st.sidebar.markdown(env_tag)
     icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
-    choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+    choice = render_sidebar_nav(
+        PAGES,
+        icons=NAV_ICONS,
+        session_key="active_page",
+    )
     return choice
 
 
@@ -852,9 +867,10 @@ def render_validation_ui(
 
         # ...
 
-        choice = render_modern_sidebar(
+        choice = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         # Use 3-column layout for cleaner modern UX
@@ -1126,9 +1142,10 @@ def main() -> None:
         }
 
         # Modern Sidebar Nav
-        choice = render_modern_sidebar(
+        choice = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         # Page layout: left for tools, center for content

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Dict
+from uuid import uuid4
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -97,13 +98,14 @@ def render_modern_sidebar(
     pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
     icons: Optional[Dict[str, str]] = None,
-
+    key: Optional[str] = None,
 ) -> str:
     """Render a vertical navigation menu with optional icons."""
     if container is None:
         container = st.sidebar
 
     state = getattr(st, "session_state", {})
+    key = key or uuid4().hex
     if key not in state:
         state[key] = list(pages.keys())[0]
 
@@ -125,8 +127,16 @@ def render_modern_sidebar(
             key=key,
             default_index=opts.index(state.get(key, opts[0])),
         )
-    else:
+    elif hasattr(st, "radio"):
         choice = st.radio("Navigate", opts, key=key, index=opts.index(state.get(key, opts[0])))
+    else:
+        # Minimal fallback used in tests
+        for opt in opts:
+            if container.button(opt, key=f"{key}_{opt}"):
+                choice = opt
+                break
+        else:
+            choice = state.get(key, opts[0])
     
     state[key] = choice
     st.markdown("</div>", unsafe_allow_html=True)
