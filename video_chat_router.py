@@ -5,9 +5,10 @@
 
 from __future__ import annotations
 
+import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Any, List
-import json
+
 
 from realtime_comm.video_chat import VideoChatManager
 
@@ -56,15 +57,38 @@ async def video_ws(websocket: WebSocket) -> None:
                 continue
 
             msg_type = event.get("type")
+
             if msg_type == "chat":
                 text = event.get("text", "")
                 lang = event.get("lang", "en")
                 video_manager.handle_chat(text, lang)
+
             elif msg_type == "frame":
                 frame = event.get("data")
                 if frame:
                     video_manager.analyze_frame("remote", frame.encode())
 
-            await manager.broadcast(event, sender=websocket)
+            elif msg_type == "translate":
+                user = event.get("user", "")
+                target = event.get("lang", "en")
+                text = event.get("text", "")
+                video_manager.translate_audio(user, target, text)
+                result = json.dumps({
+                    "type": "translation",
+                    "user": user,
+                    "text": text,
+                    "translation": next(
+                        (s.translation_overlay for s in video_manager.active_streams if s.user_id == user),
+                        text,
+                    ),
+                })
+                await manager.broadcast(result, sender=None)
+
+            elif msg_type == "voice":
+                await manager.broadcast(event, sender=websocket)
+
+            else:
+                await manager.broadcast(event, sender=websocket)
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)

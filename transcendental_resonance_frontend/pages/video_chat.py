@@ -6,10 +6,13 @@ import asyncio
 import json
 
 import streamlit as st
+from modern_ui import inject_modern_styles
 
 from ai_video_chat import create_session
 from video_chat_router import ConnectionManager
 from streamlit_helpers import safe_container
+
+inject_modern_styles()
 
 
 def _run_async(coro):

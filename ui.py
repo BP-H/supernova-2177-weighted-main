@@ -22,12 +22,11 @@ import math
 import sys
 import traceback
 import sqlite3
-import inspect
 import importlib
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
-from typing import Any, Optional
+from typing import Optional
 from frontend import ui_layout
 
 
@@ -37,8 +36,6 @@ from modern_ui_components import (
 )
 from frontend.ui_layout import (
     main_container,
-    sidebar_container,
-    render_navbar,
     render_title_bar,
     show_preview_badge,
 )
@@ -70,9 +67,15 @@ PAGES = {
     "Voting": "voting",
     "Agents": "agents",
     "Resonance Music": "resonance_music",
-    "Video Chat": "video_chat",
+    "Chat": "chat",
     "Social": "social",
+    "Profile": "profile",
 }
+
+# Icons used in the navigation bar. Must be single-character emojis or
+# valid Bootstrap icon codes prefixed with ``"bi bi-"``.
+NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
+
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
@@ -113,12 +116,11 @@ from streamlit_helpers import (
 
 from modern_ui import (
     inject_modern_styles,
-    inject_premium_styles,
-    render_modern_header,
     render_stats_section,
-    open_card_container,
-    close_card_container,
 )
+
+# Apply global styles immediately
+inject_modern_styles()
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
 except ImportError:  # optional dependency fallback
@@ -235,124 +237,10 @@ def render_landing_page():
         boot_diagnostic_ui()
 
 def inject_modern_styles() -> None:
-    """Inject a sleek dark theme inspired by modern IDEs."""
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #1e1e1e;
-            color: #ccc;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
+    """Backward compatible alias forwarding to :mod:`modern_ui`."""
+    from modern_ui import inject_modern_styles as _impl
+    _impl()
 
-        .main .block-container {
-            background-color: #252525;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 2rem 3rem;
-            margin-top: 1rem;
-        }
-
-        [data-testid="stSidebar"] {
-            background-color: #2d2d2d;
-            color: #ccc;
-        }
-
-        [data-testid="stHorizontalMenu"] ul {
-            display: flex;
-            gap: 0.5rem;
-            background: #252525;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-        }
-
-        [data-testid="stHorizontalMenu"] a {
-            color: #ccc;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background 0.2s;
-            text-decoration: none;
-        }
-
-        [data-testid="stHorizontalMenu"] a:hover {
-            background: #333;
-            color: #fff;
-        }
-
-        [data-testid="stHorizontalMenu"] .active a {
-            background: #4f8bf9;
-            color: #fff;
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .status-card {
-            background: #2d2d2d;
-            border: 1px solid #3a3a3a;
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .status-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stButton > button {
-            background-color: #4f8bf9;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 0.5rem 1.25rem;
-            font-weight: 600;
-        }
-
-        .stButton > button:hover {
-            background-color: #699cfc;
-        }
-
-        input, textarea, select {
-            background-color: #2d2d2d;
-            color: #eee;
-            border: 1px solid #555;
-            border-radius: 6px;
-        }
-
-        /* Modern scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #252525;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #4f8bf9;
-            border-radius: 10px;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .main .block-container > div {
-            animation: fadeIn 0.6s ease-out;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # Backward compatibility alias
@@ -439,13 +327,15 @@ def _render_fallback(choice: str) -> None:
         "Voting": render_modern_voting_page,
         "Agents": render_modern_agents_page,
         "Resonance Music": render_modern_music_page,
-        "Video Chat": render_modern_video_page,
+        "Chat": render_modern_chat_page,
         "Social": render_modern_social_page,
+        "Profile": render_modern_profile_page,
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
-            st.info("Backend unavailable - offline mode active.")
+            st.toast("Offline mode: using mock services", icon="⚠️")
+
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -496,10 +386,16 @@ def render_modern_social_page():
     st.success("Social feed placeholder loaded")
 
 
-def render_modern_video_page() -> None:
-    """Simple placeholder page for upcoming video features."""
-    render_title_bar("🎥", "Video Chat")
-    st.info("Video chat module not yet implemented.")
+def render_modern_chat_page() -> None:
+    """Simple placeholder page for the Chat section."""
+    render_title_bar("💬", "Chat")
+    st.info("Chat module not yet implemented.")
+
+
+def render_modern_profile_page() -> None:
+    """Placeholder profile page."""
+    render_title_bar("👤", "Profile")
+    st.info("Profile management pending implementation.")
 
 
 
@@ -931,10 +827,19 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
+
+        # ...
+
         ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
-        )
+            icons=NAV_ICONS,
+            key="navbar_sidebar_validation",  # or "navbar_main" depending on context
+)
+
+
+
+
 
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
@@ -1210,9 +1115,11 @@ def main() -> None:
             "Voting": "voting",
             "Agents": "agents",
             "Resonance Music": "resonance_music",
-            "Video Chat": "video_chat",
+            "Chat": "chat",
             "Social": "social",
+            "Profile": "profile",
         }
+
         
         PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {
@@ -1221,8 +1128,9 @@ def main() -> None:
         }
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
+            icons=NAV_ICONS,
         )
+
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
         
@@ -1264,12 +1172,25 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui()
+                api_info = render_api_key_ui(key_prefix="devtools")
+
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
+
+                if AGENT_REGISTRY:
+                    agent_choice = st.selectbox(
+                        "Agent",
+                        sorted(AGENT_REGISTRY.keys()),
+                        key="devtools_agent_select",
+                    )
+                else:
+                    agent_choice = None
+                    st.info("No agents registered")
+
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
         
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
