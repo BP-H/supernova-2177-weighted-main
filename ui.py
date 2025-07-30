@@ -1267,7 +1267,9 @@ def main() -> None:
                                 else:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
-                            except Exception:
+                            except Exception as exc:
+                                st.warning(f"Agent storage inspection failed: {exc}")
+
                     with dev_tabs[6]:
                         flow_txt = st.text_area(
                             "Agent Flow JSON",
@@ -1293,6 +1295,7 @@ def main() -> None:
                                     st.error(f"Flow execution failed: {exc}")
                             else:
                                 st.info("Agent registry unavailable")
+
 
         with center_col:
             module_paths = [
