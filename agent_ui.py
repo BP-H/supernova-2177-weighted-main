@@ -42,8 +42,8 @@ def render_agent_insights_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    theme_selector("Theme", key_suffix="agent_insights")
     inject_global_styles()
+    theme_selector("Theme", key_suffix="agent_insights")
     container_ctx = safe_container(main_container)
     with container_ctx:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
