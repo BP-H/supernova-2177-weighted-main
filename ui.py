@@ -469,12 +469,24 @@ def load_page_with_fallback(choice: str) -> None:
         "Resonance Music": "resonance_music",
         "Social": "social",
     }
-
-def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+def load_page_with_fallback(choice: str) -> None:
     """
     Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
+    Tries common candidate paths and invokes either `render()` or `main()` method.
     """
+    pages = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
+
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{pages.get(choice, '')}",
+        f"pages.{pages.get(choice, '')}",  # Optional fallback path
+    ]
+
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
@@ -484,12 +496,10 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
             elif hasattr(page_mod, "main"):
                 page_mod.main()
                 return
-            else:
-                raise AttributeError("Module found but missing 'main' or 'render'")
         except ImportError:
-            continue  # Try next path
+            continue
         except Exception as exc:
-            st.error(f"Error loading page: {exc}")
+            st.error(f"❌ Error loading page `{choice}`: {exc}")
             break
 
     _render_fallback(choice)
@@ -1133,6 +1143,7 @@ def main() -> None:
             "Social": "social",
         }
 
+        
         choice = option_menu(
             menu_title=None,
             options=list(PAGES.keys()),
@@ -1144,7 +1155,12 @@ def main() -> None:
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
         with center_col:
-            load_page_with_fallback(choice)
+            page_key = PAGES[choice]
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
         with left_col:
             render_status_icon()
