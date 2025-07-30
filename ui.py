@@ -349,11 +349,11 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = PAGES_DIR / (module_path.rsplit(".", 1)[-1] + ".py")
+        page_file = Path.cwd() / "pages" / (module_path.rsplit(".", 1)[-1] + ".py")
         if page_file.exists():
-            rel_path = os.path.relpath(page_file, start=Path.cwd()).replace(os.sep, "/")
+            rel_path = f"/pages/{page_file.stem}.py"
             try:
-                st.switch_page(rel_path.lstrip("/"))
+                st.switch_page(rel_path)
                 return
             except StreamlitAPIException as exc:
                 st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
@@ -931,8 +931,7 @@ def render_validation_ui(
 
     try:
         page_paths = {
-            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
-            for label, mod in PAGES.items()
+            label: f"/pages/{mod}.py" for label, mod in PAGES.items()
         }
         NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 
@@ -1272,12 +1271,9 @@ def main() -> None:
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
-            file_path = PAGES_DIR / f"{mod}.py"
+            file_path = Path.cwd() / "pages" / f"{mod}.py"
             if file_path.exists():
-                web_path = "/" + os.path.relpath(file_path, start=Path.cwd()).replace(
-                    os.sep, "/"
-                )
-                page_paths[label] = web_path
+                page_paths[label] = f"/pages/{mod}.py"
             else:
                 missing_pages.append(label)
 
