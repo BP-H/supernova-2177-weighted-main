@@ -32,7 +32,7 @@ except Exception:  # pragma: no cover - fallback stub for testing
     ui = types.SimpleNamespace(column=_dummy_column)
 
 from .styles import get_theme
-from .api import combined_search
+from .api import combined_search, OFFLINE_MODE
 
 
 def navigation_bar() -> Element:
@@ -114,5 +114,9 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
     with ui.column().classes('w-full p-4').style(
         f"background: {theme['gradient']}; color: {theme['text']};"
     ) as container:
+        if OFFLINE_MODE:
+            ui.label("Offline Mode – using mock services.").classes(
+                "text-xs opacity-75 mb-2"
+            )
         yield container
 

@@ -12,7 +12,6 @@ from components.emoji_toolbar import emoji_toolbar
 from components.media_renderer import render_media_block
 from nicegui import ui
 
-from utils import ErrorOverlay
 from utils.api import TOKEN, api_call, listen_ws
 from utils.features import skeleton_loader
 from utils.layout import navigation_bar, page_container
@@ -37,7 +36,6 @@ async def vibenodes_page():
             f'color: {THEME["accent"]};'
         )
 
-        error_overlay = ErrorOverlay()
 
         ui.label("Trending").classes("text-xl font-bold mb-2")
         trending_list = ui.column().classes("w-full mb-4")
@@ -335,7 +333,6 @@ async def vibenodes_page():
                 await ws_task
             except Exception:
                 ui.notify("Realtime updates unavailable", color="warning")
-                error_overlay.show("Realtime updates unavailable")
 
         ui.run_async(start_ws())
 
