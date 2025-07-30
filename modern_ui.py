@@ -7,7 +7,7 @@ import streamlit as st
 
 
 def inject_modern_styles() -> None:
-    """Inject global CSS for modern look and feel."""
+    """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
         <style>
@@ -19,6 +19,7 @@ def inject_modern_styles() -> None:
         body, .stApp {
             background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
             color: var(--text-color, #e6e6e6);
+
             font-family: 'Inter', sans-serif;
         }
         .main .block-container {
@@ -33,6 +34,7 @@ def inject_modern_styles() -> None:
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.05);
             box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
             margin-bottom: 1rem;
             background-color: rgba(255,255,255,0.05);
             transition: box-shadow 0.3s ease, transform 0.3s ease;
@@ -41,6 +43,7 @@ def inject_modern_styles() -> None:
         .custom-container:hover {
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
             transform: translateY(-3px);
+
         }
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Inter', sans-serif !important;
@@ -62,6 +65,7 @@ def inject_modern_styles() -> None:
         }
         .stButton > button {
             background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
+
             border: none !important;
             border-radius: 10px !important;
             color: #00111e !important;
@@ -69,6 +73,7 @@ def inject_modern_styles() -> None:
             padding: 0.75rem 2rem !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
+
             font-size: 0.95rem !important;
             height: auto !important;
         }
@@ -76,6 +81,7 @@ def inject_modern_styles() -> None:
             transform: translateY(-1px) !important;
             box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
             background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
+
             filter: brightness(1.05);
         }
 

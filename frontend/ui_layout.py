@@ -43,7 +43,7 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 def render_navbar(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
-    key: str = "main_nav_menu",
+    key: Optional[str] = None,
     default: Optional[str] = None,
 ) -> str:
     """Render horizontal navigation links using ``st.page_link`` and return the selected label."""
@@ -51,6 +51,9 @@ def render_navbar(
         list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
     )
     icon_list = list(icons or [None] * len(opts))
+    if key is None:
+        key = "main_nav_menu"
+
     index = 0
     if default is not None and default in [label for label, _ in opts]:
         index = [label for label, _ in opts].index(default)

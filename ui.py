@@ -245,6 +245,7 @@ def inject_modern_styles() -> None:
     _impl()
 
 
+
 # Backward compatibility alias
 def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
@@ -336,7 +337,8 @@ def _render_fallback(choice: str) -> None:
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
-            st.info("Backend unavailable - offline mode active.")
+            st.toast("Offline mode: using mock services", icon="⚠️")
+
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -828,19 +830,15 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+
+
         ui_layout.render_navbar(
             page_paths,
-            icons=[
-
-                "✅",
-                "📊",
-                "🤖",
-                "🎵",
-                "💬",
-                "👥",
-                "👤",
-            ],
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            key="navbar_validation",
         )
+
+
 
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
@@ -1138,7 +1136,9 @@ def main() -> None:
                 "👥",
                 "👤",
             ],
+            key="main_nav_menu_sub",
         )
+
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
         
@@ -1180,12 +1180,25 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui()
+                api_info = render_api_key_ui(key_prefix="devtools")
+
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
+
+                if AGENT_REGISTRY:
+                    agent_choice = st.selectbox(
+                        "Agent",
+                        sorted(AGENT_REGISTRY.keys()),
+                        key="devtools_agent_select",
+                    )
+                else:
+                    agent_choice = None
+                    st.info("No agents registered")
+
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
         
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
