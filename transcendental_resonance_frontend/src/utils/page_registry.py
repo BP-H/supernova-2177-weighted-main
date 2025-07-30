@@ -31,7 +31,21 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
     """
     pages_dir.mkdir(parents=True, exist_ok=True)
 
+    # warn if any case-variant files exist that could conflict on
+    # case-insensitive filesystems
+    by_lower: dict[str, list[str]] = {}
+    for f in pages_dir.glob("*.py"):
+        by_lower.setdefault(f.stem.lower(), []).append(f.name)
+    for slug_lower, names in by_lower.items():
+        if len(names) > 1:
+            logger.warning(
+                "Case-insensitive file collision for '%s': %s",
+                slug_lower,
+                ", ".join(sorted(names)),
+            )
+
     for slug in pages.values():
+        slug = slug.lower()
         file_path = pages_dir / f"{slug}.py"
         if not file_path.exists():
             file_path.write_text(
