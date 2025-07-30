@@ -34,11 +34,11 @@ from frontend import ui_layout
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
+    render_modern_sidebar,
 )
 from frontend.ui_layout import (
     main_container,
     sidebar_container,
-    render_navbar,
     render_title_bar,
     show_preview_badge,
 )
@@ -832,23 +832,15 @@ def render_validation_ui(
         }
 
 
-        ui_layout.render_navbar(
+        choice = render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
-            key="navbar_validation",
         )
 
+        main_container.info("Select an option from the sidebar to continue.")
 
-
-        # Page layout
-        left_col, center_col, right_col = main_container.columns([1, 3, 1])
-
-        with center_col:
-            st.info("Select a page above to continue.")
-
-        with left_col:
+        with sidebar:
             render_status_icon()
-        
             render_developer_tools()
 
 
@@ -1113,7 +1105,7 @@ def main() -> None:
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
-        choice = ui_layout.render_navbar(
+        choice = render_modern_sidebar(
             page_paths,
             icons=[
                 "✅",
@@ -1124,29 +1116,24 @@ def main() -> None:
                 "👥",
                 "👤",
             ],
-            key="main_nav_menu_sub",
         )
 
-        
-        left_col, center_col, right_col = st.columns([1, 3, 1])
-        
-        with center_col:
-            if choice:
-                page_key = PAGES.get(choice, choice)
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                try:
-                    load_page_with_fallback(choice, module_paths)
-                except Exception:
-                    st.warning(f"Page not found: {choice}")
-                    _render_fallback(choice)
-            else:
-                st.info("Select a page above to continue.")
-                _render_fallback("Validation")  # Default fallback page as a preview
-        
-        with left_col:
+        if choice:
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            try:
+                load_page_with_fallback(choice, module_paths)
+            except Exception:
+                st.warning(f"Page not found: {choice}")
+                _render_fallback(choice)
+        else:
+            st.info("Select a page on the left to continue.")
+            _render_fallback("Validation")
+
+        with st.sidebar:
             render_status_icon()
         
             with st.expander("Environment Details"):
@@ -1199,9 +1186,6 @@ def main() -> None:
             st.session_state["governance_view"] = governance_view
         
             render_developer_tools()
-
-        with center_col:
-            st.info("Select a page above to continue.")
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
 

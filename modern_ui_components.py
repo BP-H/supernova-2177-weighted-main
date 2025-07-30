@@ -11,6 +11,13 @@ from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
 
+try:
+    from streamlit_option_menu import option_menu
+    USE_OPTION_MENU = True
+except Exception:  # pragma: no cover - optional dependency
+    option_menu = None  # type: ignore
+    USE_OPTION_MENU = False
+
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
@@ -51,14 +58,26 @@ def render_modern_header(title: str) -> None:
 def render_modern_sidebar(
     pages: dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
+    icons: Optional[list[str]] = None,
 ) -> str:
-    """Render a navigation menu within ``container`` and return the selection."""
+    """Render a vertical navigation menu and return the selected label."""
     if container is None:
-        container = st
+        container = st.sidebar
+
+    opts = list(pages.keys())
     container_ctx = safe_container(container)
     with container_ctx:
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        choice = st.radio("Navigate", list(pages.keys()))
+        st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
+        if USE_OPTION_MENU and option_menu is not None:
+            choice = option_menu(
+                menu_title=None,
+                options=opts,
+                icons=icons or ["dot"] * len(opts),
+                orientation="vertical",
+                key=f"sidebar_{id(pages)}",
+            )
+        else:
+            choice = st.radio("Navigate", opts, key=f"sidebar_{id(pages)}")
         st.markdown("</div>", unsafe_allow_html=True)
     return choice
 
