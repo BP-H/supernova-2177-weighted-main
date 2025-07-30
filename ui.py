@@ -486,6 +486,24 @@ def _render_fallback(choice: str) -> None:
         return
     _fallback_rendered.add(slug)
 
+    # In debug mode the real page modules may not be available. If UI_DEBUG
+    # is disabled, skip dynamic loading and directly render the fallback.
+    if not UI_DEBUG:
+        fallback_pages = {
+            "validation": render_modern_validation_page,
+            "voting": render_modern_voting_page,
+            "agents": render_modern_agents_page,
+            "resonance music": render_modern_music_page,
+            "chat": render_modern_chat_page,
+            "social": render_modern_social_page,
+            "profile": render_modern_profile_page,
+        }
+        fallback_fn = fallback_pages.get(slug)
+        if fallback_fn:
+            show_preview_badge("🚧 Preview Mode")
+            fallback_fn()
+        return
+
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
@@ -1405,7 +1423,7 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        render_topbar()  # sticky top bar
+        render_top_bar()  # sticky top bar
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []

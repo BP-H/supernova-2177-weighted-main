@@ -233,15 +233,16 @@ def render_modern_sidebar(
     orientation_cls = "horizontal" if horizontal else "vertical"
 
     collapsed_key = f"{session_key}_collapsed"
-    if collapsed_key not in st.session_state:
-        try:
-            width = st_javascript("window.innerWidth")
-            st.session_state[collapsed_key] = bool(width) and int(width) <= 1024
-        except Exception:
-            st.session_state[collapsed_key] = False
+    if hasattr(st, "button") and callable(getattr(st, "button")):
+        if collapsed_key not in st.session_state:
+            try:
+                width = st_javascript("window.innerWidth")
+                st.session_state[collapsed_key] = bool(width) and int(width) <= 1024
+            except Exception:
+                st.session_state[collapsed_key] = False
 
-    if st.button("☰", key=f"{collapsed_key}_btn"):
-        st.session_state[collapsed_key] = not st.session_state[collapsed_key]
+        if st.button("☰", key=f"{collapsed_key}_btn"):
+            st.session_state[collapsed_key] = not st.session_state[collapsed_key]
 
     container_ctx = safe_container(container)
     with container_ctx:
