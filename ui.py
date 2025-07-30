@@ -1152,7 +1152,7 @@ def main() -> None:
     # Respond to lightweight health-check probes
     try:
         params = st.query_params
-    except Exception:
+    except AttributeError:
         # Fallback for older Streamlit versions
         params = st.experimental_get_query_params()
 
@@ -1268,7 +1268,7 @@ def main() -> None:
         # Determine page from query params and sidebar selection
         try:
             query = st.query_params
-        except Exception:
+        except AttributeError:
             # Fallback for legacy versions
             query = st.experimental_get_query_params()
 
@@ -1296,7 +1296,7 @@ def main() -> None:
 
         try:
             st.query_params["page"] = choice
-        except Exception:
+        except AttributeError:
             st.experimental_set_query_params(page=choice)
 
 
