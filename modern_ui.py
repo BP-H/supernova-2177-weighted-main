@@ -12,8 +12,8 @@ def inject_modern_styles() -> None:
         """
         <style>
         body, .stApp {
-            background-color: var(--background, #F0F2F6);
-            color: var(--text-color, #333333);
+            background: radial-gradient(circle at top left, #0e0e0e, #1a1a1a);
+            color: #e2e2e2;
             font-family: 'Inter', sans-serif;
         }
         .main .block-container {
@@ -31,16 +31,16 @@ def inject_modern_styles() -> None:
             background-color: var(--secondary-bg, #FFFFFF);
         }
         .card {
-            background-color: var(--secondary-bg, #FFFFFF);
+            background: linear-gradient(145deg, #1f1f1f, #272727);
             padding: 1rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             margin-bottom: 1rem;
             transition: box-shadow 0.2s ease, transform 0.2s ease;
         }
         .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0,255,255,0.15);
             transform: translateY(-2px);
         }
         h1, h2, h3, h4, h5, h6 {
@@ -62,21 +62,21 @@ def inject_modern_styles() -> None:
             margin-bottom: 0.75rem;
         }
         .stButton > button {
-            background: linear-gradient(135deg, #4a90e2 0%, #5ba0f2 100%) !important;
+            background: linear-gradient(135deg, #00aaff 0%, #00ffee 100%) !important;
             border: none !important;
             border-radius: 12px !important;
             color: white !important;
             font-weight: 600 !important;
             padding: 0.75rem 2rem !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4) !important;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.4) !important;
             font-size: 0.95rem !important;
             height: auto !important;
         }
         .stButton > button:hover {
             transform: translateY(-1px) !important;
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
-            background: linear-gradient(135deg, #5ba0f2 0%, #6bb0ff 100%) !important;
+            box-shadow: 0 0 16px rgba(0, 255, 255, 0.6) !important;
+            background: linear-gradient(135deg, #00ffee 0%, #00aaff 100%) !important;
             filter: brightness(1.05);
         }
 
