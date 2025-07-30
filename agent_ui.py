@@ -19,7 +19,21 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
-from ui_utils import summarize_text, load_rfc_entries
+BOX_CSS = """
+<style>
+.tab-box {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tab-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+</style>
 
 
 def render_agent_insights_tab(main_container=None) -> None:
