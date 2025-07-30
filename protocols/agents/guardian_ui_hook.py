@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Optional UI integration for :class:`GuardianInterceptorAgent`.
+
+This module registers FastAPI routes when imported and therefore depends on
+the project's optional UI extras. It is not loaded automatically with the core
+``protocols`` package.
+"""
+
 from typing import Any, Dict
 
 from frontend_bridge import register_route_once

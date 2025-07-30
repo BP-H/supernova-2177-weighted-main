@@ -24,6 +24,14 @@ except Exception:  # pragma: no cover - optional dependency
 # consistent across pages.
 SIDEBAR_STYLES = """
 <style>
+[data-testid="stSidebar"] {
+    background: rgba(20, 25, 40, 0.9);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: width 0.3s ease;
+}
+[data-testid="stSidebar"] .stButton>button {
+    width: 100%;
+}
 .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -53,6 +61,43 @@ SIDEBAR_STYLES = """
 .sidebar-nav .stButton>button:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+<style>
+.sidebar-nav label {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s;
+}
+.sidebar-nav label:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav input:checked + div {
+    color: var(--neon-accent);
+}
+.sidebar-nav .nav-item {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.sidebar-nav .nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav .nav-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--neon-accent);
+}
+
+/* Combine both @media rules */
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        width: 14rem;
+    }
+}
 @media (max-width: 600px) {
     .sidebar-nav.horizontal {
         flex-direction: column;
@@ -60,7 +105,7 @@ SIDEBAR_STYLES = """
     }
 }
 </style>
-"""
+
 
 
 def render_modern_layout() -> None:
@@ -121,6 +166,8 @@ def render_modern_sidebar(
 
     # Default session state for selected page
     st.session_state.setdefault(session_key, opts[0])
+    if st.session_state.get(session_key) not in opts:
+        st.session_state[session_key] = opts[0]
 
     widget_key = f"{session_key}_ctrl"
 
@@ -168,7 +215,9 @@ def render_modern_sidebar(
             # Final fallback
             choice = st.session_state.get(session_key, opts[0])
 
-        st.session_state[session_key] = choice
+        if st.session_state.get(session_key) != choice:
+            st.session_state[session_key] = choice
+
         st.markdown("</div>", unsafe_allow_html=True)
         return choice
 

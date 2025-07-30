@@ -16,3 +16,9 @@ from protocols import GuardianInterceptorAgent, CI_PRProtectorAgent
 ```
 
 See `protocols/_registry.py` for a programmatic listing of available agents.
+
+### UI hooks
+Additional FastAPI-based UI integrations live in modules such as
+`protocols/ui_hook.py` and `protocols/agents/*_ui_hook.py`. These are not
+imported automatically with the core package. Running the optional UI requires
+installing the project's `ui` extras defined in `requirements.txt`.

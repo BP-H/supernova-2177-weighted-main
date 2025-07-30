@@ -23,6 +23,10 @@ __all__: List[str] = []
 for _, module_name, is_pkg in pkgutil.iter_modules(__path__):
     if is_pkg or module_name.startswith("_"):
         continue
+    if "ui_hook" in module_name:
+        # UI integration modules are imported explicitly elsewhere
+        # to avoid pulling in optional dependencies automatically.
+        continue
     module = importlib.import_module(f"{__name__}.{module_name}")
     for name, obj in inspect.getmembers(module, inspect.isclass):
         if (
