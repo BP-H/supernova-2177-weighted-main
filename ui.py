@@ -448,7 +448,7 @@ def _render_fallback(choice: str) -> None:
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
-            st.info("Backend unavailable - offline mode active.")
+            st.toast("Backend unavailable - offline mode active.")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -943,7 +943,6 @@ def render_validation_ui(
         ui_layout.render_navbar(
             page_paths,
             icons=[
-
                 "✅",
                 "📊",
                 "🤖",
@@ -952,7 +951,9 @@ def render_validation_ui(
                 "👥",
                 "👤",
             ],
+            key="validation_nav_menu",
         )
+
 
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
@@ -1250,7 +1251,9 @@ def main() -> None:
                 "👥",
                 "👤",
             ],
+            key="main_nav_menu",
         )
+
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
         
@@ -1292,7 +1295,7 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui()
+                api_info = render_api_key_ui(key_prefix="agent_cfg")
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")

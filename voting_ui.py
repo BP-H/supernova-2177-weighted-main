@@ -78,11 +78,11 @@ def render_proposals_tab(main_container=None) -> None:
             )
             return
 
-        safe_markdown(
+        st.markdown(
             BOX_CSS
             + """
             <style>
-        .app-container { padding: 1rem; }
+            .app-container { padding: 1rem; }
         .card {
             background: #fff;
             border-radius: 8px;
@@ -127,8 +127,8 @@ def render_proposals_tab(main_container=None) -> None:
         </style>
         <div class='app-container'>
         """,
-        unsafe_allow_html=True,
-    )
+            unsafe_allow_html=True,
+        )
 
         col1, col2 = st.columns([1, 1])
 
