@@ -15,6 +15,9 @@ import logging
 import math
 import sys
 import traceback
+import sqlite3
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
 
 from modern_ui_components import (
     render_validation_card,
@@ -1029,7 +1032,9 @@ def main() -> None:
 
     # Initialize database FIRST
     try:
-        ensure_database_exists()
+        db_ready = ensure_database_exists()
+        if not db_ready:
+            st.warning("Database initialization failed. Running in fallback mode")
     except Exception as e:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
@@ -1174,13 +1179,12 @@ def main() -> None:
 
                 with dev_tabs[0]:
                     if 'cosmic_nexus' in globals() and 'SessionLocal' in globals() and 'Harmonizer' in globals():
-                        with SessionLocal() as db:
-                            user = db.query(Harmonizer).first()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
-                                    )
+                        user = safe_get_user()
+                        if user and st.button("Fork with Mock Config"):
+                            try:
+                                fork_id = cosmic_nexus.fork_universe(
+                                    user, {"entropy_threshold": 0.5}
+                                )
                                     st.success(f"Forked universe {fork_id}")
                                 except Exception as exc:
                                     st.error(f"Fork failed: {exc}")
@@ -1370,70 +1374,79 @@ def main() -> None:
             st.rerun()
 
 # Add this section for database error handling
-import sqlite3
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError
 
-def ensure_database_exists():
-    """Initialize database tables if they don't exist."""
+
+
+def ensure_database_exists() -> bool:
+    """Create harmonizers table and insert default admin if necessary."""
     try:
         secrets = get_st_secrets()
-        db_url = secrets.get('DATABASE_URL', 'sqlite:///harmonizers.db')
+        db_url = secrets.get("DATABASE_URL", "sqlite:///harmonizers.db")
         engine = create_engine(db_url)
-        
-        with engine.connect() as conn:
-            try:
-                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='harmonizers';"))
-                table_exists = result.fetchone() is not None
-                
-                if not table_exists:
-                    # Create the harmonizers table
-                    conn.execute(text("""
-                        CREATE TABLE harmonizers (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            username VARCHAR(50) UNIQUE NOT NULL,
-                            email VARCHAR(100) UNIQUE NOT NULL,
-                            hashed_password VARCHAR(255) NOT NULL,
-                            bio TEXT,
-                            profile_pic VARCHAR(255),
-                            is_active BOOLEAN DEFAULT 1,
-                            is_admin BOOLEAN DEFAULT 0,
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            species VARCHAR(50) DEFAULT 'human',
-                            harmony_score FLOAT DEFAULT 0.0,
-                            creative_spark FLOAT DEFAULT 0.0,
-                            is_genesis BOOLEAN DEFAULT 0,
-                            consent_given BOOLEAN DEFAULT 0,
-                            cultural_preferences TEXT,
-                            engagement_streaks INTEGER DEFAULT 0,
-                            network_centrality FLOAT DEFAULT 0.0,
-                            karma_score FLOAT DEFAULT 0.0,
-                            last_passive_aura_timestamp TIMESTAMP
-                        );
-                    """))
-                    
-                    # Insert a default user
-                    conn.execute(text("""
-                        INSERT INTO harmonizers 
-                        (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
-                        VALUES 
-                        ('admin', 'admin@supernova.dev', 'hashed_password_here', 
-                         'Default admin user for superNova_2177', 1, 1, 1, 1);
-                    """))
-                    conn.commit()
-                return True
-            except Exception:
-                return False
-    except Exception:
+    except Exception as exc:
+        logger.warning("Engine creation failed: %s", exc)
         return False
 
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS harmonizers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        email VARCHAR(100) UNIQUE NOT NULL,
+                        hashed_password VARCHAR(255) NOT NULL,
+                        bio TEXT,
+                        profile_pic VARCHAR(255),
+                        is_active BOOLEAN,
+                        is_admin BOOLEAN,
+                        is_genesis BOOLEAN,
+                        consent_given BOOLEAN,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_passive_aura_timestamp TIMESTAMP,
+                        species VARCHAR(50) DEFAULT 'human',
+                        cultural_preferences TEXT,
+                        harmony_score FLOAT,
+                        creative_spark FLOAT,
+                        network_centrality FLOAT,
+                        karma_score FLOAT,
+                        engagement_streaks INTEGER
+                    );
+                    """
+                )
+            )
+
+            res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
+            count = res.scalar() or 0
+            if count == 0:
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO harmonizers
+                            (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                        VALUES
+                            ('admin', 'admin@supernova.dev', 'hashed_password_here',
+                             'Default admin user for superNova_2177', 1, 1, 1, 1)
+                        """
+                    )
+                )
+        return True
+    except OperationalError as exc:
+        logger.warning("Database connection failed: %s", exc)
+        return False
+    except Exception as exc:
+        logger.warning("Database initialization error: %s", exc)
+        return False
 def safe_get_user():
     """Get user with proper error handling."""
     try:
-        ensure_database_exists()
+        if not ensure_database_exists():
+            return None
         with SessionLocal() as db:
             return db.query(Harmonizer).first()
-    except Exception:
+    except Exception as exc:
+        logger.warning("User fetch failed: %s", exc)
         return None
 
 if __name__ == "__main__":
