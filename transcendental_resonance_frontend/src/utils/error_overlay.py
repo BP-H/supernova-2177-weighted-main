@@ -4,15 +4,15 @@ from __future__ import annotations
 
 try:  # pragma: no cover - optional dependency
     from nicegui import ui
-except Exception:  # pragma: no cover - fallback when NiceGUI missing
-    ui = None  # type: ignore[misc]
+except ModuleNotFoundError:  # pragma: no cover - fallback when NiceGUI missing
+    ui = None  # type: ignore[assignment]
 
 
 class ErrorOverlay:
-    """Display an overlay with an error message."""
+    """Display an overlay with an error message, or fallback to stdout."""
 
     def __init__(self) -> None:
-        if ui is None:  # NiceGUI not installed
+        if ui is None:
             self._dialog = None
             self._label = None
         else:
@@ -23,15 +23,15 @@ class ErrorOverlay:
                     ui.button("Close", on_click=self.hide)
 
     def show(self, message: str) -> None:
-        if ui is None or self._dialog is None:
-            print(f"ERROR: {message}")
+        if self._dialog is None:
+            print(message)
             return
         self._label.text = message
         if not self._dialog.open:
             self._dialog.open()
 
     def hide(self) -> None:
-        if ui is None or self._dialog is None:
+        if self._dialog is None:
             return
         if self._dialog.open:
             self._dialog.close()

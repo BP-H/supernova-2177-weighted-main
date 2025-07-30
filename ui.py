@@ -77,30 +77,32 @@ render_modern_sidebar = render_sidebar_nav
 # Utility path handling
 from pathlib import Path
 import logging
+from utils.paths import ROOT_DIR, PAGES_DIR
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+# Import page registry helper with robust fallbacks. Attempt the package-specific
+# path first, then fall back to a local ``utils`` package if available. As a last
+# resort provide a no-op stub so the application can continue running without
+# crashing when the registry utilities are missing.
 try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as exc:  # pragma: no cover - best effort fallback
-    logger.error("Failed to import ensure_pages: %s", exc)
-
-    def ensure_pages(*_args, **_kwargs) -> None:
-        """Fallback no-op when page registry utilities are unavailable."""
-        logger.debug("ensure_pages fallback invoked")
-
-
-try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
-    logger.warning("Primary page_registry import failed: %s", import_err)
+    from transcendental_resonance_frontend.src.utils.page_registry import (
+        ensure_pages,
+    )
+except Exception as primary_err:  # pragma: no cover - best effort fallback
+    logger.debug("primary ensure_pages import failed: %s", primary_err)
     try:
         from utils.page_registry import ensure_pages  # type: ignore
-    except Exception as fallback_err:
-        logger.warning("Secondary page_registry import also failed: %s", fallback_err)
-        def ensure_pages(*_a, **_k):
-            logger.warning("ensure_pages noop fallback used")
+    except Exception as secondary_err:
+        logger.warning(
+            "ensure_pages import failed: %s; using noop fallback", secondary_err
+        )
+
+        def ensure_pages(*_args, **_kwargs) -> None:  # type: ignore
+            """Fallback no-op when page registry utilities are unavailable."""
+            logger.debug("ensure_pages noop fallback invoked")
             return None
 
 
@@ -115,8 +117,6 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-ROOT_DIR = Path(__file__).resolve().parent
-PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 # Mapping of navigation labels to page module names
 
@@ -146,7 +146,7 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
-# Tracks which fallback pages have been rendered in this session.
+# Tracks slugs of fallback pages rendered in this session.
 _fallback_rendered: set[str] = set()
 
 
@@ -184,9 +184,9 @@ from streamlit_helpers import (
 )
 
 from modern_ui import (
-    inject_modern_styles,
     render_stats_section,
 )
+from frontend.theme import inject_modern_styles
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -352,8 +352,8 @@ def render_landing_page():
 
 
 def inject_modern_styles() -> None:
-    """Backward compatible alias forwarding to :mod:`modern_ui`."""
-    from modern_ui import inject_modern_styles as _impl
+    """Backward compatible alias for modern theme injection."""
+    from frontend.theme import inject_modern_styles as _impl
 
     _impl()
 
@@ -387,9 +387,6 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 
     # Validate PAGES_DIR existence
-    PAGES_DIR = (
-        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-    )
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -458,60 +455,57 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    # Normalize and derive slug/module name
+    normalized = normalize_choice(choice)
+    slug = PAGES.get(normalized, str(normalized)).lower()
+
     # Prevent rendering the same fallback repeatedly.
-    if choice in _fallback_rendered:
+    if slug in _fallback_rendered:
         return
-    _fallback_rendered.add(choice)
+    _fallback_rendered.add(slug)
+
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
 
-    # Normalize and derive slug/module name
-    normalized = normalize_choice(choice)
-    slug = PAGES.get(normalized, str(normalized)).lower()
-
     # Candidate paths to try loading from
     page_candidates = [
         ROOT_DIR / "pages" / f"{slug}.py",
-        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+        PAGES_DIR / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
+
     loaded = False
-    for page_file in page_candidates:
-        if not page_file.exists():
-            continue
-        logger.debug("Attempting to load %s from %s", slug, page_file)
-        try:
-            spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
-            if not spec or not spec.loader:
+    # Only try to load manually if st.experimental_page is available
+    if hasattr(st, "experimental_page"):
+        for page_file in page_candidates:
+            if not page_file.exists():
                 continue
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            spec.loader.exec_module(mod)
-            for fn in ("render", "main"):
-                if hasattr(mod, fn):
-                    try:
-                        getattr(mod, fn)()
-                        loaded = True
-                        break
-                    except Exception as exc:
-                        logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
-            if loaded:
-                break
-        except Exception as exc:
-            logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+            logger.debug("Attempting to load %s from %s", slug, page_file)
+            try:
+                spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+                if not spec or not spec.loader:
+                    continue
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                spec.loader.exec_module(mod)
+                for fn in ("render", "main"):
+                    if hasattr(mod, fn):
+                        try:
+                            getattr(mod, fn)()
+                            loaded = True
+                            break
+                        except Exception as exc:
+                            logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+                if loaded:
+                    break
+            except Exception as exc:
+                logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
 
     if loaded:
         return
-
-
-    # Prevent duplicate fallback rendering in session
-    if st.session_state.get("_fallback_rendered") == slug:
-        logger.debug("Duplicate fallback suppressed for %s", slug)
-        return
-    st.session_state["_fallback_rendered"] = slug
 
     # Map to fallback UI stubs
     fallback_pages = {
@@ -1388,11 +1382,6 @@ def main() -> None:
             "Social": "social",
             "Profile": "profile",
         }
-        PAGES_DIR = (
-            Path(__file__).resolve().parent
-            / "transcendental_resonance_frontend"
-            / "pages"
-        )
 
 
         page_paths: dict[str, str] = {}
