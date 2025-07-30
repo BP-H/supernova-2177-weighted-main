@@ -1054,4 +1054,3 @@ def render_validation_ui(
 
 
 if __name__ == "__main__":
-    main()
