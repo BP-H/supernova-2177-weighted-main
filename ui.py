@@ -19,13 +19,22 @@ import sqlite3
 import inspect
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from typing import Any, Optional
 
 from frontend import ui_layout
+
 
 
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
+)
+from frontend.ui_layout import (
+    main_container,
+    sidebar_container,
+    render_navbar,
+    render_title_bar,
+    show_preview_badge,
 )
 
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
@@ -332,100 +341,108 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
+from frontend import ui_layout
 
 
-# --- Unified page loader ----------------------------------------------------
-def load_page_with_fallback(page_label: str) -> None:
-    """Import and render a page or fall back to a minimal stub."""
-    module_name = PAGES.get(page_label, page_label)
-    candidates = [
-        f"transcendental_resonance_frontend.pages.{module_name}",
-        module_name,
-    ]
-
-    for module_path in candidates:
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    """
+    for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
-        except ImportError:
-            continue
-
-        for attr in ("render", "main"):
-            fn = getattr(page_mod, attr, None)
-            if fn is None:
-                continue
-            try:
-                sig = inspect.signature(fn)
-                kwargs = {}
-                if "main_container" in sig.parameters:
-                    kwargs["main_container"] = ui_layout.main_container
-                if "status_container" in sig.parameters:
-                    kwargs["status_container"] = ui_layout.sidebar_container
-                fn(**kwargs)
-            except Exception as exc:
-                st.error(f"Error loading page: {exc}")
-            else:
+            if hasattr(page_mod, "render"):
+                page_mod.render()
                 return
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
+                return
+        except ImportError:
+            continue  # Try next path
+        except Exception as exc:
+            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            break
 
-    _render_fallback(module_name)
+    _render_fallback(choice)
 
 
-def _render_fallback(module_name: str) -> None:
-    """Render a styled placeholder when a page is unavailable."""
-    fallbacks = {
-        "validation": render_modern_validation_page,
-        "voting": render_modern_voting_page,
-        "agents": render_modern_agents_page,
-        "resonance_music": render_modern_music_page,
-        "social": render_modern_social_page,
+def _render_fallback(choice: str) -> None:
+    """Render modern fallback if module isn't available or fails to load."""
+    fallback_pages = {
+        "Validation": render_modern_validation_page,
+        "Voting": render_modern_voting_page,
+        "Agents": render_modern_agents_page,
+        "Resonance Music": render_modern_music_page,
+        "Social": render_modern_social_page,
     }
-    fn = fallbacks.get(module_name)
-    if fn:
-        fn()
+    fallback_fn = fallback_pages.get(choice)
+    if fallback_fn:
+        fallback_fn()
     else:
-        st.info(f"No page found for '{module_name}'.")
+        st.error(f"No fallback available for page: {choice}")
 
 
-def render_modern_validation_page() -> None:
-    ui_layout.render_title_bar("✅", "Validation Console")
-    ui_layout.render_preview_badge("🚧 Under Construction")
-    st.progress(0.4)
+def render_modern_validation_page():
+    """Fallback validation page with basic progress indicators."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("✅", "Validation Console")
+
+    status = st.empty()
+    prog = st.progress(0)
+    for i in range(1, 6):
+        status.write(f"Step {i} / 5")
+        prog.progress(i * 20)
+    st.success("Analysis placeholder complete")
+
+
+def render_modern_voting_page():
+    """Fallback voting page showing mock poll results."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🗳️", "Voting Dashboard")
+    votes = {"Option A": 60, "Option B": 25, "Option C": 15}
+    for name, val in votes.items():
+        st.write(f"{name} {val}% :thumbsup:")
+        st.progress(val / 100)
+
+
+def render_modern_agents_page():
+    """Fallback agents page with basic profiles."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🤖", "AI Agents")
     cols = st.columns(3)
-    for c, label in zip(cols, ["Queued", "Running", "Complete"]):
-        c.metric(label, "--")
-    st.markdown("Timeline coming soon...")
+    for col, agent in zip(cols, ["Meta", "Guardian", "Resonance"]):
+        with col:
+            st.image("https://via.placeholder.com/80", width=80)
+            st.write(agent)
+            st.line_chart([1, 2, 1, 3])
 
 
-def render_modern_voting_page() -> None:
-    ui_layout.render_title_bar("🗳️", "Voting Dashboard")
-    ui_layout.render_preview_badge()
-    results = {"Yes": 60, "No": 40}
-    for opt, pct in results.items():
-        st.write(f"{opt}: {pct}%")
-        st.progress(pct / 100)
-    st.markdown(":smile: :thumbsup:")
+def render_modern_music_page():
+    """Fallback music page with waveform placeholder."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🎵", "Resonance Music")
+    st.audio(b"", format="audio/wav")
+    st.markdown("Harmonic signature: **A440**")
 
 
-def render_modern_agents_page() -> None:
-    ui_layout.render_title_bar("🤖", "AI Agents")
-    ui_layout.render_preview_badge()
-    st.markdown("### MetaValidator")
-    st.line_chart([1, 2, 3, 2, 1])
+def render_modern_social_page():
+    """Fallback social page with trending hashtags."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
 
-
-def render_modern_music_page() -> None:
-    ui_layout.render_title_bar("🎵", "Resonance Music")
-    ui_layout.render_preview_badge()
-    import numpy as np
-    x = np.linspace(0, 6.28, 100)
-    st.line_chart({"wave": np.sin(x)})
-    st.caption("Harmonic signature TBD")
-
-
-def render_modern_social_page() -> None:
-    ui_layout.render_title_bar("👥", "Social Network")
-    ui_layout.render_preview_badge()
-    st.image("https://placekitten.com/200/200", caption="@user")
-    st.markdown("#hashtag #trending")
+    show_preview_badge()
+    render_title_bar("👥", "Social Network")
+    st.image("https://via.placeholder.com/40", width=40)
+    st.write("#hashtag1 #hashtag2")
+    st.success("Trending simulation running...")
 
 
 
@@ -515,8 +532,8 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
-# Optional modules used throughout the UI. Provide simple fallbacks
-# when the associated packages are not available.
+# Optional modules used throughout the UI. Provide simple fallbacks when the associated packages are not available.
+
 try:
     from protocols import AGENT_REGISTRY
 except ImportError:  # pragma: no cover - optional dependency
@@ -541,7 +558,6 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
@@ -556,6 +572,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
+
 
 
 
@@ -893,22 +910,40 @@ def render_validation_ui(
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
-    if main_container is None:
-        main_container = st
     if sidebar is None:
         sidebar = st.sidebar
-
-    page_func = globals().get("render_modern_validation_page")
-    if page_func is None:
-        st.error("Validation UI helper missing")
-        return
+    if main_container is None:
+        main_container = st
 
     try:
-        with main_container:
-            page_func()
+        # Navigation menu
+        choice = option_menu(
+            menu_title=None,
+            options=list(PAGES.keys()),
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            orientation="horizontal",
+            key="main_nav_menu",
+        )
+
+        # Page layout
+        left_col, center_col, right_col = main_container.columns([1, 3, 1])
+
+        with center_col:
+            page_key = PAGES[choice]
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
+        with left_col:
+            render_status_icon()
+
     except Exception as exc:
         st.error("Failed to load validation UI")
         st.code(str(exc))
+
+
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
@@ -1006,13 +1041,27 @@ def main() -> None:
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
         )
 
-        with ui_layout.main_container:
-            load_page_with_fallback(choice)
-
-        left_col, _, _ = st.columns([1, 3, 1])
+        left_col, center_col, right_col = st.columns([1, 3, 1])
 
         with left_col:
             render_status_icon()
+
+        with center_col:
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
+                f"pages.{PAGES[choice]}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
+
+        with center_col:
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
 
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
@@ -1257,6 +1306,9 @@ def main() -> None:
 
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
+
+        with main_container():
+            load_page_with_fallback(choice)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

@@ -1,49 +1,102 @@
-"""Reusable Streamlit layout helpers.
+"""UI Layout Helpers
 
-This module centralizes small layout utilities and container factories used
-across pages. The functions are intentionally lightweight so other modules can
-import them without heavy dependencies.
+Reusable Streamlit layout helpers and navigation components for pages.
 
-# UI ideas
-- glassy navbar with icons
-- title bar with emoji label
-- preview badge overlay for unfinished pages
+These functions are lightweight and centralized for easy reuse across modules
+without introducing heavy dependencies.
+
+Features:
+- `main_container()` – returns a generic container for page content
+- `sidebar_container()` – accesses the sidebar container
+- `render_navbar(options, default=None)` – simple radio navigation UI
+- `render_title_bar(icon, label)` – renders a header with an icon
+
+UI Ideas:
+- Glassy navbar with icons
+- Title bar with emoji label
+- Preview badge overlay for unfinished pages
+"""
+
 """
 
 from __future__ import annotations
 
-import inspect
-from typing import Dict, Iterable
+"""UI Layout Helpers
 
+Reusable Streamlit layout helpers and navigation components for pages.
+
+Features:
+- `main_container()` – returns a generic container for page content
+- `sidebar_container()` – accesses the sidebar container
+- `render_navbar(options, default=None)` – simple navigation UI (radio or option menu)
+- `render_title_bar(icon, label)` – renders a header with an icon
+- `show_preview_badge()` – floating badge for preview pages
+"""
+
+from typing import Dict, Iterable, Optional
 import streamlit as st
-from streamlit_option_menu import option_menu
 
-# Basic containers reused across the UI
-main_container = st.container()
-sidebar_container = st.sidebar
+try:
+    from streamlit_option_menu import option_menu
+    USE_OPTION_MENU = True
+except ImportError:
+    USE_OPTION_MENU = False
 
 
-def render_navbar(pages: Dict[str, str], *, icons: Iterable[str] | None = None) -> str:
-    """Render a simple horizontal nav bar and return the selected label."""
-    opts = list(pages.keys())
-    icons = list(icons or ["dot"] * len(opts))
-    return option_menu(
-        menu_title=None,
-        options=opts,
-        icons=icons,
-        orientation="horizontal",
-        key="main_nav_menu",
-    )
+def main_container() -> st.delta_generator.DeltaGenerator:
+    """Return a container for the main content area."""
+    return st.container()
+
+
+def sidebar_container() -> st.delta_generator.DeltaGenerator:
+    """Return the sidebar container."""
+    return st.sidebar
+
+
+def render_navbar(options: Iterable[str] | Dict[str, str], default: Optional[str] = None, icons: Optional[Iterable[str]] = None) -> str:
+    """Render a navigation UI and return the selected label."""
+    opts = list(options.keys()) if isinstance(options, dict) else list(options)
+    index = 0
+    if default is not None and default in opts:
+        index = opts.index(default)
+
+    if USE_OPTION_MENU:
+        icon_list = list(icons or ["dot"] * len(opts))
+        return option_menu(
+            menu_title=None,
+            options=opts,
+            icons=icon_list,
+            orientation="horizontal",
+            key="main_nav_menu",
+        )
+    else:
+        return st.radio("Navigation", opts, index=index)
 
 
 def render_title_bar(icon: str, label: str) -> None:
-    """Display a stylised page title."""
-    st.markdown(f"## {icon} {label}")
-
-
-def render_preview_badge(text: str = "Preview Mode") -> None:
-    """Overlay a badge indicating a stub page."""
+    """Display a stylized page title with icon."""
     st.markdown(
-        f"<div style='position:fixed; top:1rem; right:1rem; background:#e0a800; color:#fff; padding:0.25rem 0.75rem; border-radius:6px; z-index:1000;'> {text} </div>",
+        f"<h1 style='display:flex;align-items:center;'>"
+        f"<span style='margin-right:0.5rem'>{icon}</span>{label}</h1>",
         unsafe_allow_html=True,
     )
+
+
+def show_preview_badge(text: str = "🚧 Preview Mode") -> None:
+    """Overlay a badge used when a fallback or WIP page is shown."""
+    st.markdown(
+        f"<div style='position:fixed; top:1rem; right:1rem; background:#ffc107; "
+        f"color:#000; padding:0.25rem 0.5rem; border-radius:4px; z-index:1000;'>"
+        f"{text}</div>",
+        unsafe_allow_html=True,
+    )
+
+
+__all__ = [
+    "main_container",
+    "sidebar_container",
+    "render_navbar",
+    "render_title_bar",
+    "show_preview_badge",
+]
+
