@@ -19,6 +19,9 @@ def _scan_agents() -> Dict[str, Type[Any]]:
     agents: Dict[str, Type[Any]] = {}
     pkg = importlib.import_module(AGENT_PACKAGE)
     for _, module_name, _ in pkgutil.iter_modules(pkg.__path__):
+        if "ui_hook" in module_name:
+            # Skip optional UI integration modules
+            continue
         module = importlib.import_module(f"{AGENT_PACKAGE}.{module_name}")
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
