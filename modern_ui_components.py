@@ -8,8 +8,7 @@ from __future__ import annotations
 import streamlit as st
 from typing import Optional, Dict
 from pathlib import Path
-
-ROOT_DIR = Path(__file__).resolve().parents[1]
+from utils.paths import ROOT_DIR, PAGES_DIR
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
@@ -167,8 +166,7 @@ def render_modern_sidebar(
     page_dir_candidates = [
         Path.cwd() / "pages",
         ROOT_DIR / "pages",
-        Path(__file__).resolve().parent / "pages",
-        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages",
+        PAGES_DIR,
     ]
 
     existing_dirs = [d for d in page_dir_candidates if d.exists()]
