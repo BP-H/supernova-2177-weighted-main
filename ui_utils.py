@@ -6,7 +6,11 @@
 from pathlib import Path
 import streamlit as st
 from streamlit_helpers import inject_global_styles
-from modern_ui import render_modern_header
+try:
+    from modern_ui import render_modern_header
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def render_modern_header(*_a, **_k):
+        return None
 from modern_ui_components import render_modern_sidebar
 
 

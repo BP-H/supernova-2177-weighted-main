@@ -13,7 +13,25 @@ from utils.paths import ROOT_DIR, PAGES_DIR
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
-from modern_ui import inject_modern_styles
+try:
+    from modern_ui import inject_modern_styles
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        return None
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import get_pages_dir
+except Exception:
+    try:  # type: ignore
+        from utils.page_registry import get_pages_dir  # type: ignore
+    except Exception:  # pragma: no cover - final fallback
+        def get_pages_dir() -> Path:
+            return (
+                Path(__file__).resolve().parent
+                / "transcendental_resonance_frontend"
+                / "pages"
+            )
+
 from frontend import theme
 from streamlit_javascript import st_javascript
 
@@ -153,7 +171,8 @@ def render_modern_sidebar(
     page_dir_candidates = [
         Path.cwd() / "pages",
         ROOT_DIR / "pages",
-        PAGES_DIR,
+        Path(__file__).resolve().parent / "pages",
+        get_pages_dir(),
     ]
 
     existing_dirs = [d for d in page_dir_candidates if d.exists()]

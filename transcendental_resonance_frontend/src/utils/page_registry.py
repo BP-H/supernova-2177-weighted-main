@@ -39,9 +39,10 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
             )
             logger.info("Created placeholder page module %s", file_path.name)
 
-            # Warn in Streamlit contexts that the slug was missing, but only once per slug.
-            if hasattr(st, "warning") and slug not in _warned_slugs:
-                st.warning(f"Placeholder page created for missing slug '{slug}'.")
-                _warned_slugs.add(slug)
+def get_pages_dir() -> Path:
+    """Return the canonical directory for Streamlit page modules."""
 
-__all__ = ["ensure_pages"]
+    return Path(__file__).resolve().parents[2] / "pages"
+
+
+__all__ = ["ensure_pages", "get_pages_dir"]

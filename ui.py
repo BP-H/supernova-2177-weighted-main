@@ -77,33 +77,33 @@ render_modern_sidebar = render_sidebar_nav
 # Utility path handling
 from pathlib import Path
 import logging
-from utils.paths import ROOT_DIR, PAGES_DIR
-
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-# Import page registry helper with robust fallbacks. Attempt the package-specific
-# path first, then fall back to a local ``utils`` package if available. As a last
-# resort provide a no-op stub so the application can continue running without
-# crashing when the registry utilities are missing.
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import (
         ensure_pages,
+        get_pages_dir,
     )
-except Exception as primary_err:  # pragma: no cover - best effort fallback
-    logger.debug("primary ensure_pages import failed: %s", primary_err)
+except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
+    logger.warning("Primary page_registry import failed: %s", import_err)
     try:
-        from utils.page_registry import ensure_pages  # type: ignore
-    except Exception as secondary_err:
-        logger.warning(
-            "ensure_pages import failed: %s; using noop fallback", secondary_err
-        )
+        from utils.page_registry import ensure_pages, get_pages_dir  # type: ignore
+    except Exception as fallback_err:  # pragma: no cover - final fallback
+        logger.warning("Secondary page_registry import also failed: %s", fallback_err)
 
-        def ensure_pages(*_args, **_kwargs) -> None:  # type: ignore
-            """Fallback no-op when page registry utilities are unavailable."""
-            logger.debug("ensure_pages noop fallback invoked")
+        def ensure_pages(*_args, **_kwargs) -> None:
+            logger.debug("ensure_pages noop fallback used")
             return None
+
+        def get_pages_dir() -> Path:
+            return (
+                Path(__file__).resolve().parent
+                / "transcendental_resonance_frontend"
+                / "pages"
+            )
+
 
 
 nx = None  # imported lazily in run_analysis
@@ -117,6 +117,8 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
+ROOT_DIR = Path(__file__).resolve().parent
+PAGES_DIR = get_pages_dir()
 
 # Mapping of navigation labels to page module names
 
@@ -183,10 +185,18 @@ from streamlit_helpers import (
     safe_container,
 )
 
-from modern_ui import (
-    render_stats_section,
-)
-from frontend.theme import inject_modern_styles
+try:
+    from modern_ui import (
+        inject_modern_styles,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        return None
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
+
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -387,6 +397,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 
     # Validate PAGES_DIR existence
+    PAGES_DIR = get_pages_dir()
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -472,7 +483,7 @@ def _render_fallback(choice: str) -> None:
     # Candidate paths to try loading from
     page_candidates = [
         ROOT_DIR / "pages" / f"{slug}.py",
-        PAGES_DIR / f"{slug}.py",
+        get_pages_dir() / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
@@ -1383,10 +1394,10 @@ def main() -> None:
             "Profile": "profile",
         }
 
-
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
+
             file_path = ROOT_DIR / "pages" / f"{mod}.py"
             if file_path.exists():
                 page_paths[label] = f"/pages/{mod}.py"
