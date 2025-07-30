@@ -159,8 +159,6 @@ def render_agent_insights_tab():
     else:
         st.warning("No agents registered")
 
-# Fix theme_selector to handle missing key_suffix parameter
-
 # Add this modern UI code to your ui.py - replace the page loading section
 
 def inject_modern_styles():
@@ -481,18 +479,6 @@ def render_modern_social_page():
 
 # Add this to your main() function after st.set_page_config():
 inject_modern_styles()
-
-def theme_selector(label: str, key_suffix: str = "") -> str:
-    """Render theme selector with unique key."""
-    key = f"theme_selector_{key_suffix}" if key_suffix else "theme_selector"
-    theme = st.selectbox(
-        label,
-        ["light", "dark"],
-        index=0 if st.session_state.get("theme", "light") == "light" else 1,
-        key=key
-    )
-    st.session_state["theme"] = theme
-    return theme
 
 def load_css() -> None:
     """Placeholder for loading custom CSS."""

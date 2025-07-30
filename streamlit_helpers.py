@@ -13,6 +13,7 @@ import html
 from typing import Literal
 
 import streamlit as st
+from modern_ui import inject_premium_styles
 
 
 def alert(
@@ -118,55 +119,8 @@ def apply_theme(theme: str) -> None:
 
 
 def inject_global_styles() -> None:
-    """Inject custom CSS styling for containers, cards and buttons."""
-    st.markdown(
-        """
-        <style>
-        body, .stApp {
-            background-color: var(--background, #F0F2F6);
-            color: var(--text-color, #333333);
-            font-family: var(--font-family, 'Inter', sans-serif);
-        }
-        .custom-container {
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
-            background-color: var(--secondary-bg, #FFFFFF);
-        }
-        .card {
-            background-color: var(--secondary-bg, #FFFFFF);
-            padding: 1rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: 600;
-            margin: 0 0 0.5rem 0;
-        }
-        p {
-            line-height: 1.6;
-            margin-bottom: 0.75rem;
-        }
-        .stButton>button {
-            border-radius: 6px;
-            background: linear-gradient(90deg, var(--primary-color, #0A84FF), #2F70FF);
-            color: var(--text-color, #FFFFFF);
-            transition: filter 0.2s ease-in-out;
-            padding: 0.4rem 1rem;
-            font-weight: 600;
-            border: none;
-        }
-        .stButton>button:hover {
-            filter: brightness(1.1);
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Deprecated wrapper that forwards to :func:`modern_ui.inject_premium_styles`."""
+    inject_premium_styles()
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:

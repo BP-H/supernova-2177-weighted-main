@@ -11,21 +11,43 @@ def inject_premium_styles() -> None:
     st.markdown(
         """
         <style>
+        body, .stApp {
+            background-color: var(--background, #F0F2F6);
+            color: var(--text-color, #333333);
+            font-family: var(--font-family, 'Inter', sans-serif);
+        }
         .main .block-container {
             padding-top: 2rem;
             padding-left: 3rem;
             padding-right: 3rem;
             max-width: 1200px;
         }
+        .custom-container {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            background-color: var(--secondary-bg, #FFFFFF);
+        }
+        .card {
+            background-color: var(--secondary-bg, #FFFFFF);
+            padding: 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             font-weight: 600 !important;
             line-height: 1.3 !important;
-            margin-bottom: 1rem !important;
+            margin: 0 0 0.5rem 0 !important;
         }
         p, span, div {
             line-height: 1.6 !important;
             font-family: 'Inter', sans-serif !important;
+            margin-bottom: 0.75rem;
         }
         .stButton > button {
             background: linear-gradient(135deg, #4a90e2 0%, #5ba0f2 100%) !important;
@@ -43,6 +65,7 @@ def inject_premium_styles() -> None:
             transform: translateY(-2px) !important;
             box-shadow: 0 8px 25px rgba(74, 144, 226, 0.6) !important;
             background: linear-gradient(135deg, #5ba0f2 0%, #6bb0ff 100%) !important;
+            filter: brightness(1.1);
         }
         </style>
         """,
