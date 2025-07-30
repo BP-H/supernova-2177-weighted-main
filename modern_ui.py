@@ -17,18 +17,42 @@ def inject_modern_styles() -> None:
             --bg-start: #05080f;
             --bg-end: #020409;
             --text-color: #f0f4f8;
+
         }
+
         body, .stApp {
             background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
             color: var(--text-color);
+            font-family: 'Inter', 'Roboto', 'Urbanist', sans-serif;
+        }
 
-            font-family: 'Inter', sans-serif;
         }
         .main .block-container {
             padding-top: 2rem;
             padding-left: 3rem;
             padding-right: 3rem;
             max-width: 1200px;
+        }
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, rgba(3,6,23,0.95), rgba(10,20,40,0.95));
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        [data-testid="stSidebar"] .stButton>button {
+            width: 100%;
+        }
+        .sidebar-nav label {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+            transition: background 0.2s;
+        }
+        .sidebar-nav label:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .sidebar-nav input:checked + div {
+            color: var(--neon-accent);
         }
         .custom-container,
         .card {

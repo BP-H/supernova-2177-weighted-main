@@ -857,7 +857,8 @@ def render_validation_ui(
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
 
-        left_col, center_col, right_col = main_container.columns([1, 3, 1])
+        # Use 3-column layout for cleaner modern UX
+        left_col, center_col, _ = main_container.columns([1, 3, 1])  # omit right_col for simplicity
 
         with center_col:
             st.info("Select a page above to continue.")
@@ -874,7 +875,7 @@ def render_validation_ui(
 
 
 def render_developer_tools() -> None:
-    """Display debugging utilities in a modern tab layout."""
+    """Display debugging utilities grouped in a single expander."""
     st.markdown(
         """
         <style>
@@ -885,46 +886,28 @@ def render_developer_tools() -> None:
     )
 
     with st.expander("Developer Tools"):
-        container = st.container()
-        tab_labels = [
-            "Fork Universe",
-            "Universe State Viewer",
-            "Run Introspection Audit",
-            "Agent Logs",
-            "Inject Event",
-            "Session Inspector",
-            "Playground",
-        ]
-        (
-            tab_fork,
-            tab_state,
-            tab_audit,
-            tab_logs,
-            tab_event,
-            tab_session,
-            tab_play,
-        ) = container.tabs(tab_labels)
+        # Frequently used action
+        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+            try:
+                user = safe_get_user()
+                if user and st.button("Fork with Mock Config"):
+                    try:
+                        fork_id = cosmic_nexus.fork_universe(
+                            user, {"entropy_threshold": 0.5}
+                        )
+                        st.success(f"Forked universe {fork_id}")
+                    except Exception as exc:
+                        st.error(f"Fork failed: {exc}")
+                elif not user:
+                    st.info("No users available to fork")
+            except Exception as exc:
+                st.error(f"Database error: {exc}")
+        else:
+            st.info("Fork operation unavailable")
 
-        with tab_fork:
-            if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
-                try:
-                    user = safe_get_user()
-                    if user and st.button("Fork with Mock Config"):
-                        try:
-                            fork_id = cosmic_nexus.fork_universe(
-                                user, {"entropy_threshold": 0.5}
-                            )
-                            st.success(f"Forked universe {fork_id}")
-                        except Exception as exc:
-                            st.error(f"Fork failed: {exc}")
-                    elif not user:
-                        st.info("No users available to fork")
-                except Exception as exc:
-                    st.error(f"Database error: {exc}")
-            else:
-                st.info("Fork operation unavailable")
-
-        with tab_state:
+        # Less common diagnostics
+        with st.expander("Diagnostics & Logs"):
+            # Universe state viewer
             if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                 try:
                     with SessionLocal() as db:
@@ -944,7 +927,7 @@ def render_developer_tools() -> None:
             else:
                 st.info("Database unavailable")
 
-        with tab_audit:
+            # Run introspection audit
             hid = st.text_input("Hypothesis ID", key="audit_id")
             if st.button("Run Audit") and hid:
                 if 'dispatch_route' in globals() and 'SessionLocal' in globals():
@@ -976,7 +959,7 @@ def render_developer_tools() -> None:
                 else:
                     st.info("Audit functionality unavailable")
 
-        with tab_logs:
+            # Agent logs
             log_path = Path("logchain_main.log")
             if not log_path.exists():
                 log_path = Path("remix_logchain.log")
@@ -989,7 +972,7 @@ def render_developer_tools() -> None:
             else:
                 st.info("No log file found")
 
-        with tab_event:
+            # Inject event
             with st.expander("Inject Event", expanded=False):
                 event_json = st.text_area("Event JSON", value="{}", height=150, key="inject_event")
                 if st.button("Process Event"):
@@ -1004,7 +987,7 @@ def render_developer_tools() -> None:
                     else:
                         st.info("Agent unavailable")
 
-        with tab_session:
+            # Session inspector
             if 'AGENT_REGISTRY' in globals():
                 st.write("Available agents:", list(AGENT_REGISTRY.keys()))
             if 'cosmic_nexus' in globals():
@@ -1025,7 +1008,8 @@ def render_developer_tools() -> None:
                 except Exception:
                     st.warning("Inspection failed")
 
-        with tab_play:
+        # Playground for quick flows
+        with st.expander("Playground"):
             flow_txt = st.text_area("Agent Flow JSON", "[]", height=150, key="flow_json")
             if st.button("Run Flow"):
                 if 'AGENT_REGISTRY' in globals():
@@ -1125,17 +1109,86 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         
-        choice = render_sidebar()
+        # Setup: Pages and Icons
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Chat": "chat",
+            "Social": "social",
+            "Profile": "profile",
+        }
+        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+        page_paths = {
+            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
+            for label, mod in PAGES.items()
+        }
 
-        if st.session_state.get("agent_output") is not None:
-            st.subheader("Agent Output")
-            st.json(st.session_state["agent_output"])
+        # Modern Sidebar Nav
+        choice = render_modern_sidebar(
+            page_paths,
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+        )
 
-        render_stats_section()
-        st.markdown(f"**Runs:** {st.session_state['run_count']}")
+        # Page layout: left for tools, center for content
+        left_col, center_col, _ = st.columns([1, 3, 1])
 
-        container_ctx = safe_container(main_container)
-        with container_ctx:
+        # Sidebar functionality (left column)
+        with left_col:
+            render_status_icon()
+
+            with st.expander("Environment Details"):
+                secrets = get_st_secrets()
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
+
+            with st.expander("Application Settings"):
+                demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
+                theme_selector("Theme")
+
+            with st.expander("Data Management"):
+                uploaded_file = st.file_uploader("Upload JSON", type="json")
+                if st.button("Run Analysis"):
+                    st.success("Analysis complete!")
+
+            with st.expander("Agent Configuration"):
+                api_info = render_api_key_ui(key_prefix="devtools")
+                backend_choice = api_info.get("model", "dummy")
+                api_key = api_info.get("api_key", "") or ""
+
+                if AGENT_REGISTRY:
+                    agent_choice = st.selectbox(
+                        "Agent",
+                        sorted(AGENT_REGISTRY.keys()),
+                        key="devtools_agent_select",
+                    )
+                else:
+                    agent_choice = None
+                    st.info("No agents registered")
+
+                event_type = st.text_input("Event", value="LLM_INCOMING")
+                payload_txt = st.text_area("Payload JSON", value="{}", height=100)
+                run_agent_clicked = st.button("Run Agent")
+
+            with st.expander("Simulation Tools"):
+                render_simulation_stubs()
+
+            st.divider()
+            governance_view = st.toggle(
+                "Governance View",
+                value=st.session_state.get("governance_view", False),
+            )
+            st.session_state["governance_view"] = governance_view
+
+            render_developer_tools()
+
+        # Center content area — dynamic page loading
+        with center_col:
             if choice:
                 page_key = PAGES.get(choice, choice)
                 module_paths = [
@@ -1150,6 +1203,53 @@ def main() -> None:
             else:
                 st.info("Select a page on the left to continue.")
                 _render_fallback("Validation")
+
+            # Run agent logic if triggered
+            if run_agent_clicked and "AGENT_REGISTRY" in globals():
+                try:
+                    payload = json.loads(payload_txt or "{}")
+                except Exception as exc:
+                    alert(f"Invalid payload: {exc}", "error")
+                else:
+                    backend_fn = get_backend(backend_choice.lower(), api_key or None)
+                    if backend_fn is None:
+                        alert("Invalid backend selected", "error")
+                        st.session_state["agent_output"] = None
+                        st.stop()
+
+                    agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
+                    if agent_cls is None:
+                        alert("Unknown agent selected", "error")
+                    else:
+                        try:
+                            if agent_choice == "CI_PRProtectorAgent":
+                                talker = backend_fn or (lambda p: p)
+                                selected_agent = agent_cls(talker, llm_backend=backend_fn)
+                            elif agent_choice == "MetaValidatorAgent":
+                                selected_agent = agent_cls({}, llm_backend=backend_fn)
+                            elif agent_choice == "GuardianInterceptorAgent":
+                                selected_agent = agent_cls(llm_backend=backend_fn)
+                            else:
+                                selected_agent = agent_cls(llm_backend=backend_fn)
+
+                            st.session_state["agent_instance"] = selected_agent
+                            result = selected_agent.process_event(
+                                {"event": event_type, "payload": payload}
+                            )
+                            st.session_state["agent_output"] = result
+                            st.success("Agent executed")
+                        except Exception as exc:
+                            st.session_state["agent_output"] = {"error": str(exc)}
+                            alert(f"Agent error: {exc}", "error")
+
+            # Show agent output
+            if st.session_state.get("agent_output") is not None:
+                st.subheader("Agent Output")
+                st.json(st.session_state["agent_output"])
+
+            render_stats_section()
+            st.markdown(f"**Runs:** {st.session_state['run_count']}")
+
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
