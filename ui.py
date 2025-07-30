@@ -37,9 +37,9 @@ from modern_ui_components import (
 
 # Prefer modern sidebar render if available
 try:
-    from modern_ui_components import render_modern_sidebar
-except ImportError:
-    render_modern_sidebar = None
+    from modern_ui_components import render_modern_sidebar as _render_modern_sidebar
+except ImportError:  # pragma: no cover - optional dependency
+    _render_modern_sidebar = None
 
 from frontend.ui_layout import (
     main_container,
@@ -52,8 +52,8 @@ from frontend.ui_layout import (
 
 def render_sidebar_nav(*args, **kwargs):
     """Proxy to allow monkeypatching via `render_modern_sidebar` if available."""
-    if render_modern_sidebar and render_modern_sidebar is not render_sidebar_nav:
-        return render_modern_sidebar(*args, **kwargs)
+    if _render_modern_sidebar and _render_modern_sidebar is not render_sidebar_nav:
+        return _render_modern_sidebar(*args, **kwargs)
     return _base_render_sidebar_nav(*args, **kwargs)
 
 
@@ -352,7 +352,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = PAGES_DIR / (module_path.replace(".", "/") + ".py")
+        page_file = PAGES_DIR / (module_path.rsplit(".", 1)[-1] + ".py")
         if page_file.exists():
             rel_path = os.path.relpath(page_file, start=Path.cwd())
             try:
@@ -1351,6 +1351,7 @@ def main() -> None:
 
         # Center content area — dynamic page loading
         with center_col:
+            # Render the selected page when available
             if choice:
                 page_key = PAGES.get(choice, choice)
                 module_paths = [
@@ -1363,8 +1364,9 @@ def main() -> None:
                     st.toast(f"Page not found: {choice}", icon="⚠️")
                     _render_fallback(choice)
             else:
-                st.toast("Select a page above to continue.")  # modern, non-blocking feedback
-                _render_fallback("Validation")  # Default fallback page as a preview
+                # No choice selected — default to Validation preview
+                st.toast("Select a page above to continue.")
+                _render_fallback("Validation")
 
                 # Run agent logic if triggered
                 if run_agent_clicked and "AGENT_REGISTRY" in globals():
