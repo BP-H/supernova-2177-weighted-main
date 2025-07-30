@@ -2,13 +2,11 @@
 
 __all__ = [
     "validation",
+    "voting",
+    "agents",
+    "resonance_music",
+    "chat",
     "social",
     "profile",
-    "voting",       # Assuming these were present before the conflict snippet
-    "agents",       # Assuming these were present before the conflict snippet
-    "resonance_music", # This is the key addition to resolve the page inclusion
-    "chat",
-    "video",
-    "video_chat",
 ]
 
