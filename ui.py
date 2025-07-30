@@ -18,6 +18,7 @@ import traceback
 import sqlite3
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from typing import Any, Optional
 
 
 from modern_ui_components import (
@@ -647,8 +648,8 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
-# Optional modules used throughout the UI. Provide simple fallbacks
-# when the associated packages are not available.
+# Optional modules used throughout the UI. Provide simple fallbacks when the associated packages are not available.
+
 try:
     from protocols import AGENT_REGISTRY
 except ImportError:  # pragma: no cover - optional dependency
@@ -673,7 +674,6 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
@@ -688,6 +688,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
+
 
 
 
