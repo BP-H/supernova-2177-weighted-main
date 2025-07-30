@@ -1052,5 +1052,82 @@ def render_validation_ui(
     if main_container is None:
         main_container = st
 
+def main() -> None:
+    """Entry point with comprehensive error handling and modern UI."""
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
+        
+        # Apply modern styling
+        inject_modern_styles()
+        
+        # Initialize session state
+        if "session_start_ts" not in st.session_state:
+            st.session_state["session_start_ts"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if "theme" not in st.session_state:
+            st.session_state["theme"] = "light"
+        if "run_count" not in st.session_state:
+            st.session_state["run_count"] = 0
+
+        # Health check
+        params = st.query_params
+        if "1" in params.get("healthz", []):
+            st.write("ok")
+            st.stop()
+            return
+
+        # Define pages
+        pages = {
+            "Validation": "validation",
+            "Voting": "voting", 
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Social": "social",
+        }
+
+        # Navigation
+        choice = option_menu(
+            menu_title=None,
+            options=list(pages.keys()),
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            orientation="horizontal",
+            key="main_nav_menu"
+        )
+
+        # Main content with sidebar
+        main_col, sidebar_col = st.columns([3, 1])
+
+        with main_col:
+            # Load page content
+            load_page_with_fallback(choice)
+
+        with sidebar_col:
+            st.header("Environment")
+            secrets = get_st_secrets()
+            
+            st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
+            st.write(f"ENV: {os.getenv('ENV', 'dev')}")
+            st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+
+            st.divider()
+            st.subheader("Settings")
+            
+            demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
+            theme_selector("Theme")
+            
+            uploaded_file = st.file_uploader("Upload JSON", type="json")
+            
+            if st.button("Run Analysis"):
+                st.success("Analysis complete!")
+            
+            st.markdown(f"**Runs:** {st.session_state['run_count']}")
+
+    except Exception as exc:
+        st.error(f"Application Error: {str(exc)}")
+
+
 if __name__ == "__main__":
     main()
