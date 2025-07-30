@@ -28,9 +28,12 @@ def test_render_modern_sidebar_default_container(monkeypatch):
         radio=dummy_radio,
         sidebar=types.SimpleNamespace(markdown=lambda *a, **k: None, radio=dummy_radio),
         session_state={},
+        warning=lambda *a, **k: None,
+        error=lambda *a, **k: None,
     )
     monkeypatch.setattr(mui, "USE_OPTION_MENU", False)
     monkeypatch.setattr(mui, "st", dummy_st)
+    monkeypatch.setattr(mui.Path, "exists", lambda self: True)
     pages = {"A": "a", "B": "b"}
     assert mui.render_modern_sidebar(pages) == "A"
     assert calls, "buttons rendered"
@@ -58,9 +61,12 @@ def test_render_modern_sidebar_state_changes(monkeypatch):
         radio=dummy_radio,
         sidebar=types.SimpleNamespace(markdown=lambda *a, **k: None, radio=dummy_radio),
         session_state=session,
+        warning=lambda *a, **k: None,
+        error=lambda *a, **k: None,
     )
 
     monkeypatch.setattr(mui, "st", dummy_st)
+    monkeypatch.setattr(mui.Path, "exists", lambda self: True)
     pages = {"A": "a", "B": "b"}
 
     # No change expected

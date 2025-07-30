@@ -160,25 +160,53 @@ def render_modern_sidebar(
     if container is None:
         container = st.sidebar
 
-    # Filter out pages that don't exist on disk so we don't render broken links
-    PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    # Resolve page paths dynamically from likely locations
+
+    page_dir_candidates = [
+
+        Path(__file__).resolve().parent / "pages",
+
+        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages",
+
+    ]
+
     valid_pages: Dict[str, str] = {}
+
     missing_pages: list[str] = []
-    for label, module in pages.items():
-        page_file = PAGES_DIR / f"{module}.py"
-        if page_file.exists():
-            valid_pages[label] = module
+
+    for label, page_ref in pages.items():
+
+        slug = str(page_ref).strip("/").split("?")[0].rsplit(".", 1)[-1]
+
+        exists = any((d / f"{slug}.py").exists() for d in page_dir_candidates if d.exists())
+
+        if exists:
+
+            valid_pages[label] = page_ref
+
         else:
+
             missing_pages.append(label)
 
     if missing_pages:
+
         msg = "Unknown pages: " + ", ".join(missing_pages)
+
         if hasattr(st, "warning"):
+
             st.warning(msg, icon="⚠️")
+
         else:  # pragma: no cover - used in tests with SimpleNamespace
+
             print(msg)
 
-    pages = valid_pages or pages
+    if not valid_pages:
+
+        st.error("No valid pages available", icon="⚠️")
+
+        return ""
+
+    pages = valid_pages    
 
     opts = list(pages.keys())
     if not opts:
