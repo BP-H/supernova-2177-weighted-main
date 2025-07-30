@@ -97,7 +97,7 @@ def render_navbar(
         return st.session_state.get(key, opts[0][0])  # Return current selection
 
     except Exception as e:
-        st.warning(f"Navigation setup failed: {e}. Falling back to radio.")
+        st.toast(f"Navigation setup failed: {e}. Falling back to radio.", icon="⚠️")
         if USE_OPTION_MENU:
             icon_list = list(icons or ["dot"] * len(opts))
             return option_menu(
