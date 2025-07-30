@@ -1145,17 +1145,20 @@ def main() -> None:
                         try:
                             user = safe_get_user()
                             if user and st.button("Fork with Mock Config"):
-                                fork_id = cosmic_nexus.fork_universe(user, {"entropy_threshold": 0.5})
-                                st.success(f"Forked universe {fork_id}")
+                                try:
+                                    fork_id = cosmic_nexus.fork_universe(
+                                        user, {"entropy_threshold": 0.5}
+                                    )
+                                    st.success(f"Forked universe {fork_id}")
+                                except Exception as exc:
+                                    st.error(f"Fork failed: {exc}")
+                            elif not user:
+                                st.info("No users available to fork")
                         except Exception as exc:
-                            st.error(f"Fork failed: {exc}")
+                            st.error(f"Database error: {exc}")
+                    else:
+                        st.info("Fork operation unavailable")
 
-                                elif not user:
-                                    st.info("No users available to fork")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        else:
-                            st.info("Fork operation unavailable")
 
                     with dev_tabs[1]:
                         if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
