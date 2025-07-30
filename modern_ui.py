@@ -39,19 +39,6 @@ def inject_modern_styles() -> None:
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
-        ... (rest of your CSS)
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-    st.session_state["modern_styles_injected"] = True
-
-    st.markdown(
-        """
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-        <style>
         :root {
             --neon-accent: #00e6ff;
             --bg-start: #0f0c29;
