@@ -1148,6 +1148,7 @@ def main() -> None:
     try:
         params = st.query_params
     except Exception:
+        # Fallback for older Streamlit versions
         params = st.experimental_get_query_params()
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
@@ -1250,15 +1251,15 @@ def main() -> None:
             / "transcendental_resonance_frontend"
             / "pages"
         )
-        page_paths = {
-            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
-            for label, mod in PAGES.items()
-        }
+        # Map labels to Streamlit URL paths, not file system paths, for
+        # ``st.sidebar.page_link`` compatibility
+        page_paths = {label: f"/{mod}" for label, mod in PAGES.items()}
 
         # Determine page from query params and sidebar selection
         try:
             query = st.query_params
         except Exception:
+            # Fallback for legacy versions
             query = st.experimental_get_query_params()
         forced_page = query.get("page", [None])[0]
 
