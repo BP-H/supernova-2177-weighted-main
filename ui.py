@@ -6,6 +6,7 @@ Example:
 """
 
 import os
+import time
 import streamlit as st  # ensure Streamlit is imported early
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
@@ -23,6 +24,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+import time
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -30,10 +32,20 @@ from typing import Optional
 from frontend import ui_layout
 
 
-from modern_ui_components import (
-    render_validation_card,
-    render_stats_section,
-)
+try:
+    from modern_ui_components import (
+        SIDEBAR_STYLES,
+        render_validation_card,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - optional dependency
+    SIDEBAR_STYLES = ""
+
+    def render_validation_card(*_a, **_k):
+        st.info("validation card unavailable")
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
 
 # Prefer modern sidebar render if available
 try:
@@ -358,21 +370,28 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = Path.cwd() / "pages" / (module_path.rsplit(".", 1)[-1] + ".py")
-        if page_file.exists():
-            rel_path = f"/pages/{page_file.stem}.py"
-            try:
-                st.switch_page(rel_path)
-                return
-            except StreamlitAPIException as exc:
-                st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
-                continue
-            except Exception as exc:  # Unexpected failure
-                logging.error(
-                    "switch_page failed for %s: %s", rel_path, exc, exc_info=True
-                )
-                last_exc = exc
-                continue
+        filename = module_path.rsplit(".", 1)[-1] + ".py"
+        candidate_files = [
+            Path.cwd() / "pages" / filename,
+            PAGES_DIR / filename,
+        ]
+
+        for page_file in candidate_files:
+            if page_file.exists():
+                rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
+                try:
+                    st.switch_page(rel_path)
+                    return
+                except StreamlitAPIException as exc:
+                    st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    break
+                except Exception as exc:
+                    logging.error(
+                        "switch_page failed for %s: %s", rel_path, exc, exc_info=True
+                    )
+                    last_exc = exc
+                    break
+
 
         # Fallback: import the module directly and call ``render`` or ``main``
         try:
@@ -389,6 +408,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             break
 
     st.toast("Unable to load page. Showing preview.", icon="⚠️")
+    if choice == "Validation":
+        st.error("Validation page failed to load")
     if "_render_fallback" in globals():
         _render_fallback(choice)
     if last_exc:
@@ -399,15 +420,33 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
     choice = normalize_choice(choice)
+    module = PAGES.get(choice, choice.lower())
+    page_file = Path.cwd() / "pages" / f"{module}.py"
 
-    page_file = Path.cwd() / "pages" / f"{PAGES.get(choice, choice)}.py"
+    # Avoid redundant fallback if the page file exists
     if page_file.exists():
-        logger.debug("Fallback skipped for existing page %s", page_file)
+        logger.debug("Fallback skipped because %s exists", page_file)
+        spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = mod
+            try:
+                spec.loader.exec_module(mod)
+            except Exception as exc:  # pragma: no cover
+                st.error(f"Failed to load page {module}: {exc}")
         return
+
+    # Try importing OFFLINE_MODE
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
+
+    # Prevent duplicate fallback rendering
+    if st.session_state.get("_fallback_rendered") == choice:
+        logger.debug("Duplicate fallback suppressed for %s", choice)
+        return
+    st.session_state["_fallback_rendered"] = choice
 
     fallback_pages = {
         "Validation": render_modern_validation_page,
@@ -418,15 +457,16 @@ def _render_fallback(choice: str) -> None:
         "Social": render_modern_social_page,
         "Profile": render_modern_profile_page,
     }
+
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
-
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
         st.toast(f"No fallback available for page: {choice}", icon="⚠️")
+
 
 
 def render_modern_validation_page():
@@ -435,7 +475,7 @@ def render_modern_validation_page():
     st.markdown("- Task queued\n- Running analysis\n- Completed")
     progress = st.progress(0)
     for i in range(5):
-        st.sleep(0.1)
+        time.sleep(0.1)
         progress.progress((i + 1) / 5)
     st.success("Status: OK")
 
