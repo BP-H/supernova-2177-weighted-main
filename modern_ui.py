@@ -28,30 +28,25 @@ def inject_modern_styles() -> None:
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
-            --neon-accent: #00ffff;
-            --bg-start: #000428;
-            --bg-end: #004e92;
+            --neon-accent: #00e6ff;
+            --bg-start: #0f0c29;
+            --bg-end: #302b63;
             --text-color: #f0f4f8;
-
         }
-
         body, .stApp {
             background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
             color: var(--text-color);
-            font-family: 'Inter', 'Roboto', 'Urbanist', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
         .main .block-container {
-            padding-top: 3rem;
-            padding-bottom: 2rem;
-            padding-left: 4rem;
-            padding-right: 4rem;
+            padding: 2rem 3rem;
             max-width: 1200px;
         }
         [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, rgba(3,6,23,0.95), rgba(10,20,40,0.95));
+            background: rgba(20,25,40,0.9);
             border-right: 1px solid rgba(255,255,255,0.1);
+            transition: width 0.3s ease;
         }
         [data-testid="stSidebar"] .stButton>button {
             width: 100%;
@@ -171,40 +166,49 @@ def inject_modern_styles() -> None:
         }
 
         .sidebar-nav .nav-item:hover {
+
             background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(6px);
+            border-radius: 10px;
+            color: var(--text-color);
+            padding: 0.6rem 1.2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stButton>button:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4),0 0 6px var(--neon-accent);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .custom-container, .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+        .custom-container:hover, .card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transform: translateY(-3px);
         }
 
-        .sidebar-nav .icon {
-            font-size: 1.2rem;
-        }
-
-        @media (max-width: 768px) {
-            .main .block-container {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .main .block-container {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
-            .gradient-btn,
-            .stButton > button {
-                width: 100%;
-            }
-        }
-
-        .profile-card {
+        .sidebar-nav .nav-item {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .sidebar-nav .nav-item:hover {
             background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 1rem;
+        }
+
+        .sidebar-nav .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--neon-accent);
         }
 
         @media (max-width: 768px) {
@@ -214,6 +218,16 @@ def inject_modern_styles() -> None:
             }
             [data-testid="stSidebar"] {
                 width: 14rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main .block-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .stButton>button {
+                width: 100%;
             }
         }
 
