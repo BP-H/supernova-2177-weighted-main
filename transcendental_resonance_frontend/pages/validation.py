@@ -9,10 +9,13 @@ from ui import render_validation_ui
 
 def main(main_container=None) -> None:
     """Render the validation UI within ``main_container``."""
-    if main_container is None:
-        main_container = st
+    container = main_container if main_container is not None else st.container()
 
-    with main_container:
+    try:
+        with container:
+            render_validation_ui()
+    except AttributeError:
+        # ``container`` may not be a context manager
         render_validation_ui()
 
 
