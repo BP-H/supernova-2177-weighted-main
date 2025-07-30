@@ -146,7 +146,7 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
-# Tracks which fallback pages have been rendered in this session.
+# Tracks slugs of fallback pages rendered in this session.
 _fallback_rendered: set[str] = set()
 
 
@@ -455,18 +455,19 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    # Normalize and derive slug/module name
+    normalized = normalize_choice(choice)
+    slug = PAGES.get(normalized, str(normalized)).lower()
+
     # Prevent rendering the same fallback repeatedly.
-    if choice in _fallback_rendered:
+    if slug in _fallback_rendered:
         return
-    _fallback_rendered.add(choice)
+    _fallback_rendered.add(slug)
+
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
-      
-    # Normalize and derive slug/module name
-    normalized = normalize_choice(choice)
-    slug = PAGES.get(normalized, str(normalized)).lower()
 
     # Candidate paths to try loading from
     page_candidates = [
@@ -474,6 +475,7 @@ def _render_fallback(choice: str) -> None:
         PAGES_DIR / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
+
 
     loaded = False
     # Only try to load manually if st.experimental_page is available
@@ -504,14 +506,6 @@ def _render_fallback(choice: str) -> None:
 
     if loaded:
         return
-
-
-
-    # Prevent duplicate fallback rendering in session
-    if st.session_state.get("_fallback_rendered") == slug:
-        logger.debug("Duplicate fallback suppressed for %s", slug)
-        return
-    st.session_state["_fallback_rendered"] = slug
 
     # Map to fallback UI stubs
     fallback_pages = {
