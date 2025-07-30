@@ -79,6 +79,13 @@ def inject_modern_styles() -> None:
             background: linear-gradient(135deg, #5ba0f2 0%, #6bb0ff 100%) !important;
             filter: brightness(1.05);
         }
+
+        input, textarea, select {
+            background-color: #2d2d2d !important;
+            color: #eee !important;
+            border: 1px solid #555 !important;
+            border-radius: 8px !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,

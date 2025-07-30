@@ -37,12 +37,8 @@ from frontend.ui_layout import (
     show_preview_badge,
 )
 
-# Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
-# for reference but disabled.
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+# Utility path handling
 from pathlib import Path
-
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -52,8 +48,6 @@ go = None  # imported lazily in run_analysis
 # Register fallback watcher for environments that can't use inotify
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 
-# Bind to the default Streamlit port to satisfy platform health checks
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
@@ -118,7 +112,7 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
-from frontend.ui_layout import overlay_badge, render_title_bar
+from frontend.ui_layout import render_title_bar
 
 # Optional modules used throughout the UI. Provide simple fallbacks
 # when the associated packages are not available.
@@ -220,9 +214,6 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
-
-# Add this modern UI code to your ui.py - replace the page loading section
-
 def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
@@ -305,6 +296,13 @@ def inject_modern_styles() -> None:
 
         .stButton > button:hover {
             background-color: #699cfc;
+        }
+
+        input, textarea, select {
+            background-color: #2d2d2d;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 6px;
         }
 
         /* Modern scrollbar */
@@ -442,10 +440,6 @@ def render_modern_social_page():
     st.markdown("🔥 Trending: #resonance #ai")
     st.success("Social feed placeholder loaded")
 
-
-
-
-# Add this to your main() function after st.set_page_config()
 
 
 def load_css() -> None:
@@ -1045,23 +1039,6 @@ def main() -> None:
         with left_col:
             render_status_icon()
 
-        with center_col:
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
-                f"pages.{PAGES[choice]}",
-            ]
-            load_page_with_fallback(choice, module_paths)
-
-
-        with center_col:
-            page_key = PAGES.get(choice, choice)
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{page_key}",
-                f"pages.{page_key}",
-            ]
-            load_page_with_fallback(choice, module_paths)
-
-
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
                 info_text = (
@@ -1107,6 +1084,8 @@ def main() -> None:
                     "Session Inspector",
                     "Playground",
                 ])
+
+        
 
                 with dev_tabs[0]:
                     if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
@@ -1262,6 +1241,12 @@ def main() -> None:
                         else:
                             st.info("Agent registry unavailable")
 
+        with center_col:
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
+                f"pages.{PAGES[choice]}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
             try:
@@ -1318,8 +1303,6 @@ def main() -> None:
             st.rerun()
 
 
-
-# Add this section for database error handling
 def ensure_database_exists() -> bool:
     """Ensure harmonizers table exists and insert default admin if necessary."""
     try:
