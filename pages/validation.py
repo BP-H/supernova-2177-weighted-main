@@ -1,20 +1,26 @@
-# pages/validation.py
+"""Streamlit entry point for the Validation page."""
 
-import time
 import streamlit as st
+from transcendental_resonance_frontend.pages.validation import main as _frontend_main
+import time
 
-# optional: custom sidebar styles if you define SIDEBAR_STYLES globally
+# Optional: custom sidebar styles
 try:
+    from modern_ui_components import SIDEBAR_STYLES
     st.markdown(f"<style>{SIDEBAR_STYLES}</style>", unsafe_allow_html=True)
-except NameError:
-    pass  # no sidebar styling defined yet
+except Exception:
+    pass  # no sidebar styling defined
 
-st.title("🔍 Validation Dashboard")
 
-# simulate a short loading delay if needed
-time.sleep(0.1)
+def render() -> None:
+    """Render the validation dashboard."""
+    st.title("🔍 Validation Dashboard")
 
-st.info("Validation page loaded successfully.")
+    # simulate a short loading delay if needed
+    time.sleep(0.1)
 
-# optional: fetch or display something
-# st.write("Add validation checks or form inputs here.")
+    st.info("Validation page loaded successfully.")
+
+
+if __name__ == "__main__":  # pragma: no cover - manual execution
+    render()
