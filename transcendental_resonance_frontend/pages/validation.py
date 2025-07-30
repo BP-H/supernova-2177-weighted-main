@@ -8,14 +8,32 @@ from ui import render_validation_ui
 
 
 def main(main_container=None) -> None:
-    """Render the validation UI inside a container."""
-    container = main_container if main_container is not None else st.container()
+from contextlib import nullcontext
 
+def render_validation_entrypoint(main_container=None):
+    """Render the validation UI inside a valid container context."""
+
+    # Resolve the actual container to use
+    if main_container is None:
+        main_container = st
+
+    # Determine whether we can use `with main_container:` directly
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
+
+    # Safely render within context (fallback if necessary)
     try:
-        with container:
-            render_validation_ui(main_container=container)
+        with container_ctx:
+            render_validation_ui(main_container=main_container)
     except AttributeError:
-        render_validation_ui(main_container=container)
+        # fallback in case `with` is invalid for container
+        render_validation_ui(main_container=main_container)
+
 
 
 def render() -> None:
