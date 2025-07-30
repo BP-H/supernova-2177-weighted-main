@@ -676,6 +676,9 @@ def main() -> None:
                 "errors": []
             })
 
+        # Theme selection (unique key)
+        theme_selector("Theme", key_suffix="main")
+
         # Render main UI with error recovery
         try:
             render_validation_ui()
