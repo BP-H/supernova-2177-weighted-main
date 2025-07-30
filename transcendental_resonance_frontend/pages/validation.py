@@ -4,8 +4,11 @@
 """Validation analysis page."""
 
 import streamlit as st
+from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
 from ui import render_validation_ui
+
+inject_modern_styles()
 
 
 def main(main_container=None) -> None:

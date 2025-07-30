@@ -13,10 +13,13 @@ from pathlib import Path
 
 import requests
 import streamlit as st
+from modern_ui import inject_modern_styles
 from streamlit_helpers import alert, centered_container, safe_container
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
 from utils.api import get_resonance_summary, dispatch_route # Import get_resonance_summary and dispatch_route from utils.api
+
+inject_modern_styles()
 
 # BACKEND_URL is defined in utils.api, but we keep it here for direct requests calls if needed
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
