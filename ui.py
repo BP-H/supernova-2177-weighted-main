@@ -427,6 +427,15 @@ def render_modern_validation_page():
 # In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
     """Load page with beautiful fallback."""
+    # Define pages here since it's not global
+    pages = {
+        "Validation": "validation",
+        "Voting": "voting", 
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
+    
     try:
         page_module = pages[choice]
         module_path = f"pages.{page_module}"
@@ -450,7 +459,6 @@ def load_page_with_fallback(choice):
             render_modern_social_page()
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
-
 def render_modern_voting_page():
     """Modern voting page fallback."""
     st.markdown("# 🗳️ Voting Dashboard")
