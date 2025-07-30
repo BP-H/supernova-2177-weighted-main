@@ -15,6 +15,9 @@ import logging
 import math
 import sys
 import traceback
+import sqlite3
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
 
 from modern_ui_components import (
     render_validation_card,
@@ -1007,12 +1010,22 @@ def render_validation_ui(
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
+    params = st.query_params
+    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
+    if "1" in params.get(HEALTH_CHECK_PARAM, []) or path_info == f"/{HEALTH_CHECK_PARAM}":
+        st.write("ok")
+        st.stop()
+        return
+
     # Initialize database FIRST
     try:
-        ensure_database_exists()
+        db_ready = ensure_database_exists()
+        if not db_ready:
+            st.warning("Database initialization failed. Running in fallback mode")
     except Exception as e:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
+
 
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
@@ -1137,8 +1150,156 @@ def main() -> None:
 
             with st.expander("Developer Tools"):
                 dev_tabs = st.tabs([
-                    "Fork Universe", "Universe Viewer", "Audit", "Logs",
-                    "Inject", "Session", "Playground"])
+                    "Fork Universe",
+                    "Universe State Viewer",
+                    "Run Introspection Audit",
+                    "Agent Logs",
+                    "Inject Event",
+                    "Session Inspector",
+                    "Playground",
+                ])
+
+                with dev_tabs[0]:
+                    if 'cosmic_nexus' in globals() and 'SessionLocal' in globals() and 'Harmonizer' in globals():
+                        user = safe_get_user()
+                        if user and st.button("Fork with Mock Config"):
+                            try:
+                                fork_id = cosmic_nexus.fork_universe(
+                                    user, {"entropy_threshold": 0.5}
+                                )
+                                st.success(f"Forked universe {fork_id}")
+                            except Exception as exc:
+                                st.error(f"Fork failed: {exc}")
+                        elif not user:
+                            st.info("No users available to fork")
+                    else:
+                        st.info("Fork operation unavailable")
+
+                with dev_tabs[1]:
+                    if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+                        with SessionLocal() as db:
+                            records = (
+                                db.query(UniverseBranch)
+                                .order_by(UniverseBranch.timestamp.desc())
+                                .limit(5)
+                                .all()
+                            )
+                            if records:
+                                for r in records:
+                                    st.write({
+                                        "id": r.id,
+                                        "status": r.status,
+                                        "timestamp": r.timestamp,
+                                    })
+                            else:
+                                st.write("No forks recorded")
+                    else:
+                        st.info("Database unavailable")
+
+                with dev_tabs[2]:
+                    hid = st.text_input("Hypothesis ID", key="audit_id")
+                    if st.button("Run Audit") and hid:
+                        if 'dispatch_route' in globals() and 'SessionLocal' in globals():
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = _run_async(
+                                            dispatch_route(
+                                                "trigger_full_audit",
+                                                {"hypothesis_id": hid},
+                                                db=db,
+                                            )
+                                        )
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = run_full_audit(hid, db)
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        else:
+                            st.info("Audit functionality unavailable")
+
+                with dev_tabs[3]:
+                    log_path = Path("logchain_main.log")
+                    if not log_path.exists():
+                        log_path = Path("remix_logchain.log")
+                    if log_path.exists():
+                        try:
+                            lines = log_path.read_text().splitlines()[-100:]
+                            st.text("\n".join(lines))
+                        except Exception as exc:
+                            st.error(f"Log read failed: {exc}")
+                    else:
+                        st.info("No log file found")
+
+                with dev_tabs[4]:
+                    event_json = st.text_area(
+                        "Event JSON", value="{}", height=150, key="inject_event"
+                    )
+                    if st.button("Process Event"):
+                        if 'agent' in globals():
+                            try:
+                                event = json.loads(event_json or "{}")
+                                agent.process_event(event)
+                                st.success("Event processed")
+                            except Exception as exc:
+                                st.error(f"Event failed: {exc}")
+                        else:
+                            st.info("Agent unavailable")
+
+                with dev_tabs[5]:
+                    if 'AGENT_REGISTRY' in globals():
+                        st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                    if 'cosmic_nexus' in globals():
+                        st.write(
+                            "Sub universes:",
+                            list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
+                        )
+                    if 'agent' in globals() and 'InMemoryStorage' in globals():
+                        if isinstance(agent.storage, InMemoryStorage):
+                            st.write(
+                                f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
+                            )
+                        else:
+                            try:
+                                user_count = len(agent.storage.get_all_users())
+                            except Exception:
+                                user_count = "?"
+                            st.write(f"User count: {user_count}")
+
+                with dev_tabs[6]:
+                    flow_txt = st.text_area(
+                        "Agent Flow JSON",
+                        "[]",
+                        height=150,
+                        key="flow_json",
+                    )
+                    if st.button("Run Flow"):
+                        if 'AGENT_REGISTRY' in globals():
+                            try:
+                                steps = json.loads(flow_txt or "[]")
+                                results = []
+                                for step in steps:
+                                    a_name = step.get("agent")
+                                    agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                                    evt = step.get("event", {})
+                                    if agent_cls:
+                                        backend_fn = get_backend("dummy")
+                                        a = agent_cls(llm_backend=backend_fn)
+                                        results.append(a.process_event(evt))
+                                st.json(results)
+                            except Exception as exc:
+                                st.error(f"Flow execution failed: {exc}")
+                        else:
+                            st.info("Agent registry unavailable")
+
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
             try:
@@ -1194,13 +1355,9 @@ def main() -> None:
 
 
 # Add this section for database error handling
-import sqlite3
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import OperationalError
-
 
 def ensure_database_exists() -> bool:
-    """Create the ``harmonizers`` table if it does not already exist."""
+    """Create harmonizers table and insert default admin if necessary."""
     try:
         secrets = get_st_secrets()
         db_url = secrets.get("DATABASE_URL", "sqlite:///harmonizers.db")
@@ -1208,6 +1365,11 @@ def ensure_database_exists() -> bool:
             db_url,
             connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
         )
+    except Exception as exc:
+        logger.warning("Engine creation failed: %s", exc)
+        return False
+
+    try:
         with engine.begin() as conn:
             conn.execute(
                 text(
@@ -1225,7 +1387,7 @@ def ensure_database_exists() -> bool:
                         consent_given BOOLEAN DEFAULT 0,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         last_passive_aura_timestamp TIMESTAMP,
-                        species VARCHAR(50),
+                        species VARCHAR(50) DEFAULT 'human',
                         cultural_preferences TEXT,
                         harmony_score FLOAT,
                         creative_spark FLOAT,
@@ -1236,25 +1398,42 @@ def ensure_database_exists() -> bool:
                     """
                 )
             )
+
+            res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
+            count = res.scalar() or 0
+            if count == 0:
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO harmonizers
+                            (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                        VALUES
+                            ('admin', 'admin@supernova.dev', 'hashed_password_here',
+                             'Default admin user for superNova_2177', 1, 1, 1, 1)
+                        """
+                    )
+                )
+
         return True
-    except OperationalError as exc:  # pragma: no cover - db unavailable
-        logger.error("Database init failed: %s", exc)
+    except OperationalError as exc:
+        logger.warning("Database connection failed: %s", exc)
         return False
-    except Exception as exc:  # pragma: no cover - other failures
-        logger.error("Unexpected DB init error: %s", exc)
+    except Exception as exc:
+        logger.warning("Database initialization error: %s", exc)
         return False
 
 
 def safe_get_user():
-    """Return the first ``Harmonizer`` or ``None`` when unavailable."""
+    """Get user with proper error handling."""
     try:
         if not ensure_database_exists():
             return None
         with SessionLocal() as db:
             return db.query(Harmonizer).first()
-    except Exception as exc:  # pragma: no cover - database errors
-        logger.warning("Failed to fetch user: %s", exc)
+    except Exception as exc:
+        logger.warning("User fetch failed: %s", exc)
         return None
+
 
 
 if __name__ == "__main__":
