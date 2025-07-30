@@ -1128,36 +1128,36 @@ def main() -> None:
                 "Governance View", value=st.session_state.get("governance_view", False)
             )
             st.session_state["governance_view"] = governance_view
+            with st.expander("Developer Tools", expanded=False):
+                with st.container():
+                    dev_tabs = st.tabs([
+                        "Fork Universe",
+                        "Universe State Viewer",
+                        "Run Introspection Audit",
+                        "Agent Logs",
+                        "Inject Event",
+                        "Session Inspector",
+                        "Playground",
+                    ])
 
-            with st.expander("Developer Tools"):
-                dev_tabs = st.tabs([
-                    "Fork Universe",
-                    "Universe State Viewer",
-                    "Run Introspection Audit",
-                    "Agent Logs",
-                    "Inject Event",
-                    "Session Inspector",
-                    "Playground",
-                ])
-            
-                with dev_tabs[0]:
-                    if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
-                        try:
-                            user = safe_get_user()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
-                                    )
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
-                        except Exception as exc:
-                            st.error(f"Database error: {exc}")
-                    else:
-                        st.info("Fork operation unavailable")
+                    with dev_tabs[0]:
+                        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+                            try:
+                                user = safe_get_user()
+                                if user and st.button("Fork with Mock Config"):
+                                    try:
+                                        fork_id = cosmic_nexus.fork_universe(
+                                            user, {"entropy_threshold": 0.5}
+                                        )
+                                        st.success(f"Forked universe {fork_id}")
+                                    except Exception as exc:
+                                        st.error(f"Fork failed: {exc}")
+                                elif not user:
+                                    st.info("No users available to fork")
+                            except Exception as exc:
+                                st.error(f"Database error: {exc}")
+                        else:
+                            st.info("Fork operation unavailable")
 
 
                     with dev_tabs[1]:
@@ -1172,11 +1172,13 @@ def main() -> None:
                                     )
                                     if records:
                                         for r in records:
-                                            st.write({
-                                                "id": r.id,
-                                                "status": r.status,
-                                                "timestamp": r.timestamp,
-                                            })
+                                            st.write(
+                                                {
+                                                    "id": r.id,
+                                                    "status": r.status,
+                                                    "timestamp": r.timestamp,
+                                                }
+                                            )
                                     else:
                                         st.write("No forks recorded")
                             except Exception as exc:
@@ -1293,9 +1295,8 @@ def main() -> None:
                                     st.json(results)
                                 except Exception as exc:
                                     st.error(f"Flow execution failed: {exc}")
-                            else:
-                                st.info("Agent registry unavailable")
-
+                                else:
+                                    st.info("Agent registry unavailable")
 
         with center_col:
             module_paths = [
