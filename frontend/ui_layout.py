@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
+from pathlib import Path
 import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
@@ -78,6 +79,22 @@ def _render_sidebar_nav(
     ]
     icon_list = list(icons or [None] * len(opts))
     key = key or uuid4().hex
+
+    # filter out paths that don't exist and show an error
+    valid_opts = []
+    valid_icons = []
+    for (label, path), icon in zip(opts, icon_list):
+        file_path = Path(path.lstrip("/")).with_suffix(".py")
+        if not file_path.exists():
+            st.sidebar.error(f"Page not found: {path}")
+            continue
+        valid_opts.append((label, path))
+        valid_icons.append(icon)
+
+    opts = valid_opts
+    icon_list = valid_icons
+    if not opts:
+        return ""
 
     active = st.session_state.get(session_key, default or opts[0][0])
     if active not in [label for label, _ in opts]:
