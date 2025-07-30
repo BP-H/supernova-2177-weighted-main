@@ -4,6 +4,9 @@
 """Modern UI helpers for Streamlit pages."""
 
 import streamlit as st
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from streamlit_lottie import st_lottie
@@ -24,6 +27,10 @@ def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "ðŸš
 def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
     from modern_ui_components import SIDEBAR_STYLES
+
+    if st.session_state.get("modern_styles_injected"):
+        logger.debug("Modern styles already injected; skipping")
+        return
 
     st.markdown(
         """
@@ -168,6 +175,7 @@ def inject_modern_styles() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
+    st.session_state["modern_styles_injected"] = True
 
 
 def inject_premium_styles() -> None:
