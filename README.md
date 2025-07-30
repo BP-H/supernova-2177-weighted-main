@@ -382,6 +382,10 @@ ancestor/descendant traces update as you submit events.
 
 Use the **Resonance Music** page to generate simple MIDI snippets and view the metrics returned by the `/resonance-summary` endpoint.
 
+Additional pages for **Voting**, **Agents**, and **Social** features are
+accessible from the navigation bar. These sections provide early scaffolding
+for governance, AI insights, and community interaction.
+
 ### Starting the Backend
 
 The API must be reachable at [http://localhost:8000](http://localhost:8000). Start it with:
