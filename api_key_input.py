@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Reusable helpers for API key input in the Streamlit UI."""
 
 from __future__ import annotations
@@ -43,7 +46,6 @@ def render_api_key_ui(
         Dictionary containing ``model`` and ``api_key`` values.
     """
 
-    """
     if st is None:
         return {"model": "dummy", "api_key": None}
 
