@@ -93,6 +93,83 @@ from modern_ui import (
     close_card_container,
 )
 
+def render_landing_page():
+    """Render fallback landing page when pages directory is missing."""
+    st.title("🚀 superNova_2177")
+    st.markdown(
+        """
+        ### Advanced Validation Analysis Platform
+        
+        Welcome to the superNova_2177 validation analyzer. This platform provides:
+        
+        - **Validation Analysis** - Comprehensive validation pipeline analysis
+        - **Agent Playground** - Test and interact with AI agents
+        - **Network Coordination** - Advanced network analysis tools
+        - **Developer Tools** - Debug and monitoring capabilities
+        
+        **Demo Mode Available** - Try the platform with sample data.
+        
+        ---
+        
+        **Note:** Pages directory not found. Please ensure the following directory exists:
+        ```
+        transcendental_resonance_frontend/pages/
+        ```
+        """
+    )
+    
+    # Show diagnostic information
+    st.subheader("🔧 System Diagnostics")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.info("📁 Expected Pages Directory")
+        st.code(str(PAGES_DIR))
+        
+    with col2:
+        st.info("🔍 Directory Status")
+        if PAGES_DIR.exists():
+            st.success("Directory exists")
+        else:
+            st.error("Directory missing")
+    
+    # Show available fallback features
+    st.subheader("🎮 Available Features")
+    if st.button("Run Validation Analysis"):
+        run_analysis([], layout="force")
+    
+    if st.button("Show Boot Diagnostics"):
+        boot_diagnostic_ui()
+
+# Fix for the import error in render_agent_insights_tab
+def render_agent_insights_tab():
+    """Fallback agent insights tab."""
+    st.subheader("🤖 Agent Insights")
+    st.info("Agent insights module not available. Install required dependencies.")
+    
+    # Show basic agent info if registry is available
+    if 'AGENT_REGISTRY' in globals() and AGENT_REGISTRY:
+        st.write("Available Agents:")
+        for name, info in AGENT_REGISTRY.items():
+            with st.expander(f"🔧 {name}"):
+                st.write(f"Description: {info.get('description', 'No description')}")
+                st.write(f"Class: {info.get('class', 'Unknown')}")
+    else:
+        st.warning("No agents registered")
+
+# Fix theme_selector to handle missing key_suffix parameter
+def theme_selector(label: str, key_suffix: str = "") -> str:
+    """Render theme selector with unique key."""
+    key = f"theme_selector_{key_suffix}" if key_suffix else "theme_selector"
+    theme = st.selectbox(
+        label,
+        ["light", "dark"],
+        index=0 if st.session_state.get("theme", "light") == "light" else 1,
+        key=key
+    )
+    st.session_state["theme"] = theme
+    return theme
+
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
     pass
