@@ -394,16 +394,21 @@ def _render_fallback(choice: str) -> None:
     except Exception:
         OFFLINE_MODE = False
 
+    slug = PAGES.get(choice, choice).lower()
+    if (Path.cwd() / "pages" / f"{slug}.py").exists():
+        logger.debug("Fallback called unnecessarily for %s", slug)
+        return
+
     fallback_pages = {
-        "Validation": render_modern_validation_page,
-        "Voting": render_modern_voting_page,
-        "Agents": render_modern_agents_page,
-        "Resonance Music": render_modern_music_page,
-        "Chat": render_modern_chat_page,
-        "Social": render_modern_social_page,
-        "Profile": render_modern_profile_page,
+        "validation": render_modern_validation_page,
+        "voting": render_modern_voting_page,
+        "agents": render_modern_agents_page,
+        "resonance music": render_modern_music_page,
+        "chat": render_modern_chat_page,
+        "social": render_modern_social_page,
+        "profile": render_modern_profile_page,
     }
-    fallback_fn = fallback_pages.get(choice)
+    fallback_fn = fallback_pages.get(slug)
     if fallback_fn:
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
@@ -1290,6 +1295,14 @@ def main() -> None:
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
 
+        # Normalize forced page from query params to a label
+        if forced_page:
+            forced_slug = str(forced_page).lower()
+            forced_page = next(
+                (lbl for lbl, slug in PAGES.items() if slug == forced_slug),
+                None,
+            )
+
         # Validate session state and query params
         if st.session_state.get("sidebar_nav") not in page_paths:
             st.session_state["sidebar_nav"] = "Validation"
@@ -1297,20 +1310,24 @@ def main() -> None:
         if forced_page not in page_paths:
             forced_page = None
 
-        choice = forced_page or render_modern_sidebar(
+        choice_label = forced_page or render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
             session_key="active_page",
         )
 
         # Default to Validation page if nothing selected
-        if not choice:
-            choice = "Validation"
+        if not choice_label:
+            choice_label = "Validation"
+
+        # Normalize to lowercase slug for module loading and query params
+        display_choice = choice_label
+        choice = PAGES.get(choice_label, choice_label).lower()
 
         try:
-            st.query_params["page"] = choice
+            st.query_params["page"] = display_choice
         except AttributeError:
-            st.experimental_set_query_params(page=choice)
+            st.experimental_set_query_params(page=display_choice)
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
@@ -1378,10 +1395,10 @@ def main() -> None:
                     f"pages.{page_key}",
                 ]
                 try:
-                    load_page_with_fallback(choice, module_paths)
+                    load_page_with_fallback(display_choice, module_paths)
                 except Exception:
-                    st.toast(f"Page not found: {choice}", icon="⚠️")
-                    _render_fallback(choice)
+                    st.toast(f"Page not found: {display_choice}", icon="⚠️")
+                    _render_fallback(display_choice)
             else:
                 st.toast("Select a page above to continue.")
                 _render_fallback("Validation")

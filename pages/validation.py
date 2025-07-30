@@ -3,18 +3,21 @@
 import time
 import streamlit as st
 
-# optional: custom sidebar styles if you define SIDEBAR_STYLES globally
-try:
-    st.markdown(f"<style>{SIDEBAR_STYLES}</style>", unsafe_allow_html=True)
-except NameError:
-    pass  # no sidebar styling defined yet
 
-st.title("🔍 Validation Dashboard")
+def render() -> None:
+    """Simple validation page used during tests."""
+    try:
+        st.markdown(f"<style>{SIDEBAR_STYLES}</style>", unsafe_allow_html=True)
+    except NameError:  # pragma: no cover - style constant not defined
+        pass
 
-# simulate a short loading delay if needed
-time.sleep(0.1)
+    st.title("🔍 Validation Dashboard")
 
-st.info("Validation page loaded successfully.")
+    # simulate a short loading delay if needed
+    time.sleep(0.1)
 
-# optional: fetch or display something
-# st.write("Add validation checks or form inputs here.")
+    st.info("Validation page loaded successfully.")
+
+
+if __name__ == "__main__":  # pragma: no cover - manual execution
+    render()
