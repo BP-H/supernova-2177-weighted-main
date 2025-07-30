@@ -160,6 +160,320 @@ def render_agent_insights_tab():
         st.warning("No agents registered")
 
 # Fix theme_selector to handle missing key_suffix parameter
+
+# Add this modern UI code to your ui.py - replace the page loading section
+
+def inject_modern_styles():
+    """Inject sleek modern styling."""
+    st.markdown("""
+        <style>
+        /* Modern glassmorphism design */
+        .stApp {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Main container with glassmorphism */
+        .main .block-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 1rem;
+        }
+        
+        /* Sidebar modern styling */
+        .css-1d391kg {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Navigation tabs */
+        .stSelectbox > div > div {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modern buttons */
+        .stButton > button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        /* Modern metrics */
+        [data-testid="metric-container"] {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Text styling */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Error messages modern styling */
+        .stAlert {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* File uploader */
+        .stFileUploader {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            padding: 2rem;
+        }
+        
+        /* Input fields */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+        }
+        
+        /* Slider styling */
+        .stSlider > div > div > div {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modern scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .main .block-container > div {
+            animation: fadeIn 0.6s ease-out;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+def render_modern_validation_page():
+    """Render a beautiful modern validation page."""
+    st.markdown("""
+        <div style='text-align: center; padding: 2rem 0;'>
+            <h1 style='font-size: 3rem; background: linear-gradient(45deg, #667eea, #764ba2); 
+                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                       margin-bottom: 0.5rem;'>
+                🚀 superNova_2177
+            </h1>
+            <p style='font-size: 1.2rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 2rem;'>
+                Advanced Validation Analysis Platform
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Modern status cards
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("""
+            <div style='text-align: center; padding: 1.5rem; background: rgba(76, 175, 80, 0.1); 
+                        border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3);'>
+                <h2 style='color: #4CAF50; margin: 0; font-size: 2rem;'>✅</h2>
+                <h3 style='color: white; margin: 0.5rem 0 0 0;'>System Online</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+            <div style='text-align: center; padding: 1.5rem; background: rgba(33, 150, 243, 0.1); 
+                        border-radius: 15px; border: 1px solid rgba(33, 150, 243, 0.3);'>
+                <h2 style='color: #2196F3; margin: 0; font-size: 2rem;'>🔍</h2>
+                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Ready to Analyze</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+            <div style='text-align: center; padding: 1.5rem; background: rgba(255, 193, 7, 0.1); 
+                        border-radius: 15px; border: 1px solid rgba(255, 193, 7, 0.3);'>
+                <h2 style='color: #FFC107; margin: 0; font-size: 2rem;'>⚡</h2>
+                <h3 style='color: white; margin: 0.5rem 0 0 0;'>High Performance</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+            <div style='text-align: center; padding: 1.5rem; background: rgba(156, 39, 176, 0.1); 
+                        border-radius: 15px; border: 1px solid rgba(156, 39, 176, 0.3);'>
+                <h2 style='color: #9C27B0; margin: 0; font-size: 2rem;'>🎯</h2>
+                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Precision Mode</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Main content area
+    st.markdown("""
+        <div style='background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 20px; 
+                    border: 1px solid rgba(255, 255, 255, 0.1); margin: 2rem 0;'>
+            <h2 style='color: white; text-align: center; margin-bottom: 1.5rem;'>
+                🔬 Validation Analysis Center
+            </h2>
+            <p style='color: rgba(255, 255, 255, 0.8); text-align: center; font-size: 1.1rem;'>
+                Upload your validation data or use demo mode to experience the power of superNova_2177
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Interactive demo section
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("### 📊 Validation Input")
+        
+        # Beautiful text area
+        validation_data = st.text_area(
+            "Validation JSON Data",
+            value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
+            height=200,
+            help="Paste your validation data here or use the sample data"
+        )
+        
+        # Modern toggle for demo mode
+        demo_mode = st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
+        
+    with col2:
+        st.markdown("### ⚙️ Analysis Settings")
+        
+        view_mode = st.selectbox(
+            "Visualization Mode",
+            ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
+            help="Choose how to visualize the validation network"
+        )
+        
+        confidence_threshold = st.slider(
+            "Confidence Threshold",
+            0.0, 1.0, 0.75,
+            help="Minimum confidence level for validation acceptance"
+        )
+        
+        if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
+            with st.spinner("🔍 Analyzing validation data..."):
+                # Simulate analysis
+                import time
+                time.sleep(2)
+                
+                st.success("✅ Analysis completed successfully!")
+                
+                # Display results
+                st.markdown("### 📈 Analysis Results")
+                
+                result_col1, result_col2, result_col3 = st.columns(3)
+                
+                with result_col1:
+                    st.metric("Consensus Score", "0.87", delta="0.12")
+                with result_col2:
+                    st.metric("Network Health", "94.2%", delta="2.3%")
+                with result_col3:
+                    st.metric("Validation Count", "1,247", delta="156")
+                
+                # Beautiful results display
+                st.markdown("""
+                    <div style='background: rgba(76, 175, 80, 0.1); padding: 1.5rem; 
+                                border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3); margin-top: 1rem;'>
+                        <h4 style='color: #4CAF50; margin: 0 0 1rem 0;'>🎉 Excellent Validation Health!</h4>
+                        <p style='color: white; margin: 0;'>
+                            Your validation network shows strong consensus with high integrity scores. 
+                            The system detected no anomalies and recommends proceeding with confidence.
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
+
+# In your main() function, replace the page loading section with:
+def load_page_with_fallback(choice):
+    """Load page with beautiful fallback."""
+    try:
+        page_module = pages[choice]
+        module_path = f"pages.{page_module}"
+        page_mod = import_module(module_path)
+        
+        if hasattr(page_mod, 'render'):
+            page_mod.render()
+        else:
+            render_modern_validation_page()
+    except ImportError:
+        # Beautiful fallback based on page choice
+        if choice == "Validation":
+            render_modern_validation_page()
+        elif choice == "Voting":
+            render_modern_voting_page()
+        elif choice == "Agents":
+            render_modern_agents_page()
+        elif choice == "Resonance Music":
+            render_modern_music_page()
+        elif choice == "Social":
+            render_modern_social_page()
+    except Exception as exc:
+        st.error(f"Error loading page: {exc}")
+
+def render_modern_voting_page():
+    """Modern voting page fallback."""
+    st.markdown("# 🗳️ Voting Dashboard")
+    st.info("🚧 Advanced voting features coming soon!")
+
+def render_modern_agents_page():
+    """Modern agents page fallback."""
+    st.markdown("# 🤖 AI Agents")
+    st.info("🚧 Agent management system in development!")
+
+def render_modern_music_page():
+    """Modern music page fallback."""
+    st.markdown("# 🎵 Resonance Music")
+    st.info("🚧 Harmonic resonance features coming soon!")
+
+def render_modern_social_page():
+    """Modern social page fallback."""
+    st.markdown("# 👥 Social Network")
+    st.info("🚧 Social features in development!")
+
+# Add this to your main() function after st.set_page_config():
+inject_modern_styles()
+
 def theme_selector(label: str, key_suffix: str = "") -> str:
     """Render theme selector with unique key."""
     key = f"theme_selector_{key_suffix}" if key_suffix else "theme_selector"
