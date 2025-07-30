@@ -448,53 +448,60 @@ def render_modern_validation_page():
 
 
 # In your main() function, replace the page loading section with:
-def load_page_with_fallback(choice):
-    """Load page with beautiful fallback and maximum compatibility."""
-    try:
-        page_module = PAGES[choice]
-        module_paths = [
-            f"transcendental_resonance_frontend.pages.{page_module}",
-            f"pages.{page_module}",  # Optional legacy fallback
-        ]
+def load_page_with_fallback(choice: str) -> None:
+    """Load a page dynamically, with robust fallback logic and diagnostics."""
+    pages = {
+        "Validation": "validation",
+        "Voting": "voting",
+        "Agents": "agents",
+        "Resonance Music": "resonance_music",
+        "Social": "social",
+    }
 
-        page_mod = None
-        for module_path in module_paths:
-            try:
-                page_mod = import_module(module_path)
-                break
-            except ImportError:
-                continue
+    module_name = pages.get(choice)
+    if module_name is None:
+        st.error(f"Unknown page: {choice}")
+        return
 
-        if page_mod:
+    # Attempt importing from multiple known paths
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{module_name}",
+        f"pages.{module_name}",  # legacy/local fallback
+    ]
+
+    for module_path in module_paths:
+        try:
+            page_mod = import_module(module_path)
             if hasattr(page_mod, "main"):
                 page_mod.main()
+                return
             elif hasattr(page_mod, "render"):
                 page_mod.render()
+                return
             else:
-                render_modern_validation_page()
-        else:
-            render_modern_validation_page()
+                raise AttributeError("Module found but missing 'main' or 'render'")
+        except ImportError:
+            continue  # Try next path
 
-    except Exception as exc:
-        st.error(f"Error loading page: {exc}")
+    # If none succeeded, fall back to modern placeholder
+    _render_fallback(choice)
 
-    except ImportError:
-        _render_fallback(choice)
-    except Exception as exc:
-        st.error(f"Error loading page: {exc}")
 
 def _render_fallback(choice: str) -> None:
-    """Render page fallbacks when modules are missing."""
-    if choice == "Validation":
-        render_modern_validation_page()
-    elif choice == "Voting":
-        render_modern_voting_page()
-    elif choice == "Agents":
-        render_modern_agents_page()
-    elif choice == "Resonance Music":
-        render_modern_music_page()
-    elif choice == "Social":
-        render_modern_social_page()
+    """Render modern fallback if module isn't available."""
+    fallback_pages = {
+        "Validation": render_modern_validation_page,
+        "Voting": render_modern_voting_page,
+        "Agents": render_modern_agents_page,
+        "Resonance Music": render_modern_music_page,
+        "Social": render_modern_social_page,
+    }
+    fallback_fn = fallback_pages.get(choice)
+    if fallback_fn:
+        fallback_fn()
+    else:
+        st.error(f"No fallback available for page: {choice}")
+
 def render_modern_voting_page():
     """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
