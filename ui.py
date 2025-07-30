@@ -1212,7 +1212,7 @@ def main() -> None:
             st.session_state.setdefault(k, v)
 
         if st.session_state.get("critical_error"):
-            st.error("Application Error: " + st.session_state["critical_error"])
+            st.error("Application Error: " + st.session_state.get("critical_error", ""))
             if st.button("Reset Application", key="reset_app_critical"):
                 st.session_state.clear()
                 st.rerun()
@@ -1224,7 +1224,7 @@ def main() -> None:
             logger.warning("CSS load failed: %s", exc)
 
         try:
-            apply_theme(st.session_state["theme"])
+            apply_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
 
@@ -1285,6 +1285,7 @@ def main() -> None:
         if forced_page:
             choice = forced_page
 
+
         try:
             st.query_params["page"] = choice
         except Exception:
@@ -1304,7 +1305,7 @@ def main() -> None:
                 info_text = (
                     f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
                     f"ENV: {os.getenv('ENV', 'dev')} | "
-                    f"Session: {st.session_state['session_start_ts']} UTC"
+                    f"Session: {st.session_state.get('session_start_ts', '')} UTC"
                 )
                 st.info(info_text)
 
@@ -1372,46 +1373,55 @@ def main() -> None:
                     except Exception as exc:
                         alert(f"Invalid payload: {exc}", "error")
                     else:
-                        backend_fn = get_backend(backend_choice.lower(), api_key or None)
-                        if backend_fn is None:
-                            alert("Invalid backend selected", "error")
-                            st.session_state["agent_output"] = None
-                            st.stop()
+                        try:
+                            backend_fn = get_backend(
+                                backend_choice.lower(), api_key or None
+                            )
+                            if backend_fn is None:
+                                raise KeyError("backend")
 
-                        agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
-                        if agent_cls is None:
-                            alert("Unknown agent selected", "error")
-                        else:
-                            try:
-                                if agent_choice == "CI_PRProtectorAgent":
-                                    talker = backend_fn or (lambda p: p)
-                                    selected_agent = agent_cls(
-                                        talker, llm_backend=backend_fn
-                                    )
-                                elif agent_choice == "MetaValidatorAgent":
-                                    selected_agent = agent_cls({}, llm_backend=backend_fn)
-                                elif agent_choice == "GuardianInterceptorAgent":
-                                    selected_agent = agent_cls(llm_backend=backend_fn)
-                                else:
-                                    selected_agent = agent_cls(llm_backend=backend_fn)
+                            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get(
+                                "class"
+                            )
+                            if agent_cls is None:
+                                raise KeyError("agent")
 
-                                st.session_state["agent_instance"] = selected_agent
-                                result = selected_agent.process_event(
-                                    {"event": event_type, "payload": payload}
+                            if agent_choice == "CI_PRProtectorAgent":
+                                talker = backend_fn or (lambda p: p)
+                                selected_agent = agent_cls(
+                                    talker, llm_backend=backend_fn
                                 )
-                                st.session_state["agent_output"] = result
-                                st.success("Agent executed")
-                            except Exception as exc:
-                                st.session_state["agent_output"] = {"error": str(exc)}
-                                alert(f"Agent error: {exc}", "error")
+                            elif agent_choice == "MetaValidatorAgent":
+                                selected_agent = agent_cls({}, llm_backend=backend_fn)
+                            elif agent_choice == "GuardianInterceptorAgent":
+                                selected_agent = agent_cls(llm_backend=backend_fn)
+                            else:
+                                selected_agent = agent_cls(llm_backend=backend_fn)
+
+                            st.session_state["agent_instance"] = selected_agent
+                            result = selected_agent.process_event(
+                                {"event": event_type, "payload": payload}
+                            )
+                            st.session_state["agent_output"] = result
+                            st.success("Agent executed")
+                        except KeyError as missing:
+                            if str(missing) == "'backend'":
+                                st.warning("No backend available")
+                            else:
+                                st.warning("No agents available")
+                            st.session_state["agent_output"] = None
+                            _render_fallback("Agents")
+                        except Exception as exc:
+                            st.session_state["agent_output"] = {"error": str(exc)}
+                            alert(f"Agent error: {exc}", "error")
 
                 # Show agent output
                 if st.session_state.get("agent_output") is not None:
                     st.subheader("Agent Output")
-                    st.json(st.session_state["agent_output"])
+                    st.json(st.session_state.get("agent_output"))
 
                 render_stats_section()
-                st.markdown(f"**Runs:** {st.session_state['run_count']}")
+                st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
 
 
     except Exception as exc:

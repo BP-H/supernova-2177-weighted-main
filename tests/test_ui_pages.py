@@ -95,9 +95,16 @@ def test_main_defaults_to_validation(monkeypatch):
     monkeypatch.setenv("UI_DEBUG_PRINTS", "0")
     importlib.reload(ui)
 
-    monkeypatch.setattr(ui, "_render_fallback", lambda choice: None)
-    monkeypatch.setattr(ui, "load_page_with_fallback", lambda choice, paths: None)
+    loaded = {}
+    monkeypatch.setattr(
+        ui,
+        "load_page_with_fallback",
+        lambda choice, paths: loaded.setdefault("choice", choice),
+    )
     monkeypatch.setattr(ui, "get_st_secrets", lambda: {})
+    monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
+    monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
+
 
     class Dummy(contextlib.AbstractContextManager):
         def __enter__(self):
@@ -142,6 +149,7 @@ def test_main_defaults_to_validation(monkeypatch):
     monkeypatch.setattr(st, "experimental_get_query_params", lambda: params)
     monkeypatch.setattr(st, "experimental_set_query_params", lambda **k: params.update(k))
 
+
     for helper in [
         "apply_theme",
         "inject_modern_styles",
@@ -159,3 +167,5 @@ def test_main_defaults_to_validation(monkeypatch):
 
     assert params.get("page") == "Validation"
     assert session.get("sidebar_nav") == "Validation"
+    # Optional, if you also defined `loaded` earlier:
+    # assert loaded.get("choice") == "Validation"
