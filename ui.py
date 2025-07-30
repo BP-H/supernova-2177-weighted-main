@@ -1296,8 +1296,8 @@ def main() -> None:
         
             with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui(key_prefix="main")
-
                 backend_choice = api_info.get("model", "dummy")
+
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
