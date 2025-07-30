@@ -17,9 +17,6 @@ import sys
 import traceback
 
 from modern_ui_components import (
-    render_modern_layout,
-    render_modern_header,
-    render_modern_sidebar,
     render_validation_card,
     render_stats_section,
 )
@@ -27,7 +24,6 @@ from modern_ui_components import (
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
-from datetime import datetime
 from pathlib import Path
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -82,13 +78,13 @@ from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
-    centered_container,
     header,
     theme_selector,
 )
 
 from modern_ui import (
     inject_modern_styles,
+    inject_premium_styles,
     render_modern_header,
     render_stats_section,
     open_card_container,
@@ -198,6 +194,7 @@ def inject_dark_theme() -> None:
             background-color: #1e1e1e;
             color: #ccc;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }
 
         .main .block-container {
@@ -205,6 +202,7 @@ def inject_dark_theme() -> None:
             border: 1px solid #333;
             border-radius: 8px;
             padding: 2rem 3rem;
+            margin-top: 1rem;
         }
 
         [data-testid="stSidebar"] {
@@ -238,6 +236,13 @@ def inject_dark_theme() -> None:
             color: #fff;
         }
 
+        /* Navigation tabs */
+        .stSelectbox > div > div {
+            background: #2d2d2d;
+            border-radius: 6px;
+            border: 1px solid #3a3a3a;
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -265,10 +270,80 @@ def inject_dark_theme() -> None:
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .stButton > button:hover {
             background-color: #699cfc;
+            transform: translateY(-2px);
+        }
+
+        /* Modern metrics */
+        [data-testid="metric-container"] {
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+            padding: 1rem;
+            box-shadow: none;
+        }
+
+        /* Text styling */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+            color: #f0f0f0;
+        }
+
+        /* Error messages modern styling */
+        .stAlert {
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        /* File uploader */
+        .stFileUploader {
+            background: #252525;
+            border-radius: 8px;
+            border: 2px dashed #3a3a3a;
+            padding: 2rem;
+        }
+
+        /* Input fields */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea {
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #f0f0f0;
+        }
+
+        /* Slider styling */
+        .stSlider > div > div > div {
+            background: #4f8bf9;
+        }
+
+        /* Modern scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #252525;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4f8bf9;
+            border-radius: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main .block-container > div {
+            animation: fadeIn 0.6s ease-out;
         }
         </style>
         """,
@@ -280,7 +355,7 @@ def render_modern_validation_page():
     st.markdown(
         """
         <div style='text-align:center; padding:2rem 0;'>
-            <h1 style='font-size:3rem; color:#fff; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
+            <h1 style='font-size:3rem; color:#4f8bf9; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
             <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
         </div>
         """,
@@ -329,7 +404,7 @@ def render_modern_validation_page():
         st.markdown("### 📊 Validation Input")
         
         # Beautiful text area
-        validation_data = st.text_area(
+        st.text_area(
             "Validation JSON Data",
             value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
             height=200,
@@ -337,18 +412,18 @@ def render_modern_validation_page():
         )
         
         # Modern toggle for demo mode
-        demo_mode = st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
+        st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
         
     with col2:
         st.markdown("### ⚙️ Analysis Settings")
         
-        view_mode = st.selectbox(
+        st.selectbox(
             "Visualization Mode",
             ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
             help="Choose how to visualize the validation network"
         )
         
-        confidence_threshold = st.slider(
+        st.slider(
             "Confidence Threshold",
             0.0, 1.0, 0.75,
             help="Minimum confidence level for validation acceptance"
@@ -451,7 +526,22 @@ def load_css() -> None:
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from status_indicator import render_status_icon
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+
+# Optional UI utilities - provide fallbacks if not available
+try:
+    from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+except ImportError:  # pragma: no cover - optional dependency
+    def load_rfc_entries():
+        return []
+    
+    def parse_summary(text):
+        return {"summary": text[:100] + "..." if len(text) > 100 else text}
+    
+    def summarize_text(text):
+        return text[:200] + "..." if len(text) > 200 else text
+    
+    def render_main_ui():
+        st.info("Main UI utilities not available")
 
 # Database fallback for local testing
 try:
@@ -533,7 +623,7 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
+        
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
