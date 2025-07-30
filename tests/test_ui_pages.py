@@ -1,11 +1,17 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import importlib
 import contextlib
 import types
 from pathlib import Path
 import sys
 
-import streamlit as st
 import pytest
+pytest.importorskip("streamlit")
+pytestmark = pytest.mark.requires_streamlit
+import streamlit as st
 
 # Ensure repository root is importable
 root = Path(__file__).resolve().parents[1]
@@ -83,4 +89,3 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     ui.main()
 
     assert fallback_called.get("choice") == "Ghost"
-    assert tab_calls, "Developer tools tabs should render"

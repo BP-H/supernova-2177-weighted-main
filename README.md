@@ -603,6 +603,13 @@ actual libraries:
 pip install redis passlib[bcrypt] python-jose[cryptography]
 ```
 
+UI-specific tests rely on additional optional packages. Install `streamlit` and
+`nicegui` if you want to exercise the full UI suite:
+
+```bash
+pip install streamlit nicegui
+```
+
 Installing both requirement files ensures all dependencies used in CI
 are available:
 

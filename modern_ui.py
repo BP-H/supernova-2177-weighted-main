@@ -10,13 +10,16 @@ def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
+        <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
-            --bg-start: #020817; /* Deeper contrast, modern base tone */
-            --bg-end: #0d1b2a;   /* Soft blend into dark blue */
-            --text-color: #f0f4f8; /* Clear, readable white-blue */
-            --neon-accent: #00ffe1; /* Preserved neon styling from other UI rules */
+            --neon-accent: #00ffe1;
+            --bg-start: #05080f;
+            --bg-end: #020409;
+            --text-color: #f0f4f8;
+
         }
 
         body, .stApp {
@@ -56,7 +59,8 @@ def inject_modern_styles() -> None:
             padding: 1rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+            backdrop-filter: blur(8px);
 
             margin-bottom: 1rem;
             background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
@@ -105,6 +109,23 @@ def inject_modern_styles() -> None:
             box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
             background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
             filter: brightness(1.05);
+ 
+        .stButton>button {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            backdrop-filter: blur(8px) !important;
+            border-radius: 12px !important;
+            color: var(--text-color) !important;
+            font-weight: 600 !important;
+            padding: 0.6rem 1.4rem !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+            transition: all 0.2s ease !important;
+            font-size: 0.9rem !important;
+        }
+        .stButton>button:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important;
+            background: rgba(255,255,255,0.08) !important;
+            transform: translateY(-1px) !important;
         }
 
         input, textarea, select {
@@ -115,12 +136,16 @@ def inject_modern_styles() -> None:
         }
 
         .sidebar-nav .nav-item {
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 8px;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             transition: background 0.2s;
+        }
+
         }
 
         .sidebar-nav .nav-item.active {
@@ -152,6 +177,29 @@ def inject_modern_styles() -> None:
             .stButton > button {
                 width: 100%;
             }
+        }
+
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            [data-testid="stSidebar"] {
+                width: 14rem;
+            }
+        }
+
         }
         </style>
         """,

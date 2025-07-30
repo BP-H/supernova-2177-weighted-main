@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import streamlit as st
-from typing import Optional
+from typing import Optional, Dict
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -94,13 +94,12 @@ def render_modern_header(title: str) -> None:
 
 
 def render_modern_sidebar(
-    pages: dict[str, str],
+    pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
-    icons: Optional[list[str]] = None,
-    *,
-    key: str = "nav_selection",
+    icons: Optional[Dict[str, str]] = None,
+
 ) -> str:
-    """Render a vertical navigation menu and return the selected label."""
+    """Render a vertical navigation menu with optional icons."""
     if container is None:
         container = st.sidebar
 
@@ -109,24 +108,30 @@ def render_modern_sidebar(
         state[key] = list(pages.keys())[0]
 
     opts = list(pages.keys())
+    icon_map = icons or {}
+    session_key = f"sidebar_{id(pages)}"
+    st.session_state.setdefault(session_key, opts[0])
+
     container_ctx = safe_container(container)
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-        if USE_OPTION_MENU and option_menu is not None:
-            choice = option_menu(
-                menu_title=None,
-                options=opts,
-                icons=icons or ["dot"] * len(opts),
-                orientation="vertical",
-                key=key,
-                default_index=opts.index(state[key]),
-            )
-        else:
-            choice = st.radio("Navigate", opts, key=key, index=opts.index(state[key]))
-        state[key] = choice
-        st.markdown("</div>", unsafe_allow_html=True)
+    if USE_OPTION_MENU and option_menu is not None:
+        choice = option_menu(
+            menu_title=None,
+            options=opts,
+            icons=icons or ["dot"] * len(opts),
+            orientation="vertical",
+            key=key,
+            default_index=opts.index(state.get(key, opts[0])),
+        )
+    else:
+        choice = st.radio("Navigate", opts, key=key, index=opts.index(state.get(key, opts[0])))
+    
+    state[key] = choice
+    st.markdown("</div>", unsafe_allow_html=True)
     return state[key]
+
 
 
 def render_validation_card(entry: dict) -> None:
