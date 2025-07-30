@@ -494,47 +494,9 @@ from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_mai
 try:
     from db_models import Harmonizer, SessionLocal, UniverseBranch
     DATABASE_AVAILABLE = True
-except Exception:
+except Exception:  # pragma: no cover - missing ORM
     DATABASE_AVAILABLE = False
-
-    class MockSessionLocal:
-        def __enter__(self):
-            return self
-        def __exit__(self, *args):
-            pass
-        def query(self, *args):
-            return MockQuery()
-
-    class MockQuery:
-        def filter(self, *args):
-            return self
-        def first(self):
-            return None
-        def all(self):
-            return []
-
-    class MockHarmonizer:
-        id = 1
-        name = "Test Harmonizer"
-        config = "{}"
-
-    SessionLocal = MockSessionLocal
-    Harmonizer = MockHarmonizer
-    UniverseBranch = MockHarmonizer
-
-if not DATABASE_AVAILABLE:
-    st.session_state.setdefault(
-        "mock_data",
-        {
-            "validations": [],
-            "proposals": [
-                {"id": 1, "title": "Sample Proposal 1", "status": "active"},
-                {"id": 2, "title": "Sample Proposal 2", "status": "pending"},
-            ],
-            "runs": 0,
-            "success_rate": 94.2,
-        },
-    )
+    from stubs.mock_db import Harmonizer, SessionLocal, UniverseBranch
 
 
 def _run_async(coro):
@@ -554,70 +516,6 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None
 
-# Database fallback for local testing
-DATABASE_AVAILABLE = True
-try:
-    from db_models import Harmonizer, SessionLocal, UniverseBranch
-except Exception:  # pragma: no cover - missing ORM
-    DATABASE_AVAILABLE = False
-
-    class MockHarmonizer:
-        def __init__(self, id: int = 1, username: str = "demo"):
-            self.id = id
-            self.username = username
-
-    class UniverseBranch:
-        class timestamp:
-            @staticmethod
-            def desc() -> None:
-                return None
-
-        def __init__(self, id: str, status: str, timestamp: datetime):
-            self.id = id
-            self.status = status
-            self.timestamp = timestamp
-
-    class MockQuery(list):
-        def __init__(self, data: list | None = None) -> None:
-            super().__init__(data or [])
-
-        def order_by(self, *_a, **_k) -> "MockQuery":
-            return self
-
-        def limit(self, *_a, **_k) -> "MockQuery":
-            return self
-
-        def all(self) -> list:
-            return list(self)
-
-        def first(self):
-            return self[0] if self else None
-
-    class MockSessionLocal:
-        def __enter__(self) -> "MockSessionLocal":
-            return self
-
-        def __exit__(self, *_exc) -> None:
-            pass
-
-        def query(self, model):
-            data = []
-            if model is MockHarmonizer:
-                data = st.session_state.get("mock_data", {}).get("harmonizers", [])
-            elif model is UniverseBranch:
-                data = st.session_state.get("mock_data", {}).get("universe_branches", [])
-            return MockQuery(data)
-
-    Harmonizer = MockHarmonizer  # type: ignore
-    SessionLocal = MockSessionLocal  # type: ignore
-
-    if "mock_data" not in st.session_state:
-        st.session_state["mock_data"] = {
-            "harmonizers": [MockHarmonizer()],
-            "universe_branches": [
-                UniverseBranch("1", "active", datetime.utcnow())
-            ],
-        }
 try:
     from introspection.introspection_pipeline import run_full_audit
 except Exception:  # pragma: no cover - optional module
