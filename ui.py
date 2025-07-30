@@ -60,6 +60,7 @@ from frontend.ui_layout import (
     render_profile_card,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
+from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -75,11 +76,36 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
+import logging
 from utils.page_registry import ensure_pages
 from utils.paths import ROOT_DIR, PAGES_DIR
 
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+except Exception as exc:  # pragma: no cover - best effort fallback
+    logger.error("Failed to import ensure_pages: %s", exc)
+
+    def ensure_pages(*_args, **_kwargs) -> None:
+        """Fallback no-op when page registry utilities are unavailable."""
+        logger.debug("ensure_pages fallback invoked")
+
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
+    logger.warning("Primary page_registry import failed: %s", import_err)
+    try:
+        from utils.page_registry import ensure_pages  # type: ignore
+    except Exception as fallback_err:
+        logger.warning("Secondary page_registry import also failed: %s", fallback_err)
+        def ensure_pages(*_a, **_k):
+            logger.warning("ensure_pages noop fallback used")
+            return None
+
 
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
@@ -477,6 +503,7 @@ def _render_fallback(choice: str) -> None:
 
     if loaded:
         return
+
 
 
     # Prevent duplicate fallback rendering in session
@@ -1348,7 +1375,24 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+        render_topbar()  # added in codex branch
+
         # Setup: Pages and Icons (reuse global mapping)
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Chat": "chat",
+            "Social": "social",
+            "Profile": "profile",
+        }
+        PAGES_DIR = (
+            Path(__file__).resolve().parent
+            / "transcendental_resonance_frontend"
+            / "pages"
+        )
+
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []

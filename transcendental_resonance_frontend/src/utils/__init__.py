@@ -12,6 +12,7 @@ from .features import (
 )
 from .error_overlay import ErrorOverlay
 from .api_status_footer import ApiStatusFooter
+from .page_registry import ensure_pages
 
 __all__ = [
     "quick_post_button",
@@ -26,4 +27,5 @@ __all__ = [
     "skeleton_loader",
     "ErrorOverlay",
     "ApiStatusFooter",
+    "ensure_pages",
 ]

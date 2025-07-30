@@ -5,6 +5,7 @@
 
 import streamlit as st
 import logging
+from frontend import theme
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +261,59 @@ def render_validation_card() -> None:
 
 
 def render_stats_section() -> None:
-    """Display quick stats in a responsive flex row."""
+def render_stats_section() -> None:
+    """Display quick stats using a responsive flexbox layout."""
+
+    accent = theme.get_accent_color()
+
+    st.markdown(
+        f"""
+        <style>
+        .stats-container {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+        }}
+        .stats-card {{
+            flex: 1 1 calc(25% - 1rem);
+            min-width: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }}
+        .stats-card:hover {{
+            transform: scale(1.02);
+        }}
+        .stats-value {{
+            color: {accent};
+            font-size: calc(1.5rem + 0.3vw);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }}
+        .stats-label {{
+            color: #888;
+            font-size: calc(0.8rem + 0.2vw);
+            font-weight: 500;
+        }}
+        @media (max-width: 768px) {{
+            .stats-card {{
+                flex: 1 1 calc(50% - 1rem);
+            }}
+        }}
+        @media (max-width: 480px) {{
+            .stats-card {{
+                flex: 1 1 100%;
+            }}
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     stats = [
         ("🏃‍♂️", "Runs", "0"),
@@ -269,53 +322,20 @@ def render_stats_section() -> None:
         ("🎯", "Accuracy", "98.2%"),
     ]
 
-    st.markdown(
-        """
-        <style>
-        .stats-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-        }
-        .stat-card {
-            flex: 1;
-            min-width: 120px;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: scale(1.02);
-        }
-        .stat-value {
-            color: var(--neon-accent);
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-        .stat-label {
-            color: #888;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<div class='stats-row'>", unsafe_allow_html=True)
+    st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
     for icon, label, value in stats:
         st.markdown(
             f"""
-            <div class="stat-card">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
-                <div class="stat-value">{value}</div>
-                <div class="stat-label">{label}</div>
+            <div class='stats-card'>
+                <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
+                <div class='stats-value'>{value}</div>
+                <div class='stats-label'>{label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
+
             </div>
             """,
             unsafe_allow_html=True,
