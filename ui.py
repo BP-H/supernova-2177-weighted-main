@@ -448,7 +448,7 @@ def _render_fallback(choice: str) -> None:
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
-            st.info("Backend unavailable - offline mode active.")
+            st.toast("Offline mode: using mock services", icon="⚠️")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
