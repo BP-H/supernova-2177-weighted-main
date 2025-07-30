@@ -21,6 +21,42 @@ logger.propagate = False
 
 
 
+def clean_duplicate_pages(pages_dir: Path) -> list[str]:
+    """Remove page modules that collide case-insensitively.
+
+    Parameters
+    ----------
+    pages_dir:
+        Directory containing page modules.
+
+    Returns
+    -------
+    list[str]
+        Names of files that were removed.
+    """
+    removed: list[str] = []
+    by_lower: dict[str, list[Path]] = {}
+    for f in pages_dir.glob("*.py"):
+        by_lower.setdefault(f.stem.lower(), []).append(f)
+
+    for slug_lower, paths in by_lower.items():
+        if len(paths) <= 1:
+            continue
+        # Prefer an exact lowercase match if it exists, otherwise the
+        # lexicographically first file becomes canonical.
+        canonical = next(
+            (p for p in paths if p.name == f"{slug_lower}.py"),
+            sorted(paths, key=lambda p: p.name)[0],
+        )
+        for p in paths:
+            if p is canonical:
+                continue
+            p.unlink(missing_ok=True)
+            removed.append(p.name)
+            logger.info("Removed duplicate page module %s", p.name)
+    return removed
+
+
 def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
     """Ensure placeholder page modules exist for each slug.
 
@@ -35,11 +71,11 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
 
     # warn if any case-variant files exist that could conflict on
     # case-insensitive filesystems
+    debug_mode = os.getenv("DEV") or "--debug" in sys.argv
+
     by_lower: dict[str, list[Path]] = {}
     for f in pages_dir.glob("*.py"):
         by_lower.setdefault(f.stem.lower(), []).append(f)
-
-    debug_mode = os.getenv("DEV") or "--debug" in sys.argv
 
     for slug_lower, paths in by_lower.items():
         if len(paths) > 1:
@@ -49,15 +85,9 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
                 slug_lower,
                 ", ".join(sorted(names)),
             )
-            if debug_mode:
-                canonical = next(
-                    (p for p in paths if p.name == f"{slug_lower}.py"),
-                    sorted(paths, key=lambda p: p.name)[0],
-                )
-                for p in paths:
-                    if p is not canonical:
-                        p.unlink(missing_ok=True)
-                        logger.info("Removed duplicate page module %s", p.name)
+
+    if debug_mode:
+        clean_duplicate_pages(pages_dir)
 
     for slug in pages.values():
         slug = slug.lower()
@@ -78,5 +108,5 @@ def get_pages_dir() -> Path:
     return Path(__file__).resolve().parents[2] / "pages"
 
 
-__all__ = ["ensure_pages", "get_pages_dir"]
+__all__ = ["ensure_pages", "get_pages_dir", "clean_duplicate_pages"]
 
