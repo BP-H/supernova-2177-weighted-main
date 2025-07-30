@@ -1149,11 +1149,14 @@ def main() -> None:
         params = st.query_params
     except Exception:
         params = st.experimental_get_query_params()
+    value = params.get(HEALTH_CHECK_PARAM)
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
-        "1" in params.get(HEALTH_CHECK_PARAM, [])
+        value == "1"
+        or (isinstance(value, list) and "1" in value)
         or path_info == f"/{HEALTH_CHECK_PARAM}"
     ):
+
         st.write("ok")
         st.stop()
         return
@@ -1260,7 +1263,8 @@ def main() -> None:
             query = st.query_params
         except Exception:
             query = st.experimental_get_query_params()
-        forced_page = query.get("page", [None])[0]
+        param = query.get("page")
+        forced_page = param[0] if isinstance(param, list) else param
 
         choice = render_modern_sidebar(
             page_paths,
@@ -1274,6 +1278,7 @@ def main() -> None:
             st.query_params["page"] = choice
         except Exception:
             st.experimental_set_query_params(page=choice)
+
 
 
         # Page layout: left for tools, center for content
