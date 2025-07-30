@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from pathlib import Path
 import logging
+import os
+import sys
 import streamlit as st
 from disclaimers import (
     STRICTLY_SOCIAL_MEDIA,
@@ -33,16 +35,29 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
 
     # warn if any case-variant files exist that could conflict on
     # case-insensitive filesystems
-    by_lower: dict[str, list[str]] = {}
+    by_lower: dict[str, list[Path]] = {}
     for f in pages_dir.glob("*.py"):
-        by_lower.setdefault(f.stem.lower(), []).append(f.name)
-    for slug_lower, names in by_lower.items():
-        if len(names) > 1:
+        by_lower.setdefault(f.stem.lower(), []).append(f)
+
+    debug_mode = os.getenv("DEV") or "--debug" in sys.argv
+
+    for slug_lower, paths in by_lower.items():
+        if len(paths) > 1:
+            names = [p.name for p in paths]
             logger.warning(
                 "Case-insensitive file collision for '%s': %s",
                 slug_lower,
                 ", ".join(sorted(names)),
             )
+            if debug_mode:
+                canonical = next(
+                    (p for p in paths if p.name == f"{slug_lower}.py"),
+                    sorted(paths, key=lambda p: p.name)[0],
+                )
+                for p in paths:
+                    if p is not canonical:
+                        p.unlink(missing_ok=True)
+                        logger.info("Removed duplicate page module %s", p.name)
 
     for slug in pages.values():
         slug = slug.lower()
