@@ -36,7 +36,13 @@ def render_agent_insights_tab(main_container=None) -> None:
 
     theme_selector("Theme", key_suffix="agent_insights")
     inject_global_styles()
-    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
     with container_ctx:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         st.subheader("Virtual Diary")

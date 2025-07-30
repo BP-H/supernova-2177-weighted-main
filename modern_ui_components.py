@@ -51,7 +51,14 @@ def render_modern_sidebar(
     """Render a navigation menu within ``container`` and return the selection."""
     if container is None:
         container = st
-    with container:
+    container_ctx = (
+        container()
+        if callable(container)
+        else container
+        if hasattr(container, "__enter__")
+        else nullcontext()
+    )
+    with container_ctx:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         choice = st.radio("Navigate", list(pages.keys()))
         st.markdown("</div>", unsafe_allow_html=True)

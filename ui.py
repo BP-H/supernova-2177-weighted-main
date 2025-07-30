@@ -960,6 +960,29 @@ def render_validation_ui(
 
         with left_col:
             render_status_icon()
+        
+            with st.expander("Developer Tools"):
+                dev_tabs = st.tabs([
+                    "Fork Universe",
+                    "Universe State Viewer",
+                    "Run Introspection Audit",
+                    "Agent Logs",
+                    "Inject Event",
+                    "Session Inspector",
+                    "Playground",
+                ])
+        
+                with dev_tabs[0]:
+                    st.write("Placeholder for Fork Universe")
+        
+                with dev_tabs[1]:
+                    st.write("Placeholder for Universe Viewer")
+        
+                with dev_tabs[2]:
+                    st.write("Placeholder for Audit")
+        
+                # ... repeat or customize more tabs as needed
+
 
     except Exception as exc:
         st.error("Failed to load validation UI")
@@ -1136,6 +1159,7 @@ def main() -> None:
                         else:
                             st.info("Fork operation unavailable")
 
+
                     with dev_tabs[1]:
                         if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                             try:
@@ -1245,8 +1269,8 @@ def main() -> None:
                                 else:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
-                            except Exception:
-                                pass
+                            except Exception as exc:
+                                st.warning(f"Agent storage inspection failed: {exc}")
 
                     with dev_tabs[6]:
                         flow_txt = st.text_area(
@@ -1271,11 +1295,8 @@ def main() -> None:
                                     st.json(results)
                                 except Exception as exc:
                                     st.error(f"Flow execution failed: {exc}")
-                            else:
-                                st.info("Agent registry unavailable")
-                                st.error(f"Flow execution failed: {exc}")
-                        else:
-                            st.info("Agent registry unavailable")
+                                else:
+                                    st.info("Agent registry unavailable")
 
         with center_col:
             module_paths = [

@@ -13,7 +13,13 @@ def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
     with container_ctx:
         render_voting_tab(main_container=main_container)
 
