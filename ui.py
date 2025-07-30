@@ -1012,8 +1012,6 @@ def render_validation_ui(
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
-    if sidebar is None:
-        sidebar = st.sidebar
     if main_container is None:
         main_container = st
 
@@ -1110,37 +1108,38 @@ def main() -> None:
         )
 
         # Main content with sidebar
-        main_col, left_col = st.columns([3, 1])
+        main_col, sidebar_col = st.columns([3, 1])
 
         with main_col:
             # Load page content
             load_page_with_fallback(choice)
 
-        with left_col:
-            render_status_icon()
-
-            with st.expander("Environment"):
+        with sidebar_col:
+            with st.expander("Environment Details"):
+                render_status_icon()
                 secrets = get_st_secrets()
                 st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
                 st.write(f"ENV: {os.getenv('ENV', 'dev')}")
                 st.write(f"Session: {st.session_state['session_start_ts']} UTC")
 
-            with st.expander("Settings"):
+            with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
                 theme_selector("Theme")
 
-            with st.expander("File Upload"):
+            with st.expander("Data Management"):
                 uploaded_file = st.file_uploader("Upload JSON", type="json")
                 if st.button("Run Analysis"):
                     st.success("Analysis complete!")
 
-            with st.expander("Agent Controls"):
+            with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui()
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
+            with st.expander("Simulation Tools"):
                 render_simulation_stubs()
 
             st.divider()
