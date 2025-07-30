@@ -11,20 +11,34 @@ from ui import render_validation_ui
 inject_modern_styles()
 
 
-@st.experimental_page("Validation")
-def main(main_container=None) -> None:
-    """Render the validation UI inside a container safely."""
-    if main_container is None:
-        main_container = st
+if hasattr(st, "experimental_page"):
+    @st.experimental_page("Validation")
+    def main(main_container=None) -> None:
+        """Render the validation UI inside a container safely."""
+        if main_container is None:
+            main_container = st
 
-    container_ctx = safe_container(main_container)
+        container_ctx = safe_container(main_container)
 
-    try:
-        with container_ctx:
+        try:
+            with container_ctx:
+                render_validation_ui(main_container=main_container)
+        except AttributeError:
             render_validation_ui(main_container=main_container)
-    except AttributeError:
-        # Fallback: in case container_ctx fails due to unexpected type
-        render_validation_ui(main_container=main_container)
+else:
+    def main(main_container=None) -> None:
+        """Render the validation UI inside a container safely."""
+        if main_container is None:
+            main_container = st
+
+        container_ctx = safe_container(main_container)
+
+        try:
+            with container_ctx:
+                render_validation_ui(main_container=main_container)
+        except AttributeError:
+            # Fallback: in case container_ctx fails due to unexpected type
+            render_validation_ui(main_container=main_container)
 
 def render() -> None:
     """Wrapper to keep page loading consistent."""
