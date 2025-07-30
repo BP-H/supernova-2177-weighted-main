@@ -1,3 +1,10 @@
+"""
+Streamlit entry point for the validation dashboard.
+
+Example:
+    $ streamlit run ui.py
+"""
+
 import os
 import streamlit as st  # ensure Streamlit is imported early
 
@@ -1299,8 +1306,9 @@ def main() -> None:
                 render_simulation_stubs()
 
             st.divider()
-            governance_view = st.checkbox(
-                "Governance View", value=st.session_state.get("governance_view", False)
+            governance_view = st.toggle(
+                "Governance View",
+                value=st.session_state.get("governance_view", False),
             )
             st.session_state["governance_view"] = governance_view
 
