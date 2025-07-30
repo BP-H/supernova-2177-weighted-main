@@ -501,6 +501,7 @@ def load_css() -> None:
 # Accent color used for button styling
 ACCENT_COLOR = "#4f8bf9"
 from api_key_input import render_api_key_ui, render_simulation_stubs
+from status_indicator import render_status_icon
 from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
 
 # Database fallback for local testing
@@ -1149,38 +1150,38 @@ def main() -> None:
         )
 
         # Main content with sidebar
-        main_col, sidebar_col = st.columns([3, 1])
+        main_col, left_col = st.columns([3, 1])
 
         with main_col:
             # Load page content
             load_page_with_fallback(choice)
 
-        with sidebar_col:
-            st.header("Environment")
-            secrets = get_st_secrets()
-            
-            st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-            st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-            st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+        with left_col:
+            render_status_icon()
 
-            st.divider()
-            st.subheader("Settings")
-            
-            demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
-            theme_selector("Theme")
-            
-            uploaded_file = st.file_uploader("Upload JSON", type="json")
-            
-            if st.button("Run Analysis"):
-                st.success("Analysis complete!")
-            
-            api_info = render_api_key_ui()
-            backend_choice = api_info.get("model", "dummy")
-            api_key = api_info.get("api_key", "") or ""
-            event_type = st.text_input("Event", value="LLM_INCOMING")
-            payload_txt = st.text_area("Payload JSON", value="{}", height=100)
-            run_agent_clicked = st.button("Run Agent")
-            render_simulation_stubs()
+            with st.expander("Environment"):
+                secrets = get_st_secrets()
+                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
+                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
+                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+
+            with st.expander("Settings"):
+                demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
+                theme_selector("Theme")
+
+            with st.expander("File Upload"):
+                uploaded_file = st.file_uploader("Upload JSON", type="json")
+                if st.button("Run Analysis"):
+                    st.success("Analysis complete!")
+
+            with st.expander("Agent Controls"):
+                api_info = render_api_key_ui()
+                backend_choice = api_info.get("model", "dummy")
+                api_key = api_info.get("api_key", "") or ""
+                event_type = st.text_input("Event", value="LLM_INCOMING")
+                payload_txt = st.text_area("Payload JSON", value="{}", height=100)
+                run_agent_clicked = st.button("Run Agent")
+                render_simulation_stubs()
 
             st.divider()
             governance_view = st.checkbox(
@@ -1188,12 +1189,10 @@ def main() -> None:
             )
             st.session_state["governance_view"] = governance_view
 
-            # Developer tools
-            show_dev = st.checkbox("Dev Tools")
-            if show_dev:
+            with st.expander("Developer Tools"):
                 dev_tabs = st.tabs([
                     "Fork Universe",
-                    "Universe State Viewer", 
+                    "Universe State Viewer",
                     "Run Introspection Audit",
                     "Agent Logs",
                     "Inject Event",
