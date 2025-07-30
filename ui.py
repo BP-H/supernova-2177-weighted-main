@@ -1295,13 +1295,25 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui(key_prefix="main")
-                backend_choice = api_info.get("model", "dummy")
+                api_info = render_api_key_ui(key_prefix="devtools")
 
+                backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
+
+                if AGENT_REGISTRY:
+                    agent_choice = st.selectbox(
+                        "Agent",
+                        sorted(AGENT_REGISTRY.keys()),
+                        key="devtools_agent_select",
+                    )
+                else:
+                    agent_choice = None
+                    st.info("No agents registered")
+
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
         
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
