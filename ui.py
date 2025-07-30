@@ -58,9 +58,8 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = (
-    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-)
+ROOT_DIR = Path(__file__).resolve().parent
+PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 # Mapping of navigation labels to page module names
 
@@ -360,10 +359,13 @@ def inject_dark_theme() -> None:
 
 
 from frontend.ui_layout import render_title_bar, show_preview_badge
+from streamlit.errors import StreamlitAPIException
+from pathlib import Path
+import importlib
+import traceback
 
-
-def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None:
-    """Attempt to import and render a page by name with graceful fallback."""
+def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
+    """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -374,12 +376,26 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
             module,
         ]
 
-    """
-    Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
-    Logs the traceback for any unexpected failure.
-    """
-    import importlib
+    # Validate PAGES_DIR existence
+    if not PAGES_DIR.exists():
+        st.error(f"Pages directory not found: {PAGES_DIR}")
+        if "_render_fallback" in globals():
+            _render_fallback(choice)
+        return
+
+    # First try switching pages using Streamlit's multipage support
+    for module_path in module_paths:
+        page_file = Path(module_path.replace(".", "/") + ".py")
+        if page_file.exists():
+            rel_path = str(page_file.relative_to(ROOT_DIR))
+            try:
+                st.switch_page(rel_path)
+                return
+            except StreamlitAPIException as exc:
+                st.warning(f"Switch failed for {choice}: {exc}")
+                continue
+
+    # Fallback: import the module directly and call ``render`` or ``main``
     for module_path in module_paths:
         try:
             page_mod = importlib.import_module(module_path)
@@ -390,13 +406,34 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
         except ImportError:
             continue  # Try next candidate module path
         except Exception as exc:
-            st.error(
-                f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}"
-            )
+            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
             with st.expander("Show error details"):
                 st.exception(exc)
             print("Traceback for debugging:\n", traceback.format_exc())
             break
+
+    st.warning(f"Page not found: {choice}")
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
+    for module_path in module_paths:
+        try:
+            page_mod = importlib.import_module(module_path)
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
+        except ImportError:
+            continue  # Try next candidate module path
+                except Exception as exc:
+                    st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+                    with st.expander("Show error details"):
+                        st.exception(exc)
+                    print("Traceback for debugging:\n", traceback.format_exc())
+                    break
+                    with st.expander("Show error details"):
+                        st.exception(exc)
+                    print("Traceback for debugging:\n", traceback.format_exc())
+                    break
 
     st.warning(f"Page not found: {choice}")
     if "_render_fallback" in globals():
@@ -1230,7 +1267,6 @@ def main() -> None:
             "Social": "social",
         }
         
-        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
         choice = ui_layout.render_navbar(
             page_paths,
