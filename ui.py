@@ -1,3 +1,10 @@
+"""
+Streamlit entry point for the validation dashboard.
+
+Example:
+    $ streamlit run ui.py
+"""
+
 import os
 import streamlit as st  # ensure Streamlit is imported early
 
