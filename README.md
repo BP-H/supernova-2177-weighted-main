@@ -610,6 +610,13 @@ UI-specific tests rely on additional optional packages. Install `streamlit` and
 pip install streamlit nicegui
 ```
 
+Optional splash animations use the `streamlit-lottie` package. If it is not
+installed, the UI falls back to static emoji icons. Install it with:
+
+```bash
+pip install streamlit-lottie
+```
+
 Installing both requirement files ensures all dependencies used in CI
 are available:
 
