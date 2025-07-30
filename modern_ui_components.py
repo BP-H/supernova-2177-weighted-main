@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import streamlit as st
+from typing import Optional
 
 from modern_ui import inject_premium_styles
 
@@ -43,9 +44,14 @@ def render_modern_header(title: str) -> None:
     )
 
 
-def render_modern_sidebar(pages: dict[str, str]) -> str:
-    """Render a sidebar navigation menu and return the selected option."""
-    with st.sidebar:
+def render_modern_sidebar(
+    pages: dict[str, str],
+    container: Optional[st.delta_generator.DeltaGenerator] = None,
+) -> str:
+    """Render a navigation menu within ``container`` and return the selection."""
+    if container is None:
+        container = st
+    with container:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         choice = st.radio("Navigate", list(pages.keys()))
         st.markdown("</div>", unsafe_allow_html=True)

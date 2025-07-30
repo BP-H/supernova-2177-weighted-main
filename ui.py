@@ -1005,20 +1005,23 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Main content with sidebar
-        main_col, sidebar_col = st.columns([3, 1])
-
-        with main_col:
+        left_col, center_col, right_col = st.columns([1, 3, 1])
+        
+        with center_col:
             # Load page content
             load_page_with_fallback(choice)
-
-        with sidebar_col:
+            
+        with left_col:
+            render_status_icon()
+            
             with st.expander("Environment Details"):
-                render_status_icon()
                 secrets = get_st_secrets()
-                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
 
             with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
@@ -1046,7 +1049,7 @@ def main() -> None:
             )
             st.session_state["governance_view"] = governance_view
 
-            with st.expander("Developer Tools"):
+            with st.expander("Simulation Tools"):
                 dev_tabs = st.tabs([
                     "Fork Universe",
                     "Universe State Viewer",
