@@ -1296,6 +1296,72 @@ def main() -> None:
             st.session_state.clear()
             st.rerun()
 
+# Add this section for database error handling
+import sqlite3
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
+
+def ensure_database_exists():
+    """Initialize database tables if they don't exist."""
+    try:
+        secrets = get_st_secrets()
+        db_url = secrets.get('DATABASE_URL', 'sqlite:///harmonizers.db')
+        engine = create_engine(db_url)
+        
+        with engine.connect() as conn:
+            try:
+                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='harmonizers';"))
+                table_exists = result.fetchone() is not None
+                
+                if not table_exists:
+                    # Create the harmonizers table
+                    conn.execute(text("""
+                        CREATE TABLE harmonizers (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username VARCHAR(50) UNIQUE NOT NULL,
+                            email VARCHAR(100) UNIQUE NOT NULL,
+                            hashed_password VARCHAR(255) NOT NULL,
+                            bio TEXT,
+                            profile_pic VARCHAR(255),
+                            is_active BOOLEAN DEFAULT 1,
+                            is_admin BOOLEAN DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            species VARCHAR(50) DEFAULT 'human',
+                            harmony_score FLOAT DEFAULT 0.0,
+                            creative_spark FLOAT DEFAULT 0.0,
+                            is_genesis BOOLEAN DEFAULT 0,
+                            consent_given BOOLEAN DEFAULT 0,
+                            cultural_preferences TEXT,
+                            engagement_streaks INTEGER DEFAULT 0,
+                            network_centrality FLOAT DEFAULT 0.0,
+                            karma_score FLOAT DEFAULT 0.0,
+                            last_passive_aura_timestamp TIMESTAMP
+                        );
+                    """))
+                    
+                    # Insert a default user
+                    conn.execute(text("""
+                        INSERT INTO harmonizers 
+                        (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                        VALUES 
+                        ('admin', 'admin@supernova.dev', 'hashed_password_here', 
+                         'Default admin user for superNova_2177', 1, 1, 1, 1);
+                    """))
+                    conn.commit()
+                return True
+            except Exception:
+                return False
+    except Exception:
+        return False
+
+def safe_get_user():
+    """Get user with proper error handling."""
+    try:
+        ensure_database_exists()
+        with SessionLocal() as db:
+            return db.query(Harmonizer).first()
+    except Exception:
+        return None
 
 if __name__ == "__main__":
     main()
