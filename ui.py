@@ -1390,35 +1390,43 @@ def main() -> None:
                             st.error(f"Database error: {exc}")
                     else:
                         st.info("Audit functionality unavailable")
+                else:
+                    st.info("Audit functionality unavailable")
+                    try:
+                        with SessionLocal() as db:
+                            with st.spinner("Working on it..."):
+                                try:
+                                    result = _run_async(
+                                        dispatch_route(
+                                            "trigger_full_audit",
+                                            {"hypothesis_id": hid},
+                                            db=db,
+                                        )
+                                    )
+                                    st.json(result)
+                                    st.toast("Success!")
+                                except Exception as exc:
+                                    st.error(f"Audit failed: {exc}")
+                    except Exception as exc:
+                        st.error(f"Database error: {exc}")
+                else:
+                    st.info("Fork operation unavailable")
 
-                            try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = _run_async(dispatch_route("trigger_full_audit", {"hypothesis_id": hid}, db=db))
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        else:
-                            st.info("Fork operation unavailable")
                 with dev_tabs[1]:
-                        if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
-                            try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = run_full_audit(hid, db)
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        else:
-                            st.info("Database unavailable")
+                    if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+                        try:
+                            with SessionLocal() as db:
+                                with st.spinner("Working on it..."):
+                                    try:
+                                        result = run_full_audit(hid, db)
+                                        st.json(result)
+                                        st.toast("Success!")
+                                    except Exception as exc:
+                                        st.error(f"Audit failed: {exc}")
+                        except Exception as exc:
+                            st.error(f"Database error: {exc}")
+                    else:
+                        st.info("Database unavailable")
 
                 with dev_tabs[2]:
                     hid = st.text_input("Hypothesis ID", key="audit_id")
@@ -1455,6 +1463,7 @@ def main() -> None:
                                 st.error(f"Database error: {exc}")
                         else:
                             st.info("Audit functionality unavailable")
+
 
                 with dev_tabs[3]:
                     log_path = Path("logchain_main.log")
