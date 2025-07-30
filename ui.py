@@ -389,10 +389,30 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    module = PAGES.get(choice, choice.lower())
+    page_file = Path.cwd() / "pages" / f"{module}.py"
+
+    if page_file.exists():
+        logger.debug("Fallback skipped because %s exists", page_file)
+        spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = mod
+            try:
+                spec.loader.exec_module(mod)
+            except Exception as exc:  # pragma: no cover - unexpected
+                st.error(f"Failed to load page {module}: {exc}")
+        return
+
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
-    except Exception:
+    except Exception:  # pragma: no cover - optional dependency
         OFFLINE_MODE = False
+
+    if st.session_state.get("_fallback_rendered") == choice:
+        logger.debug("Duplicate fallback suppressed for %s", choice)
+        return
+    st.session_state["_fallback_rendered"] = choice
 
     fallback_pages = {
         "Validation": render_modern_validation_page,
@@ -403,6 +423,7 @@ def _render_fallback(choice: str) -> None:
         "Social": render_modern_social_page,
         "Profile": render_modern_profile_page,
     }
+
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:

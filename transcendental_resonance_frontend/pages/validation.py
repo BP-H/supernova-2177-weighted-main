@@ -11,6 +11,7 @@ from ui import render_validation_ui
 inject_modern_styles()
 
 
+@st.experimental_page("Validation")
 def main(main_container=None) -> None:
     """Render the validation UI inside a container safely."""
     if main_container is None:
