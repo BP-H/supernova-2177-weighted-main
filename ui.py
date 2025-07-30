@@ -1052,5 +1052,5 @@ def render_validation_ui(
     if main_container is None:
         main_container = st
 
-
 if __name__ == "__main__":
+    main()
