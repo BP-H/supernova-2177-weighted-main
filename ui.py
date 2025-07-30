@@ -104,10 +104,6 @@ except Exception as import_err:  # pragma: no cover - fallback if absolute impor
             return None
 
         def get_pages_dir() -> Path:
-            return Path(__file__).resolve().parents[2] / "pages"
-
-
-        def get_pages_dir() -> Path:
             return (
                 Path(__file__).resolve().parent
                 / "transcendental_resonance_frontend"
