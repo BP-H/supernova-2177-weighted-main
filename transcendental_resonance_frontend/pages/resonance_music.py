@@ -12,14 +12,17 @@ from typing import Any, Optional, Dict
 
 import requests
 import streamlit as st
-from contextlib import nullcontext
-from streamlit_helpers import alert, centered_container
+from streamlit_helpers import alert, centered_container, safe_container
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
 from utils.api import get_resonance_summary, dispatch_route # Import get_resonance_summary and dispatch_route from utils.api
 
 # BACKEND_URL is defined in utils.api, but we keep it here for direct requests calls if needed
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+AMBIENT_URL = os.getenv(
+    "AMBIENT_MP3_URL",
+    "https://raw.githubusercontent.com/anars/blank-audio/master/10-minutes-of-silence.mp3",
+)
 
 
 def _run_async(coro):
@@ -46,13 +49,7 @@ def main(main_container=None, status_container=None) -> None:
     st_autorefresh(interval=30000, key="status_ping")
 
     # Render global backend status indicator in the provided container
-    status_ctx = (
-        status_container()
-        if callable(status_container)
-        else status_container
-        if hasattr(status_container, "__enter__")
-        else nullcontext()
-    )
+    status_ctx = safe_container(status_container)
     with status_ctx:
         render_status_icon(endpoint="/healthz")
 
@@ -69,17 +66,26 @@ def render_resonance_music_page(main_container=None):
     Render the Resonance Music page with backend MIDI generation and metrics summary.
     Handles dynamic selection of profile/track and safely wraps container logic.
     """
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
 
     with container_ctx:
         st.subheader("Resonance Music")
         centered_container()
+
+        if "play_ambient" not in st.session_state:
+            st.session_state["play_ambient"] = True
+        play_toggle = st.checkbox(
+            "Play ambient music",
+            value=st.session_state["play_ambient"],
+            key="ambient_music_toggle",
+        )
+        st.session_state["play_ambient"] = play_toggle
+        autoplay = "autoplay" if play_toggle else ""
+        muted = "" if play_toggle else "muted"
+        st.markdown(
+            f"<audio id='ambient-audio' src='{AMBIENT_URL}' {autoplay} loop {muted} style='display:none'></audio>",
+            unsafe_allow_html=True,
+        )
 
         profile_options = ["default", "high_harmony", "high_entropy"]
         track_options = ["Solar Echoes", "Quantum Drift", "Ether Pulse"]

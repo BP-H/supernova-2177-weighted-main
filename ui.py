@@ -101,6 +101,7 @@ from streamlit_helpers import (
     apply_theme,
     header,
     theme_selector,
+    safe_container,
 )
 
 from modern_ui import (
@@ -1500,7 +1501,7 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        container_ctx = main_container() if callable(main_container) else nullcontext()
+        container_ctx = safe_container(main_container)
         with container_ctx:
             page_key = PAGES.get(choice, choice)
             module_paths = [

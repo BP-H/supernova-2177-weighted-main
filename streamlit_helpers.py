@@ -10,7 +10,8 @@ applications to keep the UI code concise and consistent.
 from __future__ import annotations
 
 import html
-from typing import Literal
+from typing import Literal, Any, ContextManager
+from contextlib import nullcontext
 
 import streamlit as st
 from modern_ui import inject_modern_styles
@@ -160,11 +161,23 @@ def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGen
     return st.container()
 
 
+def safe_container(container: Any) -> ContextManager:
+    """Return a context manager for ``container`` or ``nullcontext``."""
+    try:
+        candidate = container() if callable(container) else container
+        if hasattr(candidate, "__enter__"):
+            return candidate
+    except Exception:
+        pass
+    return nullcontext()
+
+
 __all__ = [
     "alert",
     "header",
     "apply_theme",
     "theme_selector",
     "centered_container",
+    "safe_container",
     "inject_global_styles",
 ]

@@ -7,14 +7,13 @@ from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
-from streamlit_helpers import inject_global_styles, theme_selector
+from streamlit_helpers import inject_global_styles, theme_selector, safe_container
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
     render_agent_ops_tab,
     render_logs_tab,
 )
-from contextlib import nullcontext
 from ui_utils import summarize_text, load_rfc_entries
 
 BOX_CSS = """
@@ -36,13 +35,7 @@ def render_agent_insights_tab(main_container=None) -> None:
 
     theme_selector("Theme", key_suffix="agent_insights")
     inject_global_styles()
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         st.subheader("Virtual Diary")

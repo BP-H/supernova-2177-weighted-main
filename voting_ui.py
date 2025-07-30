@@ -3,8 +3,8 @@
 # Legal & Ethical Safeguards
 import asyncio
 import json
-from contextlib import nullcontext
 import streamlit as st
+from streamlit_helpers import safe_container
 import pandas as pd
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder
@@ -64,13 +64,7 @@ def render_proposals_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         if AgGrid is None or GridOptionsBuilder is None:
             alert(
@@ -231,13 +225,7 @@ def render_governance_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         if AgGrid is None or GridOptionsBuilder is None:
             alert(
@@ -302,13 +290,7 @@ def render_agent_ops_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         if dispatch_route is None:
             alert(
@@ -370,13 +352,7 @@ def render_logs_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         if dispatch_route is None:
             alert(
@@ -410,13 +386,7 @@ def render_voting_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    container_ctx = (
-        main_container()
-        if callable(main_container)
-        else main_container
-        if hasattr(main_container, "__enter__")
-        else nullcontext()
-    )
+    container_ctx = safe_container(main_container)
     with container_ctx:
         inject_global_styles()
         sub1, sub2, sub3, sub4 = st.tabs(
