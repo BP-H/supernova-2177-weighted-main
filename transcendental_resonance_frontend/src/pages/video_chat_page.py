@@ -35,11 +35,11 @@ async def video_chat_page() -> None:
         )
 
         error_overlay = ErrorOverlay()
-
         manager = VideoChatManager()
 
         local_cam = ui.camera().classes("w-full mb-4")
         remote_view = ui.video().props("autoplay playsinline").classes("w-full mb-4")
+        caption = ui.label().classes("text-sm mb-2")
 
         messages = (
             ui.column()
@@ -49,6 +49,13 @@ async def video_chat_page() -> None:
         message_input = ui.input(placeholder="Type a message").classes("w-full mb-2")
         send_button = ui.button("Send")
 
+        translate_input = ui.input("Text to translate").classes("w-full mb-2")
+        translate_lang = ui.input("Target language code", value="en").classes("w-full mb-4")
+
+        join_button = ui.button("Join Call")
+        share_button = ui.button("Share Screen")
+
+
         async def handle_event(event: dict) -> None:
             if event.get("type") == "frame":
                 remote_view.source = event.get("data")
@@ -56,6 +63,11 @@ async def video_chat_page() -> None:
                 with messages:
                     ui.chat_message(event.get("text", ""), name="Remote")
                 manager.translate_audio("remote", "en", event.get("text", ""))
+            elif event.get("type") == "translation":
+                caption.text = event.get("translation")
+            elif event.get("type") == "screen_share":
+                remote_view.source = event.get("data")
+
 
         async def start_ws() -> None:
             global WS_CONNECTION
@@ -75,7 +87,6 @@ async def video_chat_page() -> None:
                 if WS_CONNECTION is ws:
                     WS_CONNECTION = None
 
-        join_button = ui.button("Join Call")
 
         async def join_call() -> None:
             try:
@@ -87,24 +98,48 @@ async def video_chat_page() -> None:
                 local_cam.disable()
                 error_overlay.show("Realtime updates unavailable")
 
-        join_button.on_click(lambda: ui.run_async(join_call()))
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:
-                await WS_CONNECTION.send_text(json.dumps({"type": "frame", "data": local_cam.value}))
+                await WS_CONNECTION.send_text(json.dumps({
+                    "type": "frame",
+                    "data": local_cam.value
+                }))
+
 
         async def send_chat() -> None:
             if WS_CONNECTION and message_input.value:
-                await WS_CONNECTION.send_text(json.dumps({"type": "chat", "text": message_input.value}))
+                await WS_CONNECTION.send_text(json.dumps({
+                    "type": "chat",
+                    "text": message_input.value
+                }))
                 with messages:
                     ui.chat_message(message_input.value, name="You", sent=True)
                 manager.translate_audio("local", "en", message_input.value)
                 message_input.value = ""
 
+
+        async def send_translation() -> None:
+            if WS_CONNECTION and translate_input.value:
+                await WS_CONNECTION.send_text(json.dumps({
+                    "type": "translate",
+                    "user": "local-user",
+                    "lang": translate_lang.value or "en",
+                    "text": translate_input.value
+                }))
+                translate_input.value = ""
+
+
+        join_button.on_click(lambda: ui.run_async(join_call()))
+        share_button.on_click(lambda: WS_CONNECTION and WS_CONNECTION.send_text(
+            json.dumps({"type": "screen_share"})))
+
         local_cam.on("capture", lambda _: ui.run_async(send_frame()))
         send_button.on_click(lambda: ui.run_async(send_chat()))
+        translate_input.on("submit", lambda _: ui.run_async(send_translation()))
 
         ui.label("Note: Video chat is unavailable when offline.").classes(
             "text-xs opacity-75 mt-2"
         )
+
 
