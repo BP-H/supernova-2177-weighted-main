@@ -61,3 +61,12 @@ and follow `disclaimers.LEGAL_ETHICAL_SAFEGUARDS` for community use.
 | Route | Description |
 |-------|-------------|
 |`healthz`|Health check endpoint.|
+
+## communication
+
+| Route | Description |
+|-------|-------------|
+|`/ws/video`|WebSocket endpoint for video chat signaling between participants.|
+|`POST /api/chat/send`|Send a chat message to the active session.|
+|`POST /api/chat/translate`|Translate and display text in the target language.|
+|`POST /api/chat/voice`|Synthesize audio from text to broadcast voice replies.|
