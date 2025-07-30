@@ -522,47 +522,9 @@ from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_mai
 try:
     from db_models import Harmonizer, SessionLocal, UniverseBranch
     DATABASE_AVAILABLE = True
-except Exception:
+except Exception:  # pragma: no cover - missing ORM
     DATABASE_AVAILABLE = False
-
-    class MockSessionLocal:
-        def __enter__(self):
-            return self
-        def __exit__(self, *args):
-            pass
-        def query(self, *args):
-            return MockQuery()
-
-    class MockQuery:
-        def filter(self, *args):
-            return self
-        def first(self):
-            return None
-        def all(self):
-            return []
-
-    class MockHarmonizer:
-        id = 1
-        name = "Test Harmonizer"
-        config = "{}"
-
-    SessionLocal = MockSessionLocal
-    Harmonizer = MockHarmonizer
-    UniverseBranch = MockHarmonizer
-
-if not DATABASE_AVAILABLE:
-    st.session_state.setdefault(
-        "mock_data",
-        {
-            "validations": [],
-            "proposals": [
-                {"id": 1, "title": "Sample Proposal 1", "status": "active"},
-                {"id": 2, "title": "Sample Proposal 2", "status": "pending"},
-            ],
-            "runs": 0,
-            "success_rate": 94.2,
-        },
-    )
+    from stubs.mock_db import Harmonizer, SessionLocal, UniverseBranch
 
 
 def _run_async(coro):
@@ -582,70 +544,6 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None
 
-# Database fallback for local testing
-DATABASE_AVAILABLE = True
-try:
-    from db_models import Harmonizer, SessionLocal, UniverseBranch
-except Exception:  # pragma: no cover - missing ORM
-    DATABASE_AVAILABLE = False
-
-    class MockHarmonizer:
-        def __init__(self, id: int = 1, username: str = "demo"):
-            self.id = id
-            self.username = username
-
-    class UniverseBranch:
-        class timestamp:
-            @staticmethod
-            def desc() -> None:
-                return None
-
-        def __init__(self, id: str, status: str, timestamp: datetime):
-            self.id = id
-            self.status = status
-            self.timestamp = timestamp
-
-    class MockQuery(list):
-        def __init__(self, data: list | None = None) -> None:
-            super().__init__(data or [])
-
-        def order_by(self, *_a, **_k) -> "MockQuery":
-            return self
-
-        def limit(self, *_a, **_k) -> "MockQuery":
-            return self
-
-        def all(self) -> list:
-            return list(self)
-
-        def first(self):
-            return self[0] if self else None
-
-    class MockSessionLocal:
-        def __enter__(self) -> "MockSessionLocal":
-            return self
-
-        def __exit__(self, *_exc) -> None:
-            pass
-
-        def query(self, model):
-            data = []
-            if model is MockHarmonizer:
-                data = st.session_state.get("mock_data", {}).get("harmonizers", [])
-            elif model is UniverseBranch:
-                data = st.session_state.get("mock_data", {}).get("universe_branches", [])
-            return MockQuery(data)
-
-    Harmonizer = MockHarmonizer  # type: ignore
-    SessionLocal = MockSessionLocal  # type: ignore
-
-    if "mock_data" not in st.session_state:
-        st.session_state["mock_data"] = {
-            "harmonizers": [MockHarmonizer()],
-            "universe_branches": [
-                UniverseBranch("1", "active", datetime.utcnow())
-            ],
-        }
 try:
     from introspection.introspection_pipeline import run_full_audit
 except Exception:  # pragma: no cover - optional module
@@ -674,7 +572,47 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
 
+try:
+    from social_tabs import render_social_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
+
+try:
+    from voting_ui import render_voting_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
+        st.info("Voting module not available")
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
+
+try:
+    from llm_backends import get_backend
+except ImportError:  # pragma: no cover - optional dependency
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy backend"}
 
 
 def get_st_secrets() -> dict:
@@ -1011,8 +949,6 @@ def render_validation_ui(
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
-    if sidebar is None:
-        sidebar = st.sidebar
     if main_container is None:
         main_container = st
 
@@ -1108,38 +1044,42 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Main content with sidebar
-        main_col, left_col = st.columns([3, 1])
-
-        with main_col:
+        left_col, center_col, right_col = st.columns([1, 3, 1])
+        
+        with center_col:
             # Load page content
             load_page_with_fallback(choice)
-
+            
         with left_col:
             render_status_icon()
-
-            with st.expander("Environment"):
+            
+            with st.expander("Environment Details"):
                 secrets = get_st_secrets()
-                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
 
-            with st.expander("Settings"):
+            with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
                 theme_selector("Theme")
 
-            with st.expander("File Upload"):
+            with st.expander("Data Management"):
                 uploaded_file = st.file_uploader("Upload JSON", type="json")
                 if st.button("Run Analysis"):
                     st.success("Analysis complete!")
 
-            with st.expander("Agent Controls"):
+            with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui()
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
+            with st.expander("Simulation Tools"):
                 render_simulation_stubs()
 
             st.divider()
@@ -1148,7 +1088,7 @@ def main() -> None:
             )
             st.session_state["governance_view"] = governance_view
 
-            with st.expander("Developer Tools"):
+            with st.expander("Simulation Tools"):
                 dev_tabs = st.tabs([
                     "Fork Universe",
                     "Universe State Viewer",
