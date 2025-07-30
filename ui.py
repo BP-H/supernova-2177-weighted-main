@@ -960,6 +960,29 @@ def render_validation_ui(
 
         with left_col:
             render_status_icon()
+        
+            with st.expander("Developer Tools"):
+                dev_tabs = st.tabs([
+                    "Fork Universe",
+                    "Universe State Viewer",
+                    "Run Introspection Audit",
+                    "Agent Logs",
+                    "Inject Event",
+                    "Session Inspector",
+                    "Playground",
+                ])
+        
+                with dev_tabs[0]:
+                    st.write("Placeholder for Fork Universe")
+        
+                with dev_tabs[1]:
+                    st.write("Placeholder for Universe Viewer")
+        
+                with dev_tabs[2]:
+                    st.write("Placeholder for Audit")
+        
+                # ... repeat or customize more tabs as needed
+
 
     except Exception as exc:
         st.error("Failed to load validation UI")
