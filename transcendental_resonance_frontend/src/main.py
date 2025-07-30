@@ -57,7 +57,7 @@ from .utils.features import (
     theme_personalization_panel,
     onboarding_overlay,
 )
-from .utils import ErrorOverlay, ApiStatusFooter
+from .utils import ApiStatusFooter
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -69,7 +69,6 @@ onboarding = onboarding_overlay()
 contrast_toggle = high_contrast_switch()
 contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
 theme_personalization_panel()
-error_overlay = ErrorOverlay()
 api_status = ApiStatusFooter()
 
 ws_status = (
@@ -78,21 +77,10 @@ ws_status = (
     .style("color: red")
 )
 
-# Show whether the frontend is running in offline mode
-if OFFLINE_MODE:
-    # Label bar across the bottom
-    ui.label("OFFLINE MODE – using mock services.")
-        .classes("fixed bottom-0 w-full text-center bg-red-600 text-white text-sm")
-
-    # Icon indicator (cloud_off)
-    ui.icon("cloud_off")
-        .classes("fixed bottom-0 right-0 m-2")
-        .style("color: red")
-else:
-    # Icon indicator (cloud_done)
-    ui.icon("cloud_done")
-        .classes("fixed bottom-0 right-0 m-2")
-        .style("color: green")
+# Show connection state icon
+ui.icon("cloud_off" if OFFLINE_MODE else "cloud_done")\
+    .classes("fixed bottom-0 right-0 m-2")\
+    .style(f"color: {'red' if OFFLINE_MODE else 'green'}")
 
 
 def _update_ws_status(status: str) -> None:
@@ -100,10 +88,8 @@ def _update_ws_status(status: str) -> None:
     ws_status.style(f"color: {color}")
     if status == "connected":
         ui.notify("WebSocket connected", color="positive")
-        error_overlay.hide()
     else:
-        ui.notify("WebSocket disconnected", color="warning")
-        error_overlay.show("Connection lost. Trying to reconnect...")
+        ui.notify("Connection lost. Trying to reconnect...", color="warning")
 
 on_ws_status_change(_update_ws_status)
 

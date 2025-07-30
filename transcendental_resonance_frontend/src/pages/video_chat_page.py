@@ -9,7 +9,6 @@ import json
 
 from nicegui import ui
 
-from utils import ErrorOverlay
 from utils.api import TOKEN, WS_CONNECTION, connect_ws
 from utils.layout import navigation_bar, page_container
 from utils.styles import get_theme
@@ -34,7 +33,6 @@ async def video_chat_page() -> None:
             f'color: {THEME["accent"]};'
         )
 
-        error_overlay = ErrorOverlay()
         manager = VideoChatManager()
 
         local_cam = ui.camera().classes("w-full mb-4")
@@ -96,7 +94,6 @@ async def video_chat_page() -> None:
                 ui.notify("Realtime updates unavailable", color="warning")
                 join_button.disable()
                 local_cam.disable()
-                error_overlay.show("Realtime updates unavailable")
 
 
         async def send_frame() -> None:
