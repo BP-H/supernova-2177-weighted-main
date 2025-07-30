@@ -5,7 +5,6 @@ def main():
     """Safe agent page that won't crash."""
     try:
         st.title("🤖 Agents")
-        st.info("Agent functionality is under development")
 
         agents = ["MetaValidator", "Guardian", "Resonance"]
         selected_agent = st.selectbox("Select Agent", agents, key="agent_select")

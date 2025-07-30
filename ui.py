@@ -484,7 +484,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
         except ImportError:
             continue  # Try next path
         except Exception as exc:
-            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            st.error(
+                f"⚠️ {choice} failed to load due to {exc.__class__.__name__}: {exc}"
+            )
             break
 
     _render_fallback(choice)
@@ -1325,10 +1327,11 @@ def main() -> None:
                         "Event JSON", value="{}", height=150, key="inject_event"
                     )
                     if st.button("Process Event"):
-                        if 'agent' in globals():
+                        agent_obj = st.session_state.get("agent_instance")
+                        if agent_obj is not None:
                             try:
                                 event = json.loads(event_json or "{}")
-                                agent.process_event(event)
+                                agent_obj.process_event(event)
                                 st.success("Event processed")
                             except Exception as exc:
                                 st.error(f"Event failed: {exc}")
@@ -1343,14 +1346,15 @@ def main() -> None:
                             "Sub universes:",
                             list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                         )
-                    if 'agent' in globals() and 'InMemoryStorage' in globals():
-                        if isinstance(agent.storage, InMemoryStorage):
+                    agent_obj = st.session_state.get("agent_instance")
+                    if agent_obj is not None and 'InMemoryStorage' in globals():
+                        if isinstance(agent_obj.storage, InMemoryStorage):
                             st.write(
-                                f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
+                                f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
                             )
                         else:
                             try:
-                                user_count = len(agent.storage.get_all_users())
+                                user_count = len(agent_obj.storage.get_all_users())
                             except Exception:
                                 user_count = "?"
                             st.write(f"User count: {user_count}")
@@ -1409,6 +1413,8 @@ def main() -> None:
                         else:
                             agent = agent_cls(llm_backend=backend_fn)
 
+                        st.session_state["agent_instance"] = agent
+
                         result = agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
@@ -1426,7 +1432,12 @@ def main() -> None:
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
         with main_container():
-            load_page_with_fallback(choice)
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

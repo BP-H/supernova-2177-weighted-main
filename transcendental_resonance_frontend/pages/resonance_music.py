@@ -12,6 +12,7 @@ from typing import Any, Optional, Dict
 
 import requests
 import streamlit as st
+from contextlib import nullcontext
 from streamlit_helpers import alert, centered_container
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
@@ -56,7 +57,8 @@ def main(main_container=None, status_container=None) -> None:
             "error",
         )
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         st.subheader("Resonance Music")
         centered_container()
 
