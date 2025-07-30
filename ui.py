@@ -466,7 +466,6 @@ def render_modern_validation_page():
                     </div>
                 """, unsafe_allow_html=True)
 
-# In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
     """Load page with beautiful fallback."""
     # Define pages here since it's not global
@@ -480,15 +479,30 @@ def load_page_with_fallback(choice):
     
     try:
         page_module = pages[choice]
-        module_path = f"pages.{page_module}"
-        page_mod = import_module(module_path)
-
-        if hasattr(page_mod, "main"):
-            page_mod.main()
-        elif hasattr(page_mod, "render"):
-            page_mod.render()
+        # Try both possible module paths
+        module_paths = [
+            f"transcendental_resonance_frontend.pages.{page_module}",
+            f"pages.{page_module}"
+        ]
+        
+        page_mod = None
+        for module_path in module_paths:
+            try:
+                page_mod = import_module(module_path)
+                break
+            except ImportError:
+                continue
+        
+        if page_mod:
+            if hasattr(page_mod, "main"):
+                page_mod.main()
+            elif hasattr(page_mod, "render"):
+                page_mod.render()
+            else:
+                raise ImportError("No main or render method found")
         else:
-            render_modern_validation_page()
+            raise ImportError("Module not found in any path")
+            
     except ImportError:
         # Beautiful fallback based on page choice
         if choice == "Validation":
@@ -503,6 +517,7 @@ def load_page_with_fallback(choice):
             render_modern_social_page()
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
+
 def render_modern_voting_page():
     """Modern voting page fallback."""
     st.markdown("# 🗳️ Voting Dashboard")
@@ -527,7 +542,7 @@ def render_modern_music_page():
         if hasattr(resonance_music, "main"):
             resonance_music.main()
         else:
-            raise RuntimeError
+            raise RuntimeError("No main method available")
     except Exception:
         st.info("🚧 Harmonic resonance features coming soon!")
 
