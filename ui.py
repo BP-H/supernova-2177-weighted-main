@@ -1476,14 +1476,6 @@ def main() -> None:
                             st.error(f"Log read failed: {exc}")
                     else:
                         st.info("No log file found")
-                            try:
-                                event = json.loads(event_json or "{}")
-                                agent_obj.process_event(event)
-                                st.success("Event processed")
-                            except Exception as exc:
-                                st.error(f"Event failed: {exc}")
-                        else:
-                            st.info("No log file found")
 
                 with dev_tabs[4]:
                     event_json = st.text_area(
