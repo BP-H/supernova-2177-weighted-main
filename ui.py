@@ -86,7 +86,12 @@ from streamlit_helpers import (
 )
 
 from modern_ui import (
+    inject_modern_styles,
     inject_premium_styles,
+    render_modern_header,
+    render_stats_section,
+    open_card_container,
+    close_card_container,
 )
 
 # Optional modules used throughout the UI. Provide simple fallbacks
@@ -192,8 +197,7 @@ def render_landing_page():
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-
-def inject_dark_theme() -> None:
+def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
         """
@@ -244,13 +248,6 @@ def inject_dark_theme() -> None:
             color: #fff;
         }
 
-        /* Navigation tabs */
-        .stSelectbox > div > div {
-            background: #2d2d2d;
-            border-radius: 6px;
-            border: 1px solid #3a3a3a;
-        }
-
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -278,55 +275,10 @@ def inject_dark_theme() -> None:
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
-            transition: all 0.3s ease;
         }
 
         .stButton > button:hover {
             background-color: #699cfc;
-            transform: translateY(-2px);
-        }
-
-        /* Modern metrics */
-        [data-testid="metric-container"] {
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
-            padding: 1rem;
-            box-shadow: none;
-        }
-
-        /* Text styling */
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            color: #f0f0f0;
-        }
-
-        /* Error messages modern styling */
-        .stAlert {
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
-        }
-
-        /* File uploader */
-        .stFileUploader {
-            background: #252525;
-            border-radius: 8px;
-            border: 2px dashed #3a3a3a;
-            padding: 2rem;
-        }
-
-        /* Input fields */
-        .stTextInput > div > div > input,
-        .stTextArea > div > div > textarea {
-            background: #2d2d2d;
-            border: 1px solid #3a3a3a;
-            border-radius: 6px;
-            color: #f0f0f0;
-        }
-
-        /* Slider styling */
-        .stSlider > div > div > div {
-            background: #4f8bf9;
         }
 
         /* Modern scrollbar */
@@ -358,6 +310,11 @@ def inject_dark_theme() -> None:
         unsafe_allow_html=True,
     )
 
+
+# Backward compatibility alias
+def inject_dark_theme() -> None:
+    """Legacy alias for inject_modern_styles()."""
+    inject_modern_styles()
 
 def render_modern_validation_page():
     """Render the main validation interface."""
@@ -441,7 +398,7 @@ def render_modern_validation_page():
         )
 
         if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
-            with st.spinner("🔍 Analyzing validation data..."):
+            with st.spinner("Loading..."):
                 # Simulate analysis
                 import time
 
@@ -479,7 +436,7 @@ def render_modern_validation_page():
 
 # In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
-    """Load page with beautiful fallback."""
+    """Load page with beautiful fallback and maximum compatibility."""
     # Define pages here since it's not global
     pages = {
         "Validation": "validation",
@@ -488,54 +445,88 @@ def load_page_with_fallback(choice):
         "Resonance Music": "resonance_music",
         "Social": "social",
     }
-
+    
     try:
         page_module = pages[choice]
-        module_path = f"pages.{page_module}"
-        page_mod = import_module(module_path)
-
-        if hasattr(page_mod, "render"):
-            page_mod.render()
+        # Try both possible module paths for maximum compatibility
+        module_paths = [
+            f"transcendental_resonance_frontend.pages.{page_module}",
+            f"pages.{page_module}"
+        ]
+        
+        page_mod = None
+        for module_path in module_paths:
+            try:
+                page_mod = import_module(module_path)
+                break
+            except ImportError:
+                continue
+        
+        if page_mod:
+            if hasattr(page_mod, "render"):
+                page_mod.render()
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
+            else:
+                raise ImportError("No main or render method found")
         else:
-            render_modern_validation_page()
+            raise ImportError("Module not found in any path")
+            
     except ImportError:
-        # Beautiful fallback based on page choice
-        if choice == "Validation":
-            render_modern_validation_page()
-        elif choice == "Voting":
-            render_modern_voting_page()
-        elif choice == "Agents":
-            render_modern_agents_page()
-        elif choice == "Resonance Music":
-            render_modern_music_page()
-        elif choice == "Social":
-            render_modern_social_page()
+        _render_fallback(choice)
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
 
-
+def _render_fallback(choice: str) -> None:
+    """Render page fallbacks when modules are missing."""
+    if choice == "Validation":
+        render_modern_validation_page()
+    elif choice == "Voting":
+        render_modern_voting_page()
+    elif choice == "Agents":
+        render_modern_agents_page()
+    elif choice == "Resonance Music":
+        render_modern_music_page()
+    elif choice == "Social":
+        render_modern_social_page()
 def render_modern_voting_page():
-    """Modern voting page fallback."""
+    """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
-    st.info("🚧 Advanced voting features coming soon!")
+    try:
+        render_voting_tab()
+    except Exception:
+        st.info("🚧 Advanced voting features coming soon!")
 
 
 def render_modern_agents_page():
-    """Modern agents page fallback."""
+    """Modern agents page fallback using agent_ui widgets."""
     st.markdown("# 🤖 AI Agents")
-    st.info("🚧 Agent management system in development!")
+    try:
+        render_agent_insights_tab()
+    except Exception:
+        st.info("🚧 Agent management system in development!")
 
 
 def render_modern_music_page():
-    """Modern music page fallback."""
+    """Modern music page fallback invoking the resonance module if available."""
     st.markdown("# 🎵 Resonance Music")
-    st.info("🚧 Harmonic resonance features coming soon!")
+    try:
+        from transcendental_resonance_frontend.pages import resonance_music
+        if hasattr(resonance_music, "main"):
+            resonance_music.main()
+        else:
+            raise RuntimeError("No main method available")
+    except Exception:
+        st.info("🚧 Harmonic resonance features coming soon!")
 
 
 def render_modern_social_page():
-    """Modern social page fallback."""
+    """Modern social page fallback using social_tabs widgets."""
     st.markdown("# 👥 Social Network")
-    st.info("🚧 Social features in development!")
+    try:
+        render_social_tab()
+    except Exception:
+        st.info("🚧 Social features in development!")
 
 
 # Add this to your main() function after st.set_page_config()
@@ -798,7 +789,7 @@ def run_analysis(validations, *, layout: str = "force"):
         if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
             print("✅ UI diagnostic agent active")
 
-    with st.spinner("Running analysis..."):
+    with st.spinner("Loading..."):
         result = analyze_validation_integrity(validations)
 
     st.subheader("Validations")
@@ -1037,10 +1028,8 @@ def main() -> None:
         st.set_page_config(
             page_title="superNova_2177", layout="wide", initial_sidebar_state="expanded"
         )
-
-        # Apply dark theme styling
-        inject_dark_theme()
-
+        inject_modern_styles()
+        
         # Initialize session state
         if "session_start_ts" not in st.session_state:
             st.session_state["session_start_ts"] = datetime.now(timezone.utc).isoformat(
@@ -1075,7 +1064,7 @@ def main() -> None:
 
         # Apply modern styling
         try:
-            inject_premium_styles()
+            inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
 
@@ -1179,17 +1168,20 @@ def main() -> None:
                         and "SessionLocal" in globals()
                         and "Harmonizer" in globals()
                     ):
-                        user = safe_get_user()
-                        if user and st.button("Fork with Mock Config"):
-                            try:
-                                fork_id = cosmic_nexus.fork_universe(
-                                    user, {"entropy_threshold": 0.5}
-                                )
-                                st.success(f"Forked universe {fork_id}")
-                            except Exception as exc:
-                                st.error(f"Fork failed: {exc}")
-                        elif not user:
-                            st.info("No users available to fork")
+                        try:
+                            user = safe_get_user()
+                            if user and st.button("Fork with Mock Config"):
+                                try:
+                                    fork_id = cosmic_nexus.fork_universe(
+                                        user, {"entropy_threshold": 0.5}
+                                    )
+                                    st.success(f"Forked universe {fork_id}")
+                                except Exception as exc:
+                                    st.error(f"Fork failed: {exc}")
+                            elif not user:
+                                st.info("No users available to fork")
+                        except Exception as exc:
+                            st.error(f"Database error: {exc}")
                     else:
                         st.info("Fork operation unavailable")
 
@@ -1203,20 +1195,17 @@ def main() -> None:
                                     .limit(5)
                                     .all()
                                 )
+                                if records:
+                                    for r in records:
+                                        st.write({
+                                            "id": r.id,
+                                            "status": r.status,
+                                            "timestamp": r.timestamp,
+                                        })
+                                else:
+                                    st.write("No forks recorded")
                         except Exception as exc:
                             st.error(f"Database error: {exc}")
-                            records = []
-                        if records:
-                            for r in records:
-                                st.write(
-                                    {
-                                        "id": r.id,
-                                        "status": r.status,
-                                        "timestamp": r.timestamp,
-                                    }
-                                )
-                        else:
-                            st.write("No forks recorded")
                     else:
                         st.info("Database unavailable")
 
@@ -1230,17 +1219,20 @@ def main() -> None:
                             try:
                                 with SessionLocal() as db:
                                     with st.spinner("Working on it..."):
-                                        result = _run_async(
-                                            dispatch_route(
-                                                "trigger_full_audit",
-                                                {"hypothesis_id": hid},
-                                                db=db,
+                                        try:
+                                            result = _run_async(
+                                                dispatch_route(
+                                                    "trigger_full_audit",
+                                                    {"hypothesis_id": hid},
+                                                    db=db,
+                                                )
                                             )
-                                        )
-                                        st.json(result)
-                                        st.toast("Success!")
+                                            st.json(result)
+                                            st.toast("Success!")
+                                        except Exception as exc:
+                                            st.error(f"Audit failed: {exc}")
                             except Exception as exc:
-                                st.error(f"Audit failed: {exc}")
+                                st.error(f"Database error: {exc}")
                         elif (
                             "run_full_audit" in globals()
                             and "SessionLocal" in globals()
@@ -1248,11 +1240,14 @@ def main() -> None:
                             try:
                                 with SessionLocal() as db:
                                     with st.spinner("Working on it..."):
-                                        result = run_full_audit(hid, db)
-                                        st.json(result)
-                                        st.toast("Success!")
+                                        try:
+                                            result = run_full_audit(hid, db)
+                                            st.json(result)
+                                            st.toast("Success!")
+                                        except Exception as exc:
+                                            st.error(f"Audit failed: {exc}")
                             except Exception as exc:
-                                st.error(f"Audit failed: {exc}")
+                                st.error(f"Database error: {exc}")
                         else:
                             st.info("Audit functionality unavailable")
 
