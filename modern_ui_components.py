@@ -101,8 +101,7 @@ def render_modern_sidebar(
     container: Optional[st.delta_generator.DeltaGenerator] = None,
     icons: Optional[Dict[str, str]] = None,
     *,
-    key: str = "nav_selection",
-
+    key: str = "sidebar_nav",
 ) -> str:
     """Render a vertical navigation menu with optional icons."""
     if container is None:
@@ -135,46 +134,42 @@ def render_modern_sidebar(
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-
         try:
             if USE_OPTION_MENU and option_menu is not None:
-                choice_disp = option_menu(
+                choice = option_menu(
                     menu_title=None,
-                    options=display_opts,
+                    options=opts,
                     icons=[icon_map.get(o, "dot") for o in opts],
                     orientation="vertical",
                     key=key,
-                    default_index=display_opts.index(
-                        short_map.get(st.session_state.get(key, opts[0]), opts[0])
+                    default_index=opts.index(
+                        st.session_state.get(key, opts[0])
                     ),
                 )
-                choice = opts[display_opts.index(choice_disp)]
             elif hasattr(st, "radio"):
                 choice_disp = st.radio(
                     "Navigate",
-                    display_opts,
+                    [f"{icon_map.get(o, '')} {o}".strip() for o in opts],
                     key=key,
-                    index=display_opts.index(
-                        short_map.get(st.session_state.get(key, opts[0]), opts[0])
+                    index=opts.index(
+                        st.session_state.get(key, opts[0])
                     ),
                 )
-                choice = opts[display_opts.index(choice_disp)]
+                choice = opts[[f"{icon_map.get(o, '')} {o}".strip() for o in opts].index(choice_disp)]
             else:
-                # Fallback mode for limited test environments
                 choice = st.session_state.get(key, opts[0])
                 for opt in opts:
-                    if container.button(opt, key=f"{key}_{opt}"):
+                    icon = icon_map.get(opt, "")
+                    label = f"{icon} {opt}" if icon else opt
+                    if container.button(label, key=f"{key}_{opt}"):
                         choice = opt
                         break
         except Exception:
-            # Final fallback for any rendering edge cases
             choice = opts[0]
 
-    st.session_state[key] = choice
-    st.markdown("</div>", unsafe_allow_html=True)
-    return choice
-
-
+        st.session_state[key] = choice
+        st.markdown("</div>", unsafe_allow_html=True)
+        return choice
 
 
 def render_validation_card(entry: dict) -> None:
