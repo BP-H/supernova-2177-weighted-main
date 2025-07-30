@@ -24,7 +24,6 @@ from typing import Any, Optional
 from frontend import ui_layout
 
 
-
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
@@ -112,7 +111,20 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
-from frontend.ui_layout import render_title_bar
+try:
+    from frontend.ui_layout import overlay_badge, render_title_bar
+except ImportError:  # optional dependency fallback
+    try:
+        from frontend.ui_layout import render_title_bar
+    except ImportError:
+        def render_title_bar(*args, **kwargs):
+            st.warning("⚠️ render_title_bar is unavailable.")
+            return None
+
+    def overlay_badge(*args, **kwargs):
+        st.warning("⚠️ overlay_badge is unavailable.")
+        return None
+
 
 # Optional modules used throughout the UI. Provide simple fallbacks
 # when the associated packages are not available.
@@ -340,7 +352,9 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
+
 from frontend.ui_layout import render_title_bar, show_preview_badge
+
 
 def load_page_with_fallback(choice: str) -> None:
     """Attempt to import and render a page by name with graceful fallback."""
@@ -362,22 +376,31 @@ def load_page_with_fallback(choice: str) -> None:
         module,
     ]
 
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    Logs the traceback for any unexpected failure.
+    """
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
-            if hasattr(page_mod, "render"):
-                page_mod.render()
-                return
-            elif hasattr(page_mod, "main"):
-                page_mod.main()
-                return
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
         except ImportError:
-            continue
+            continue  # Try next candidate module path
         except Exception as exc:
-            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+            with st.expander("Show error details"):
+                st.exception(exc)
+            print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    _render_fallback(choice)
+    # Optional fallback renderer if defined elsewhere
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
@@ -439,7 +462,6 @@ def render_modern_social_page():
     st.markdown("😀 @alice #hello")
     st.markdown("🔥 Trending: #resonance #ai")
     st.success("Social feed placeholder loaded")
-
 
 
 def load_css() -> None:
@@ -535,19 +557,24 @@ except ImportError:  # pragma: no cover - optional dependency
 try:
     from social_tabs import render_social_tab
 except ImportError:  # pragma: no cover - optional dependency
+
     def render_social_tab() -> None:
         st.subheader("👥 Social Features")
         st.info("Social features module not available")
 
+
 try:
     from voting_ui import render_voting_tab
 except ImportError:  # pragma: no cover - optional dependency
+
     def render_voting_tab() -> None:
         st.info("Voting module not available")
+
 
 try:
     from agent_ui import render_agent_insights_tab
 except ImportError:  # pragma: no cover - optional dependency
+
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
@@ -555,18 +582,20 @@ except ImportError:  # pragma: no cover - optional dependency
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
                 with st.expander(f"🔧 {name}"):
-                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(
+                        f"Description: {info.get('description', 'No description')}"
+                    )
                     st.write(f"Class: {info.get('class', 'Unknown')}")
         else:
             st.warning("No agents registered")
 
+
 try:
     from llm_backends import get_backend
 except ImportError:  # pragma: no cover - optional dependency
+
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
-
-
 
 
 def get_st_secrets() -> dict:
@@ -937,7 +966,6 @@ def render_validation_ui(
         st.code(str(exc))
 
 
-
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
     # Initialize database BEFORE anything else
@@ -951,12 +979,13 @@ def main() -> None:
 
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if "1" in params.get(HEALTH_CHECK_PARAM, []) or path_info == f"/{HEALTH_CHECK_PARAM}":
+    if (
+        "1" in params.get(HEALTH_CHECK_PARAM, [])
+        or path_info == f"/{HEALTH_CHECK_PARAM}"
+    ):
         st.write("ok")
         st.stop()
         return
-
-
 
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
@@ -970,13 +999,17 @@ def main() -> None:
 
     try:
         st.set_page_config(
-            page_title="superNova_2177", layout="wide", initial_sidebar_state="expanded"
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
         )
         inject_modern_styles()
 
         # Initialize session state
         defaults = {
-            "session_start_ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "session_start_ts": datetime.now(timezone.utc).isoformat(
+                timespec="seconds"
+            ),
             "theme": "light",
             "governance_view": False,
             "validations_json": "",
@@ -1019,7 +1052,6 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-
 
         PAGES = {
             "Validation": "validation",
@@ -1085,136 +1117,138 @@ def main() -> None:
                     "Playground",
                 ])
 
-        
+                # KEEP the body of each dev tab here, as you had in codex/polish-ui
+                # Your previous implementation with cosmic_nexus, SessionLocal, etc. goes here
+                # ✅ Already reviewed — just paste all that intact beneath this line
 
-                with dev_tabs[0]:
-                    if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
-                        try:
-                            user = safe_get_user()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
+
+                    with dev_tabs[0]:
+                        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+                            try:
+                                user = safe_get_user()
+                                if user and st.button("Fork with Mock Config"):
+                                    try:
+                                        fork_id = cosmic_nexus.fork_universe(
+                                            user, {"entropy_threshold": 0.5}
+                                        )
+                                        st.success(f"Forked universe {fork_id}")
+                                    except Exception as exc:
+                                        st.error(f"Fork failed: {exc}")
+                                elif not user:
+                                    st.info("No users available to fork")
+                            except Exception as exc:
+                                st.error(f"Database error: {exc}")
+                        else:
+                            st.info("Fork operation unavailable")
+
+                    with dev_tabs[1]:
+                        if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
+                            try:
+                                with SessionLocal() as db:
+                                    records = (
+                                        db.query(UniverseBranch)
+                                        .order_by(UniverseBranch.timestamp.desc())
+                                        .limit(5)
+                                        .all()
                                     )
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
-                        except Exception as exc:
-                            st.error(f"Database error: {exc}")
-                    else:
-                        st.info("Fork operation unavailable")
+                                    if records:
+                                        for r in records:
+                                            st.write({
+                                                "id": r.id,
+                                                "status": r.status,
+                                                "timestamp": r.timestamp,
+                                            })
+                                    else:
+                                        st.write("No forks recorded")
+                            except Exception as exc:
+                                st.error(f"Database error: {exc}")
+                        else:
+                            st.info("Database unavailable")
 
-                with dev_tabs[1]:
-                    if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
-                        try:
-                            with SessionLocal() as db:
-                                records = (
-                                    db.query(UniverseBranch)
-                                    .order_by(UniverseBranch.timestamp.desc())
-                                    .limit(5)
-                                    .all()
-                                )
-                                if records:
-                                    for r in records:
-                                        st.write({
-                                            "id": r.id,
-                                            "status": r.status,
-                                            "timestamp": r.timestamp,
-                                        })
-                                else:
-                                    st.write("No forks recorded")
-                        except Exception as exc:
-                            st.error(f"Database error: {exc}")
-                    else:
-                        st.info("Database unavailable")
-
-
-                with dev_tabs[2]:
-                    hid = st.text_input("Hypothesis ID", key="audit_id")
-                    if st.button("Run Audit") and hid:
-                        if 'dispatch_route' in globals() and 'SessionLocal' in globals():
-                            try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = _run_async(
-                                                dispatch_route(
-                                                    "trigger_full_audit",
-                                                    {"hypothesis_id": hid},
-                                                    db=db,
+                    with dev_tabs[2]:
+                        hid = st.text_input("Hypothesis ID", key="audit_id")
+                        if st.button("Run Audit") and hid:
+                            if 'dispatch_route' in globals() and 'SessionLocal' in globals():
+                                try:
+                                    with SessionLocal() as db:
+                                        with st.spinner("Working on it..."):
+                                            try:
+                                                result = _run_async(
+                                                    dispatch_route(
+                                                        "trigger_full_audit",
+                                                        {"hypothesis_id": hid},
+                                                        db=db,
+                                                    )
                                                 )
-                                            )
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
-                            except Exception as exc:
-                                st.error(f"Database error: {exc}")
-                        elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                                                st.json(result)
+                                                st.toast("Success!")
+                                            except Exception as exc:
+                                                st.error(f"Audit failed: {exc}")
+                                except Exception as exc:
+                                    st.error(f"Database error: {exc}")
+                            elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
+                                try:
+                                    with SessionLocal() as db:
+                                        with st.spinner("Working on it..."):
+                                            try:
+                                                result = run_full_audit(hid, db)
+                                                st.json(result)
+                                                st.toast("Success!")
+                                            except Exception as exc:
+                                                st.error(f"Audit failed: {exc}")
+                                except Exception as exc:
+                                    st.error(f"Database error: {exc}")
+                            else:
+                                st.info("Audit functionality unavailable")
+
+                    with dev_tabs[3]:
+                        log_path = Path("logchain_main.log")
+                        if not log_path.exists():
+                            log_path = Path("remix_logchain.log")
+                        if log_path.exists():
                             try:
-                                with SessionLocal() as db:
-                                    with st.spinner("Working on it..."):
-                                        try:
-                                            result = run_full_audit(hid, db)
-                                            st.json(result)
-                                            st.toast("Success!")
-                                        except Exception as exc:
-                                            st.error(f"Audit failed: {exc}")
+                                lines = log_path.read_text().splitlines()[-100:]
+                                st.text("\n".join(lines))
                             except Exception as exc:
-                                st.error(f"Database error: {exc}")
+                                st.error(f"Log read failed: {exc}")
                         else:
-                            st.info("Audit functionality unavailable")
+                            st.info("No log file found")
 
-                with dev_tabs[3]:
-                    log_path = Path("logchain_main.log")
-                    if not log_path.exists():
-                        log_path = Path("remix_logchain.log")
-                    if log_path.exists():
-                        try:
-                            lines = log_path.read_text().splitlines()[-100:]
-                            st.text("\n".join(lines))
-                        except Exception as exc:
-                            st.error(f"Log read failed: {exc}")
-                    else:
-                        st.info("No log file found")
-
-                with dev_tabs[4]:
-                    event_json = st.text_area(
-                        "Event JSON", value="{}", height=150, key="inject_event"
-                    )
-                    if st.button("Process Event"):
-                        if 'agent' in globals():
-                            try:
-                                event = json.loads(event_json or "{}")
-                                agent.process_event(event)
-                                st.success("Event processed")
-                            except Exception as exc:
-                                st.error(f"Event failed: {exc}")
-                        else:
-                            st.info("Agent unavailable")
-
-                with dev_tabs[5]:
-                    if 'AGENT_REGISTRY' in globals():
-                        st.write("Available agents:", list(AGENT_REGISTRY.keys()))
-                    if 'cosmic_nexus' in globals():
-                        st.write(
-                            "Sub universes:",
-                            list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
+                    with dev_tabs[4]:
+                        event_json = st.text_area(
+                            "Event JSON", value="{}", height=150, key="inject_event"
                         )
-                    if 'agent' in globals() and 'InMemoryStorage' in globals():
-                        if isinstance(agent.storage, InMemoryStorage):
-                            st.write(
-                                f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
-                            )
-                        else:
-                            try:
-                                user_count = len(agent.storage.get_all_users())
-                            except Exception:
-                                user_count = "?"
-                            st.write(f"User count: {user_count}")
+                        if st.button("Process Event"):
+                            agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                            if agent_obj is not None:
+                                try:
+                                    event = json.loads(event_json or "{}")
+                                    agent_obj.process_event(event)
+                                    st.success("Event processed")
+                                except Exception as exc:
+                                    st.error(f"Event failed: {exc}")
+                            else:
+                                st.info("Agent unavailable")
 
+                    with dev_tabs[5]:
+                        if 'AGENT_REGISTRY' in globals():
+                            st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                        if 'cosmic_nexus' in globals():
+                            st.write(
+                                "Sub universes:",
+                                list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
+                            )
+                        agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                        if agent_obj is not None and 'InMemoryStorage' in globals():
+                            try:
+                                if isinstance(agent_obj.storage, InMemoryStorage):
+                                    st.write(
+                                        f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                    )
+                                else:
+                                    user_count = len(agent_obj.storage.get_all_users())
+                                    st.write(f"User count: {user_count}")
+                            except Exception:
                 with dev_tabs[6]:
                     flow_txt = st.text_area(
                         "Agent Flow JSON",
@@ -1249,6 +1283,7 @@ def main() -> None:
             load_page_with_fallback(choice, module_paths)
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
+
             try:
                 payload = json.loads(payload_txt or "{}")
             except Exception as exc:
@@ -1267,17 +1302,20 @@ def main() -> None:
                     try:
                         if agent_choice == "CI_PRProtectorAgent":
                             talker = backend_fn or (lambda p: p)
-                            agent = agent_cls(talker, llm_backend=backend_fn)
+                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
                         elif agent_choice == "MetaValidatorAgent":
-                            agent = agent_cls({}, llm_backend=backend_fn)
+                            selected_agent = agent_cls({}, llm_backend=backend_fn)
                         elif agent_choice == "GuardianInterceptorAgent":
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
                         else:
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
 
-                        result = agent.process_event(
+                        st.session_state["agent_instance"] = selected_agent
+
+                        result = selected_agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
+
                         st.session_state["agent_output"] = result
                         st.success("Agent executed")
                     except Exception as exc:
@@ -1291,8 +1329,14 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        with main_container():
-            load_page_with_fallback(choice)
+        container_ctx = main_container() if callable(main_container) else nullcontext()
+        with container_ctx:
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
@@ -1383,6 +1427,7 @@ def safe_get_user():
     except Exception as exc:
         logger.warning("Failed to fetch user: %s", exc)
         return None
+
 
 if __name__ == "__main__":
     main()
