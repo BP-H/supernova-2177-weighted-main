@@ -348,28 +348,35 @@ except ImportError:
 # Replace this line in your ui.py:
 # from voting_ui import render_voting_tab
 
-# With this safe import:
+# Safe imports with fallbacks
 try:
     from voting_ui import render_voting_tab
-    from agent_ui import render_agent_insights_tab
-    from social_tabs import render_social_tab
-    from llm_backends import get_backend
-    from protocols import AGENT_REGISTRY
 except ImportError:
-    # Create fallback functions
     def render_voting_tab():
         st.info("Voting module not available")
-    
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:
     def render_agent_insights_tab():
         st.info("Agent insights not available")
-    
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:
     def render_social_tab():
         st.info("Social features not available")
-    
+
+try:
+    from llm_backends import get_backend
+except ImportError:
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy"}
 
-# Apply the same pattern to other missing imports:
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:
+    AGENT_REGISTRY = {}
 
 try:
     from agent_ui import render_agent_insights_tab
