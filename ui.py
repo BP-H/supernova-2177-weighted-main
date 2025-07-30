@@ -426,7 +426,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                 if hasattr(page_mod, method_name):
                     getattr(page_mod, method_name)()
                     return
-        except ImportError:
+                except ImportError:
             continue  # Try next candidate module path
                 except Exception as exc:
                     st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
