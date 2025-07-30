@@ -360,12 +360,12 @@ def inject_dark_theme() -> None:
 
 from frontend.ui_layout import render_title_bar, show_preview_badge
 from streamlit.errors import StreamlitAPIException
+from pathlib import Path
+import importlib
+import traceback
 
-
-def load_page_with_fallback(
-    choice: str, module_paths: list[str] | None = None
-) -> None:
-    """Load a page via ``st.switch_page`` or fall back to importing the module."""
+def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
+    """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -376,6 +376,13 @@ def load_page_with_fallback(
             module,
         ]
 
+    # Validate PAGES_DIR existence
+    if not PAGES_DIR.exists():
+        st.error(f"Pages directory not found: {PAGES_DIR}")
+        if "_render_fallback" in globals():
+            _render_fallback(choice)
+        return
+
     # First try switching pages using Streamlit's multipage support
     for module_path in module_paths:
         page_file = Path(module_path.replace(".", "/") + ".py")
@@ -384,12 +391,11 @@ def load_page_with_fallback(
             try:
                 st.switch_page(rel_path)
                 return
-            except StreamlitAPIException:
-                pass
+            except StreamlitAPIException as exc:
+                st.warning(f"Switch failed for {choice}: {exc}")
+                continue
 
     # Fallback: import the module directly and call ``render`` or ``main``
-    import importlib
-
     for module_path in module_paths:
         try:
             page_mod = importlib.import_module(module_path)
@@ -398,13 +404,36 @@ def load_page_with_fallback(
                     getattr(page_mod, method_name)()
                     return
         except ImportError:
-            continue
+            continue  # Try next candidate module path
         except Exception as exc:
             st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
             with st.expander("Show error details"):
                 st.exception(exc)
             print("Traceback for debugging:\n", traceback.format_exc())
             break
+
+    st.warning(f"Page not found: {choice}")
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
+    for module_path in module_paths:
+        try:
+            page_mod = importlib.import_module(module_path)
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
+        except ImportError:
+            continue  # Try next candidate module path
+                except Exception as exc:
+                    st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+                    with st.expander("Show error details"):
+                        st.exception(exc)
+                    print("Traceback for debugging:\n", traceback.format_exc())
+                    break
+                    with st.expander("Show error details"):
+                        st.exception(exc)
+                    print("Traceback for debugging:\n", traceback.format_exc())
+                    break
 
     st.warning(f"Page not found: {choice}")
     if "_render_fallback" in globals():
