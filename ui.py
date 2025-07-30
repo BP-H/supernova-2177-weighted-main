@@ -53,6 +53,7 @@ PAGES_DIR = (
 )
 
 # Mapping of navigation labels to page module names
+
 PAGES = {
     "Validation": "validation",
     "Voting": "voting",
