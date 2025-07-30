@@ -12,7 +12,7 @@ from .features import (
 )
 from .error_overlay import ErrorOverlay
 from .api_status_footer import ApiStatusFooter
-from .page_registry import ensure_pages, get_pages_dir
+from .page_registry import ensure_pages, get_pages_dir, clean_duplicate_pages
 
 __all__ = [
     "quick_post_button",
@@ -29,4 +29,5 @@ __all__ = [
     "ApiStatusFooter",
     "ensure_pages",
     "get_pages_dir",
+    "clean_duplicate_pages",
 ]
