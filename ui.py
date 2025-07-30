@@ -481,8 +481,10 @@ def load_page_with_fallback(choice):
         page_module = pages[choice]
         module_path = f"pages.{page_module}"
         page_mod = import_module(module_path)
-        
-        if hasattr(page_mod, 'render'):
+
+        if hasattr(page_mod, "main"):
+            page_mod.main()
+        elif hasattr(page_mod, "render"):
             page_mod.render()
         else:
             render_modern_validation_page()
@@ -503,22 +505,38 @@ def load_page_with_fallback(choice):
 def render_modern_voting_page():
     """Modern voting page fallback."""
     st.markdown("# 🗳️ Voting Dashboard")
-    st.info("🚧 Advanced voting features coming soon!")
+    try:
+        render_voting_tab()
+    except Exception:
+        st.info("🚧 Advanced voting features coming soon!")
 
 def render_modern_agents_page():
     """Modern agents page fallback."""
     st.markdown("# 🤖 AI Agents")
-    st.info("🚧 Agent management system in development!")
+    try:
+        render_agent_insights_tab()
+    except Exception:
+        st.info("🚧 Agent management system in development!")
 
 def render_modern_music_page():
     """Modern music page fallback."""
     st.markdown("# 🎵 Resonance Music")
-    st.info("🚧 Harmonic resonance features coming soon!")
+    try:
+        from transcendental_resonance_frontend.pages import resonance_music
+        if hasattr(resonance_music, "main"):
+            resonance_music.main()
+        else:
+            raise RuntimeError
+    except Exception:
+        st.info("🚧 Harmonic resonance features coming soon!")
 
 def render_modern_social_page():
     """Modern social page fallback."""
     st.markdown("# 👥 Social Network")
-    st.info("🚧 Social features in development!")
+    try:
+        render_social_tab()
+    except Exception:
+        st.info("🚧 Social features in development!")
 
 # Add this to your main() function after st.set_page_config()
 
