@@ -77,33 +77,32 @@ render_modern_sidebar = render_sidebar_nav
 # Utility path handling
 from pathlib import Path
 import logging
-from utils.page_registry import ensure_pages
 from utils.paths import ROOT_DIR, PAGES_DIR
 
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+# Import page registry helper with robust fallbacks. Attempt the package-specific
+# path first, then fall back to a local ``utils`` package if available. As a last
+# resort provide a no-op stub so the application can continue running without
+# crashing when the registry utilities are missing.
 try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as exc:  # pragma: no cover - best effort fallback
-    logger.error("Failed to import ensure_pages: %s", exc)
-
-    def ensure_pages(*_args, **_kwargs) -> None:
-        """Fallback no-op when page registry utilities are unavailable."""
-        logger.debug("ensure_pages fallback invoked")
-
-
-try:
-    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
-except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
-    logger.warning("Primary page_registry import failed: %s", import_err)
+    from transcendental_resonance_frontend.src.utils.page_registry import (
+        ensure_pages,
+    )
+except Exception as primary_err:  # pragma: no cover - best effort fallback
+    logger.debug("primary ensure_pages import failed: %s", primary_err)
     try:
         from utils.page_registry import ensure_pages  # type: ignore
-    except Exception as fallback_err:
-        logger.warning("Secondary page_registry import also failed: %s", fallback_err)
-        def ensure_pages(*_a, **_k):
-            logger.warning("ensure_pages noop fallback used")
+    except Exception as secondary_err:
+        logger.warning(
+            "ensure_pages import failed: %s; using noop fallback", secondary_err
+        )
+
+        def ensure_pages(*_args, **_kwargs) -> None:  # type: ignore
+            """Fallback no-op when page registry utilities are unavailable."""
+            logger.debug("ensure_pages noop fallback invoked")
             return None
 
 
@@ -185,9 +184,9 @@ from streamlit_helpers import (
 )
 
 from modern_ui import (
-    inject_modern_styles,
     render_stats_section,
 )
+from frontend.theme import inject_modern_styles
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -353,8 +352,8 @@ def render_landing_page():
 
 
 def inject_modern_styles() -> None:
-    """Backward compatible alias forwarding to :mod:`modern_ui`."""
-    from modern_ui import inject_modern_styles as _impl
+    """Backward compatible alias for modern theme injection."""
+    from frontend.theme import inject_modern_styles as _impl
 
     _impl()
 
@@ -477,30 +476,33 @@ def _render_fallback(choice: str) -> None:
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
+
     loaded = False
-    for page_file in page_candidates:
-        if not page_file.exists():
-            continue
-        logger.debug("Attempting to load %s from %s", slug, page_file)
-        try:
-            spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
-            if not spec or not spec.loader:
+    # Only try to load manually if st.experimental_page is available
+    if hasattr(st, "experimental_page"):
+        for page_file in page_candidates:
+            if not page_file.exists():
                 continue
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            spec.loader.exec_module(mod)
-            for fn in ("render", "main"):
-                if hasattr(mod, fn):
-                    try:
-                        getattr(mod, fn)()
-                        loaded = True
-                        break
-                    except Exception as exc:
-                        logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
-            if loaded:
-                break
-        except Exception as exc:
-            logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+            logger.debug("Attempting to load %s from %s", slug, page_file)
+            try:
+                spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+                if not spec or not spec.loader:
+                    continue
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                spec.loader.exec_module(mod)
+                for fn in ("render", "main"):
+                    if hasattr(mod, fn):
+                        try:
+                            getattr(mod, fn)()
+                            loaded = True
+                            break
+                        except Exception as exc:
+                            logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+                if loaded:
+                    break
+            except Exception as exc:
+                logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
 
     if loaded:
         return

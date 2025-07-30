@@ -9,6 +9,9 @@ from pathlib import Path
 import logging
 import streamlit as st
 
+# Track which slugs have already triggered a missing-page warning.
+_warned_slugs: set[str] = set()
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
@@ -35,5 +38,10 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
                 "    st.write('Placeholder')\n"
             )
             logger.info("Created placeholder page module %s", file_path.name)
+
+            # Warn in Streamlit contexts that the slug was missing, but only once per slug.
+            if hasattr(st, "warning") and slug not in _warned_slugs:
+                st.warning(f"Placeholder page created for missing slug '{slug}'.")
+                _warned_slugs.add(slug)
 
 __all__ = ["ensure_pages"]
