@@ -10,8 +10,14 @@ from .utils.reflection import self_reflect  # noqa: F401
 from .utils.remote import handshake, ping_agent  # noqa: F401
 
 # Expose agent classes for convenience
+_loaded_agents = []
 for _name, _info in AGENT_REGISTRY.items():
-    globals()[_name] = _info["class"]
+    try:
+        globals()[_name] = _info["class"]
+    except Exception:
+        continue
+    else:
+        _loaded_agents.append(_name)
 
 __all__ = (
     "AgentProfile",
@@ -22,4 +28,4 @@ __all__ = (
     "fork_agent",
     "ValidatorElf",
     "DreamWeaver",
-) + tuple(AGENT_REGISTRY.keys()) + ("AGENT_REGISTRY",)
+) + tuple(_loaded_agents) + ("AGENT_REGISTRY",)
