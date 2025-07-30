@@ -1043,7 +1043,7 @@ def main() -> None:
         st.info("Running in fallback mode")
 
     # Respond to lightweight health-check probes
-    params = st.query_params
+    params = st.experimental_get_query_params()
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
         "1" in params.get(HEALTH_CHECK_PARAM, [])
@@ -1058,6 +1058,27 @@ def main() -> None:
             page_title="superNova_2177",
             layout="wide",
             initial_sidebar_state="collapsed",
+        )
+        # Inject keyboard shortcuts for quick navigation
+        st.markdown(
+            """
+            <script>
+            document.addEventListener('keydown', function(e) {
+              const tag = document.activeElement.tagName;
+              if (tag === 'INPUT' || tag === 'TEXTAREA') { return; }
+              const params = new URLSearchParams(window.location.search);
+              if (e.key === 'N' || e.key === 'n') {
+                params.set('page', 'Voting');
+                window.location.search = params.toString();
+              }
+              if (e.key === 'V' || e.key === 'v') {
+                params.set('page', 'Validation');
+                window.location.search = params.toString();
+              }
+            });
+            </script>
+            """,
+            unsafe_allow_html=True,
         )
         inject_modern_styles()
 
@@ -1125,11 +1146,19 @@ def main() -> None:
             for label, mod in PAGES.items()
         }
 
-        # Modern Sidebar Nav
+        # Determine page from query params and sidebar
+        query = st.experimental_get_query_params()
+        forced_page = query.get("page", [None])[0]
+
         choice = render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
+
+        if forced_page in page_paths:
+            choice = forced_page
+
+        st.experimental_set_query_params(page=choice)
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])

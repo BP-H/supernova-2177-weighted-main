@@ -97,7 +97,8 @@ def render_modern_sidebar(
     pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
     icons: Optional[Dict[str, str]] = None,
-
+    *,
+    key: str = "sidebar_nav",
 ) -> str:
     """Render a vertical navigation menu with optional icons."""
     if container is None:
@@ -116,20 +117,24 @@ def render_modern_sidebar(
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-    if USE_OPTION_MENU and option_menu is not None:
-        choice = option_menu(
-            menu_title=None,
-            options=opts,
-            icons=icons or ["dot"] * len(opts),
-            orientation="vertical",
-            key=key,
-            default_index=opts.index(state.get(key, opts[0])),
-        )
-    else:
-        choice = st.radio("Navigate", opts, key=key, index=opts.index(state.get(key, opts[0])))
-    
-    state[key] = choice
-    st.markdown("</div>", unsafe_allow_html=True)
+        if USE_OPTION_MENU and option_menu is not None:
+            choice = option_menu(
+                menu_title=None,
+                options=opts,
+                icons=icons or ["dot"] * len(opts),
+                orientation="vertical",
+                key=key,
+                default_index=opts.index(state.get(key, opts[0])),
+            )
+        else:
+            choice = state.get(key, opts[0])
+            for opt in opts:
+                icon = icon_map.get(opt, "")
+                label = f"{icon} {opt}" if icon else opt
+                if st.button(label, key=f"{key}_{opt}"):
+                    choice = opt
+        state[key] = choice
+        st.markdown("</div>", unsafe_allow_html=True)
     return state[key]
 
 
