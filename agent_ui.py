@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
-from streamlit_helpers import inject_global_styles, theme_selector
+from streamlit_helpers import inject_global_styles
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
@@ -33,7 +33,7 @@ def render_agent_insights_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    theme_selector("Theme")
+    theme_selector("Theme", key_suffix="agent_insights")
     inject_global_styles()
     with main_container:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)

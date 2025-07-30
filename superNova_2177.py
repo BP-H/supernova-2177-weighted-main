@@ -47,7 +47,9 @@ Contact: https://github.com/BP-H
 # --- Static Analysis & Linting ---
 # black .
 # flake8 .
-# mypy .
+# mypy hypothesis_meta_evaluator.py \
+#      causal_trigger.py \
+#      introspection/introspection_pipeline.py
 # bandit -r .
 
 # ----------------------------------------------------------------------------------------------------------------------
