@@ -1109,32 +1109,34 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Main content with sidebar
-        main_col, left_col = st.columns([3, 1])
+        # Main content with 3-column layout
+        left_col, center_col, right_col = st.columns([1, 3, 1])
 
-        with main_col:
+        with center_col:
             # Load page content
             load_page_with_fallback(choice)
-
         with left_col:
             render_status_icon()
 
-            with st.expander("Environment"):
+            with st.expander("Environment Details"):
                 secrets = get_st_secrets()
-                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
 
-            with st.expander("Settings"):
+            with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
                 theme_selector("Theme")
 
-            with st.expander("File Upload"):
+            with st.expander("Data Management"):
                 uploaded_file = st.file_uploader("Upload JSON", type="json")
                 if st.button("Run Analysis"):
                     st.success("Analysis complete!")
 
-            with st.expander("Agent Controls"):
+            with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui()
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
@@ -1149,7 +1151,7 @@ def main() -> None:
             )
             st.session_state["governance_view"] = governance_view
 
-            with st.expander("Developer Tools"):
+            with st.expander("Simulation Tools"):
                 dev_tabs = st.tabs([
                     "Fork Universe",
                     "Universe State Viewer",
