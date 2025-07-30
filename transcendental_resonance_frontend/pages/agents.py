@@ -1,19 +1,14 @@
 import streamlit as st
+from agent_ui import render_agent_insights_tab
 
 
-def main():
-    """Safe agent page that won't crash."""
+def main(main_container=None) -> None:
+    """Render the full agent insights tab if available."""
+    if main_container is None:
+        main_container = st
+
     try:
-        st.title("🤖 Agents")
-        st.info("Agent functionality is under development")
-
-        agents = ["MetaValidator", "Guardian", "Resonance"]
-        selected_agent = st.selectbox("Select Agent", agents, key="agent_select")
-
-        if st.button("Test Agent", key="test_agent"):
-            st.success(f"✅ {selected_agent} agent test complete")
-            st.json({"agent": selected_agent, "status": "ok", "test": True})
-
+        render_agent_insights_tab(main_container=main_container)
     except Exception as e:  # pragma: no cover - UI
         st.error(f"Agent page error: {e}")
         if st.button("Reset", key="agent_reset"):

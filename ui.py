@@ -484,7 +484,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
         except ImportError:
             continue  # Try next path
         except Exception as exc:
-            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            st.error(
+                f"⚠️ {choice} failed to load due to {exc.__class__.__name__}: {exc}"
+            )
             break
 
     _render_fallback(choice)
@@ -1325,7 +1327,7 @@ def main() -> None:
                         "Event JSON", value="{}", height=150, key="inject_event"
                     )
                     if st.button("Process Event"):
-                        if 'agent' in globals():
+                        if 'agent' in globals() and agent is not None:
                             try:
                                 event = json.loads(event_json or "{}")
                                 agent.process_event(event)
@@ -1343,7 +1345,11 @@ def main() -> None:
                             "Sub universes:",
                             list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                         )
-                    if 'agent' in globals() and 'InMemoryStorage' in globals():
+                    if (
+                        'agent' in globals()
+                        and agent is not None
+                        and 'InMemoryStorage' in globals()
+                    ):
                         if isinstance(agent.storage, InMemoryStorage):
                             st.write(
                                 f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
@@ -1401,15 +1407,15 @@ def main() -> None:
                     try:
                         if agent_choice == "CI_PRProtectorAgent":
                             talker = backend_fn or (lambda p: p)
-                            agent = agent_cls(talker, llm_backend=backend_fn)
+                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
                         elif agent_choice == "MetaValidatorAgent":
-                            agent = agent_cls({}, llm_backend=backend_fn)
+                            selected_agent = agent_cls({}, llm_backend=backend_fn)
                         elif agent_choice == "GuardianInterceptorAgent":
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
                         else:
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
 
-                        result = agent.process_event(
+                        result = selected_agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
                         st.session_state["agent_output"] = result
@@ -1425,8 +1431,7 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        with main_container():
-            load_page_with_fallback(choice)
+        load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

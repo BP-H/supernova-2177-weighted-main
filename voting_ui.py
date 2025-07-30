@@ -29,6 +29,18 @@ BOX_CSS = """
 """
 
 
+def _sanitize_markdown(text: str) -> str:
+    """Return a UTF-8 safe string for ``st.markdown``."""
+    if isinstance(text, bytes):
+        return text.decode("utf-8", "ignore")
+    return text.encode("utf-8", "ignore").decode("utf-8", "ignore")
+
+
+def safe_markdown(text: str, **kwargs) -> None:
+    """Render markdown after sanitizing the input text."""
+    st.markdown(_sanitize_markdown(text), **kwargs)
+
+
 def _run_async(coro):
     try:
         loop = asyncio.get_running_loop()
@@ -59,7 +71,7 @@ def render_proposals_tab(main_container=None) -> None:
             )
             return
 
-        st.markdown(
+        safe_markdown(
             BOX_CSS
             + """
         <style>
@@ -103,7 +115,7 @@ def render_proposals_tab(main_container=None) -> None:
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            safe_markdown("<div class='card'>", unsafe_allow_html=True)
             with st.form("create_proposal_form"):
                 st.write("Create Proposal")
                 title = st.text_input("Title")
@@ -111,14 +123,14 @@ def render_proposals_tab(main_container=None) -> None:
                 author_id = st.number_input("Author ID", value=1, step=1)
                 group_id = st.text_input("Group ID")
                 voting_deadline = st.date_input("Voting Deadline")
-                st.markdown("<div class='button-primary'>", unsafe_allow_html=True)
+                safe_markdown("<div class='button-primary'>", unsafe_allow_html=True)
                 submitted = st.form_submit_button("Create")
-                st.markdown("</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+                safe_markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("<div class='button-primary'>", unsafe_allow_html=True)
+            safe_markdown("<div class='card'>", unsafe_allow_html=True)
+            safe_markdown("<div class='button-primary'>", unsafe_allow_html=True)
             if st.button("Refresh Proposals", key="refresh_proposals"):
                 with st.spinner("Working on it..."):
                     try:
@@ -127,7 +139,7 @@ def render_proposals_tab(main_container=None) -> None:
                         st.toast("Success!")
                     except Exception as exc:
                         alert(f"Failed to load proposals: {exc}", "error")
-            st.markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
         proposals = st.session_state.get("proposals_cache", [])
         if proposals:
@@ -143,14 +155,14 @@ def render_proposals_tab(main_container=None) -> None:
             df = pd.DataFrame(simple)
             gb = GridOptionsBuilder.from_dataframe(df)
             gb.configure_default_column(filter=True, sortable=True, resizable=True)
-            st.markdown("<div class='ag-grid-container'>", unsafe_allow_html=True)
+            safe_markdown("<div class='ag-grid-container'>", unsafe_allow_html=True)
             AgGrid(
                 df,
                 gridOptions=gb.build(),
                 theme="streamlit",
                 fit_columns_on_grid_load=True,
             )
-            st.markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
         with st.form("vote_proposal_form"):
             st.write("Vote on Proposal")
@@ -165,7 +177,7 @@ def render_proposals_tab(main_container=None) -> None:
             )
             vote_choice = st.selectbox("Vote", ["yes", "no", "abstain"])
             vote_sub = st.form_submit_button("Submit Vote")
-        st.markdown("</div>", unsafe_allow_html=True)
+        safe_markdown("</div>", unsafe_allow_html=True)
 
         if submitted:
             payload = {
@@ -197,7 +209,7 @@ def render_proposals_tab(main_container=None) -> None:
                 except Exception as exc:
                     alert(f"Vote failed: {exc}", "error")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        safe_markdown("</div>", unsafe_allow_html=True)
 
 
 def render_governance_tab(main_container=None) -> None:
@@ -219,7 +231,7 @@ def render_governance_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
             if st.button("Refresh Votes"):
                 with st.spinner("Working on it..."):
                     try:
@@ -261,7 +273,7 @@ def render_governance_tab(main_container=None) -> None:
                             st.toast("Success!")
                         except Exception as exc:
                             alert(f"Record failed: {exc}", "error")
-            st.markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
 
 def render_agent_ops_tab(main_container=None) -> None:
@@ -277,7 +289,7 @@ def render_agent_ops_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
             if st.button("Reload Agent List"):
                 with st.spinner("Working on it..."):
                     try:
@@ -322,7 +334,7 @@ def render_agent_ops_tab(main_container=None) -> None:
                     st.toast("Success!")
                 except Exception as exc:
                     alert(f"Step failed: {exc}", "error")
-            st.markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
 
 def render_logs_tab(main_container=None) -> None:
@@ -338,7 +350,7 @@ def render_logs_tab(main_container=None) -> None:
             )
             return
         with st.container():
-            st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
+            safe_markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
             trace_text = st.text_area("Audit Trace JSON", value="{}", height=200)
             if st.button("Explain Trace"):
                 try:
@@ -355,7 +367,7 @@ def render_logs_tab(main_container=None) -> None:
                             st.toast("Success!")
                         except Exception as exc:
                             alert(f"Explain failed: {exc}", "error")
-            st.markdown("</div>", unsafe_allow_html=True)
+            safe_markdown("</div>", unsafe_allow_html=True)
 
 
 def render_voting_tab(main_container=None) -> None:
