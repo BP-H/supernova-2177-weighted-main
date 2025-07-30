@@ -340,15 +340,13 @@ from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 
+# Safe imports with fallbacks - Replace lines 343-384
 try:
     from social_tabs import render_social_tab
 except ImportError:
     def render_social_tab():
-        # ... (use the code from my artifact)
-# Replace this line in your ui.py:
-# from voting_ui import render_voting_tab
+        st.info("Social features not available")
 
-# Safe imports with fallbacks
 try:
     from voting_ui import render_voting_tab
 except ImportError:
@@ -359,13 +357,8 @@ try:
     from agent_ui import render_agent_insights_tab
 except ImportError:
     def render_agent_insights_tab():
+        st.subheader("🤖 Agent Insights")
         st.info("Agent insights not available")
-
-try:
-    from social_tabs import render_social_tab
-except ImportError:
-    def render_social_tab():
-        st.info("Social features not available")
 
 try:
     from llm_backends import get_backend
@@ -383,7 +376,7 @@ try:
 except ImportError:
     def render_agent_insights_tab():
         st.subheader("🤖 Agent Insights")
-        st.info("Agent insights module not available")
+        st.info("Agent insights not available")
 
 try:
     from social_tabs import render_social_tab
