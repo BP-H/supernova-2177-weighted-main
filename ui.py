@@ -375,11 +375,13 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                     return
                 except StreamlitAPIException as exc:
                     st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    logger.debug("File exists but switch failed: %s", page_file)
                     break
                 except Exception as exc:
                     logging.error(
                         "switch_page failed for %s: %s", rel_path, exc, exc_info=True
                     )
+                    logger.debug("File exists but switch failed: %s", page_file)
                     last_exc = exc
                     break
 
@@ -426,6 +428,7 @@ def _render_fallback(choice: str) -> None:
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
+        logger.debug("Rendering fallback for %s", choice)
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
 
