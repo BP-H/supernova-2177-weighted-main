@@ -1128,39 +1128,43 @@ def main() -> None:
 
                 with dev_tabs[0]:
                     if 'cosmic_nexus' in globals() and 'SessionLocal' in globals() and 'Harmonizer' in globals():
-                        with SessionLocal() as db:
-                            user = db.query(Harmonizer).first()
-                            if user and st.button("Fork with Mock Config"):
-                                try:
-                                    fork_id = cosmic_nexus.fork_universe(
-                                        user, {"entropy_threshold": 0.5}
-                                    )
-                                    st.success(f"Forked universe {fork_id}")
-                                except Exception as exc:
-                                    st.error(f"Fork failed: {exc}")
-                            elif not user:
-                                st.info("No users available to fork")
+                        user = safe_get_user()
+                        if user and st.button("Fork with Mock Config"):
+                            try:
+                                fork_id = cosmic_nexus.fork_universe(
+                                    user, {"entropy_threshold": 0.5}
+                                )
+                                st.success(f"Forked universe {fork_id}")
+                            except Exception as exc:
+                                st.error(f"Fork failed: {exc}")
+                        elif not user:
+                            st.info("No users available to fork")
                     else:
                         st.info("Fork operation unavailable")
 
                 with dev_tabs[1]:
                     if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
-                        with SessionLocal() as db:
-                            records = (
-                                db.query(UniverseBranch)
-                                .order_by(UniverseBranch.timestamp.desc())
-                                .limit(5)
-                                .all()
-                            )
-                            if records:
-                                for r in records:
-                                    st.write({
-                                        "id": r.id,
-                                        "status": r.status,
-                                        "timestamp": r.timestamp,
-                                    })
-                            else:
-                                st.write("No forks recorded")
+                        try:
+                            with SessionLocal() as db:
+                                records = (
+                                    db.query(UniverseBranch)
+                                    .order_by(UniverseBranch.timestamp.desc())
+                                    .limit(5)
+                                    .all()
+                                )
+                        except Exception as exc:
+                            st.error(f"DB error: {exc}")
+                            records = []
+
+                        if records:
+                            for r in records:
+                                st.write({
+                                    "id": r.id,
+                                    "status": r.status,
+                                    "timestamp": r.timestamp,
+                                })
+                        else:
+                            st.write("No forks recorded")
                     else:
                         st.info("Database unavailable")
 
@@ -1168,9 +1172,9 @@ def main() -> None:
                     hid = st.text_input("Hypothesis ID", key="audit_id")
                     if st.button("Run Audit") and hid:
                         if 'dispatch_route' in globals() and 'SessionLocal' in globals():
-                            with SessionLocal() as db:
-                                with st.spinner("Working on it..."):
-                                    try:
+                            try:
+                                with SessionLocal() as db:
+                                    with st.spinner("Working on it..."):
                                         result = _run_async(
                                             dispatch_route(
                                                 "trigger_full_audit",
@@ -1178,19 +1182,19 @@ def main() -> None:
                                                 db=db,
                                             )
                                         )
-                                        st.json(result)
-                                        st.toast("Success!")
-                                    except Exception as exc:
-                                        st.error(f"Audit failed: {exc}")
+                                st.json(result)
+                                st.toast("Success!")
+                            except Exception as exc:
+                                st.error(f"Audit failed: {exc}")
                         elif 'run_full_audit' in globals() and 'SessionLocal' in globals():
-                            with SessionLocal() as db:
-                                with st.spinner("Working on it..."):
-                                    try:
+                            try:
+                                with SessionLocal() as db:
+                                    with st.spinner("Working on it..."):
                                         result = run_full_audit(hid, db)
-                                        st.json(result)
-                                        st.toast("Success!")
-                                    except Exception as exc:
-                                        st.error(f"Audit failed: {exc}")
+                                st.json(result)
+                                st.toast("Success!")
+                            except Exception as exc:
+                                st.error(f"Audit failed: {exc}")
                         else:
                             st.info("Audit functionality unavailable")
 
