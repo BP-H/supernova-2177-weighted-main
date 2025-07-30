@@ -1352,21 +1352,7 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        # Setup: Pages and Icons
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Chat": "chat",
-            "Social": "social",
-            "Profile": "profile",
-        }
-        PAGES_DIR = (
-            Path(__file__).resolve().parent
-            / "transcendental_resonance_frontend"
-            / "pages"
-        )
+        # Setup: Pages and Icons (reuse global mapping)
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
