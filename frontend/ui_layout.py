@@ -20,6 +20,7 @@ UI Ideas:
 from __future__ import annotations
 
 from typing import Dict, Iterable, Optional
+from uuid import uuid4
 import streamlit as st
 
 try:
@@ -43,14 +44,30 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 def render_navbar(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
-    key: str = "main_nav_menu",
+    key: Optional[str] = None,
     default: Optional[str] = None,
 ) -> str:
-    """Render horizontal navigation links using ``st.page_link`` and return the selected label."""
+    """Render horizontal navigation links using ``st.page_link`` and return the
+    selected label.
+
+    Parameters
+    ----------
+    page_links:
+        Mapping or iterable of label-to-target page links.
+    icons:
+        Optional iterable of emoji or icon names for each label.
+    key:
+        Session state key used to track the currently selected page. If omitted,
+        a unique key is generated using :func:`uuid4`.
+    default:
+        The label selected initially when the navbar is first rendered.
+    """
     opts = (
         list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
     )
     icon_list = list(icons or [None] * len(opts))
+    key = key or uuid4().hex
+
     index = 0
     if default is not None and default in [label for label, _ in opts]:
         index = [label for label, _ in opts].index(default)

@@ -1,5 +1,8 @@
 import streamlit as st
+from modern_ui import inject_modern_styles
 from agent_ui import render_agent_insights_tab
+
+inject_modern_styles()
 
 
 def main(main_container=None) -> None:
