@@ -5,17 +5,34 @@
 
 import streamlit as st
 
+try:  # pragma: no cover - optional dependency
+    from streamlit_lottie import st_lottie
+    HAS_LOTTIE = True
+except Exception:  # pragma: no cover - graceful fallback
+    st_lottie = None  # type: ignore
+    HAS_LOTTIE = False
+
+
+def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "🚀") -> None:
+    """Display a Lottie animation if available, otherwise show a fallback icon."""
+    if HAS_LOTTIE and st_lottie is not None:
+        st_lottie(url, height=height)
+    else:
+        st.markdown(f"<div style='font-size:{height // 4}px'>{fallback}</div>", unsafe_allow_html=True)
+
 
 def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
-            --neon-accent: #00ffe1;
-            --bg-start: #05080f;
-            --bg-end: #020409;
+            --neon-accent: #00ffff;
+            --bg-start: #000428;
+            --bg-end: #004e92;
             --text-color: #f0f4f8;
 
         }
@@ -25,12 +42,11 @@ def inject_modern_styles() -> None:
             color: var(--text-color);
             font-family: 'Inter', 'Roboto', 'Urbanist', sans-serif;
         }
-
-        }
         .main .block-container {
-            padding-top: 2rem;
-            padding-left: 3rem;
-            padding-right: 3rem;
+            padding-top: 3rem;
+            padding-bottom: 2rem;
+            padding-left: 4rem;
+            padding-right: 4rem;
             max-width: 1200px;
         }
         [data-testid="stSidebar"] {
@@ -59,7 +75,8 @@ def inject_modern_styles() -> None:
             padding: 1rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
 
             margin-bottom: 1rem;
             background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
@@ -67,8 +84,9 @@ def inject_modern_styles() -> None:
         }
         .card:hover,
         .custom-container:hover {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             transform: translateY(-3px);
+
 
         }
         h1, h2, h3, h4, h5, h6 {
@@ -89,6 +107,26 @@ def inject_modern_styles() -> None:
             font-family: 'Inter', sans-serif !important;
             margin-bottom: 0.75rem;
         }
+        .gradient-btn,
+        .stButton > button {
+            background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            color: #00111e !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 2rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
+            font-size: 0.95rem !important;
+            height: auto !important;
+        }
+        .gradient-btn:hover,
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
+            background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
+            filter: brightness(1.05);
+ 
         .stButton>button {
             background: rgba(255,255,255,0.05) !important;
             border: 1px solid rgba(255,255,255,0.15) !important;
@@ -102,9 +140,9 @@ def inject_modern_styles() -> None:
             font-size: 0.9rem !important;
         }
         .stButton>button:hover {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important, 0 0 6px var(--neon-accent) !important;
             background: rgba(255,255,255,0.08) !important;
-            transform: translateY(-1px) !important;
+            transform: translateY(-1px) scale(1.03) !important;
         }
 
         input, textarea, select {
@@ -114,19 +152,48 @@ def inject_modern_styles() -> None:
             border-radius: 8px !important;
         }
 
-        .sidebar-nav {
-            padding: 0;
-            margin: 0 0 1rem 0;
-        }
         .sidebar-nav .nav-item {
             padding: 0.4rem 0.8rem;
             border-radius: 8px;
             margin-bottom: 0.25rem;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
         }
 
         .sidebar-nav .nav-item.active {
             background: rgba(255,255,255,0.1);
+            color: var(--neon-accent);
+        }
+
+        .sidebar-nav .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav .icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main .block-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .gradient-btn,
+            .stButton > button {
+                width: 100%;
+            }
         }
 
         .profile-card {
@@ -138,6 +205,18 @@ def inject_modern_styles() -> None:
             border-radius: 12px;
             padding: 0.5rem 0.75rem;
             margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            [data-testid="stSidebar"] {
+                width: 14rem;
+            }
+        }
+
         }
         </style>
         """,
@@ -267,6 +346,7 @@ def close_card_container() -> None:
 
 
 __all__ = [
+    "render_lottie_animation",
     "inject_modern_styles",
     "inject_premium_styles",
     "render_modern_header",

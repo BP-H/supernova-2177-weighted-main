@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import importlib
 import sqlite3
 from pathlib import Path
@@ -5,6 +9,8 @@ import sys
 import types
 
 import pytest
+pytest.importorskip("streamlit")
+pytestmark = pytest.mark.requires_streamlit
 
 
 def load_ui(monkeypatch):

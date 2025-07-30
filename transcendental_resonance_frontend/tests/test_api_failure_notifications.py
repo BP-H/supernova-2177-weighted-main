@@ -1,5 +1,12 @@
-import types
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import pytest
+pytest.importorskip("nicegui")
+pytestmark = pytest.mark.requires_nicegui
+
+import types
 
 import pages.network_analysis_page as network_page
 import pages.system_insights_page as system_insights_page
