@@ -961,26 +961,12 @@ def main() -> None:
         st.stop()
         return
 
-    # ADD THIS RIGHT HERE - Initialize database FIRST
+    # Initialize database FIRST
     try:
         ensure_database_exists()
     except Exception as e:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
-
-    try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            layout="wide",
-            initial_sidebar_state="expanded"
-        )
-    """Entry point with comprehensive error handling and modern UI."""
-    params = st.query_params
-    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if "1" in params.get(HEALTH_CHECK_PARAM, []) or path_info == f"/{HEALTH_CHECK_PARAM}":
-        st.write("ok")
-        st.stop()
-        return
 
     try:
         st.set_page_config(
