@@ -51,16 +51,15 @@ def header(title: str, *, layout: str = "centered") -> None:
 def safe_apply_theme(theme: str) -> None:
     """Apply theme with error handling."""
     try:
-        if theme == "dark":
+        if theme.lower() == "dark":
             css = """
                 <style>
-                @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
                 :root {
                     --background: #181818;
                     --secondary-bg: #242424;
                     --text-color: #e8e6e3;
                     --primary-color: #4a90e2;
-                    --font-family: 'Iosevka', monospace;
+                    --font-family: monospace;
                 }
                 .stApp {
                     background-color: var(--background);
@@ -78,7 +77,7 @@ def safe_apply_theme(theme: str) -> None:
                     --secondary-bg: #FFFFFF;
                     --text-color: #333333;
                     --primary-color: #0A84FF;
-                    --font-family: 'Inter', sans-serif;
+                    --font-family: sans-serif;
                 }
                 .stApp {
                     background-color: var(--background);
@@ -102,7 +101,6 @@ def inject_global_styles() -> None:
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body, .stApp {
             background-color: var(--background, #F0F2F6);
             color: var(--text-color, #333333);
@@ -151,44 +149,31 @@ def inject_global_styles() -> None:
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:
-    """Modern theme selector with visual toggle.
-
-    Parameters
-    ----------
-    label
-        Visible label for the selectbox.
-    key_suffix
-        Optional unique suffix appended to the widget key. If omitted, "default"
-        will be used. The key format becomes ``"theme_selector_{key_suffix}_{id(st)}"``.
-    """
+    """Select and apply a theme."""
 
     if key_suffix is None:
         key_suffix = "default"
 
     if "theme" not in st.session_state:
-        st.session_state["theme"] = "dark"
+        st.session_state["theme"] = "light"
 
     unique_key = f"theme_selector_{key_suffix}_{id(st)}"
 
     try:
-        col1, col2 = st.columns([4, 1])
-        with col2:
-            current_theme = st.session_state.get("theme", "dark")
+        current_theme = st.session_state.get("theme", "light")
+        theme_choice = st.selectbox(
+            label,
+            ["Light", "Dark"],
+            index=0 if current_theme == "light" else 1,
+            key=unique_key,
+        )
 
-            theme_choice = st.selectbox(
-                label,
-                ["Light", "Dark", "Codex"],
-                index=1 if current_theme == "dark" else (2 if current_theme == "codex" else 0),
-                key=unique_key,
-            )
-
-            st.session_state["theme"] = theme_choice.lower()
-
+        st.session_state["theme"] = theme_choice.lower()
         apply_theme(st.session_state["theme"])
         return st.session_state["theme"]
     except Exception as e:
         st.warning(f"Theme selector error: {e}")
-        return "dark"
+        return st.session_state.get("theme", "light")
 
 
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":
