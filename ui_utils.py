@@ -6,6 +6,8 @@
 from pathlib import Path
 import streamlit as st
 from streamlit_helpers import inject_global_styles
+from modern_ui import render_modern_header
+from modern_ui_components import render_modern_sidebar
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
@@ -57,13 +59,20 @@ def render_main_ui() -> None:
 
 
 def render_modern_layout() -> None:
-    """Render a small demo verifying the modern CSS styles."""
+    """Demo layout showcasing the modern styles."""
     inject_global_styles()
-    st.markdown(
-        "<div class='custom-container'>Modern layout loaded.</div>",
-        unsafe_allow_html=True,
-    )
-    st.button("Primary Action")
+
+    pages = {"Home": "home", "Profile": "profile"}
+    choice = render_modern_sidebar(pages, icons={"Home": "🏠", "Profile": "👤"})
+
+    render_modern_header("NovaNet 🚀")
+
+    with st.container():
+        st.markdown(
+            "<div class='custom-container'>Welcome to the next-gen network.</div>",
+            unsafe_allow_html=True,
+        )
+        st.button("Primary Action", key="primary_btn")
 
 
 __all__ = [
@@ -72,4 +81,6 @@ __all__ = [
     "load_rfc_entries",
     "render_main_ui",
     "render_modern_layout",
+    "render_modern_sidebar",
+    "render_modern_header",
 ]
