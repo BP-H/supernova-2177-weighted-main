@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Dict
+from pathlib import Path
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
@@ -159,6 +160,27 @@ def render_modern_sidebar(
     if container is None:
         container = st.sidebar
 
+    # Validate that referenced page files exist before rendering navigation
+    page_dir_candidates = [
+        Path.cwd() / "pages",
+        Path(__file__).resolve().parent / "pages",
+        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages",
+    ]
+
+    valid_pages: Dict[str, str] = {}
+    for label, page_ref in pages.items():
+        slug = str(page_ref).strip("/").split("?")[0].rsplit(".", 1)[-1]
+        exists = any((d / f"{slug}.py").exists() for d in page_dir_candidates if d.exists())
+        if exists:
+            valid_pages[label] = page_ref
+        else:
+            st.warning(f"Page file missing for '{label}' -> {page_ref}", icon="⚠️")
+
+    if not valid_pages:
+        st.error("No valid pages available", icon="⚠️")
+        return ""
+
+    pages = valid_pages
     opts = list(pages.keys())
     icon_map = icons or {}
 
