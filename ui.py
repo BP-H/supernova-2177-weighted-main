@@ -364,20 +364,28 @@ def load_page_with_fallback(choice: str) -> None:
         module,
     ]
 
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    Logs the traceback for any unexpected failure.
+    """
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
-            if hasattr(page_mod, "render"):
-                page_mod.render()
-                return
-            elif hasattr(page_mod, "main"):
-                page_mod.main()
-                return
+            for method_name in ("render", "main"):
+                if hasattr(page_mod, method_name):
+                    getattr(page_mod, method_name)()
+                    return
         except ImportError:
-            continue
+            continue  # Try next candidate module path
         except Exception as exc:
-            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
+            st.expander("Show error details").exception(exc)
+            print("Traceback for debugging:\n", traceback.format_exc())
             break
+
+    _render_fallback(choice)  # Optional: if defined elsewhere
 
     _render_fallback(choice)
 
@@ -1206,7 +1214,7 @@ def main() -> None:
                         "Event JSON", value="{}", height=150, key="inject_event"
                     )
                     if st.button("Process Event"):
-                        if 'agent' in globals():
+                        if 'agent' in globals() and agent is not None:
                             try:
                                 event = json.loads(event_json or "{}")
                                 agent.process_event(event)
@@ -1224,7 +1232,11 @@ def main() -> None:
                             "Sub universes:",
                             list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                         )
-                    if 'agent' in globals() and 'InMemoryStorage' in globals():
+                    if (
+                        'agent' in globals()
+                        and agent is not None
+                        and 'InMemoryStorage' in globals()
+                    ):
                         if isinstance(agent.storage, InMemoryStorage):
                             st.write(
                                 f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
@@ -1282,15 +1294,15 @@ def main() -> None:
                     try:
                         if agent_choice == "CI_PRProtectorAgent":
                             talker = backend_fn or (lambda p: p)
-                            agent = agent_cls(talker, llm_backend=backend_fn)
+                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
                         elif agent_choice == "MetaValidatorAgent":
-                            agent = agent_cls({}, llm_backend=backend_fn)
+                            selected_agent = agent_cls({}, llm_backend=backend_fn)
                         elif agent_choice == "GuardianInterceptorAgent":
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
                         else:
-                            agent = agent_cls(llm_backend=backend_fn)
+                            selected_agent = agent_cls(llm_backend=backend_fn)
 
-                        result = agent.process_event(
+                        result = selected_agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
                         st.session_state["agent_output"] = result
@@ -1306,8 +1318,7 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        with main_container():
-            load_page_with_fallback(choice)
+        load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
