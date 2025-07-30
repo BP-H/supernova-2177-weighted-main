@@ -77,6 +77,9 @@ render_modern_sidebar = render_sidebar_nav
 # Utility path handling
 from pathlib import Path
 import logging
+from utils.page_registry import ensure_pages
+from utils.paths import ROOT_DIR, PAGES_DIR
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -115,8 +118,6 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-ROOT_DIR = Path(__file__).resolve().parent
-PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 # Mapping of navigation labels to page module names
 
@@ -387,9 +388,6 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 
     # Validate PAGES_DIR existence
-    PAGES_DIR = (
-        Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-    )
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -474,7 +472,7 @@ def _render_fallback(choice: str) -> None:
     # Candidate paths to try loading from
     page_candidates = [
         ROOT_DIR / "pages" / f"{slug}.py",
-        ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
+        PAGES_DIR / f"{slug}.py",
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
@@ -505,6 +503,7 @@ def _render_fallback(choice: str) -> None:
 
     if loaded:
         return
+
 
 
     # Prevent duplicate fallback rendering in session
