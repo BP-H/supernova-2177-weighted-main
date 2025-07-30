@@ -13,6 +13,7 @@ if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
 import frontend.ui_layout as ui_layout
+import modern_ui_components as mui
 import ui
 
 
@@ -24,7 +25,8 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     monkeypatch.setattr(ui, "_render_fallback", lambda choice: fallback_called.setdefault("choice", choice))
     monkeypatch.setattr(ui, "load_page_with_fallback", lambda choice, paths: ui._render_fallback(choice))
     monkeypatch.setattr(ui, "get_st_secrets", lambda: {})
-    monkeypatch.setattr(ui_layout, "render_navbar", lambda *a, **k: "Ghost")
+    monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: "Ghost")
+    monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: "Ghost")
 
     class Dummy(contextlib.AbstractContextManager):
         def __enter__(self):

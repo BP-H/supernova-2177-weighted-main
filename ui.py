@@ -33,12 +33,14 @@ from frontend import ui_layout
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
+    render_modern_sidebar,
 )
 from frontend.ui_layout import (
     main_container,
     render_title_bar,
     show_preview_badge,
 )
+
 
 # Utility path handling
 from pathlib import Path
@@ -831,17 +833,11 @@ def render_validation_ui(
 
         # ...
 
-        ui_layout.render_navbar(
+        choice = render_modern_sidebar(
             page_paths,
-            icons=NAV_ICONS,
-            key="navbar_sidebar_validation",  # or "navbar_main" depending on context
-)
+            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+        )
 
-
-
-
-
-        # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
 
         with center_col:
@@ -849,8 +845,8 @@ def render_validation_ui(
 
         with left_col:
             render_status_icon()
-        
             render_developer_tools()
+
 
 
     except Exception as exc:
@@ -1120,20 +1116,27 @@ def main() -> None:
             "Profile": "profile",
         }
 
-        
         PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
-        choice = ui_layout.render_navbar(
+
+        choice = render_modern_sidebar(
             page_paths,
-            icons=NAV_ICONS,
+            icons=[
+                "✅",
+                "📊",
+                "🤖",
+                "🎵",
+                "💬",
+                "👥",
+                "👤",
+            ],
         )
 
-        
         left_col, center_col, right_col = st.columns([1, 3, 1])
-        
+
         with center_col:
             if choice:
                 page_key = PAGES.get(choice, choice)
@@ -1147,11 +1150,13 @@ def main() -> None:
                     st.warning(f"Page not found: {choice}")
                     _render_fallback(choice)
             else:
-                st.info("Select a page above to continue.")
-                _render_fallback("Validation")  # Default fallback page as a preview
-        
+                st.info("Select a page on the left to continue.")
+                _render_fallback("Validation")
+
         with left_col:
             render_status_icon()
+            render_developer_tools()
+
         
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
@@ -1203,9 +1208,6 @@ def main() -> None:
             st.session_state["governance_view"] = governance_view
         
             render_developer_tools()
-
-        with center_col:
-            st.info("Select a page above to continue.")
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
 
