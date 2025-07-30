@@ -171,6 +171,8 @@ def render_modern_sidebar(
         Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages",
     ]
 
+    existing_dirs = [d for d in page_dir_candidates if d.exists()]
+
     valid_pages: Dict[str, str] = {}
 
     missing_pages: list[str] = []
@@ -179,9 +181,9 @@ def render_modern_sidebar(
 
         slug = str(page_ref).strip("/").split("?")[0].rsplit(".", 1)[-1]
 
-        exists = any((d / f"{slug}.py").exists() for d in page_dir_candidates if d.exists())
+        exists = any((d / f"{slug}.py").exists() for d in existing_dirs)
 
-        if not exists:
+        if existing_dirs and not exists:
             missing_pages.append(label)
 
         # Always include the page so fallback placeholders can render
