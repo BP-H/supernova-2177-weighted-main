@@ -6,6 +6,7 @@ Example:
 """
 
 import os
+import time
 import streamlit as st  # ensure Streamlit is imported early
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
@@ -23,6 +24,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+import time
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -30,10 +32,20 @@ from typing import Optional
 from frontend import ui_layout
 
 
-from modern_ui_components import (
-    render_validation_card,
-    render_stats_section,
-)
+try:
+    from modern_ui_components import (
+        SIDEBAR_STYLES,
+        render_validation_card,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - optional dependency
+    SIDEBAR_STYLES = ""
+
+    def render_validation_card(*_a, **_k):
+        st.info("validation card unavailable")
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
 
 # Prefer modern sidebar render if available
 try:
@@ -92,6 +104,14 @@ PAGES = {
     "Social": "social",
     "Profile": "profile",
 }
+
+# Case-insensitive lookup for labels
+_PAGE_LABELS = {label.lower(): label for label in PAGES}
+
+
+def normalize_choice(choice: str) -> str:
+    """Return the canonical label for ``choice`` ignoring case."""
+    return _PAGE_LABELS.get(choice.lower(), choice)
 
 # Icons used in the navigation bar. Must be single-character emojis or
 # valid Bootstrap icon codes prefixed with ``"bi bi-"``.
@@ -318,6 +338,7 @@ def inject_dark_theme() -> None:
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
+    choice = normalize_choice(choice)
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -349,21 +370,28 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = Path.cwd() / "pages" / (module_path.rsplit(".", 1)[-1] + ".py")
-        if page_file.exists():
-            rel_path = f"/pages/{page_file.stem}.py"
-            try:
-                st.switch_page(rel_path)
-                return
-            except StreamlitAPIException as exc:
-                st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
-                continue
-            except Exception as exc:  # Unexpected failure
-                logging.error(
-                    "switch_page failed for %s: %s", rel_path, exc, exc_info=True
-                )
-                last_exc = exc
-                continue
+        filename = module_path.rsplit(".", 1)[-1] + ".py"
+        candidate_files = [
+            Path.cwd() / "pages" / filename,
+            PAGES_DIR / filename,
+        ]
+
+        for page_file in candidate_files:
+            if page_file.exists():
+                rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
+                try:
+                    st.switch_page(rel_path)
+                    return
+                except StreamlitAPIException as exc:
+                    st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    break
+                except Exception as exc:
+                    logging.error(
+                        "switch_page failed for %s: %s", rel_path, exc, exc_info=True
+                    )
+                    last_exc = exc
+                    break
+
 
         # Fallback: import the module directly and call ``render`` or ``main``
         try:
@@ -380,6 +408,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             break
 
     st.toast("Unable to load page. Showing preview.", icon="⚠️")
+    if choice == "Validation":
+        st.error("Validation page failed to load")
     if "_render_fallback" in globals():
         _render_fallback(choice)
     if last_exc:
@@ -394,11 +424,31 @@ def _render_fallback(choice: str) -> None:
     except Exception:
         OFFLINE_MODE = False
 
-    slug = PAGES.get(choice, choice).lower()
-    if (Path.cwd() / "pages" / f"{slug}.py").exists():
-        logger.debug("Fallback called unnecessarily for %s", slug)
+    # Normalize and derive slug/module name
+    slug = normalize_choice(choice)
+    module = PAGES.get(slug, slug.lower())
+    page_file = Path.cwd() / "pages" / f"{module}.py"
+
+    # Skip fallback if page file is available
+    if page_file.exists():
+        logger.debug("Fallback skipped because %s exists", page_file)
+        spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = mod
+            try:
+                spec.loader.exec_module(mod)
+            except Exception as exc:
+                st.error(f"Failed to load page {module}: {exc}")
         return
 
+    # Prevent duplicate fallback rendering in session
+    if st.session_state.get("_fallback_rendered") == slug:
+        logger.debug("Duplicate fallback suppressed for %s", slug)
+        return
+    st.session_state["_fallback_rendered"] = slug
+
+    # Map to fallback UI stubs
     fallback_pages = {
         "validation": render_modern_validation_page,
         "voting": render_modern_voting_page,
@@ -408,15 +458,17 @@ def _render_fallback(choice: str) -> None:
         "social": render_modern_social_page,
         "profile": render_modern_profile_page,
     }
+
     fallback_fn = fallback_pages.get(slug)
     if fallback_fn:
         if OFFLINE_MODE:
             st.toast("Offline mode: using mock services", icon="⚠️")
-
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
         st.toast(f"No fallback available for page: {choice}", icon="⚠️")
+
+
 
 
 def render_modern_validation_page():
@@ -425,7 +477,7 @@ def render_modern_validation_page():
     st.markdown("- Task queued\n- Running analysis\n- Completed")
     progress = st.progress(0)
     for i in range(5):
-        st.sleep(0.1)
+        time.sleep(0.1)
         progress.progress((i + 1) / 5)
     st.success("Status: OK")
 
@@ -510,7 +562,7 @@ def render_sidebar() -> str:
     else:
         choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
 
-    return choice
+    return normalize_choice(choice)
 
 
 def load_css() -> None:
@@ -1295,39 +1347,40 @@ def main() -> None:
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
 
-        # Normalize forced page from query params to a label
+        # Normalize and resolve forced page from query params to display label
         if forced_page:
-            forced_slug = str(forced_page).lower()
+            forced_slug = normalize_choice(forced_page)
             forced_page = next(
-                (lbl for lbl, slug in PAGES.items() if slug == forced_slug),
+                (label for label, slug in PAGES.items() if normalize_choice(slug) == forced_slug),
                 None,
             )
 
-        # Validate session state and query params
+        # Ensure session state defaults are valid
         if st.session_state.get("sidebar_nav") not in page_paths:
             st.session_state["sidebar_nav"] = "Validation"
 
         if forced_page not in page_paths:
             forced_page = None
 
+        # Determine selected label from sidebar or fallback
         choice_label = forced_page or render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
             session_key="active_page",
         )
 
-        # Default to Validation page if nothing selected
         if not choice_label:
             choice_label = "Validation"
 
-        # Normalize to lowercase slug for module loading and query params
+        # Normalize and extract slug for loading
         display_choice = choice_label
-        choice = PAGES.get(choice_label, choice_label).lower()
+        choice = normalize_choice(PAGES.get(choice_label, choice_label))
 
         try:
             st.query_params["page"] = display_choice
         except AttributeError:
             st.experimental_set_query_params(page=display_choice)
+
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
@@ -1388,7 +1441,10 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Resolve page module
-            page_key = PAGES.get(choice or "", choice or "")
+            # Normalize input and resolve page key
+            label = normalize_choice(choice)
+            page_key = PAGES.get(label, label.lower())
+
             if page_key:
                 module_paths = [
                     f"transcendental_resonance_frontend.pages.{page_key}",
@@ -1402,6 +1458,7 @@ def main() -> None:
             else:
                 st.toast("Select a page above to continue.")
                 _render_fallback("Validation")
+
 
             # Run agent logic if triggered
             if run_agent_clicked and "AGENT_REGISTRY" in globals():
