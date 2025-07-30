@@ -12,14 +12,18 @@ def inject_modern_styles() -> None:
         """
         <style>
         :root {
-            --neon-accent: #00ffe1;
-            --bg-start: #020817;
-            --bg-end: #0d1b2a;
+            --bg-start: #020817; /* Deeper contrast, modern base tone */
+            --bg-end: #0d1b2a;   /* Soft blend into dark blue */
+            --text-color: #f0f4f8; /* Clear, readable white-blue */
+            --neon-accent: #00ffe1; /* Preserved neon styling from other UI rules */
         }
+
         body, .stApp {
             background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
-            color: var(--text-color, #e6e6e6);
+            color: var(--text-color);
             font-family: 'Inter', 'Roboto', 'Urbanist', sans-serif;
+        }
+
         }
         .main .block-container {
             padding-top: 2rem;
@@ -52,11 +56,11 @@ def inject_modern_styles() -> None:
         .card {
             padding: 1rem;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 
             margin-bottom: 1rem;
-            background-color: rgba(255,255,255,0.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
             transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
         .card:hover,
@@ -110,6 +114,15 @@ def inject_modern_styles() -> None:
             color: #eee !important;
             border: 1px solid #444 !important;
             border-radius: 8px !important;
+        }
+
+        .sidebar-nav .nav-item {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .sidebar-nav .nav-item.active {
+            background: rgba(255,255,255,0.1);
         }
         </style>
         """,
