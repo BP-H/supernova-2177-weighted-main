@@ -8,7 +8,7 @@ without introducing heavy dependencies.
 Features:
 - `main_container()` – returns a generic container for page content
 - `sidebar_container()` – accesses the sidebar container
-- `render_navbar(options, default=None)` – simple radio navigation UI
+- `render_navbar(pages)` – horizontal page links UI
 - `render_title_bar(icon, label)` – renders a header with an icon
 
 UI Ideas:
@@ -33,7 +33,6 @@ def main_container() -> st.delta_generator.DeltaGenerator:
     """Return a container for the main content area."""
     return st.container()
 
-    return st.container()
 
 
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
@@ -42,32 +41,60 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 
 
 def render_navbar(
-    options: Iterable[str] | Dict[str, str],
-    default: Optional[str] = None,
+    page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
-    key: str = "main_nav_menu"
+    key: str = "main_nav_menu",
+    default: Optional[str] = None,
 ) -> str:
-    """Render a navigation UI and return the selected label."""
-    opts = list(options.keys()) if isinstance(options, dict) else list(options)
+    """Render horizontal navigation links using ``st.page_link`` and return the selected label."""
+    opts = (
+        list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
+    )
+    icon_list = list(icons or [None] * len(opts))
     index = 0
-    if default is not None and default in opts:
-        index = opts.index(default)
+    if default is not None and default in [label for label, _ in opts]:
+        index = [label for label, _ in opts].index(default)
 
-    if USE_OPTION_MENU:
-        icon_list = list(icons or ["dot"] * len(opts))
-        return option_menu(
-            menu_title=None,
-            options=opts,
-            icons=icon_list,
-            orientation="horizontal",
-            key=key,
-        )
-    else:
-        if icons and len(list(icons)) == len(opts):
-            labels = [f"{icon} {label}" for icon, label in zip(icons, opts)]
-            choice = st.sidebar.radio("Navigate", labels, key=key)
-            return opts[labels.index(choice)]
-        return st.sidebar.radio("Navigate", opts, key=key)
+    try:
+        sidebar = st.sidebar
+        if hasattr(sidebar, "page_link"):
+            sidebar.markdown(
+                "<style>.nav-links a{margin-right:0.5rem;}</style>",
+                unsafe_allow_html=True,
+            )
+            with sidebar.container():
+                sidebar.markdown("<div class='nav-links'>", unsafe_allow_html=True)
+                for (label, target), icon in zip(opts, icon_list):
+                    sidebar.page_link(target, label=label, icon=icon)
+                sidebar.markdown("</div>", unsafe_allow_html=True)
+            sidebar.divider()
+
+        # Fallback to horizontal columns if sidebar fails or for main area display
+        if not st.session_state.get(key, None):
+            st.session_state[key] = default or opts[0][0]  # Initialize with default or first option
+        cols = st.columns(len(opts))
+        for col, ((label, target), icon) in zip(cols, zip(opts, icon_list)):
+            with col:
+                if st.button(label, key=f"{key}_{label}", help=target):
+                    st.session_state[key] = label
+        return st.session_state.get(key, opts[0][0])  # Return current selection
+
+    except Exception as e:
+        st.warning(f"Navigation setup failed: {e}. Falling back to radio.")
+        if USE_OPTION_MENU:
+            icon_list = list(icons or ["dot"] * len(opts))
+            return option_menu(
+                menu_title=None,
+                options=[label for label, _ in opts],
+                icons=icon_list,
+                orientation="horizontal",
+                key=key,
+                default_index=index,
+            )
+        else:
+            labels = [f"{icon} {label}" if icon else label for label, _ in opts for icon in icon_list[:len(opts)]]
+            choice = st.sidebar.radio("Navigate", labels, key=key, index=index)
+            return [label for label, _ in opts][labels.index(choice)] if icons else choice
 
 
 def render_title_bar(icon: str, label: str) -> None:

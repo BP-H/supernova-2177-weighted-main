@@ -7,15 +7,19 @@ from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
-from streamlit_helpers import inject_global_styles, theme_selector, safe_container
+from streamlit_helpers import (
+    inject_global_styles,
+    theme_selector,
+    safe_container,
+    BOX_CSS,
+)
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
     render_agent_ops_tab,
     render_logs_tab,
 )
-from ui_utils import summarize_text, load_rfc_entries
-
+# Define BOX_CSS at the top of agent_ui.py or within the function if needed
 BOX_CSS = """
 <style>
 .tab-box {
@@ -23,10 +27,15 @@ BOX_CSS = """
     border-radius: 8px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tab-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
 """
-
 
 def render_agent_insights_tab(main_container=None) -> None:
     """Display diary, RFC summaries and internal notes."""
@@ -81,7 +90,7 @@ def render_agent_insights_tab(main_container=None) -> None:
             with st.expander("Proposed RFCs", expanded=False):
                 rfc_dir = Path("rfcs")
                 filter_text = st.text_input("Filter RFCs")
-                preview_all = st.checkbox("Preview full text")
+                preview_all = st.toggle("Preview full text")
 
             rfc_entries, rfc_index = load_rfc_entries(rfc_dir)
 
@@ -123,7 +132,7 @@ def render_agent_insights_tab(main_container=None) -> None:
                     )
                     st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
                 st.markdown(f"[Read RFC]({cast(Path, rfc['path']).as_posix()})")
-                if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
+                if preview_all or st.toggle("Show details", key=f"show_{rfc['id']}"):
                     st.markdown(rfc["text"], unsafe_allow_html=True)
 
         st.subheader("Protocols")
