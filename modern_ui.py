@@ -7,13 +7,14 @@ import streamlit as st
 
 
 def inject_modern_styles() -> None:
-    """Inject global CSS for modern look and feel."""
+    """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
         <style>
         body, .stApp {
-            background: radial-gradient(circle at top left, #0e0e0e, #1a1a1a);
-            color: #e2e2e2;
+            background: radial-gradient(circle at top left, #0d0d0d, #050505);
+            color: #d0d0d0;
+
             font-family: 'Inter', sans-serif;
         }
         .main .block-container {
@@ -24,23 +25,25 @@ def inject_modern_styles() -> None:
         }
         .custom-container {
             padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
             margin-bottom: 1rem;
-            background-color: var(--secondary-bg, #FFFFFF);
+            background-color: var(--secondary-bg, #111);
         }
         .card {
-            background: linear-gradient(145deg, #1f1f1f, #272727);
+            background-color: var(--secondary-bg, #111);
             padding: 1rem;
-            border: 1px solid #333;
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+
             margin-bottom: 1rem;
             transition: box-shadow 0.2s ease, transform 0.2s ease;
         }
         .card:hover {
-            box-shadow: 0 6px 20px rgba(0,255,255,0.15);
+            box-shadow: 0 4px 20px rgba(0,224,255,0.25);
+
             transform: translateY(-2px);
         }
         h1, h2, h3, h4, h5, h6 {
