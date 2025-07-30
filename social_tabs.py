@@ -1,6 +1,13 @@
 import asyncio
 import streamlit as st
 from streamlit_helpers import alert
+from contextlib import nullcontext
+
+
+def safe_markdown(text: str, **kwargs) -> None:
+    """Render text as Markdown, stripping invalid characters."""
+    clean = text.encode("utf-8", errors="ignore").decode("utf-8")
+    st.markdown(clean, **kwargs)
 
 try:
     from frontend_bridge import dispatch_route
@@ -45,7 +52,8 @@ def render_social_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         st.subheader("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")
@@ -84,7 +92,7 @@ def render_social_tab(main_container=None) -> None:
             except Exception as exc:
                 alert(f"Profile fetch failed: {exc}", "error")
                 return
-            st.markdown(f"### Profile: {user.get('username', current_user)}")
+            safe_markdown(f"### Profile: {user.get('username', current_user)}")
             st.write(user.get("bio", ""))
             st.markdown("**Followers**")
             st.write(followers.get("followers", []))
