@@ -659,12 +659,7 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
-from agent_ui import render_agent_insights_tab
-from llm_backends import get_backend
-from protocols import AGENT_REGISTRY
-from social_tabs import render_social_tab
 
-# Safe imports with fallbacks - Replace lines 343-384
 try:
     from social_tabs import render_social_tab
 except ImportError:
@@ -683,6 +678,7 @@ except ImportError:
     def render_agent_insights_tab():
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights not available")
+
 
 try:
     from llm_backends import get_backend
