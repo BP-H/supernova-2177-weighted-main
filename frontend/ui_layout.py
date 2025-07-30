@@ -23,6 +23,7 @@ from typing import Dict, Iterable, Optional
 from uuid import uuid4
 import os
 import streamlit as st
+from modern_ui_components import SIDEBAR_STYLES
 
 try:
     from streamlit_option_menu import option_menu
@@ -86,6 +87,8 @@ def _render_sidebar_nav(
     choice = active
     container = st.sidebar.container()
     with container:
+        st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
+        st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
         if hasattr(st.sidebar, "page_link"):
             for (label, path), icon in zip(opts, icon_list):
                 try:
@@ -106,6 +109,8 @@ def _render_sidebar_nav(
             labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
             choice = st.radio("", labels, index=index, key=key)
             choice = opts[labels.index(choice)][0]
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.session_state[session_key] = choice
     return choice
