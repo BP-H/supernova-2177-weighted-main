@@ -18,6 +18,7 @@ import traceback
 import sqlite3
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from typing import Any, Optional
 
 
 from modern_ui_components import (
@@ -466,9 +467,11 @@ def render_modern_validation_page():
                 )
 
 
-# In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice: str) -> None:
-    """Import and run the selected page or fall back to a stub."""
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    """
     module_name = PAGES.get(choice, choice)
     module_paths = [
         f"transcendental_resonance_frontend.pages.{module_name}",
@@ -479,20 +482,21 @@ def load_page_with_fallback(choice: str) -> None:
         try:
             page_mod = import_module(module_path)
         except ImportError:
-            continue
+            continue  # Try next path
 
         try:
-            if hasattr(page_mod, "main"):
-                page_mod.main()
-                return
             if hasattr(page_mod, "render"):
                 page_mod.render()
                 return
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
+                return
         except Exception as exc:
-            st.error(f"Error loading page {choice}: {exc}")
+            st.error(f"❌ Error loading page `{choice}`: {exc}")
             return
 
     _render_fallback(choice)
+
 
 
 def _render_fallback(choice: str) -> None:
@@ -660,8 +664,8 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
-# Optional modules used throughout the UI. Provide simple fallbacks
-# when the associated packages are not available.
+# Optional modules used throughout the UI. Provide simple fallbacks when the associated packages are not available.
+
 try:
     from protocols import AGENT_REGISTRY
 except ImportError:  # pragma: no cover - optional dependency
@@ -686,7 +690,6 @@ except ImportError:  # pragma: no cover - optional dependency
     def render_agent_insights_tab() -> None:
         st.subheader("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
-
         if AGENT_REGISTRY:
             st.write("Available Agents:")
             for name, info in AGENT_REGISTRY.items():
@@ -701,6 +704,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
+
 
 
 
@@ -1038,6 +1042,8 @@ def render_validation_ui(
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
+    if main_container is None:
+        main_container = st.container()
     if sidebar is None:
         sidebar = st.sidebar
 
@@ -1047,11 +1053,12 @@ def render_validation_ui(
         return
 
     try:
-        with st.container():
+        with main_container:
             page_func()
     except Exception as exc:
         st.error("Failed to load validation UI")
         st.code(str(exc))
+
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
@@ -1144,9 +1151,27 @@ def main() -> None:
             "Social": "social",
         }
 
-        with sidebar_container():
-            choice = render_navbar(PAGES.keys())
+        choice = option_menu(
+            menu_title=None,
+            options=list(PAGES.keys()),
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            orientation="horizontal",
+            key="main_nav_menu",
+        )
+
+        left_col, center_col, right_col = st.columns([1, 3, 1])
+
+        with left_col:
             render_status_icon()
+
+        with center_col:
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
 
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
