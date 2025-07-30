@@ -331,6 +331,17 @@ def inject_dark_theme() -> None:
 
 def render_modern_validation_page():
     """Render the main validation interface."""
+    try:
+        from transcendental_resonance_frontend.pages import validation
+        if hasattr(validation, "render"):
+            validation.render()
+            return
+        if hasattr(validation, "main"):
+            validation.main()
+            return
+    except Exception:
+        pass
+
     st.markdown(
         """
         <div style='text-align:center; padding:2rem 0;'>
@@ -466,17 +477,14 @@ def load_page_with_fallback(choice):
                 continue
 
         if page_mod:
-            if hasattr(page_mod, "main"):
-                page_mod.main()
-            elif hasattr(page_mod, "render"):
+            if hasattr(page_mod, "render"):
                 page_mod.render()
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
             else:
-                render_modern_validation_page()
+                _render_fallback(choice)
         else:
-            render_modern_validation_page()
-
-    except Exception as exc:
-        st.error(f"Error loading page: {exc}")
+            _render_fallback(choice)
 
     except ImportError:
         _render_fallback(choice)
@@ -497,6 +505,17 @@ def _render_fallback(choice: str) -> None:
         render_modern_social_page()
 def render_modern_voting_page():
     """Modern voting page fallback using voting_ui widgets."""
+    try:
+        from transcendental_resonance_frontend.pages import voting
+        if hasattr(voting, "render"):
+            voting.render()
+            return
+        if hasattr(voting, "main"):
+            voting.main()
+            return
+    except Exception:
+        pass
+
     st.markdown("# 🗳️ Voting Dashboard")
     try:
         render_voting_tab()
@@ -506,6 +525,17 @@ def render_modern_voting_page():
 
 def render_modern_agents_page():
     """Modern agents page fallback using agent_ui widgets."""
+    try:
+        from transcendental_resonance_frontend.pages import agents
+        if hasattr(agents, "render"):
+            agents.render()
+            return
+        if hasattr(agents, "main"):
+            agents.main()
+            return
+    except Exception:
+        pass
+
     st.markdown("# 🤖 AI Agents")
     try:
         render_agent_insights_tab()
@@ -515,19 +545,34 @@ def render_modern_agents_page():
 
 def render_modern_music_page():
     """Modern music page fallback invoking the resonance module if available."""
-    st.markdown("# 🎵 Resonance Music")
     try:
         from transcendental_resonance_frontend.pages import resonance_music
+        if hasattr(resonance_music, "render"):
+            resonance_music.render()
+            return
         if hasattr(resonance_music, "main"):
             resonance_music.main()
-        else:
-            raise RuntimeError("No main method available")
+            return
     except Exception:
-        st.info("🚧 Harmonic resonance features coming soon!")
+        pass
+
+    st.markdown("# 🎵 Resonance Music")
+    st.info("🚧 Harmonic resonance features coming soon!")
 
 
 def render_modern_social_page():
     """Modern social page fallback using social_tabs widgets."""
+    try:
+        from transcendental_resonance_frontend.pages import social
+        if hasattr(social, "render"):
+            social.render()
+            return
+        if hasattr(social, "main"):
+            social.main()
+            return
+    except Exception:
+        pass
+
     st.markdown("# 👥 Social Network")
     try:
         render_social_tab()
