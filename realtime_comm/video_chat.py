@@ -13,6 +13,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, Optional
+import logging
+from io import BytesIO
+
+try:
+    from gtts import gTTS
+except Exception:  # pragma: no cover - optional dependency
+    gTTS = None
+
+try:
+    from superNova_2177 import GenerativeAIService
+except Exception:  # pragma: no cover - avoids hard dependency for tests
+    GenerativeAIService = None
 
 
 @dataclass
@@ -37,8 +49,9 @@ class FrameMetadata:
 class VideoChatManager:
     """Coordinate peer connections and media streams."""
 
-    def __init__(self) -> None:
+    def __init__(self, generative_service: Optional[GenerativeAIService] = None) -> None:
         self.active_streams: list[VideoStream] = []
+        self.generative_service = generative_service
 
     def start_call(self, user_ids: Iterable[str]) -> None:
         """Initialize a new call between ``user_ids``."""
@@ -61,15 +74,36 @@ class VideoChatManager:
         # TODO: write WebRTC data to file
         pass
 
+    def transmit_voice(self, text: str) -> str:
+        """Send synthesized voice to call participants."""
+        if self.generative_service and hasattr(self.generative_service, "_transmit_voice_stub"):
+            return self.generative_service._transmit_voice_stub(text)
+        logging.warning("Generative voice service unavailable")
+        return "Voice transmission unavailable"
+
     def apply_filter(self, user_id: str, filter_name: str) -> None:
         """Apply an AR filter to ``user_id``'s stream."""
         # TODO: integrate with an AR effects library
         pass
 
-    def translate_audio(self, user_id: str, target_lang: str) -> None:
-        """Enable live translation for ``user_id`` to ``target_lang``."""
-        # TODO: integrate a translation API and TTS voice cloning
-        pass
+    def translate_audio(self, user_id: str, target_lang: str, text: str) -> None:
+        """Overlay ``text`` in ``target_lang`` and optionally play audio."""
+        self.update_translation_overlay(user_id, text, target_lang)
+        if gTTS:
+            try:
+                tts = gTTS(text, lang=target_lang)
+                fp = BytesIO()
+                tts.write_to_fp(fp)
+                fp.seek(0)
+                import pygame as pg
+                if not pg.mixer.get_init():
+                    pg.mixer.init()
+                sound = pg.mixer.Sound(fp)
+                sound.play()
+            except Exception as e:  # pragma: no cover - depends on system audio
+                logging.error(f"TTS playback failed: {e}")
+        else:
+            self.transmit_voice(text)
 
     def update_translation_overlay(self, user_id: str, text: str, lang: str) -> None:
         """Overlay ``text`` in ``lang`` on ``user_id``'s stream."""
