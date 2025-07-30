@@ -1292,7 +1292,11 @@ def main() -> None:
                     f"transcendental_resonance_frontend.pages.{page_key}",
                     f"pages.{page_key}",
                 ]
-                load_page_with_fallback(choice, module_paths)
+                try:
+                    load_page_with_fallback(choice, module_paths)
+                except Exception:
+                    st.warning(f"Page not found: {choice}")
+                    _render_fallback(choice)
             else:
                 st.info("Select a page above to continue.")
                 _render_fallback("Validation")  # Default fallback page as a preview
