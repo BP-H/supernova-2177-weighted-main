@@ -52,6 +52,15 @@ PAGES_DIR = (
     Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 )
 
+# Mapping of navigation labels to page module names
+PAGES = {
+    "Validation": "validation",
+    "Voting": "voting",
+    "Agents": "agents",
+    "Resonance Music": "resonance_music",
+    "Social": "social",
+}
+
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
@@ -468,21 +477,15 @@ def render_modern_validation_page():
 # In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
     """Load page with beautiful fallback."""
-    # Define pages here since it's not global
-    pages = {
-        "Validation": "validation",
-        "Voting": "voting", 
-        "Agents": "agents",
-        "Resonance Music": "resonance_music",
-        "Social": "social",
-    }
-    
     try:
-        page_module = pages[choice]
-        module_path = f"pages.{page_module}"
+        page_module = PAGES[choice]
+        module_path = f"transcendental_resonance_frontend.pages.{page_module}"
         page_mod = import_module(module_path)
-        
-        if hasattr(page_mod, 'render'):
+
+        # Call ``main`` or ``render`` if present
+        if hasattr(page_mod, "main"):
+            page_mod.main()
+        elif hasattr(page_mod, "render"):
             page_mod.render()
         else:
             render_modern_validation_page()
@@ -585,48 +588,6 @@ except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
 from typing import Any, Optional
-
-# Optional modules used throughout the UI. Provide simple fallbacks
-# when the associated packages are not available.
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:  # pragma: no cover - optional dependency
-    AGENT_REGISTRY = {}
-
-try:
-    from social_tabs import render_social_tab
-except ImportError:  # pragma: no cover - optional dependency
-    def render_social_tab() -> None:
-        st.subheader("👥 Social Features")
-        st.info("Social features module not available")
-
-try:
-    from voting_ui import render_voting_tab
-except ImportError:  # pragma: no cover - optional dependency
-    def render_voting_tab() -> None:
-        st.info("Voting module not available")
-
-try:
-    from agent_ui import render_agent_insights_tab
-except ImportError:  # pragma: no cover - optional dependency
-    def render_agent_insights_tab() -> None:
-        st.subheader("🤖 Agent Insights")
-        st.info("Agent insights module not available. Install required dependencies.")
-
-        if AGENT_REGISTRY:
-            st.write("Available Agents:")
-            for name, info in AGENT_REGISTRY.items():
-                with st.expander(f"🔧 {name}"):
-                    st.write(f"Description: {info.get('description', 'No description')}")
-                    st.write(f"Class: {info.get('class', 'Unknown')}")
-        else:
-            st.warning("No agents registered")
-
-try:
-    from llm_backends import get_backend
-except ImportError:  # pragma: no cover - optional dependency
-    def get_backend(name, api_key=None):
-        return lambda x: {"response": "dummy backend"}
 
 
 def get_st_secrets() -> dict:
@@ -1047,14 +1008,9 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        # Define pages
-        pages = {
-            "Validation": "validation",
-            "Voting": "voting", 
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Social": "social",
-        }
+
+        # Define pages for navigation
+        pages = PAGES
 
         # Navigation
         choice = option_menu(
