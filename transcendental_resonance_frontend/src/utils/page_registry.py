@@ -8,9 +8,11 @@ from __future__ import annotations
 from pathlib import Path
 import logging
 import streamlit as st
-
-# Track which slugs have already triggered a missing-page warning.
-_warned_slugs: set[str] = set()
+from disclaimers import (
+    STRICTLY_SOCIAL_MEDIA,
+    INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION,
+    LEGAL_ETHICAL_SAFEGUARDS,
+)
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -33,15 +35,13 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
         file_path = pages_dir / f"{slug}.py"
         if not file_path.exists():
             file_path.write_text(
+                f"# {STRICTLY_SOCIAL_MEDIA}\n"
+                f"# {INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION}\n"
+                f"# {LEGAL_ETHICAL_SAFEGUARDS}\n"
                 "import streamlit as st\n\n"
-                "def main():\n"
+                "def main() -> None:\n"
                 "    st.write('Placeholder')\n"
             )
             logger.info("Created placeholder page module %s", file_path.name)
-
-            # Warn in Streamlit contexts that the slug was missing, but only once per slug.
-            if hasattr(st, "warning") and slug not in _warned_slugs:
-                st.warning(f"Placeholder page created for missing slug '{slug}'.")
-                _warned_slugs.add(slug)
 
 __all__ = ["ensure_pages"]
