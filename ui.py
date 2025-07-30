@@ -1145,10 +1145,12 @@ def main() -> None:
         st.info("Running in fallback mode")
 
     # Respond to lightweight health-check probes
-    params = st.experimental_get_query_params()
+    params = st.query_params
+    value = params.get(HEALTH_CHECK_PARAM)
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
-        "1" in params.get(HEALTH_CHECK_PARAM, [])
+        value == "1"
+        or (isinstance(value, list) and "1" in value)
         or path_info == f"/{HEALTH_CHECK_PARAM}"
     ):
         st.write("ok")
@@ -1253,8 +1255,8 @@ def main() -> None:
         }
 
         # Determine page from query params and sidebar selection
-        query = st.experimental_get_query_params()
-        forced_page = query.get("page", [None])[0]
+        param = st.query_params.get("page")
+        forced_page = param[0] if isinstance(param, list) else param
 
         choice = render_modern_sidebar(
             page_paths,
@@ -1264,7 +1266,7 @@ def main() -> None:
         if forced_page in page_paths:
             choice = forced_page
 
-        st.experimental_set_query_params(page=choice)
+        st.query_params["page"] = choice
 
 
         # Page layout: left for tools, center for content
