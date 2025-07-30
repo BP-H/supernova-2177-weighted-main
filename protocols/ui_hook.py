@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""UI helpers for the cross-universe bridge agent.
+
+These routes rely on the optional UI extras (FastAPI and frontend bridge). The
+module is loaded only when the UI is launched.
+"""
+
 from typing import Any, Dict, List
 
 from frontend_bridge import register_route_once

@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Optional UI routes for :class:`HarmonySynthesizerAgent`.
+
+Importing this module registers FastAPI endpoints, requiring the UI extras of
+the project. It is intentionally not imported as part of the standard
+``protocols`` package initialization.
+"""
+
 import base64
 from typing import Any, Callable, Dict, Optional
 
