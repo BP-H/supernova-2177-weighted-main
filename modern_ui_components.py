@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import streamlit as st
 
-from streamlit_helpers import inject_global_styles
+from modern_ui import inject_premium_styles
 
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
-    inject_global_styles()
+    inject_premium_styles()
     st.markdown(
         """
         <style>

@@ -6,7 +6,9 @@ Import these helpers in your own modules to keep layouts consistent.
 ```python
 import streamlit as st
 from streamlit_helpers import header, theme_selector, centered_container
+from modern_ui import inject_premium_styles
 
+inject_premium_styles()
 header("Custom Page", layout="wide")
 with centered_container():
     theme_selector("Theme")
