@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, cast
 
 import streamlit as st
-from streamlit_helpers import inject_global_styles
+from streamlit_helpers import inject_global_styles, theme_selector
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,

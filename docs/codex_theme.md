@@ -8,10 +8,10 @@ It is available through `streamlit_helpers.theme_selector()` and sets the
 
 ```python
 from streamlit_helpers import theme_selector
-from modern_ui import inject_premium_styles
+from modern_ui import inject_modern_styles
 
 # Apply premium styles and add a radio selector to switch themes
-inject_premium_styles()
+inject_modern_styles()
 theme_selector("Theme")
 ```
 
