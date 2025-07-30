@@ -76,6 +76,7 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
+from utils.page_registry import ensure_pages
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -1239,6 +1240,7 @@ def render_developer_tools() -> None:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
+    ensure_pages(PAGES, PAGES_DIR)
     # Initialize database BEFORE anything else
     try:
         db_ready = ensure_database_exists()
@@ -1351,9 +1353,9 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        render_topbar()
+        render_topbar()  # added in codex branch
 
-        # Setup: Pages and Icons
+        # Setup: Pages and Icons (reuse global mapping)
         PAGES = {
             "Validation": "validation",
             "Voting": "voting",
@@ -1368,6 +1370,7 @@ def main() -> None:
             / "transcendental_resonance_frontend"
             / "pages"
         )
+
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
