@@ -150,20 +150,33 @@ def inject_global_styles() -> None:
     )
 
 
-def theme_selector(label: str = "Theme", key_suffix: str = "") -> str:
-    """Theme selector with unique keys and error handling."""
+def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:
+    """Modern theme selector with visual toggle.
+
+    Parameters
+    ----------
+    label
+        Visible label for the selectbox.
+    key_suffix
+        Optional unique suffix appended to the widget key. If omitted, "default"
+        will be used. The key format becomes ``"theme_selector_{key_suffix}_{id(st)}"``.
+    """
+
+    if key_suffix is None:
+        key_suffix = "default"
+
     if "theme" not in st.session_state:
         st.session_state["theme"] = "dark"
 
-    unique_key = f"theme_selector_{key_suffix}_{id(st)}" if key_suffix else "theme_select"
+    unique_key = f"theme_selector_{key_suffix}_{id(st)}"
 
     try:
         col1, col2 = st.columns([4, 1])
         with col2:
             current_theme = st.session_state.get("theme", "dark")
-            
+
             theme_choice = st.selectbox(
-                "Theme",
+                label,
                 ["Light", "Dark", "Codex"],
                 index=1 if current_theme == "dark" else (2 if current_theme == "codex" else 0),
                 key=unique_key,
