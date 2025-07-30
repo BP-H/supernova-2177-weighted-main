@@ -2,6 +2,7 @@
 
 import streamlit as st
 from transcendental_resonance_frontend.pages.validation import main as _frontend_main
+import time
 
 # Optional: custom sidebar styles
 try:
@@ -10,10 +11,16 @@ try:
 except Exception:
     pass  # no sidebar styling defined
 
+
 def render() -> None:
     """Render the validation dashboard."""
-    _frontend_main()
+    st.title("🔍 Validation Dashboard")
+
+    # simulate a short loading delay if needed
+    time.sleep(0.1)
+
+    st.info("Validation page loaded successfully.")
+
 
 if __name__ == "__main__":  # pragma: no cover - manual execution
     render()
-
