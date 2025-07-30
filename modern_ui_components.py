@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import streamlit as st
+from contextlib import nullcontext
 from typing import Optional
 
 from modern_ui import inject_modern_styles
