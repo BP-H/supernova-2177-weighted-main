@@ -5,8 +5,11 @@
 
 from __future__ import annotations
 
+import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
+
+from realtime_comm.video_chat import VideoChatManager
 
 router = APIRouter()
 
@@ -35,6 +38,7 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+video_manager = VideoChatManager()
 
 
 @router.websocket("/ws/video")
@@ -45,5 +49,25 @@ async def video_ws(websocket: WebSocket) -> None:
         while True:
             data = await websocket.receive_text()
             await manager.broadcast(data, sender=websocket)
+            try:
+                payload = json.loads(data)
+            except Exception:
+                continue
+
+            if payload.get("type") == "translate":
+                user = payload.get("user", "")
+                target = payload.get("lang", "en")
+                text = payload.get("text", "")
+                video_manager.translate_audio(user, target, text)
+                result = json.dumps({
+                    "type": "translation",
+                    "user": user,
+                    "text": text,
+                    "translation": next((s.translation_overlay for s in video_manager.active_streams if s.user_id == user), text),
+                })
+                await manager.broadcast(result, sender=None)
+            elif payload.get("type") == "voice":
+                # relay synthesized voice to all participants
+                await manager.broadcast(data, sender=websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
