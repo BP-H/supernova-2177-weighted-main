@@ -6,7 +6,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import logging
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
@@ -29,5 +32,6 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
                 "def main():\n"
                 "    st.write('Placeholder')\n"
             )
+            logger.debug("Created placeholder page module: %s", file_path)
 
 __all__ = ["ensure_pages"]
