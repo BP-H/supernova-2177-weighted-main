@@ -1270,17 +1270,21 @@ def main() -> None:
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
 
-        if st.session_state.get("active_page") not in PAGES:
-            st.session_state["active_page"] = "Validation"
+        # Validate session state and query params
+        if st.session_state.get("sidebar_nav") not in page_paths:
+            st.session_state["sidebar_nav"] = "Validation"
 
+        if forced_page not in page_paths:
+            forced_page = None
 
         choice = render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
 
-        if forced_page in page_paths:
+        if forced_page:
             choice = forced_page
+
 
         try:
             st.query_params["page"] = choice

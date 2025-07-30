@@ -109,6 +109,8 @@ def render_modern_sidebar(
 
     # Default session state for selected page
     st.session_state.setdefault(key, opts[0])
+    if st.session_state.get(key) not in opts:
+        st.session_state[key] = opts[0]
 
     orientation_cls = "horizontal" if horizontal else "vertical"
 
@@ -154,7 +156,8 @@ def render_modern_sidebar(
             # Final fallback
             choice = st.session_state.get(key, opts[0])
 
-        st.session_state[key] = choice
+        if st.session_state.get(key) != choice:
+            st.session_state[key] = choice
         st.markdown("</div>", unsafe_allow_html=True)
         return choice
 

@@ -105,6 +105,7 @@ def test_main_defaults_to_validation(monkeypatch):
     monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
     monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
 
+
     class Dummy(contextlib.AbstractContextManager):
         def __enter__(self):
             return self
@@ -141,8 +142,13 @@ def test_main_defaults_to_validation(monkeypatch):
     ]:
         monkeypatch.setattr(st, fn, lambda *a, **k: None)
 
-    monkeypatch.setattr(st, "session_state", {})
-    monkeypatch.setattr(st, "query_params", {})
+    session = {"sidebar_nav": "Ghost"}
+    monkeypatch.setattr(st, "session_state", session)
+    params = {"page": "Unknown"}
+    monkeypatch.setattr(st, "query_params", params)
+    monkeypatch.setattr(st, "experimental_get_query_params", lambda: params)
+    monkeypatch.setattr(st, "experimental_set_query_params", lambda **k: params.update(k))
+
 
     for helper in [
         "apply_theme",
@@ -154,7 +160,12 @@ def test_main_defaults_to_validation(monkeypatch):
         monkeypatch.setattr(ui, helper, lambda *a, **k: None)
 
     monkeypatch.setattr(ui, "render_api_key_ui", lambda *a, **k: {"model": "dummy", "api_key": ""})
+    monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav"))
+    monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav"))
 
     ui.main()
 
-    assert loaded.get("choice") == "Validation"
+    assert params.get("page") == "Validation"
+    assert session.get("sidebar_nav") == "Validation"
+    # Optional, if you also defined `loaded` earlier:
+    # assert loaded.get("choice") == "Validation"
