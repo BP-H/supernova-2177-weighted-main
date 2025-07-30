@@ -24,6 +24,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+import time
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -31,10 +32,20 @@ from typing import Optional
 from frontend import ui_layout
 
 
-from modern_ui_components import (
-    render_validation_card,
-    render_stats_section,
-)
+try:
+    from modern_ui_components import (
+        SIDEBAR_STYLES,
+        render_validation_card,
+        render_stats_section,
+    )
+except Exception:  # pragma: no cover - optional dependency
+    SIDEBAR_STYLES = ""
+
+    def render_validation_card(*_a, **_k):
+        st.info("validation card unavailable")
+
+    def render_stats_section(*_a, **_k):
+        st.info("stats section unavailable")
 
 # Prefer modern sidebar render if available
 try:
@@ -350,7 +361,6 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-
         filename = module_path.rsplit(".", 1)[-1] + ".py"
         candidate_files = [
             Path.cwd() / "pages" / filename,
@@ -359,19 +369,20 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
         for page_file in candidate_files:
             if page_file.exists():
-                rel_path = f"/pages/{page_file.stem}.py"
+                rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
                 try:
                     st.switch_page(rel_path)
                     return
                 except StreamlitAPIException as exc:
                     st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
                     break
-                except Exception as exc:  # Unexpected failure
+                except Exception as exc:
                     logging.error(
                         "switch_page failed for %s: %s", rel_path, exc, exc_info=True
                     )
                     last_exc = exc
                     break
+
 
         # Fallback: import the module directly and call ``render`` or ``main``
         try:
