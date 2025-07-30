@@ -467,27 +467,35 @@ def render_modern_validation_page():
 
 # In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
-    """Load page with beautiful fallback."""
-    # Define pages here since it's not global
+    """Load a page module or show an inline fallback."""
     pages = {
         "Validation": "validation",
-        "Voting": "voting", 
+        "Voting": "voting",
         "Agents": "agents",
         "Resonance Music": "resonance_music",
         "Social": "social",
     }
-    
+
+    module_name = pages.get(choice)
+    if module_name is None:
+        st.error(f"Unknown page: {choice}")
+        return
+
     try:
-        page_module = pages[choice]
-        module_path = f"pages.{page_module}"
+        module_path = (
+            f"transcendental_resonance_frontend.pages.{module_name}"
+        )
         page_mod = import_module(module_path)
-        
-        if hasattr(page_mod, 'render'):
+
+        if hasattr(page_mod, "main"):
+            page_mod.main()
+        elif hasattr(page_mod, "render"):
             page_mod.render()
         else:
-            render_modern_validation_page()
+            raise AttributeError(
+                "Page module lacks a 'main' or 'render' entry point"
+            )
     except ImportError:
-        # Beautiful fallback based on page choice
         if choice == "Validation":
             render_modern_validation_page()
         elif choice == "Voting":
