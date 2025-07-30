@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Dict
+from pathlib import Path
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
@@ -159,12 +160,40 @@ def render_modern_sidebar(
     if container is None:
         container = st.sidebar
 
+    # Filter out pages that don't exist on disk so we don't render broken links
+    PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+    valid_pages: Dict[str, str] = {}
+    missing_pages: list[str] = []
+    for label, module in pages.items():
+        page_file = PAGES_DIR / f"{module}.py"
+        if page_file.exists():
+            valid_pages[label] = module
+        else:
+            missing_pages.append(label)
+
+    if missing_pages:
+        msg = "Unknown pages: " + ", ".join(missing_pages)
+        if hasattr(st, "warning"):
+            st.warning(msg, icon="⚠️")
+        else:  # pragma: no cover - used in tests with SimpleNamespace
+            print(msg)
+
+    pages = valid_pages or pages
+
     opts = list(pages.keys())
+    if not opts:
+        st.error("No valid pages configured", icon="⚠️")
+        return ""
     icon_map = icons or {}
 
     # Default session state for selected page
     st.session_state.setdefault(session_key, opts[0])
     if st.session_state.get(session_key) not in opts:
+        msg = f"Unknown page '{st.session_state.get(session_key)}'"
+        if hasattr(st, "toast"):
+            st.toast(msg, icon="⚠️")
+        else:  # pragma: no cover - used in tests with SimpleNamespace
+            print(msg)
         st.session_state[session_key] = opts[0]
 
     widget_key = f"{session_key}_ctrl"
