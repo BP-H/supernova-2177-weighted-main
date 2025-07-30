@@ -58,9 +58,8 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = (
-    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-)
+ROOT_DIR = Path(__file__).resolve().parent
+PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 # Mapping of navigation labels to page module names
 
@@ -363,9 +362,7 @@ from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
-    """Load a page module or switch to an existing page file gracefully."""
-    import importlib
-
+    """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -378,16 +375,31 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             module,
         ]
 
+    # Validate PAGES_DIR existence
+    if not PAGES_DIR.exists():
+        st.error(f"Pages directory not found: {PAGES_DIR}")
+        if "_render_fallback" in globals():
+            _render_fallback(choice)
+        return
+
+    # First try switching pages using Streamlit's multipage support
     for module_path in module_paths:
-        page_file = module_path.replace(".", "/") + ".py"
-        rel_path = os.path.relpath(page_file, start=Path.cwd())
-        if Path(rel_path).is_file():
+        page_file = Path(module_path.replace(".", "/") + ".py")
+        if page_file.exists():
+            rel_path = os.path.relpath(page_file, start=Path.cwd())
             try:
                 st.switch_page(rel_path)
                 return
-            except Exception as exc:  # fallback to import on failure
-                log(f"switch_page failed for {rel_path}: {exc}")
+            except StreamlitAPIException as exc:
+                st.warning(f"Switch failed for {choice}: {exc}")
+                continue
 
+    # Fallback: import the module directly and call ``render`` or ``main``
+    attempted_paths = set()  # Track attempted paths to avoid infinite loops
+    for module_path in module_paths:
+        if module_path in attempted_paths:
+            continue
+        attempted_paths.add(module_path)
         try:
             page_mod = importlib.import_module(module_path)
             for method_name in ("render", "main"):
@@ -395,7 +407,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
                     getattr(page_mod, method_name)()
                     return
         except ImportError:
-            continue
+            continue  # Try next candidate module path
         except Exception as exc:
             st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
             with st.expander("Show error details"):
@@ -403,7 +415,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    st.error(f"Page not found: {choice}")
+    st.warning(f"Page not found: {choice}")
     if "_render_fallback" in globals():
         _render_fallback(choice)
 
@@ -1229,6 +1241,14 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
+        
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Social": "social",
+        }
         
         page_paths = {
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
