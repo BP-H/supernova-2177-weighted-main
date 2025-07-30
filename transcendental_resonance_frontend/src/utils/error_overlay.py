@@ -4,8 +4,8 @@ from __future__ import annotations
 
 try:  # pragma: no cover - optional dependency
     from nicegui import ui
-except Exception:  # pragma: no cover - fallback when NiceGUI missing
-    ui = None  # type: ignore[misc]
+except ModuleNotFoundError:  # pragma: no cover - fallback when NiceGUI missing
+    ui = None  # type: ignore[assignment]
 
 
 class ErrorOverlay:
@@ -24,7 +24,7 @@ class ErrorOverlay:
 
     def show(self, message: str) -> None:
         if ui is None or self._dialog is None:
-            print(f"ERROR: {message}")
+            print(message)
             return
         self._label.text = message
         if not self._dialog.open:
