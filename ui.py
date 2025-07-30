@@ -945,6 +945,7 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+
         ui_layout.render_navbar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
@@ -1238,6 +1239,7 @@ def main() -> None:
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+
         choice = ui_layout.render_navbar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
@@ -1285,7 +1287,7 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui(key_prefix="devtools")
+                api_info = render_api_key_ui(key_prefix="main")
 
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
