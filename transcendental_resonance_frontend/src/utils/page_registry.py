@@ -32,6 +32,6 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
                 "def main():\n"
                 "    st.write('Placeholder')\n"
             )
-            logger.info("Created placeholder page module: %s", file_path)
+            logger.info("Created placeholder page module %s", file_path.name)
 
 __all__ = ["ensure_pages"]
