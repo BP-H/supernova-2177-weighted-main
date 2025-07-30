@@ -6,6 +6,7 @@ Example:
 """
 
 import os
+import time
 import streamlit as st  # ensure Streamlit is imported early
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
@@ -360,21 +361,28 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = Path.cwd() / "pages" / (module_path.rsplit(".", 1)[-1] + ".py")
-        if page_file.exists():
-            rel_path = f"pages/{page_file.stem}.py"
-            try:
-                st.switch_page(rel_path)
-                return
-            except StreamlitAPIException as exc:
-                st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
-                continue
-            except Exception as exc:  # Unexpected failure
-                logging.error(
-                    "switch_page failed for %s: %s", rel_path, exc, exc_info=True
-                )
-                last_exc = exc
-                continue
+        filename = module_path.rsplit(".", 1)[-1] + ".py"
+        candidate_files = [
+            Path.cwd() / "pages" / filename,
+            PAGES_DIR / filename,
+        ]
+
+        for page_file in candidate_files:
+            if page_file.exists():
+                rel_path = f"pages/{page_file.stem}"  # ✅ no .py extension for st.switch_page
+                try:
+                    st.switch_page(rel_path)
+                    return
+                except StreamlitAPIException as exc:
+                    st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
+                    break
+                except Exception as exc:
+                    logging.error(
+                        "switch_page failed for %s: %s", rel_path, exc, exc_info=True
+                    )
+                    last_exc = exc
+                    break
+
 
         # Fallback: import the module directly and call ``render`` or ``main``
         try:
@@ -391,6 +399,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             break
 
     st.toast("Unable to load page. Showing preview.", icon="⚠️")
+    if choice == "Validation":
+        st.error("Validation page failed to load")
     if "_render_fallback" in globals():
         _render_fallback(choice)
     if last_exc:
