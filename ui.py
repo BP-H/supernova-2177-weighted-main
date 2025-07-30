@@ -60,6 +60,7 @@ from frontend.ui_layout import (
     render_profile_card,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
+from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -1349,6 +1350,8 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
+
+        render_topbar()
 
         # Setup: Pages and Icons
         PAGES = {
