@@ -111,6 +111,7 @@ def render_proposals_tab(main_container=None) -> None:
 
         st.markdown(BOX_CSS + VOTING_CSS + "<div class='app-container'>", unsafe_allow_html=True)
 
+
         col1, col2 = st.columns([1, 1])
 
         with col1:

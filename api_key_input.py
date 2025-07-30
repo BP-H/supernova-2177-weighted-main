@@ -23,14 +23,26 @@ PROVIDERS = {
 
 
 def render_api_key_ui(
-    default: str = "Dummy", *, key_prefix: str | None = None
+    default: str = "Dummy",
+    *,
+    key_prefix: str | None = None,
 ) -> dict[str, str | None]:
-    """Render model selection and API key fields with unique keys.
+    """Render model selection and API key fields with unique widget keys.
 
-    ``key_prefix`` can be used when the component is rendered in multiple
-    places on the same page to avoid duplicate widget keys.
+    Parameters
+    ----------
+    default : str
+        The provider name to pre-select in the dropdown.
+    key_prefix : str | None
+        Optional prefix used to ensure widget keys are unique when this
+        component is rendered multiple times on a page.
 
-    Returns a dictionary with ``model`` and ``api_key`` keys.
+    Returns
+    -------
+    dict[str, str | None]
+        Dictionary containing ``model`` and ``api_key`` values.
+    """
+
     """
     if st is None:
         return {"model": "dummy", "api_key": None}
@@ -52,6 +64,7 @@ def render_api_key_ui(
     model, key_name = PROVIDERS[choice]
     key_val = ""
     if key_name is not None:
+
         key_val = st.text_input(
             f"{choice} API Key",
             type="password",
