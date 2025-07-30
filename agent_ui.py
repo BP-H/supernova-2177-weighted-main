@@ -19,6 +19,7 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
+# Define BOX_CSS at the top of agent_ui.py or within the function if needed
 BOX_CSS = """
 <style>
 .tab-box {
@@ -34,7 +35,7 @@ BOX_CSS = """
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
-
+"""
 
 def render_agent_insights_tab(main_container=None) -> None:
     """Display diary, RFC summaries and internal notes."""
