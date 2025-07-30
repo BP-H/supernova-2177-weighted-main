@@ -22,8 +22,13 @@ PROVIDERS = {
 }
 
 
-def render_api_key_ui(default: str = "Dummy") -> dict[str, str | None]:
-    """Render model selection and API key fields.
+def render_api_key_ui(
+    default: str = "Dummy", *, key_prefix: str | None = None
+) -> dict[str, str | None]:
+    """Render model selection and API key fields with unique keys.
+
+    ``key_prefix`` can be used when the component is rendered in multiple
+    places on the same page to avoid duplicate widget keys.
 
     Returns a dictionary with ``model`` and ``api_key`` keys.
     """
@@ -35,7 +40,15 @@ def render_api_key_ui(default: str = "Dummy") -> dict[str, str | None]:
         index = names.index(default)
     else:
         index = 0
-    choice = st.selectbox("LLM Model", names, index=index)
+
+    prefix = f"{key_prefix}_" if key_prefix else ""
+
+    choice = st.selectbox(
+        "LLM Model",
+        names,
+        index=index,
+        key=f"{prefix}llm_model_select",
+    )
     model, key_name = PROVIDERS[choice]
     key_val = ""
     if key_name is not None:
@@ -43,6 +56,7 @@ def render_api_key_ui(default: str = "Dummy") -> dict[str, str | None]:
             f"{choice} API Key",
             type="password",
             value=st.session_state.get(key_name, ""),
+            key=f"{prefix}{key_name.lower()}_input",
         )
         if key_val:
             st.session_state[key_name] = key_val

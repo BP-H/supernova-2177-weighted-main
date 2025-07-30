@@ -17,7 +17,7 @@ def main(main_container=None) -> None:
     with container_ctx:
         st.subheader("👤 Profile")
         st.info("Manage API credentials for advanced features.")
-        render_api_key_ui()
+        render_api_key_ui(key_prefix="profile")
 
 
 def render() -> None:
