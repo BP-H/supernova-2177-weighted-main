@@ -9,6 +9,14 @@ import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
 
+if not hasattr(st, "experimental_page"):
+    def _noop_experimental_page(*_args, **_kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
+    st.experimental_page = _noop_experimental_page
+
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
@@ -34,13 +42,10 @@ from frontend import ui_layout
 
 try:
     from modern_ui_components import (
-        SIDEBAR_STYLES,
         render_validation_card,
         render_stats_section,
     )
 except Exception:  # pragma: no cover - optional dependency
-    SIDEBAR_STYLES = ""
-
     def render_validation_card(*_a, **_k):
         st.info("validation card unavailable")
 
@@ -492,36 +497,50 @@ def _render_fallback(choice: str) -> None:
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
-
     loaded = False
-    # Only try to load manually if st.experimental_page is available
     if hasattr(st, "experimental_page"):
         for page_file in page_candidates:
             if not page_file.exists():
                 continue
+
             logger.debug("Attempting to load %s from %s", slug, page_file)
+
             try:
-                spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+                spec = importlib.util.spec_from_file_location(
+                    f"_page_{slug}", page_file
+                )
                 if not spec or not spec.loader:
                     continue
+
                 mod = importlib.util.module_from_spec(spec)
                 sys.modules[spec.name] = mod
                 spec.loader.exec_module(mod)
+
+                # Call either `render` or `main` once imported
                 for fn in ("render", "main"):
                     if hasattr(mod, fn):
                         try:
-                            getattr(mod, fn)()
+                            getattr(mod, fn)()      # run the page
                             loaded = True
                             break
                         except Exception as exc:
-                            logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+                            logger.error(
+                                "Error running %s.%s: %s",
+                                slug, fn, exc, exc_info=True,
+                            )
                 if loaded:
-                    break
-            except Exception as exc:
-                logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+                    break     # page loaded successfully → stop loop
 
+            except Exception as exc:
+                logger.error(
+                    "Error loading page candidate %s: %s",
+                    page_file, exc, exc_info=True,
+                )
+
+    # If we managed to render a page above, simply return
     if loaded:
         return
+
 
     # Map to fallback UI stubs
     fallback_pages = {
@@ -1331,7 +1350,11 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        inject_modern_styles()
+        if not st.session_state.get("modern_styles_injected"):
+            try:
+                inject_modern_styles()
+            except Exception as exc:
+                logger.warning("CSS load failed: %s", exc)
 
         # Initialize session state
         defaults = {
@@ -1361,15 +1384,6 @@ def main() -> None:
             return
 
         try:
-            inject_modern_styles()
-        except Exception as exc:
-            logger.warning("CSS load failed: %s", exc)
-        try:
-            st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-        except Exception as exc:
-            logger.warning("Sidebar CSS failed: %s", exc)
-
-        try:
             apply_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
@@ -1387,17 +1401,22 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+        render_topbar()  # sticky top bar
 
-        # Build navigation paths from global mapping
-        page_paths: dict[str, str] = {
-            label: f"/pages/{slug}.py" for label, slug in PAGES.items()
-        }
+        page_paths: dict[str, str] = {}
+        missing_pages: list[str] = []
 
-        # Optional: Warn if any page files are missing
-        missing_pages = [
-            label for label, slug in PAGES.items()
-            if not (ROOT_DIR / "pages" / f"{slug}.py").exists()
-        ]
+        for label, slug in PAGES.items():
+            candidate_files = [
+                PAGES_DIR / f"{slug}.py",
+                ROOT_DIR / "pages" / f"{slug}.py",
+            ]
+            if any(path.exists() for path in candidate_files):
+                # Streamlit links expect paths like "/pages/validation.py"
+                page_paths[label] = f"/pages/{slug}.py"
+            else:
+                missing_pages.append(label)
+
         if missing_pages:
             st.warning("Missing pages: " + ", ".join(missing_pages))
 
