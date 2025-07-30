@@ -683,6 +683,13 @@ def render_validation_ui(
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
+    params = st.query_params
+    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
+    if "1" in params.get(HEALTH_CHECK_PARAM, []) or path_info == f"/{HEALTH_CHECK_PARAM}":
+        st.write("ok")
+        st.stop()
+        return
+
     try:
         st.set_page_config(
             page_title="superNova_2177",
@@ -723,8 +730,15 @@ def main() -> None:
             return
 
         # Apply modern styling
-        inject_premium_styles()
-        apply_theme(st.session_state["theme"])
+        try:
+            inject_premium_styles()
+        except Exception as exc:
+            logger.warning("CSS load failed: %s", exc)
+
+        try:
+            apply_theme(st.session_state["theme"])
+        except Exception as exc:
+            st.warning(f"Theme load failed: {exc}")
         
         # Global button styles
         st.markdown(
@@ -740,13 +754,6 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        # Health check endpoint
-        params = st.query_params
-        path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-        if "1" in params.get("healthz", []) or path_info == "/healthz":
-            st.write("ok")
-            st.stop()
-            return
 
         # Main application header
         with st.container():
@@ -1120,51 +1127,12 @@ def main() -> None:
         render_stats_section()
 
     except Exception as exc:
-        st.session_state["critical_error"] = str(exc)
-        st.error(f"Critical Application Error: {str(exc)}")
-        if st.button("Clear Error & Restart", key="clear_error_restart"):
+        logger.critical("Unhandled error in main: %s", exc, exc_info=True)
+        st.error("Critical Application Error")
+        st.code(traceback.format_exc())
+        if st.button("Reset Application"):
             st.session_state.clear()
             st.rerun()
-
-        # Load CSS safely
-        try:
-            from components.modern_ui import load_css
-            load_css()
-        except Exception:
-            pass  # Fail silently
-
-        # Health check
-        params = st.query_params
-        if "1" in params.get("healthz", []):
-            st.write("ok")
-            st.stop()
-            return
-
-        # Initialize session state safely
-        if "initialized" not in st.session_state:
-            st.session_state.update({
-                "initialized": True,
-                "theme": "dark",
-                "demo_mode": True,
-                "errors": []
-            })
-
-        # Theme selection (unique key)
-        theme_selector("Theme", key_suffix="main")
-
-        # Render main UI with error recovery
-        try:
-            render_validation_ui()
-        except Exception as e:
-            st.error(f"UI Rendering Error: {str(e)}")
-            st.code(f"Error details: {repr(e)}")
-            if st.button("🔄 Reset Application", key="reset_main_ui"):
-                st.session_state.clear()
-                st.rerun()
-
-    except Exception as e:
-        st.error(f"Critical Application Error: {str(e)}")
-        st.code(f"Stack trace: {repr(e)}")
 
 
 if __name__ == "__main__":
