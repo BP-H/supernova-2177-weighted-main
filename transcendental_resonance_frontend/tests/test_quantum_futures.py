@@ -1,5 +1,12 @@
-import inspect
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import pytest
+pytest.importorskip("nicegui")
+pytestmark = pytest.mark.requires_nicegui
+
+import inspect
 from quantum_futures import generate_speculative_futures, DISCLAIMER
 
 
