@@ -433,30 +433,26 @@ def _render_fallback(choice: str) -> None:
 
     slug = PAGES.get(choice, str(choice)).lower()
     page_candidates = [
+        Path.cwd() / "pages" / f"{slug}.py",
         ROOT_DIR / "pages" / f"{slug}.py",
         ROOT_DIR / "transcendental_resonance_frontend" / "pages" / f"{slug}.py",
     ]
-    if any(p.exists() for p in page_candidates):
-        logger.debug("_render_fallback called but page exists: %s", slug)
-        return
 
-    # Normalize and derive slug/module name
     slug = normalize_choice(choice)
     module = PAGES.get(slug, slug.lower())
-    page_file = Path.cwd() / "pages" / f"{module}.py"
 
-    # Skip fallback if page file is available
-    if page_file.exists():
-        logger.debug("Fallback skipped because %s exists", page_file)
-        spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
-        if spec and spec.loader:
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            try:
-                spec.loader.exec_module(mod)
-            except Exception as exc:
-                st.error(f"Failed to load page {module}: {exc}")
-        return
+    for page_file in page_candidates:
+        if page_file.exists():
+            logger.debug("Fallback loading %s from %s", module, page_file)
+            spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                try:
+                    spec.loader.exec_module(mod)
+                except Exception as exc:
+                    st.error(f"Failed to load page {module}: {exc}")
+            return
 
     # Prevent duplicate fallback rendering in session
     if st.session_state.get("_fallback_rendered") == slug:
