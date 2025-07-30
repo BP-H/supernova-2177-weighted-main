@@ -841,16 +841,10 @@ def render_validation_ui(
 
 
 
-        # Page layout
-        left_col, center_col, right_col = main_container.columns([1, 3, 1])
-
-        with center_col:
-            st.info("Select a page above to continue.")
-
-        with left_col:
+        with main_container:
             render_status_icon()
-        
             render_developer_tools()
+            st.info("Select a page above to continue.")
 
 
     except Exception as exc:
@@ -1131,28 +1125,9 @@ def main() -> None:
             icons=NAV_ICONS,
         )
 
-        
-        left_col, center_col, right_col = st.columns([1, 3, 1])
-        
-        with center_col:
-            if choice:
-                page_key = PAGES.get(choice, choice)
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                try:
-                    load_page_with_fallback(choice, module_paths)
-                except Exception:
-                    st.warning(f"Page not found: {choice}")
-                    _render_fallback(choice)
-            else:
-                st.info("Select a page above to continue.")
-                _render_fallback("Validation")  # Default fallback page as a preview
-        
-        with left_col:
+        with st.sidebar:
             render_status_icon()
-        
+
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
                 info_text = (
@@ -1161,16 +1136,16 @@ def main() -> None:
                     f"Session: {st.session_state['session_start_ts']} UTC"
                 )
                 st.info(info_text)
-        
+
             with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
                 theme_selector("Theme")
-        
+
             with st.expander("Data Management"):
                 uploaded_file = st.file_uploader("Upload JSON", type="json")
                 if st.button("Run Analysis"):
                     st.success("Analysis complete!")
-        
+
             with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui(key_prefix="devtools")
 
@@ -1191,21 +1166,34 @@ def main() -> None:
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
 
-        
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
-        
+
             st.divider()
             governance_view = st.toggle(
                 "Governance View",
                 value=st.session_state.get("governance_view", False),
             )
             st.session_state["governance_view"] = governance_view
-        
+
             render_developer_tools()
 
-        with center_col:
-            st.info("Select a page above to continue.")
+        container_ctx = safe_container(main_container)
+        with container_ctx:
+            if choice:
+                page_key = PAGES.get(choice, choice)
+                module_paths = [
+                    f"transcendental_resonance_frontend.pages.{page_key}",
+                    f"pages.{page_key}",
+                ]
+                try:
+                    load_page_with_fallback(choice, module_paths)
+                except Exception:
+                    st.warning(f"Page not found: {choice}")
+                    _render_fallback(choice)
+            else:
+                st.info("Select a page above to continue.")
+                _render_fallback("Validation")  # Default fallback page as a preview
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
 
@@ -1253,19 +1241,6 @@ def main() -> None:
 
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
-
-        container_ctx = safe_container(main_container)
-        with container_ctx:
-            if choice:  # Only attempt to load if a page is selected
-                page_key = PAGES.get(choice, choice)
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                load_page_with_fallback(choice, module_paths)
-            else:
-                st.info("Select a page above to continue.")
-                _render_fallback("Validation")  # Default fallback page as a preview
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
