@@ -95,6 +95,48 @@ from modern_ui import (
     close_card_container,
 )
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
+
+try:
+    from voting_ui import render_voting_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
+        st.info("Voting module not available")
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
+
+try:
+    from llm_backends import get_backend
+except ImportError:  # pragma: no cover - optional dependency
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy backend"}
+
 def render_landing_page():
     """Render fallback landing page when pages directory is missing."""
     st.title("🚀 superNova_2177")
@@ -143,21 +185,7 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
-# Fix for the import error in render_agent_insights_tab
-def render_agent_insights_tab():
-    """Fallback agent insights tab."""
-    st.subheader("🤖 Agent Insights")
-    st.info("Agent insights module not available. Install required dependencies.")
-    
-    # Show basic agent info if registry is available
-    if 'AGENT_REGISTRY' in globals() and AGENT_REGISTRY:
-        st.write("Available Agents:")
-        for name, info in AGENT_REGISTRY.items():
-            with st.expander(f"🔧 {name}"):
-                st.write(f"Description: {info.get('description', 'No description')}")
-                st.write(f"Class: {info.get('class', 'Unknown')}")
-    else:
-        st.warning("No agents registered")
+
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
@@ -479,36 +507,47 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, Optional
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
 
 try:
     from social_tabs import render_social_tab
-except ImportError:
-    def render_social_tab():
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
         st.subheader("👥 Social Features")
         st.info("Social features module not available")
 
 try:
     from voting_ui import render_voting_tab
-except ImportError:
-    def render_voting_tab():
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
         st.info("Voting module not available")
 
-# Fallback implementation defined earlier in the file
 try:
     from agent_ui import render_agent_insights_tab
 except ImportError:  # pragma: no cover - optional dependency
-    pass
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
 
 try:
     from llm_backends import get_backend
-except ImportError:
+except ImportError:  # pragma: no cover - optional dependency
     def get_backend(name, api_key=None):
         return lambda x: {"response": "dummy backend"}
-
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:
-    AGENT_REGISTRY = {}
 
 
 def get_st_secrets() -> dict:
@@ -857,6 +896,13 @@ def main() -> None:
         st.stop()
         return
 
+    # Initialize database FIRST
+    try:
+        ensure_database_exists()
+    except Exception as e:
+        st.error(f"Database initialization failed: {e}")
+        st.info("Running in fallback mode")
+
     try:
         st.set_page_config(
             page_title="superNova_2177",
@@ -940,17 +986,23 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Load selected page
-        load_page_with_fallback(choice)
-
-        # Sidebar controls
-        with st.sidebar:
+        left_col, center_col, right_col = st.columns([1, 3, 1])
+        
+        with center_col:
+            # Load page content
+            load_page_with_fallback(choice)
+            
+        with left_col:
+            render_status_icon()
+            
             with st.expander("Environment Details"):
-                render_status_icon()
                 secrets = get_st_secrets()
-                st.write(f"Database URL: {secrets.get('DATABASE_URL', 'not set')}")
-                st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-                st.write(f"Session: {st.session_state['session_start_ts']} UTC")
+                info_text = (
+                    f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
+                    f"ENV: {os.getenv('ENV', 'dev')} | "
+                    f"Session: {st.session_state['session_start_ts']} UTC"
+                )
+                st.info(info_text)
 
             with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
@@ -1186,6 +1238,72 @@ def main() -> None:
             st.session_state.clear()
             st.rerun()
 
+# Add this section for database error handling
+import sqlite3
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
+
+def ensure_database_exists():
+    """Initialize database tables if they don't exist."""
+    try:
+        secrets = get_st_secrets()
+        db_url = secrets.get('DATABASE_URL', 'sqlite:///harmonizers.db')
+        engine = create_engine(db_url)
+        
+        with engine.connect() as conn:
+            try:
+                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='harmonizers';"))
+                table_exists = result.fetchone() is not None
+                
+                if not table_exists:
+                    # Create the harmonizers table
+                    conn.execute(text("""
+                        CREATE TABLE harmonizers (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username VARCHAR(50) UNIQUE NOT NULL,
+                            email VARCHAR(100) UNIQUE NOT NULL,
+                            hashed_password VARCHAR(255) NOT NULL,
+                            bio TEXT,
+                            profile_pic VARCHAR(255),
+                            is_active BOOLEAN DEFAULT 1,
+                            is_admin BOOLEAN DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            species VARCHAR(50) DEFAULT 'human',
+                            harmony_score FLOAT DEFAULT 0.0,
+                            creative_spark FLOAT DEFAULT 0.0,
+                            is_genesis BOOLEAN DEFAULT 0,
+                            consent_given BOOLEAN DEFAULT 0,
+                            cultural_preferences TEXT,
+                            engagement_streaks INTEGER DEFAULT 0,
+                            network_centrality FLOAT DEFAULT 0.0,
+                            karma_score FLOAT DEFAULT 0.0,
+                            last_passive_aura_timestamp TIMESTAMP
+                        );
+                    """))
+                    
+                    # Insert a default user
+                    conn.execute(text("""
+                        INSERT INTO harmonizers 
+                        (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                        VALUES 
+                        ('admin', 'admin@supernova.dev', 'hashed_password_here', 
+                         'Default admin user for superNova_2177', 1, 1, 1, 1);
+                    """))
+                    conn.commit()
+                return True
+            except Exception:
+                return False
+    except Exception:
+        return False
+
+def safe_get_user():
+    """Get user with proper error handling."""
+    try:
+        ensure_database_exists()
+        with SessionLocal() as db:
+            return db.query(Harmonizer).first()
+    except Exception:
+        return None
 
 if __name__ == "__main__":
     main()
