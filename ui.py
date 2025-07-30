@@ -19,6 +19,7 @@ import sqlite3
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
+
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
@@ -1175,6 +1176,7 @@ def main() -> None:
                     else:
                         st.info("Fork operation unavailable")
 
+
                 with dev_tabs[1]:
                     if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                         with SessionLocal() as db:
@@ -1355,9 +1357,8 @@ def main() -> None:
 
 
 # Add this section for database error handling
-
 def ensure_database_exists() -> bool:
-    """Create harmonizers table and insert default admin if necessary."""
+    """Ensure harmonizers table exists and insert default admin if necessary."""
     try:
         secrets = get_st_secrets()
         db_url = secrets.get("DATABASE_URL", "sqlite:///harmonizers.db")
@@ -1366,11 +1367,12 @@ def ensure_database_exists() -> bool:
             connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
         )
     except Exception as exc:
-        logger.warning("Engine creation failed: %s", exc)
+        logger.error("Failed to configure DB engine: %s", exc)
         return False
 
     try:
         with engine.begin() as conn:
+            # Create table if missing
             conn.execute(
                 text(
                     """
@@ -1389,16 +1391,17 @@ def ensure_database_exists() -> bool:
                         last_passive_aura_timestamp TIMESTAMP,
                         species VARCHAR(50) DEFAULT 'human',
                         cultural_preferences TEXT,
-                        harmony_score FLOAT,
-                        creative_spark FLOAT,
-                        network_centrality FLOAT,
-                        karma_score FLOAT,
-                        engagement_streaks INTEGER
+                        harmony_score FLOAT DEFAULT 0.0,
+                        creative_spark FLOAT DEFAULT 0.0,
+                        network_centrality FLOAT DEFAULT 0.0,
+                        karma_score FLOAT DEFAULT 0.0,
+                        engagement_streaks INTEGER DEFAULT 0
                     );
                     """
                 )
             )
 
+            # Check if any user exists
             res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
             count = res.scalar() or 0
             if count == 0:
@@ -1406,35 +1409,34 @@ def ensure_database_exists() -> bool:
                     text(
                         """
                         INSERT INTO harmonizers
-                            (username, email, hashed_password, bio, is_active, is_admin, is_genesis, consent_given)
+                            (username, email, hashed_password, bio,
+                             is_active, is_admin, is_genesis, consent_given)
                         VALUES
                             ('admin', 'admin@supernova.dev', 'hashed_password_here',
-                             'Default admin user for superNova_2177', 1, 1, 1, 1)
+                             'Default admin user for superNova_2177',
+                             1, 1, 1, 1);
                         """
                     )
                 )
-
         return True
-    except OperationalError as exc:
-        logger.warning("Database connection failed: %s", exc)
+    except (OperationalError, sqlite3.Error) as exc:
+        logger.error("Database initialization failed: %s", exc)
         return False
     except Exception as exc:
-        logger.warning("Database initialization error: %s", exc)
+        logger.error("Unexpected DB init error: %s", exc)
         return False
 
 
 def safe_get_user():
-    """Get user with proper error handling."""
+    """Get the first user with proper error handling."""
     try:
         if not ensure_database_exists():
             return None
         with SessionLocal() as db:
             return db.query(Harmonizer).first()
     except Exception as exc:
-        logger.warning("User fetch failed: %s", exc)
+        logger.warning("Failed to fetch user: %s", exc)
         return None
-
-
 
 if __name__ == "__main__":
     main()
