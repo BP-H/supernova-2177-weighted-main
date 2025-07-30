@@ -67,6 +67,7 @@ def render_navbar(
     )
     icon_list = list(icons or [None] * len(opts))
     key = key or uuid4().hex
+
     index = 0
     if default is not None and default in [label for label, _ in opts]:
         index = [label for label, _ in opts].index(default)

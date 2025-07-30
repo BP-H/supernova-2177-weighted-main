@@ -7,13 +7,19 @@ import streamlit as st
 
 
 def inject_modern_styles() -> None:
-    """Inject global CSS for modern look and feel."""
+    """Inject global CSS for a sleek dark appearance."""
     st.markdown(
         """
         <style>
+        :root {
+            --neon-accent: #08f7fe;
+            --bg-start: #07182c;
+            --bg-end: #06203f;
+        }
         body, .stApp {
-            background-color: var(--background, #F0F2F6);
-            color: var(--text-color, #333333);
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text-color, #e6e6e6);
+
             font-family: 'Inter', sans-serif;
         }
         .main .block-container {
@@ -22,26 +28,22 @@ def inject_modern_styles() -> None:
             padding-right: 3rem;
             max-width: 1200px;
         }
-        .custom-container {
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
-            background-color: var(--secondary-bg, #FFFFFF);
-        }
+        .custom-container,
         .card {
-            background-color: var(--secondary-bg, #FFFFFF);
             padding: 1rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
             margin-bottom: 1rem;
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            background-color: rgba(255,255,255,0.05);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
+        .card:hover,
+        .custom-container:hover {
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            transform: translateY(-3px);
+
         }
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Inter', sans-serif !important;
@@ -49,12 +51,12 @@ def inject_modern_styles() -> None:
             line-height: 1.3 !important;
             margin: 0 0 0.5rem 0 !important;
         }
-        h1 { font-size: 2.25rem !important; }
-        h2 { font-size: 1.75rem !important; }
-        h3 { font-size: 1.5rem !important; }
-        h4 { font-size: 1.25rem !important; }
-        h5 { font-size: 1rem !important; }
-        h6 { font-size: 0.875rem !important; }
+        h1 { font-size: clamp(1.8rem, 5vw, 2.4rem) !important; }
+        h2 { font-size: clamp(1.5rem, 4vw, 2rem) !important; }
+        h3 { font-size: clamp(1.25rem, 3vw, 1.6rem) !important; }
+        h4 { font-size: clamp(1.1rem, 2.5vw, 1.3rem) !important; }
+        h5 { font-size: clamp(1rem, 2vw, 1.1rem) !important; }
+        h6 { font-size: clamp(0.875rem, 1.5vw, 1rem) !important; }
         }
         p, span, div {
             line-height: 1.6 !important;
@@ -62,28 +64,31 @@ def inject_modern_styles() -> None:
             margin-bottom: 0.75rem;
         }
         .stButton > button {
-            background: linear-gradient(135deg, #4a90e2 0%, #5ba0f2 100%) !important;
+            background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
+
             border: none !important;
-            border-radius: 12px !important;
-            color: white !important;
+            border-radius: 10px !important;
+            color: #00111e !important;
             font-weight: 600 !important;
             padding: 0.75rem 2rem !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4) !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
+
             font-size: 0.95rem !important;
             height: auto !important;
         }
         .stButton > button:hover {
             transform: translateY(-1px) !important;
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
-            background: linear-gradient(135deg, #5ba0f2 0%, #6bb0ff 100%) !important;
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
+            background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
+
             filter: brightness(1.05);
         }
 
         input, textarea, select {
-            background-color: #2d2d2d !important;
+            background-color: #1a1a1a !important;
             color: #eee !important;
-            border: 1px solid #555 !important;
+            border: 1px solid #444 !important;
             border-radius: 8px !important;
         }
         </style>
