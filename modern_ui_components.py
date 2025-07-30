@@ -61,7 +61,6 @@ SIDEBAR_STYLES = """
 .sidebar-nav .stButton>button:hover {
     background: rgba(255, 255, 255, 0.05);
 }
-<style>
 .sidebar-nav label {
     display: flex;
     align-items: center;
@@ -91,8 +90,6 @@ SIDEBAR_STYLES = """
     background: rgba(255, 255, 255, 0.1);
     color: var(--neon-accent);
 }
-
-/* Combine both @media rules */
 @media (max-width: 768px) {
     [data-testid="stSidebar"] {
         width: 14rem;
@@ -105,6 +102,7 @@ SIDEBAR_STYLES = """
     }
 }
 </style>
+"""
 
 
 
