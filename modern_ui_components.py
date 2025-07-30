@@ -26,10 +26,12 @@ SIDEBAR_STYLES = """
     border-radius: 12px;
     padding: 0.5rem;
     margin-bottom: 1rem;
+    font-size: 0.75rem;
 }
 .sidebar-nav .nav-item {
     color: #f0f4f8;
     font-weight: 500;
+    font-size: 0.75rem;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     margin-bottom: 0.25rem;
@@ -97,7 +99,8 @@ def render_modern_sidebar(
     pages: Dict[str, str],
     container: Optional[st.delta_generator.DeltaGenerator] = None,
     icons: Optional[Dict[str, str]] = None,
-
+    *,
+    key: str = "nav_selection",
 ) -> str:
     """Render a vertical navigation menu with optional icons."""
     if container is None:
@@ -109,6 +112,18 @@ def render_modern_sidebar(
 
     opts = list(pages.keys())
     icon_map = icons or {}
+    short_map = {
+        "Validation": "Validate",
+        "Voting": "Voting",
+        "Agents": "Agent",
+        "Resonance Music": "Music",
+        "Chat": "Chat",
+        "Social": "Social",
+        "Profile": "Profile",
+    }
+
+    display_opts = [short_map.get(o, o.split()[0]) for o in opts]
+
     session_key = f"sidebar_{id(pages)}"
     st.session_state.setdefault(session_key, opts[0])
 
@@ -116,18 +131,25 @@ def render_modern_sidebar(
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-    if USE_OPTION_MENU and option_menu is not None:
-        choice = option_menu(
-            menu_title=None,
-            options=opts,
-            icons=icons or ["dot"] * len(opts),
-            orientation="vertical",
-            key=key,
-            default_index=opts.index(state.get(key, opts[0])),
-        )
-    else:
-        choice = st.radio("Navigate", opts, key=key, index=opts.index(state.get(key, opts[0])))
-    
+
+        if USE_OPTION_MENU and option_menu is not None:
+            choice_disp = option_menu(
+                menu_title=None,
+                options=display_opts,
+                icons=[icon_map.get(o, "dot") for o in opts],
+                orientation="vertical",
+                key=key,
+                default_index=display_opts.index(short_map.get(state.get(key, opts[0]), opts[0])),
+            )
+        else:
+            choice_disp = st.radio(
+                "Navigate",
+                display_opts,
+                key=key,
+                index=display_opts.index(short_map.get(state.get(key, opts[0]), opts[0])),
+            )
+
+    choice = opts[display_opts.index(choice_disp)]
     state[key] = choice
     st.markdown("</div>", unsafe_allow_html=True)
     return state[key]
