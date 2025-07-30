@@ -32,10 +32,13 @@ def inject_modern_styles() -> None:
     Call this before rendering any UI elements so the styles apply correctly.
     """
     from modern_ui_components import SIDEBAR_STYLES
+    from frontend.theme import get_global_css
 
     if st.session_state.get("modern_styles_injected"):
         logger.debug("Modern styles already injected; skipping")
         return
+
+    st.markdown(get_global_css(True), unsafe_allow_html=True)
 
     css = """
         <link rel="preconnect" href="https://fonts.gstatic.com">
