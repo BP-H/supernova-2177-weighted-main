@@ -25,6 +25,13 @@ from modern_ui_components import (
     render_validation_card,
     render_stats_section,
 )
+from frontend.ui_layout import (
+    main_container,
+    sidebar_container,
+    render_navbar,
+    render_title_bar,
+    show_preview_badge,
+)
 
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
@@ -460,27 +467,36 @@ def render_modern_validation_page():
                 )
 
 
-def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+def load_page_with_fallback(choice: str) -> None:
     """
     Attempt to import and run a page module by name, with graceful fallback.
     Tries each candidate path and checks for `render()` or `main()` method.
     """
+    module_name = PAGES.get(choice, choice)
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{module_name}",
+        module_name,
+    ]
+
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
+        except ImportError:
+            continue  # Try next path
+
+        try:
             if hasattr(page_mod, "render"):
                 page_mod.render()
                 return
             elif hasattr(page_mod, "main"):
                 page_mod.main()
                 return
-        except ImportError:
-            continue  # Try next path
         except Exception as exc:
             st.error(f"❌ Error loading page `{choice}`: {exc}")
-            break
+            return
 
     _render_fallback(choice)
+
 
 
 def _render_fallback(choice: str) -> None:
@@ -500,52 +516,65 @@ def _render_fallback(choice: str) -> None:
 
 
 def render_modern_validation_page():
-    st.markdown("# ✅ Validation Console")
-    st.info("🚧 Validation logic coming soon!")
+    """Fallback validation page with basic progress indicators."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("✅", "Validation Console")
+
+    status = st.empty()
+    prog = st.progress(0)
+    for i in range(1, 6):
+        status.write(f"Step {i} / 5")
+        prog.progress(i * 20)
+    st.success("Analysis placeholder complete")
 
 
 def render_modern_voting_page():
-    st.markdown("# 🗳️ Voting Dashboard")
-    try:
-        render_voting_tab()
-    except Exception:
-        st.info("🚧 Advanced voting features coming soon!")
+    """Fallback voting page showing mock poll results."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🗳️", "Voting Dashboard")
+    votes = {"Option A": 60, "Option B": 25, "Option C": 15}
+    for name, val in votes.items():
+        st.write(f"{name} {val}% :thumbsup:")
+        st.progress(val / 100)
 
 
 def render_modern_agents_page():
-    st.markdown("# 🤖 AI Agents")
-    try:
-        render_agent_insights_tab()
-    except Exception:
-        st.info("🚧 Agent management system in development!")
+    """Fallback agents page with basic profiles."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🤖", "AI Agents")
+    cols = st.columns(3)
+    for col, agent in zip(cols, ["Meta", "Guardian", "Resonance"]):
+        with col:
+            st.image("https://via.placeholder.com/80", width=80)
+            st.write(agent)
+            st.line_chart([1, 2, 1, 3])
 
 
 def render_modern_music_page():
-    st.markdown("# 🎵 Resonance Music")
-    try:
-        from transcendental_resonance_frontend.pages import resonance_music
-        if hasattr(resonance_music, "render"):
-            resonance_music.render()
-        elif hasattr(resonance_music, "main"):
-            resonance_music.main()
-        else:
-            raise RuntimeError("No render or main method available in resonance_music")
-    except Exception:
-        st.info("🚧 Harmonic resonance features coming soon!")
+    """Fallback music page with waveform placeholder."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("🎵", "Resonance Music")
+    st.audio(b"", format="audio/wav")
+    st.markdown("Harmonic signature: **A440**")
 
 
 def render_modern_social_page():
-    st.markdown("# 👥 Social Network")
-    try:
-        from transcendental_resonance_frontend.pages import social
-        if hasattr(social, "render"):
-            social.render()
-        elif hasattr(social, "main"):
-            social.main()
-        else:
-            raise RuntimeError("No render or main method available in social")
-    except Exception:
-        st.info("🚧 Social features in development!")
+    """Fallback social page with trending hashtags."""
+    from frontend.ui_layout import render_title_bar, show_preview_badge
+
+    show_preview_badge()
+    render_title_bar("👥", "Social Network")
+    st.image("https://via.placeholder.com/40", width=40)
+    st.write("#hashtag1 #hashtag2")
+    st.success("Trending simulation running...")
 
 
 
@@ -1014,7 +1043,7 @@ def render_validation_ui(
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
     if main_container is None:
-        main_container = st
+        main_container = st.container()
     if sidebar is None:
         sidebar = st.sidebar
 
@@ -1029,6 +1058,7 @@ def render_validation_ui(
     except Exception as exc:
         st.error("Failed to load validation UI")
         st.code(str(exc))
+
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
@@ -1121,7 +1151,6 @@ def main() -> None:
             "Social": "social",
         }
 
-        
         choice = option_menu(
             menu_title=None,
             options=list(PAGES.keys()),
@@ -1132,16 +1161,17 @@ def main() -> None:
 
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
+        with left_col:
+            render_status_icon()
+
         with center_col:
-            page_key = PAGES[choice]
+            page_key = PAGES.get(choice, choice)
             module_paths = [
                 f"transcendental_resonance_frontend.pages.{page_key}",
                 f"pages.{page_key}",
             ]
             load_page_with_fallback(choice, module_paths)
 
-        with left_col:
-            render_status_icon()
 
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
@@ -1386,6 +1416,9 @@ def main() -> None:
 
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
+
+        with main_container():
+            load_page_with_fallback(choice)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
