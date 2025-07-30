@@ -1139,24 +1139,17 @@ def main() -> None:
                     "Session Inspector",
                     "Playground",
                 ])
+            
+                with dev_tabs[0]:
+                    if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+                        try:
+                            user = safe_get_user()
+                            if user and st.button("Fork with Mock Config"):
+                                fork_id = cosmic_nexus.fork_universe(user, {"entropy_threshold": 0.5})
+                                st.success(f"Forked universe {fork_id}")
+                        except Exception as exc:
+                            st.error(f"Fork failed: {exc}")
 
-                # KEEP the body of each dev tab here, as you had in codex/polish-ui
-                # Your previous implementation with cosmic_nexus, SessionLocal, etc. goes here
-                # ✅ Already reviewed — just paste all that intact beneath this line
-
-
-                    with dev_tabs[0]:
-                        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
-                            try:
-                                user = safe_get_user()
-                                if user and st.button("Fork with Mock Config"):
-                                    try:
-                                        fork_id = cosmic_nexus.fork_universe(
-                                            user, {"entropy_threshold": 0.5}
-                                        )
-                                        st.success(f"Forked universe {fork_id}")
-                                    except Exception as exc:
-                                        st.error(f"Fork failed: {exc}")
                                 elif not user:
                                     st.info("No users available to fork")
                             except Exception as exc:
