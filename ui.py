@@ -443,8 +443,8 @@ def _render_fallback(choice: str) -> None:
         OFFLINE_MODE = False
 
     # Normalize and derive slug/module name
-    slug = normalize_choice(choice)
-    module = PAGES.get(slug, slug.lower())
+    normalized = normalize_choice(choice)
+    slug = PAGES.get(normalized, str(normalized)).lower()
 
     # Candidate paths to try loading from
     page_candidates = [
@@ -453,18 +453,33 @@ def _render_fallback(choice: str) -> None:
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
+    loaded = False
     for page_file in page_candidates:
-        if page_file.exists():
-            logger.debug("Fallback loading %s from %s", module, page_file)
-            spec = importlib.util.spec_from_file_location(f"_page_{module}", page_file)
-            if spec and spec.loader:
-                mod = importlib.util.module_from_spec(spec)
-                sys.modules[spec.name] = mod
-                try:
-                    spec.loader.exec_module(mod)
-                except Exception as exc:
-                    st.error(f"Failed to load page {module}: {exc}")
-            return
+        if not page_file.exists():
+            continue
+        logger.debug("Attempting to load %s from %s", slug, page_file)
+        try:
+            spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+            if not spec or not spec.loader:
+                continue
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = mod
+            spec.loader.exec_module(mod)
+            for fn in ("render", "main"):
+                if hasattr(mod, fn):
+                    try:
+                        getattr(mod, fn)()
+                        loaded = True
+                        break
+                    except Exception as exc:
+                        logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+            if loaded:
+                break
+        except Exception as exc:
+            logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+
+    if loaded:
+        return
 
 
     # Prevent duplicate fallback rendering in session
