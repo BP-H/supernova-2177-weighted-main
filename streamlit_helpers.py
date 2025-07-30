@@ -48,47 +48,53 @@ def header(title: str, *, layout: str = "centered") -> None:
     st.header(title)
 
 
+def safe_apply_theme(theme: str) -> None:
+    """Apply theme with error handling."""
+    try:
+        if theme == "dark":
+            css = """
+                <style>
+                @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
+                :root {
+                    --background: #181818;
+                    --secondary-bg: #242424;
+                    --text-color: #e8e6e3;
+                    --primary-color: #4a90e2;
+                    --font-family: 'Iosevka', monospace;
+                }
+                .stApp {
+                    background-color: var(--background);
+                    color: var(--text-color);
+                    font-family: var(--font-family);
+                }
+                a { color: var(--primary-color); }
+                </style>
+            """
+        else:
+            css = """
+                <style>
+                :root {
+                    --background: #F0F2F6;
+                    --secondary-bg: #FFFFFF;
+                    --text-color: #333333;
+                    --primary-color: #0A84FF;
+                    --font-family: 'Inter', sans-serif;
+                }
+                .stApp {
+                    background-color: var(--background);
+                    color: var(--text-color);
+                    font-family: var(--font-family);
+                }
+                </style>
+            """
+        st.markdown(css, unsafe_allow_html=True)
+    except Exception as e:
+        st.warning(f"Theme application failed: {e}")
+
+
 def apply_theme(theme: str) -> None:
-    """Apply light or dark theme styles based on ``theme``."""
-    if theme == "dark":
-        css = """
-            <style>
-            @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
-            :root {
-                --background: #181818;
-                --secondary-bg: #242424;
-                --text-color: #e8e6e3;
-                --primary-color: #4a90e2;
-                --font-family: 'Iosevka', monospace;
-            }
-            body, .stApp {
-                background-color: var(--background);
-                color: var(--text-color);
-                font-family: var(--font-family);
-            }
-            a { color: var(--primary-color); }
-
-            </style>
-        """
-    else:
-        css = """
-            <style>
-            :root {
-                --background: #F0F2F6;
-                --secondary-bg: #FFFFFF;
-                --text-color: #333333;
-                --primary-color: #0A84FF;
-                --font-family: 'Inter', sans-serif;
-            }
-            body, .stApp {
-                background-color: var(--background);
-                color: var(--text-color);
-                font-family: var(--font-family);
-            }
-
-            </style>
-        """
-    st.markdown(css, unsafe_allow_html=True)
+    """Apply theme with fallback."""
+    safe_apply_theme(theme)
 
 
 def inject_global_styles() -> None:
@@ -96,10 +102,11 @@ def inject_global_styles() -> None:
     st.markdown(
         """
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body, .stApp {
             background-color: var(--background, #F0F2F6);
             color: var(--text-color, #333333);
-            font-family: var(--font-family, "Inter", sans-serif);
+            font-family: var(--font-family, 'Inter', sans-serif);
         }
         .custom-container {
             padding: 1rem;
@@ -117,7 +124,26 @@ def inject_global_styles() -> None:
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
         }
-        .stButton>button {border-radius:6px; background-color: var(--primary-color, #0A84FF); color: var(--text-color, #FFFFFF);}
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+        .stButton>button {
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--primary-color, #0A84FF), #2F70FF);
+            color: var(--text-color, #FFFFFF);
+            transition: filter 0.2s ease-in-out;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            border: none;
+        }
+        .stButton>button:hover {
+            filter: brightness(1.1);
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -125,27 +151,30 @@ def inject_global_styles() -> None:
 
 
 def theme_selector(label: str = "Theme", key_suffix: str = "") -> str:
-    """Render a theme selector with unique keys."""
+    """Theme selector with unique keys and error handling."""
     if "theme" not in st.session_state:
         st.session_state["theme"] = "dark"
 
-    unique_key = f"theme_selector_{key_suffix}_{id(st)}"
+    unique_key = f"theme_selector_{key_suffix}_{id(st)}" if key_suffix else "theme_select"
 
     try:
-        choice = st.radio(
-            label,
-            ["Light", "Dark", "Codex"],
-            index=1
-            if st.session_state["theme"] == "dark"
-            else (2 if st.session_state["theme"] == "codex" else 0),
-            horizontal=True,
-            key=unique_key,
-        )
-        st.session_state["theme"] = choice.lower()
+        col1, col2 = st.columns([4, 1])
+        with col2:
+            current_theme = st.session_state.get("theme", "dark")
+            
+            theme_choice = st.selectbox(
+                "Theme",
+                ["Light", "Dark", "Codex"],
+                index=1 if current_theme == "dark" else (2 if current_theme == "codex" else 0),
+                key=unique_key,
+            )
+
+            st.session_state["theme"] = theme_choice.lower()
+
         apply_theme(st.session_state["theme"])
         return st.session_state["theme"]
-    except Exception as e:  # pragma: no cover - UI errors
-        st.error(f"Theme selector error: {e}")
+    except Exception as e:
+        st.warning(f"Theme selector error: {e}")
         return "dark"
 
 
