@@ -479,7 +479,7 @@ def load_page_with_fallback(choice):
     
     try:
         page_module = pages[choice]
-        # Try both possible module paths
+        # Try both possible module paths for maximum compatibility
         module_paths = [
             f"transcendental_resonance_frontend.pages.{page_module}",
             f"pages.{page_module}"
@@ -494,32 +494,35 @@ def load_page_with_fallback(choice):
                 continue
         
         if page_mod:
-            if hasattr(page_mod, "main"):
-                page_mod.main()
-            elif hasattr(page_mod, "render"):
+            if hasattr(page_mod, "render"):
                 page_mod.render()
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
             else:
                 raise ImportError("No main or render method found")
         else:
             raise ImportError("Module not found in any path")
             
     except ImportError:
-        # Beautiful fallback based on page choice
-        if choice == "Validation":
-            render_modern_validation_page()
-        elif choice == "Voting":
-            render_modern_voting_page()
-        elif choice == "Agents":
-            render_modern_agents_page()
-        elif choice == "Resonance Music":
-            render_modern_music_page()
-        elif choice == "Social":
-            render_modern_social_page()
+        _render_fallback(choice)
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
 
+def _render_fallback(choice: str) -> None:
+    """Render page fallbacks when modules are missing."""
+    if choice == "Validation":
+        render_modern_validation_page()
+    elif choice == "Voting":
+        render_modern_voting_page()
+    elif choice == "Agents":
+        render_modern_agents_page()
+    elif choice == "Resonance Music":
+        render_modern_music_page()
+    elif choice == "Social":
+        render_modern_social_page()
+
 def render_modern_voting_page():
-    """Modern voting page fallback."""
+    """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
     try:
         render_voting_tab()
@@ -527,7 +530,7 @@ def render_modern_voting_page():
         st.info("🚧 Advanced voting features coming soon!")
 
 def render_modern_agents_page():
-    """Modern agents page fallback."""
+    """Modern agents page fallback using agent_ui widgets."""
     st.markdown("# 🤖 AI Agents")
     try:
         render_agent_insights_tab()
@@ -535,7 +538,7 @@ def render_modern_agents_page():
         st.info("🚧 Agent management system in development!")
 
 def render_modern_music_page():
-    """Modern music page fallback."""
+    """Modern music page fallback invoking the resonance module if available."""
     st.markdown("# 🎵 Resonance Music")
     try:
         from transcendental_resonance_frontend.pages import resonance_music
@@ -547,7 +550,7 @@ def render_modern_music_page():
         st.info("🚧 Harmonic resonance features coming soon!")
 
 def render_modern_social_page():
-    """Modern social page fallback."""
+    """Modern social page fallback using social_tabs widgets."""
     st.markdown("# 👥 Social Network")
     try:
         render_social_tab()
