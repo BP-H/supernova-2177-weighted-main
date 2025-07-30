@@ -20,7 +20,7 @@ import inspect
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Any, Optional
-
+from streamlit_option_menu import option_menu
 from frontend import ui_layout
 
 
