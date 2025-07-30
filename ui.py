@@ -362,8 +362,8 @@ def inject_dark_theme() -> None:
 from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
-def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None:
-    """Attempt to import and render a page by name with graceful fallback."""
+def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
+    """Switch to a Streamlit page or import the module as a fallback."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -374,13 +374,17 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
             module,
         ]
 
-    """
-    Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
-    Logs the traceback for any unexpected failure.
-    """
     import importlib
+
     for module_path in module_paths:
+        page_file = Path.cwd() / (module_path.replace(".", "/") + ".py")
+        if page_file.exists():
+            try:
+                st.switch_page(str(page_file))
+                return
+            except Exception as exc:  # pragma: no cover - st.switch_page may fail
+                log(f"switch_page failed for {page_file}: {exc}")
+
         try:
             page_mod = importlib.import_module(module_path)
             for method_name in ("render", "main"):
@@ -388,7 +392,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
                     getattr(page_mod, method_name)()
                     return
         except ImportError:
-            continue  # Try next candidate module path
+            continue
         except Exception as exc:
             st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
             with st.expander("Show error details"):
@@ -396,19 +400,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
             print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    # Optional fallback renderer if defined elsewhere
     if "_render_fallback" in globals():
         _render_fallback(choice)
-
-
-def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
-    """Switch to the first existing page referenced in ``module_paths``."""
-    for module_path in module_paths:
-        page_file = module_path.replace(".", "/") + ".py"
-        if Path(page_file).exists():
-            st.switch_page(page_file)
-            return
-    st.error(f"Page not found: {choice}")
 
 
 def _render_fallback(choice: str) -> None:
