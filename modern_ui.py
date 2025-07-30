@@ -5,6 +5,7 @@
 
 import streamlit as st
 import logging
+from frontend.theme import inject_modern_styles as _theme_styles
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ def inject_modern_styles() -> None:
     Call this before rendering any UI elements so the styles apply correctly.
     """
     from modern_ui_components import SIDEBAR_STYLES
+
+    _theme_styles()
 
     if st.session_state.get("modern_styles_injected"):
         logger.debug("Modern styles already injected; skipping")
