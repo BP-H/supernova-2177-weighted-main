@@ -1027,6 +1027,20 @@ def render_validation_ui(
     """Main entry point for the validation analysis UI with error handling."""
     if main_container is None:
         main_container = st
+    if sidebar is None:
+        sidebar = st.sidebar
+
+    page_func = globals().get("render_modern_validation_page")
+    if page_func is None:
+        st.error("Validation UI helper missing")
+        return
+
+    try:
+        with main_container:
+            page_func()
+    except Exception as exc:
+        st.error("Failed to load validation UI")
+        st.code(str(exc))
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
