@@ -63,7 +63,11 @@ def render_modern_layout() -> None:
     inject_global_styles()
 
     pages = {"Home": "home", "Profile": "profile"}
-    choice = render_modern_sidebar(pages, icons={"Home": "🏠", "Profile": "👤"})
+    choice = render_modern_sidebar(
+        pages,
+        icons={"Home": "🏠", "Profile": "👤"},
+        session_key="demo_nav",
+    )
 
     render_modern_header("NovaNet 🚀")
 

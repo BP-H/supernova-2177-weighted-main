@@ -4,6 +4,9 @@
 """Modern UI helpers for Streamlit pages."""
 
 import streamlit as st
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from streamlit_lottie import st_lottie
@@ -23,6 +26,12 @@ def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "ðŸš
 
 def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
+    from modern_ui_components import SIDEBAR_STYLES
+
+    if st.session_state.get("modern_styles_injected"):
+        logger.debug("Modern styles already injected; skipping")
+        return
+
     st.markdown(
         """
         <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -42,28 +51,6 @@ def inject_modern_styles() -> None:
         .main .block-container {
             padding: 2rem 3rem;
             max-width: 1200px;
-        }
-        [data-testid="stSidebar"] {
-            background: rgba(20,25,40,0.9);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            transition: width 0.3s ease;
-        }
-        [data-testid="stSidebar"] .stButton>button {
-            width: 100%;
-        }
-        .sidebar-nav label {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.25rem;
-            transition: background 0.2s;
-        }
-        .sidebar-nav label:hover {
-            background: rgba(255,255,255,0.05);
-        }
-        .sidebar-nav input:checked + div {
-            color: var(--neon-accent);
         }
         .custom-container,
         .card {
@@ -148,33 +135,6 @@ def inject_modern_styles() -> None:
             border-radius: 8px !important;
         }
 
-        .sidebar-nav .nav-item {
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            margin-bottom: 0.25rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s;
-        }
-
-
-        .sidebar-nav .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            color: var(--neon-accent);
-        }
-
-        .sidebar-nav .nav-item:hover {
-
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(6px);
-            border-radius: 10px;
-            color: var(--text-color);
-            padding: 0.6rem 1.2rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
         .stButton>button:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.4),0 0 6px var(--neon-accent);
             transform: translateY(-2px) scale(1.03);
@@ -193,31 +153,11 @@ def inject_modern_styles() -> None:
             transform: translateY(-3px);
         }
 
-        .sidebar-nav .nav-item {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .sidebar-nav .nav-item:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .sidebar-nav .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            color: var(--neon-accent);
-        }
 
         @media (max-width: 768px) {
             .main .block-container {
                 padding-left: 1rem;
                 padding-right: 1rem;
-            }
-            [data-testid="stSidebar"] {
-                width: 14rem;
             }
         }
 
@@ -234,6 +174,8 @@ def inject_modern_styles() -> None:
         """,
         unsafe_allow_html=True,
     )
+    st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
+    st.session_state["modern_styles_injected"] = True
 
 
 def inject_premium_styles() -> None:
