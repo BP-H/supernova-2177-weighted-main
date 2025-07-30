@@ -21,7 +21,10 @@ def main(main_container=None) -> None:
         else nullcontext()
     )
 
-    with container_ctx:
+    try:
+        with container_ctx:
+            render_validation_ui(main_container=main_container)
+    except AttributeError:
         render_validation_ui(main_container=main_container)
 
 
