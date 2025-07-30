@@ -952,6 +952,7 @@ def render_validation_ui(
                 "👥",
                 "👤",
             ],
+            key="validation_nav_menu",
         )
 
         # Page layout
@@ -1250,6 +1251,7 @@ def main() -> None:
                 "👥",
                 "👤",
             ],
+            key="frontend_nav_menu",
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
@@ -1292,7 +1294,7 @@ def main() -> None:
                     st.success("Analysis complete!")
         
             with st.expander("Agent Configuration"):
-                api_info = render_api_key_ui()
+                api_info = render_api_key_ui(key_prefix="main")
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
                 event_type = st.text_input("Event", value="LLM_INCOMING")
