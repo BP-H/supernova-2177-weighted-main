@@ -1042,22 +1042,39 @@ def render_validation_ui(
     main_container: Optional[st.delta_generator.DeltaGenerator] = None,
 ) -> None:
     """Main entry point for the validation analysis UI with error handling."""
-    if main_container is None:
-        main_container = st.container()
     if sidebar is None:
         sidebar = st.sidebar
-
-    page_func = globals().get("render_modern_validation_page")
-    if page_func is None:
-        st.error("Validation UI helper missing")
-        return
+    if main_container is None:
+        main_container = st
 
     try:
-        with main_container:
-            page_func()
+        # Navigation menu
+        choice = option_menu(
+            menu_title=None,
+            options=list(PAGES.keys()),
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            orientation="horizontal",
+            key="main_nav_menu",
+        )
+
+        # Page layout
+        left_col, center_col, right_col = main_container.columns([1, 3, 1])
+
+        with center_col:
+            page_key = PAGES[choice]
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
+        with left_col:
+            render_status_icon()
+
     except Exception as exc:
         st.error("Failed to load validation UI")
         st.code(str(exc))
+
 
 
 def main() -> None:
