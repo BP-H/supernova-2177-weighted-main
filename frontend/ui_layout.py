@@ -114,18 +114,22 @@ def _render_sidebar_nav(
 ) -> str:
     """Render a vertical sidebar navigation and return the selected label.
 
+    ``page_links`` may be provided as an iterable of page paths/slugs or a
+    mapping of labels to those paths. The data is normalized into a
+    ``{label: slug}`` dictionary with lowercase slugs. Duplicate slugs are
+    ignored and links are sorted alphabetically before rendering.
     The selected page label is also stored in ``st.session_state`` using
     ``session_key`` so other components can react to the active page.
     """
+
+    # Normalize to label -> slug dictionary
     items = list(page_links.items()) if isinstance(page_links, dict) else [
         (None, str(o)) for o in page_links
     ]
     icon_list = list(icons or [None] * len(items))
     key = key or uuid4().hex
 
-    # filter out paths that don't exist and show an error
-    valid_opts = []
-    valid_icons = []
+    normalized: Dict[str, str] = {}
     seen_slugs: set[str] = set()
     for (label, path), icon in zip(items, icon_list):
         slug = Path(path).stem.lower()
@@ -134,14 +138,20 @@ def _render_sidebar_nav(
         seen_slugs.add(slug)
         if not label:
             label = Path(path).stem.replace("_", " ").title()
-        rel = Path(path.lstrip("/"))
-        candidates = [ROOT_DIR / rel, PAGES_DIR / rel.name]
+        normalized[label] = slug
+
+    # filter out slugs that don't exist and show an error
+    valid_opts: list[tuple[str, str]] = []
+    valid_icons: list[Optional[str]] = []
+    for (label, slug), icon in zip(normalized.items(), icon_list):
+        candidates = [ROOT_DIR / slug, PAGES_DIR / slug]
         exists = any(c.with_suffix(".py").exists() for c in candidates)
         if not exists:
-            st.sidebar.error(f"Page not found: {path}")
+            st.sidebar.error(f"Page not found: {slug}")
             continue
-        valid_opts.append((label, path))
+        valid_opts.append((label, slug))
         valid_icons.append(icon)
+
     sorted_pairs = sorted(zip(valid_opts, valid_icons), key=lambda p: p[0][0].lower())
     opts = [p for p, _ in sorted_pairs]
     icon_list = [ico for _, ico in sorted_pairs]
@@ -159,9 +169,10 @@ def _render_sidebar_nav(
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
         if hasattr(st.sidebar, "page_link"):
-            for (label, path), icon in zip(opts, icon_list):
+            for (label, slug), icon in zip(opts, icon_list):
+                page_path = f"/pages/{slug}.py"
                 try:
-                    st.sidebar.page_link(path, label=label, icon=icon, help=label)
+                    st.sidebar.page_link(page_path, label=label, icon=icon, help=label)
                 except Exception:
                     url = f"?page={label}"
                     st.sidebar.link_button(label, url=url, icon=icon)
