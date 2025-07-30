@@ -160,33 +160,68 @@ def render_modern_sidebar(
     if container is None:
         container = st.sidebar
 
-    # Validate that referenced page files exist before rendering navigation
+    # Resolve page paths dynamically from likely locations
+
     page_dir_candidates = [
-        Path.cwd() / "pages",
+
         Path(__file__).resolve().parent / "pages",
+
         Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages",
+
     ]
 
     valid_pages: Dict[str, str] = {}
+
+    missing_pages: list[str] = []
+
     for label, page_ref in pages.items():
+
         slug = str(page_ref).strip("/").split("?")[0].rsplit(".", 1)[-1]
+
         exists = any((d / f"{slug}.py").exists() for d in page_dir_candidates if d.exists())
+
         if exists:
+
             valid_pages[label] = page_ref
+
         else:
-            st.warning(f"Page file missing for '{label}' -> {page_ref}", icon="⚠️")
+
+            missing_pages.append(label)
+
+    if missing_pages:
+
+        msg = "Unknown pages: " + ", ".join(missing_pages)
+
+        if hasattr(st, "warning"):
+
+            st.warning(msg, icon="⚠️")
+
+        else:  # pragma: no cover - used in tests with SimpleNamespace
+
+            print(msg)
 
     if not valid_pages:
+
         st.error("No valid pages available", icon="⚠️")
+
         return ""
 
-    pages = valid_pages
+    pages = valid_pages    
+
     opts = list(pages.keys())
+    if not opts:
+        st.error("No valid pages configured", icon="⚠️")
+        return ""
     icon_map = icons or {}
 
     # Default session state for selected page
     st.session_state.setdefault(session_key, opts[0])
     if st.session_state.get(session_key) not in opts:
+        msg = f"Unknown page '{st.session_state.get(session_key)}'"
+        if hasattr(st, "toast"):
+            st.toast(msg, icon="⚠️")
+        else:  # pragma: no cover - used in tests with SimpleNamespace
+            print(msg)
         st.session_state[session_key] = opts[0]
 
     widget_key = f"{session_key}_ctrl"
