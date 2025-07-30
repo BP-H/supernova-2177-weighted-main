@@ -1105,22 +1105,17 @@ def main() -> None:
                 "Governance View", value=st.session_state.get("governance_view", False)
             )
             st.session_state["governance_view"] = governance_view
-
-            with st.expander("Developer Tools"):
-                dev_tabs = st.tabs([
-                    "Fork Universe",
-                    "Universe State Viewer",
-                    "Run Introspection Audit",
-                    "Agent Logs",
-                    "Inject Event",
-                    "Session Inspector",
-                    "Playground",
-                ])
-
-                # KEEP the body of each dev tab here, as you had in codex/polish-ui
-                # Your previous implementation with cosmic_nexus, SessionLocal, etc. goes here
-                # ✅ Already reviewed — just paste all that intact beneath this line
-
+            with st.expander("Developer Tools", expanded=False):
+                with st.container():
+                    dev_tabs = st.tabs([
+                        "Fork Universe",
+                        "Universe State Viewer",
+                        "Run Introspection Audit",
+                        "Agent Logs",
+                        "Inject Event",
+                        "Session Inspector",
+                        "Playground",
+                    ])
 
                     with dev_tabs[0]:
                         if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
@@ -1153,11 +1148,13 @@ def main() -> None:
                                     )
                                     if records:
                                         for r in records:
-                                            st.write({
-                                                "id": r.id,
-                                                "status": r.status,
-                                                "timestamp": r.timestamp,
-                                            })
+                                            st.write(
+                                                {
+                                                    "id": r.id,
+                                                    "status": r.status,
+                                                    "timestamp": r.timestamp,
+                                                }
+                                            )
                                     else:
                                         st.write("No forks recorded")
                             except Exception as exc:
@@ -1249,28 +1246,33 @@ def main() -> None:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
                             except Exception:
-                with dev_tabs[6]:
-                    flow_txt = st.text_area(
-                        "Agent Flow JSON",
-                        "[]",
-                        height=150,
-                        key="flow_json",
-                    )
-                    if st.button("Run Flow"):
-                        if 'AGENT_REGISTRY' in globals():
-                            try:
-                                steps = json.loads(flow_txt or "[]")
-                                results = []
-                                for step in steps:
-                                    a_name = step.get("agent")
-                                    agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
-                                    evt = step.get("event", {})
-                                    if agent_cls:
-                                        backend_fn = get_backend("dummy")
-                                        a = agent_cls(llm_backend=backend_fn)
-                                        results.append(a.process_event(evt))
-                                st.json(results)
-                            except Exception as exc:
+                                pass
+
+                    with dev_tabs[6]:
+                        flow_txt = st.text_area(
+                            "Agent Flow JSON",
+                            "[]",
+                            height=150,
+                            key="flow_json",
+                        )
+                        if st.button("Run Flow"):
+                            if 'AGENT_REGISTRY' in globals():
+                                try:
+                                    steps = json.loads(flow_txt or "[]")
+                                    results = []
+                                    for step in steps:
+                                        a_name = step.get("agent")
+                                        agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                                        evt = step.get("event", {})
+                                        if agent_cls:
+                                            backend_fn = get_backend("dummy")
+                                            a = agent_cls(llm_backend=backend_fn)
+                                            results.append(a.process_event(evt))
+                                    st.json(results)
+                                except Exception as exc:
+                                    st.error(f"Flow execution failed: {exc}")
+                            else:
+                                st.info("Agent registry unavailable")
                                 st.error(f"Flow execution failed: {exc}")
                         else:
                             st.info("Agent registry unavailable")
