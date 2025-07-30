@@ -15,9 +15,9 @@ def inject_modern_styles() -> None:
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
         :root {
-            --neon-accent: #00ffe1;
-            --bg-start: #05080f;
-            --bg-end: #020409;
+            --neon-accent: #00ffff;
+            --bg-start: #000428;
+            --bg-end: #004e92;
             --text-color: #f0f4f8;
 
         }
@@ -30,9 +30,10 @@ def inject_modern_styles() -> None:
 
         }
         .main .block-container {
-            padding-top: 2rem;
-            padding-left: 3rem;
-            padding-right: 3rem;
+            padding-top: 3rem;
+            padding-bottom: 2rem;
+            padding-left: 4rem;
+            padding-right: 4rem;
             max-width: 1200px;
         }
         [data-testid="stSidebar"] {
@@ -61,7 +62,7 @@ def inject_modern_styles() -> None:
             padding: 1rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
             backdrop-filter: blur(8px);
 
             margin-bottom: 1rem;
@@ -70,7 +71,7 @@ def inject_modern_styles() -> None:
         }
         .card:hover,
         .custom-container:hover {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             transform: translateY(-3px);
 
         }
