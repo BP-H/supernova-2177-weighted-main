@@ -332,6 +332,17 @@ def inject_dark_theme() -> None:
 
 def render_modern_validation_page():
     """Render the main validation interface."""
+    try:
+        from transcendental_resonance_frontend.pages import validation
+        if hasattr(validation, "render"):
+            validation.render()
+            return
+        if hasattr(validation, "main"):
+            validation.main()
+            return
+    except Exception:
+        pass
+
     st.markdown(
         """
         <div style='text-align:center; padding:2rem 0;'>
@@ -459,37 +470,33 @@ def load_page_with_fallback(choice: str) -> None:
         "Social": "social",
     }
 
-    module_name = pages.get(choice)
-    if module_name is None:
-        st.error(f"Unknown page: {choice}")
-        return
-
-    # Attempt importing from multiple known paths
-    module_paths = [
-        f"transcendental_resonance_frontend.pages.{module_name}",
-        f"pages.{module_name}",  # legacy/local fallback
-    ]
-
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries each candidate path and checks for `render()` or `main()` method.
+    """
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
-            if hasattr(page_mod, "main"):
-                page_mod.main()
-                return
-            elif hasattr(page_mod, "render"):
+            if hasattr(page_mod, "render"):
                 page_mod.render()
+                return
+            elif hasattr(page_mod, "main"):
+                page_mod.main()
                 return
             else:
                 raise AttributeError("Module found but missing 'main' or 'render'")
         except ImportError:
             continue  # Try next path
+        except Exception as exc:
+            st.error(f"Error loading page: {exc}")
+            break
 
-    # If none succeeded, fall back to modern placeholder
     _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
-    """Render modern fallback if module isn't available."""
+    """Render modern fallback if module isn't available or fails to load."""
     fallback_pages = {
         "Validation": render_modern_validation_page,
         "Voting": render_modern_voting_page,
@@ -503,8 +510,13 @@ def _render_fallback(choice: str) -> None:
     else:
         st.error(f"No fallback available for page: {choice}")
 
+
+def render_modern_validation_page():
+    st.markdown("# ✅ Validation Console")
+    st.info("🚧 Validation logic coming soon!")
+
+
 def render_modern_voting_page():
-    """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
     try:
         render_voting_tab()
@@ -513,7 +525,6 @@ def render_modern_voting_page():
 
 
 def render_modern_agents_page():
-    """Modern agents page fallback using agent_ui widgets."""
     st.markdown("# 🤖 AI Agents")
     try:
         render_agent_insights_tab()
@@ -522,25 +533,32 @@ def render_modern_agents_page():
 
 
 def render_modern_music_page():
-    """Modern music page fallback invoking the resonance module if available."""
     st.markdown("# 🎵 Resonance Music")
     try:
         from transcendental_resonance_frontend.pages import resonance_music
-        if hasattr(resonance_music, "main"):
+        if hasattr(resonance_music, "render"):
+            resonance_music.render()
+        elif hasattr(resonance_music, "main"):
             resonance_music.main()
         else:
-            raise RuntimeError("No main method available")
+            raise RuntimeError("No render or main method available in resonance_music")
     except Exception:
         st.info("🚧 Harmonic resonance features coming soon!")
 
 
 def render_modern_social_page():
-    """Modern social page fallback using social_tabs widgets."""
     st.markdown("# 👥 Social Network")
     try:
-        render_social_tab()
+        from transcendental_resonance_frontend.pages import social
+        if hasattr(social, "render"):
+            social.render()
+        elif hasattr(social, "main"):
+            social.main()
+        else:
+            raise RuntimeError("No render or main method available in social")
     except Exception:
         st.info("🚧 Social features in development!")
+
 
 
 # Add this to your main() function after st.set_page_config()
