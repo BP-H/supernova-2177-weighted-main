@@ -37,9 +37,9 @@ from modern_ui_components import (
 
 # Prefer modern sidebar render if available
 try:
-    from modern_ui_components import render_modern_sidebar
+    from modern_ui_components import render_modern_sidebar as _modern_sidebar
 except ImportError:
-    render_modern_sidebar = None
+    _modern_sidebar = None
 
 from frontend.ui_layout import (
     main_container,
@@ -52,8 +52,8 @@ from frontend.ui_layout import (
 
 def render_sidebar_nav(*args, **kwargs):
     """Proxy to allow monkeypatching via `render_modern_sidebar` if available."""
-    if render_modern_sidebar and render_modern_sidebar is not render_sidebar_nav:
-        return render_modern_sidebar(*args, **kwargs)
+    if _modern_sidebar and _modern_sidebar is not render_sidebar_nav:
+        return _modern_sidebar(*args, **kwargs)
     return _base_render_sidebar_nav(*args, **kwargs)
 
 
