@@ -14,7 +14,13 @@ def render_agent_insights_tab(main_container=None):
     if main_container is None:
         main_container = st
 
-    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
     with container_ctx:
         st.subheader("Agent Insights")
         st.warning("Agent logic coming soon...")

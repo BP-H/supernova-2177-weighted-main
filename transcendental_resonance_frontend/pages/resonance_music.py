@@ -46,7 +46,14 @@ def main(main_container=None, status_container=None) -> None:
     st_autorefresh(interval=30000, key="status_ping")
 
     # Render global backend status indicator in the provided container
-    with status_container:
+    status_ctx = (
+        status_container()
+        if callable(status_container)
+        else status_container
+        if hasattr(status_container, "__enter__")
+        else nullcontext()
+    )
+    with status_ctx:
         render_status_icon(endpoint="/healthz")
 
     # Display alert if backend is not reachable (check once per rerun)
@@ -62,7 +69,13 @@ def render_resonance_music_page(main_container=None):
     Render the Resonance Music page with backend MIDI generation and metrics summary.
     Handles dynamic selection of profile/track and safely wraps container logic.
     """
-    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    container_ctx = (
+        main_container()
+        if callable(main_container)
+        else main_container
+        if hasattr(main_container, "__enter__")
+        else nullcontext()
+    )
 
     with container_ctx:
         st.subheader("Resonance Music")
