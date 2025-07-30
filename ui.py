@@ -360,9 +360,6 @@ def inject_dark_theme() -> None:
 
 
 from frontend.ui_layout import render_title_bar, show_preview_badge
-
-
-from frontend.ui_layout import render_title_bar, show_preview_badge
 from streamlit.errors import StreamlitAPIException
 from pathlib import Path
 import importlib
@@ -385,6 +382,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         ]
 
     # Validate PAGES_DIR existence
+    PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
     if not PAGES_DIR.exists():
         st.error(f"Pages directory not found: {PAGES_DIR}")
         if "_render_fallback" in globals():
@@ -400,7 +398,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         if module_path in attempted_paths:
             continue
         attempted_paths.add(module_path)
-        page_file = Path(module_path.replace(".", "/") + ".py")
+        page_file = PAGES_DIR / (module_path.replace(".", "/") + ".py")
         if page_file.exists():
             rel_path = os.path.relpath(page_file, start=Path.cwd())
             try:
