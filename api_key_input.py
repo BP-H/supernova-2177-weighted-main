@@ -35,12 +35,13 @@ def render_api_key_ui(default: str = "Dummy") -> dict[str, str | None]:
         index = names.index(default)
     else:
         index = 0
-    choice = st.selectbox("LLM Model", names, index=index)
+    choice = st.selectbox("LLM Model", names, index=index, key="llm_model_select")
     model, key_name = PROVIDERS[choice]
     key_val = ""
     if key_name is not None:
         key_val = st.text_input(
             f"{choice} API Key",
+            key=f"{model}_api_key",
             type="password",
             value=st.session_state.get(key_name, ""),
         )
