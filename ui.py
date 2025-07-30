@@ -69,6 +69,7 @@ PAGES = {
     "Voting": "voting",
     "Agents": "agents",
     "Resonance Music": "resonance_music",
+    "Video Chat": "video",
     "Social": "social",
 }
 
@@ -362,8 +363,8 @@ def inject_dark_theme() -> None:
 from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
-def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None:
-    """Attempt to import and render a page by name with graceful fallback."""
+def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
+    """Import and run a page module, gracefully falling back when missing."""
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -374,11 +375,6 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
             module,
         ]
 
-    """
-    Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
-    Logs the traceback for any unexpected failure.
-    """
     import importlib
     for module_path in module_paths:
         try:
@@ -388,27 +384,16 @@ def load_page_with_fallback(choice: str, module_paths: list[str] = None) -> None
                     getattr(page_mod, method_name)()
                     return
         except ImportError:
-            continue  # Try next candidate module path
-        except Exception as exc:
+            continue
+        except Exception as exc:  # pragma: no cover - unexpected UI failure
             st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
             with st.expander("Show error details"):
                 st.exception(exc)
             print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    # Optional fallback renderer if defined elsewhere
     if "_render_fallback" in globals():
         _render_fallback(choice)
-
-
-def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
-    """Switch to the first existing page referenced in ``module_paths``."""
-    for module_path in module_paths:
-        page_file = module_path.replace(".", "/") + ".py"
-        if Path(page_file).exists():
-            st.switch_page(page_file)
-            return
-    st.error(f"Page not found: {choice}")
 
 
 def _render_fallback(choice: str) -> None:
@@ -418,6 +403,7 @@ def _render_fallback(choice: str) -> None:
         "Voting": render_modern_voting_page,
         "Agents": render_modern_agents_page,
         "Resonance Music": render_modern_music_page,
+        "Video Chat": render_modern_video_page,
         "Social": render_modern_social_page,
     }
     fallback_fn = fallback_pages.get(choice)
@@ -470,6 +456,13 @@ def render_modern_social_page():
     st.markdown("😀 @alice #hello")
     st.markdown("🔥 Trending: #resonance #ai")
     st.success("Social feed placeholder loaded")
+
+
+def render_modern_video_page() -> None:
+    """Simple placeholder page for upcoming video features."""
+    render_title_bar("🎥", "Video Chat")
+    st.info("Video chat module not yet implemented.")
+
 
 
 def load_css() -> None:
@@ -949,7 +942,7 @@ def render_validation_ui(
         page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
         ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
         )
 
         # Page layout
@@ -1235,6 +1228,7 @@ def main() -> None:
             "Voting": "voting",
             "Agents": "agents",
             "Resonance Music": "resonance_music",
+            "Video Chat": "video",
             "Social": "social",
         }
         
@@ -1242,7 +1236,7 @@ def main() -> None:
         page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
