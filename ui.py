@@ -95,6 +95,48 @@ from modern_ui import (
     close_card_container,
 )
 
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
+
+try:
+    from voting_ui import render_voting_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
+        st.info("Voting module not available")
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
+
+try:
+    from llm_backends import get_backend
+except ImportError:  # pragma: no cover - optional dependency
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy backend"}
+
 def render_landing_page():
     """Render fallback landing page when pages directory is missing."""
     st.title("🚀 superNova_2177")
@@ -143,21 +185,7 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
-# Fix for the import error in render_agent_insights_tab
-def render_agent_insights_tab():
-    """Fallback agent insights tab."""
-    st.subheader("🤖 Agent Insights")
-    st.info("Agent insights module not available. Install required dependencies.")
-    
-    # Show basic agent info if registry is available
-    if 'AGENT_REGISTRY' in globals() and AGENT_REGISTRY:
-        st.write("Available Agents:")
-        for name, info in AGENT_REGISTRY.items():
-            with st.expander(f"🔧 {name}"):
-                st.write(f"Description: {info.get('description', 'No description')}")
-                st.write(f"Class: {info.get('class', 'Unknown')}")
-    else:
-        st.warning("No agents registered")
+
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
@@ -647,35 +675,6 @@ except Exception:  # pragma: no cover - optional dependency
 from typing import Any, Optional
 
 
-try:
-    from social_tabs import render_social_tab
-except ImportError:
-    def render_social_tab():
-        st.subheader("👥 Social Features")
-        st.info("Social features module not available")
-
-try:
-    from voting_ui import render_voting_tab
-except ImportError:
-    def render_voting_tab():
-        st.info("Voting module not available")
-
-# Fallback implementation defined earlier in the file
-try:
-    from agent_ui import render_agent_insights_tab
-except ImportError:  # pragma: no cover - optional dependency
-    pass
-
-try:
-    from llm_backends import get_backend
-except ImportError:
-    def get_backend(name, api_key=None):
-        return lambda x: {"response": "dummy backend"}
-
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:
-    AGENT_REGISTRY = {}
 
 
 def get_st_secrets() -> dict:
