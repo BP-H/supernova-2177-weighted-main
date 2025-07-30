@@ -4,20 +4,15 @@
 """Validation analysis page."""
 
 import streamlit as st
+from contextlib import nullcontext
 from ui import render_validation_ui
 
 
 def main(main_container=None) -> None:
-from contextlib import nullcontext
-
-def render_validation_entrypoint(main_container=None):
-    """Render the validation UI inside a valid container context."""
-
-    # Resolve the actual container to use
+    """Render the validation UI inside ``main_container`` safely."""
     if main_container is None:
         main_container = st
 
-    # Determine whether we can use `with main_container:` directly
     container_ctx = (
         main_container()
         if callable(main_container)
@@ -26,14 +21,11 @@ def render_validation_entrypoint(main_container=None):
         else nullcontext()
     )
 
-    # Safely render within context (fallback if necessary)
     try:
         with container_ctx:
             render_validation_ui(main_container=main_container)
     except AttributeError:
-        # fallback in case `with` is invalid for container
         render_validation_ui(main_container=main_container)
-
 
 
 def render() -> None:
