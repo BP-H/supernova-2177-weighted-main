@@ -257,39 +257,67 @@ def render_validation_card() -> None:
 
 
 def render_stats_section() -> None:
-    """Display quick stats in four columns."""
-    col1, col2, col3, col4 = st.columns(4)
+    """Display quick stats in a responsive flex row."""
+
     stats = [
-        ("🏃‍♂️", "Runs", "0", "#4a90e2"),
-        ("📝", "Proposals", "12", "#10b981"),
-        ("⚡", "Success Rate", "94%", "#f59e0b"),
-        ("🎯", "Accuracy", "98.2%", "#8b5cf6"),
+        ("🏃‍♂️", "Runs", "0"),
+        ("📝", "Proposals", "12"),
+        ("⚡", "Success Rate", "94%"),
+        ("🎯", "Accuracy", "98.2%"),
     ]
-    for col, (icon, label, value, color) in zip([col1, col2, col3, col4], stats):
-        with col:
-            st.markdown(
-                f"""
-                <div style="
-                    background: rgba(255, 255, 255, 0.03);
-                    backdrop-filter: blur(15px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 12px;
-                    padding: 1.5rem;
-                    text-align: center;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.transform='scale(1.02)'"
-                   onmouseout="this.style.transform='scale(1)'">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
-                    <div style="color: {color}; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">
-                        {value}
-                    </div>
-                    <div style="color: #888; font-size: 0.85rem; font-weight: 500;">
-                        {label}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+
+    st.markdown(
+        """
+        <style>
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: scale(1.02);
+        }
+        .stat-value {
+            color: var(--neon-accent);
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<div class='stats-row'>", unsafe_allow_html=True)
+    for icon, label, value in stats:
+        st.markdown(
+            f"""
+            <div class="stat-card">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
+                <div class="stat-value">{value}</div>
+                <div class="stat-label">{label}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def open_card_container() -> None:
