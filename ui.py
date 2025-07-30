@@ -39,6 +39,7 @@ from frontend.ui_layout import (
     main_container,
     render_title_bar,
     show_preview_badge,
+    render_profile_card,
 )
 
 
@@ -458,15 +459,13 @@ def render_sidebar() -> str:
     user = safe_get_user()
     avatar = getattr(user, "profile_pic", "https://via.placeholder.com/64")
     username = getattr(user, "username", "Guest")
-    st.sidebar.image(avatar, width=48)
-    st.sidebar.markdown(f"**{username}**", unsafe_allow_html=True)
-    st.sidebar.button("Create Proposal")
-    st.sidebar.button("Run Validation")
-    dark = st.sidebar.toggle("Dark Mode", value=st.session_state.get("theme") == "dark")
-    st.session_state["theme"] = "dark" if dark else "light"
-    env = os.getenv("ENV", "development").lower()
-    env_tag = "🚀 Production" if env.startswith("prod") else "🧪 Development"
-    st.sidebar.markdown(env_tag)
+    render_profile_card(username, avatar)
+    with st.sidebar.expander("Create Proposal"):
+        st.button("Create Proposal")
+    with st.sidebar.expander("Run Validation"):
+        st.button("Run Validation")
+    with st.sidebar.expander("Theme"):
+        theme_selector("Theme")
     icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
     choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
     return choice
