@@ -198,6 +198,7 @@ def inject_dark_theme() -> None:
             background-color: #1e1e1e;
             color: #ccc;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }
 
         .main .block-container {
@@ -205,6 +206,7 @@ def inject_dark_theme() -> None:
             border: 1px solid #333;
             border-radius: 8px;
             padding: 2rem 3rem;
+            margin-top: 1rem;
         }
 
         [data-testid="stSidebar"] {
@@ -238,6 +240,13 @@ def inject_dark_theme() -> None:
             color: #fff;
         }
 
+        /* Navigation tabs */
+        .stSelectbox > div > div {
+            background: #2d2d2d;
+            border-radius: 6px;
+            border: 1px solid #3a3a3a;
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -265,10 +274,80 @@ def inject_dark_theme() -> None:
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .stButton > button:hover {
             background-color: #699cfc;
+            transform: translateY(-2px);
+        }
+
+        /* Modern metrics */
+        [data-testid="metric-container"] {
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+            padding: 1rem;
+            box-shadow: none;
+        }
+
+        /* Text styling */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+            color: #f0f0f0;
+        }
+
+        /* Error messages modern styling */
+        .stAlert {
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        /* File uploader */
+        .stFileUploader {
+            background: #252525;
+            border-radius: 8px;
+            border: 2px dashed #3a3a3a;
+            padding: 2rem;
+        }
+
+        /* Input fields */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea {
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #f0f0f0;
+        }
+
+        /* Slider styling */
+        .stSlider > div > div > div {
+            background: #4f8bf9;
+        }
+
+        /* Modern scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #252525;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4f8bf9;
+            border-radius: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main .block-container > div {
+            animation: fadeIn 0.6s ease-out;
         }
         </style>
         """,
@@ -280,7 +359,7 @@ def render_modern_validation_page():
     st.markdown(
         """
         <div style='text-align:center; padding:2rem 0;'>
-            <h1 style='font-size:3rem; color:#fff; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
+            <h1 style='font-size:3rem; color:#4f8bf9; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
             <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
         </div>
         """,
