@@ -185,9 +185,9 @@ from streamlit_helpers import (
 )
 
 from modern_ui import (
-    inject_modern_styles,
     render_stats_section,
 )
+from frontend.theme import inject_modern_styles
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -353,8 +353,8 @@ def render_landing_page():
 
 
 def inject_modern_styles() -> None:
-    """Backward compatible alias forwarding to :mod:`modern_ui`."""
-    from modern_ui import inject_modern_styles as _impl
+    """Backward compatible alias for modern theme injection."""
+    from frontend.theme import inject_modern_styles as _impl
 
     _impl()
 
@@ -464,7 +464,7 @@ def _render_fallback(choice: str) -> None:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
-
+      
     # Normalize and derive slug/module name
     normalized = normalize_choice(choice)
     slug = PAGES.get(normalized, str(normalized)).lower()
@@ -477,29 +477,31 @@ def _render_fallback(choice: str) -> None:
     ]
 
     loaded = False
-    for page_file in page_candidates:
-        if not page_file.exists():
-            continue
-        logger.debug("Attempting to load %s from %s", slug, page_file)
-        try:
-            spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
-            if not spec or not spec.loader:
+    # Only try to load manually if st.experimental_page is available
+    if hasattr(st, "experimental_page"):
+        for page_file in page_candidates:
+            if not page_file.exists():
                 continue
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            spec.loader.exec_module(mod)
-            for fn in ("render", "main"):
-                if hasattr(mod, fn):
-                    try:
-                        getattr(mod, fn)()
-                        loaded = True
-                        break
-                    except Exception as exc:
-                        logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
-            if loaded:
-                break
-        except Exception as exc:
-            logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+            logger.debug("Attempting to load %s from %s", slug, page_file)
+            try:
+                spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+                if not spec or not spec.loader:
+                    continue
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                spec.loader.exec_module(mod)
+                for fn in ("render", "main"):
+                    if hasattr(mod, fn):
+                        try:
+                            getattr(mod, fn)()
+                            loaded = True
+                            break
+                        except Exception as exc:
+                            logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+                if loaded:
+                    break
+            except Exception as exc:
+                logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
 
     if loaded:
         return

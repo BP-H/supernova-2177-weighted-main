@@ -11,7 +11,13 @@ from ui import render_validation_ui
 inject_modern_styles()
 
 
-@st.experimental_page("Validation")
+def _page_decorator(func):
+    if hasattr(st, "experimental_page"):
+        return st.experimental_page("Validation")(func)
+    return func
+
+
+@_page_decorator
 def main(main_container=None) -> None:
     """Render the validation UI inside a container safely."""
     if main_container is None:
