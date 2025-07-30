@@ -75,10 +75,18 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
-from utils.page_registry import ensure_pages
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+except Exception as exc:  # pragma: no cover - best effort fallback
+    logger.error("Failed to import ensure_pages: %s", exc)
+
+    def ensure_pages(*_args, **_kwargs) -> None:
+        """Fallback no-op when page registry utilities are unavailable."""
+        logger.debug("ensure_pages fallback invoked")
 
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
