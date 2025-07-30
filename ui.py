@@ -37,9 +37,9 @@ from modern_ui_components import (
 
 # Prefer modern sidebar render if available
 try:
-    from modern_ui_components import render_modern_sidebar
+    from modern_ui_components import render_modern_sidebar as _modern_sidebar_impl
 except ImportError:
-    render_modern_sidebar = None
+    _modern_sidebar_impl = None
 
 from frontend.ui_layout import (
     main_container,
@@ -52,8 +52,8 @@ from frontend.ui_layout import (
 
 def render_sidebar_nav(*args, **kwargs):
     """Proxy to allow monkeypatching via `render_modern_sidebar` if available."""
-    if render_modern_sidebar and render_modern_sidebar is not render_sidebar_nav:
-        return render_modern_sidebar(*args, **kwargs)
+    if _modern_sidebar_impl is not None:
+        return _modern_sidebar_impl(*args, **kwargs)
     return _base_render_sidebar_nav(*args, **kwargs)
 
 
@@ -1277,13 +1277,10 @@ def main() -> None:
         if forced_page not in page_paths:
             forced_page = None
 
-        choice = render_modern_sidebar(
+        choice = forced_page or render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
         )
-
-        if forced_page:
-            choice = forced_page
 
 
         try:
@@ -1351,8 +1348,8 @@ def main() -> None:
 
         # Center content area — dynamic page loading
         with center_col:
-            if choice:
-                page_key = PAGES.get(choice, choice)
+            page_key = PAGES.get(choice or "")
+            if page_key:
                 module_paths = [
                     f"transcendental_resonance_frontend.pages.{page_key}",
                     f"pages.{page_key}",
@@ -1363,65 +1360,58 @@ def main() -> None:
                     st.toast(f"Page not found: {choice}", icon="⚠️")
                     _render_fallback(choice)
             else:
-                st.toast("Select a page above to continue.")  # modern, non-blocking feedback
-                _render_fallback("Validation")  # Default fallback page as a preview
+                _render_fallback(choice or "Validation")
 
-                # Run agent logic if triggered
-                if run_agent_clicked and "AGENT_REGISTRY" in globals():
+            # Run agent logic if triggered
+            if run_agent_clicked and "AGENT_REGISTRY" in globals():
+                try:
+                    payload = json.loads(payload_txt or "{}")
+                except Exception as exc:
+                    alert(f"Invalid payload: {exc}", "error")
+                else:
                     try:
-                        payload = json.loads(payload_txt or "{}")
+                        backend_fn = get_backend(
+                            backend_choice.lower(), api_key or None
+                        )
+                        if backend_fn is None:
+                            raise KeyError("backend")
+
+                        agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
+                        if agent_cls is None:
+                            raise KeyError("agent")
+
+                        if agent_choice == "CI_PRProtectorAgent":
+                            talker = backend_fn or (lambda p: p)
+                            selected_agent = agent_cls(talker, llm_backend=backend_fn)
+                        elif agent_choice == "MetaValidatorAgent":
+                            selected_agent = agent_cls({}, llm_backend=backend_fn)
+                        elif agent_choice == "GuardianInterceptorAgent":
+                            selected_agent = agent_cls(llm_backend=backend_fn)
+                        else:
+                            selected_agent = agent_cls(llm_backend=backend_fn)
+
+                        st.session_state["agent_instance"] = selected_agent
+                        result = selected_agent.process_event({"event": event_type, "payload": payload})
+                        st.session_state["agent_output"] = result
+                        st.success("Agent executed")
+                    except KeyError as missing:
+                        if str(missing) == "'backend'":
+                            st.warning("No backend available")
+                        else:
+                            st.warning("No agents available")
+                        st.session_state["agent_output"] = None
+                        _render_fallback("Agents")
                     except Exception as exc:
-                        alert(f"Invalid payload: {exc}", "error")
-                    else:
-                        try:
-                            backend_fn = get_backend(
-                                backend_choice.lower(), api_key or None
-                            )
-                            if backend_fn is None:
-                                raise KeyError("backend")
+                        st.session_state["agent_output"] = {"error": str(exc)}
+                        alert(f"Agent error: {exc}", "error")
 
-                            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get(
-                                "class"
-                            )
-                            if agent_cls is None:
-                                raise KeyError("agent")
+            # Show agent output
+            if st.session_state.get("agent_output") is not None:
+                st.subheader("Agent Output")
+                st.json(st.session_state.get("agent_output"))
 
-                            if agent_choice == "CI_PRProtectorAgent":
-                                talker = backend_fn or (lambda p: p)
-                                selected_agent = agent_cls(
-                                    talker, llm_backend=backend_fn
-                                )
-                            elif agent_choice == "MetaValidatorAgent":
-                                selected_agent = agent_cls({}, llm_backend=backend_fn)
-                            elif agent_choice == "GuardianInterceptorAgent":
-                                selected_agent = agent_cls(llm_backend=backend_fn)
-                            else:
-                                selected_agent = agent_cls(llm_backend=backend_fn)
-
-                            st.session_state["agent_instance"] = selected_agent
-                            result = selected_agent.process_event(
-                                {"event": event_type, "payload": payload}
-                            )
-                            st.session_state["agent_output"] = result
-                            st.success("Agent executed")
-                        except KeyError as missing:
-                            if str(missing) == "'backend'":
-                                st.warning("No backend available")
-                            else:
-                                st.warning("No agents available")
-                            st.session_state["agent_output"] = None
-                            _render_fallback("Agents")
-                        except Exception as exc:
-                            st.session_state["agent_output"] = {"error": str(exc)}
-                            alert(f"Agent error: {exc}", "error")
-
-                # Show agent output
-                if st.session_state.get("agent_output") is not None:
-                    st.subheader("Agent Output")
-                    st.json(st.session_state.get("agent_output"))
-
-                render_stats_section()
-                st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
+            render_stats_section()
+            st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
 
 
     except Exception as exc:
