@@ -70,6 +70,24 @@ def safe_apply_theme(theme: str) -> None:
                 a { color: var(--primary-color); }
                 </style>
             """
+        elif theme == "codex":
+            css = """
+                <style>
+                @import url('https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap');
+                :root {
+                    --background: #202123;
+                    --secondary-bg: #343541;
+                    --text-color: #ECECF1;
+                    --primary-color: #19C37D;
+                    --font-family: 'Iosevka', monospace;
+                }
+                .stApp {
+                    background-color: var(--background);
+                    color: var(--text-color);
+                    font-family: var(--font-family);
+                }
+                </style>
+            """
         else:
             css = """
                 <style>
