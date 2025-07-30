@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List
+from typing import Any, List
+
 
 from realtime_comm.video_chat import VideoChatManager
 
@@ -28,11 +29,12 @@ class ConnectionManager:
         if ws in self.active:
             self.active.remove(ws)
 
-    async def broadcast(self, message: str, sender: WebSocket) -> None:
+    async def broadcast(self, message: Any, sender: WebSocket) -> None:
+        data = json.dumps(message) if not isinstance(message, str) else message
         for conn in list(self.active):
             if conn is not sender:
                 try:
-                    await conn.send_text(message)
+                    await conn.send_text(data)
                 except Exception:
                     self.disconnect(conn)
 
@@ -48,26 +50,45 @@ async def video_ws(websocket: WebSocket) -> None:
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(data, sender=websocket)
             try:
-                payload = json.loads(data)
+                event = json.loads(data)
             except Exception:
+                await manager.broadcast(data, sender=websocket)
                 continue
 
-            if payload.get("type") == "translate":
-                user = payload.get("user", "")
-                target = payload.get("lang", "en")
-                text = payload.get("text", "")
+            msg_type = event.get("type")
+
+            if msg_type == "chat":
+                text = event.get("text", "")
+                lang = event.get("lang", "en")
+                video_manager.handle_chat(text, lang)
+
+            elif msg_type == "frame":
+                frame = event.get("data")
+                if frame:
+                    video_manager.analyze_frame("remote", frame.encode())
+
+            elif msg_type == "translate":
+                user = event.get("user", "")
+                target = event.get("lang", "en")
+                text = event.get("text", "")
                 video_manager.translate_audio(user, target, text)
                 result = json.dumps({
                     "type": "translation",
                     "user": user,
                     "text": text,
-                    "translation": next((s.translation_overlay for s in video_manager.active_streams if s.user_id == user), text),
+                    "translation": next(
+                        (s.translation_overlay for s in video_manager.active_streams if s.user_id == user),
+                        text,
+                    ),
                 })
                 await manager.broadcast(result, sender=None)
-            elif payload.get("type") == "voice":
-                # relay synthesized voice to all participants
-                await manager.broadcast(data, sender=websocket)
+
+            elif msg_type == "voice":
+                await manager.broadcast(event, sender=websocket)
+
+            else:
+                await manager.broadcast(event, sender=websocket)
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)

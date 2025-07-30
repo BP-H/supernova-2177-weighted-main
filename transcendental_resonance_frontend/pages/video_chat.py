@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import streamlit as st
 from modern_ui import inject_modern_styles
@@ -58,7 +59,8 @@ def main(main_container=None) -> None:
             msg = st.text_input("Message", key="video_chat_input")
             if st.button("Send", key="video_chat_send"):
                 if msg:
-                    _run_async(manager.broadcast(msg, sender=None))
+                    payload = {"type": "chat", "text": msg, "lang": "en"}
+                    _run_async(manager.broadcast(payload, sender=None))
                     messages.append(f"You: {msg}")
                     st.session_state["video_chat_input"] = ""
 
