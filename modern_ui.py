@@ -48,8 +48,125 @@ def inject_modern_styles() -> None:
             border-right: 1px solid rgba(255,255,255,0.1);
             transition: width 0.3s ease;
         }
-        [data-testid="stSidebar"] .stButton>button {width: 100%;}
+        [data-testid="stSidebar"] .stButton>button {
+            width: 100%;
+        }
+        .sidebar-nav label {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+            transition: background 0.2s;
+        }
+        .sidebar-nav label:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .sidebar-nav input:checked + div {
+            color: var(--neon-accent);
+        }
+        .custom-container,
+        .card {
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .card:hover,
+        .custom-container:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transform: translateY(-3px);
+
+
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 0 0 0.5rem 0;
+        }
+        h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); }
+        h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+        h3 { font-size: clamp(1.25rem, 3vw, 1.6rem); }
+        h4 { font-size: clamp(1.1rem, 2.5vw, 1.3rem); }
+        h5 { font-size: clamp(1rem, 2vw, 1.1rem); }
+        h6 { font-size: clamp(0.875rem, 1.5vw, 1rem); }
+        }
+        p, span, div {
+            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 0.75rem;
+        }
+        .gradient-btn,
+        .stButton > button {
+            background: linear-gradient(90deg, var(--neon-accent), #00ffff) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            color: #00111e !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 2rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4) !important;
+            font-size: 0.95rem !important;
+            height: auto !important;
+        }
+        .gradient-btn:hover,
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6) !important;
+            background: linear-gradient(90deg, #00ffff, var(--neon-accent)) !important;
+            filter: brightness(1.05);
+        }
+ 
         .stButton>button {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            backdrop-filter: blur(8px) !important;
+            border-radius: 12px !important;
+            color: var(--text-color) !important;
+            font-weight: 600 !important;
+            padding: 0.6rem 1.4rem !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+            transition: all 0.2s ease !important;
+            font-size: 0.9rem !important;
+        }
+        .stButton>button:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4) !important, 0 0 6px var(--neon-accent) !important;
+            background: rgba(255,255,255,0.08) !important;
+            transform: translateY(-1px) scale(1.03) !important;
+        }
+
+        input, textarea, select {
+            background-color: #1a1a1a !important;
+            color: #eee !important;
+            border: 1px solid #444 !important;
+            border-radius: 8px !important;
+        }
+
+        .sidebar-nav .nav-item {
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
+
+        .sidebar-nav .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--neon-accent);
+        }
+
+        .sidebar-nav .nav-item:hover {
+
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(6px);
@@ -75,19 +192,45 @@ def inject_modern_styles() -> None:
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             transform: translateY(-3px);
         }
+
         .sidebar-nav .nav-item {
-            padding:0.5rem 1rem;
-            border-radius:8px;
-            display:flex;
-            align-items:center;
-            gap:0.5rem;
-            transition:background 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
         }
-        .sidebar-nav .nav-item:hover {background: rgba(255,255,255,0.05);}
-        .sidebar-nav .nav-item.active {background: rgba(255,255,255,0.1); color: var(--neon-accent);}
-        @media (max-width:768px){.main .block-container{padding:1rem;}}
-        @media (max-width:480px){.main .block-container{padding:0.5rem;} .stButton>button{width:100%;}}
-        </style>
+
+        .sidebar-nav .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--neon-accent);
+        }
+
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            [data-testid="stSidebar"] {
+                width: 14rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main .block-container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .stButton>button {
+                width: 100%;
+            }
+        }
+
         """,
         unsafe_allow_html=True,
     )
