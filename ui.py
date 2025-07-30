@@ -5,7 +5,6 @@ import streamlit as st  # ensure Streamlit is imported early
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-from importlib import import_module
 from datetime import datetime, timezone
 import asyncio
 import difflib
@@ -20,7 +19,6 @@ import inspect
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Any, Optional
-from streamlit_option_menu import option_menu
 from frontend import ui_layout
 
 
@@ -357,51 +355,14 @@ def inject_dark_theme() -> None:
 from frontend.ui_layout import render_title_bar, show_preview_badge
 
 
-def load_page_with_fallback(choice: str) -> None:
-    """Attempt to import and render a page by name with graceful fallback."""
-    PAGES = {
-        "Validation": "validation",
-        "Voting": "voting",
-        "Agents": "agents",
-        "Resonance Music": "resonance_music",
-        "Social": "social",
-    }
-
-    module = PAGES.get(choice)
-    if not module:
-        st.error(f"Unknown page: {choice}")
-        return
-
-    module_paths = [
-        f"transcendental_resonance_frontend.pages.{module}",
-        module,
-    ]
-
 def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
-    """
-    Attempt to import and run a page module by name, with graceful fallback.
-    Tries each candidate path and checks for `render()` or `main()` method.
-    Logs the traceback for any unexpected failure.
-    """
+    """Switch to the first existing page referenced in ``module_paths``."""
     for module_path in module_paths:
-        try:
-            page_mod = import_module(module_path)
-            for method_name in ("render", "main"):
-                if hasattr(page_mod, method_name):
-                    getattr(page_mod, method_name)()
-                    return
-        except ImportError:
-            continue  # Try next candidate module path
-        except Exception as exc:
-            st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
-            with st.expander("Show error details"):
-                st.exception(exc)
-            print("Traceback for debugging:\n", traceback.format_exc())
-            break
-
-    # Optional fallback renderer if defined elsewhere
-    if "_render_fallback" in globals():
-        _render_fallback(choice)
+        page_file = module_path.replace(".", "/") + ".py"
+        if Path(page_file).exists():
+            st.switch_page(page_file)
+            return
+    st.error(f"Page not found: {choice}")
 
 
 def _render_fallback(choice: str) -> None:
@@ -939,25 +900,17 @@ def render_validation_ui(
         main_container = st
 
     try:
-        # Navigation menu
-        choice = option_menu(
-            menu_title=None,
-            options=list(PAGES.keys()),
+        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        ui_layout.render_navbar(
+            page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-            orientation="horizontal",
-            key="main_nav_menu",
         )
 
         # Page layout
         left_col, center_col, right_col = main_container.columns([1, 3, 1])
 
         with center_col:
-            page_key = PAGES[choice]
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{page_key}",
-                f"pages.{page_key}",
-            ]
-            load_page_with_fallback(choice, module_paths)
+            st.info("Select a page above to continue.")
 
         with left_col:
             render_status_icon()
@@ -1259,12 +1212,16 @@ def main() -> None:
             "Social": "social",
         }
 
-        choice = ui_layout.render_navbar(
-            PAGES,
+        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        ui_layout.render_navbar(
+            page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
         )
 
         left_col, center_col, right_col = st.columns([1, 3, 1])
+
+        with center_col:
+            st.info("Select a page above to continue.")
 
         with left_col:
             render_status_icon()
@@ -1570,11 +1527,7 @@ def main() -> None:
                             st.info("Agent registry unavailable")
 
         with center_col:
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
-                f"pages.{PAGES[choice]}",
-            ]
-            load_page_with_fallback(choice, module_paths)
+            st.info("Select a page above to continue.")
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
 
@@ -1625,12 +1578,7 @@ def main() -> None:
 
         container_ctx = safe_container(main_container)
         with container_ctx:
-            page_key = PAGES.get(choice, choice)
-            module_paths = [
-                f"transcendental_resonance_frontend.pages.{page_key}",
-                f"pages.{page_key}",
-            ]
-            load_page_with_fallback(choice, module_paths)
+            st.info("Select a page above to continue.")
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

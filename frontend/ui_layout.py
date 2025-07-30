@@ -8,7 +8,7 @@ without introducing heavy dependencies.
 Features:
 - `main_container()` – returns a generic container for page content
 - `sidebar_container()` – accesses the sidebar container
-- `render_navbar(options, default=None)` – simple radio navigation UI
+- `render_navbar(pages)` – horizontal page links UI
 - `render_title_bar(icon, label)` – renders a header with an icon
 
 UI Ideas:
@@ -42,32 +42,18 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 
 
 def render_navbar(
-    options: Iterable[str] | Dict[str, str],
-    default: Optional[str] = None,
+    page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
-    key: str = "main_nav_menu"
-) -> str:
-    """Render a navigation UI and return the selected label."""
-    opts = list(options.keys()) if isinstance(options, dict) else list(options)
-    index = 0
-    if default is not None and default in opts:
-        index = opts.index(default)
-
-    if USE_OPTION_MENU:
-        icon_list = list(icons or ["dot"] * len(opts))
-        return option_menu(
-            menu_title=None,
-            options=opts,
-            icons=icon_list,
-            orientation="horizontal",
-            key=key,
-        )
-    else:
-        if icons and len(list(icons)) == len(opts):
-            labels = [f"{icon} {label}" for icon, label in zip(icons, opts)]
-            choice = st.sidebar.radio("Navigate", labels, key=key)
-            return opts[labels.index(choice)]
-        return st.sidebar.radio("Navigate", opts, key=key)
+) -> None:
+    """Render horizontal navigation links using ``st.page_link``."""
+    opts = (
+        list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
+    )
+    icon_list = list(icons or [None] * len(opts))
+    cols = st.columns(len(opts))
+    for col, ((label, target), icon) in zip(cols, zip(opts, icon_list)):
+        with col:
+            st.page_link(target, label=label, icon=icon)
 
 
 def render_title_bar(icon: str, label: str) -> None:
