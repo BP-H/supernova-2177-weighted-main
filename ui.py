@@ -58,9 +58,9 @@ from frontend.ui_layout import (
     render_title_bar,
     show_preview_badge,
     render_profile_card,
+    render_top_bar,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
-from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -1300,6 +1300,7 @@ def main() -> None:
             layout="wide",
             initial_sidebar_state="collapsed",
         )
+        render_top_bar()
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
             """
@@ -1377,7 +1378,6 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        render_topbar()  # added in codex branch
 
         # Setup: Pages and Icons (reuse global mapping)
         PAGES = {
