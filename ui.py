@@ -951,6 +951,7 @@ def render_validation_ui(
                 "people",
                 "person-circle",
             ],
+            key="main_nav_menu_top",
         )
 
         # Page layout
@@ -1249,6 +1250,7 @@ def main() -> None:
                 "people",
                 "person-circle",
             ],
+            key="main_nav_menu_sub",
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
