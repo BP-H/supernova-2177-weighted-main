@@ -14,6 +14,7 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
+from contextlib import nullcontext
 from ui_utils import summarize_text, load_rfc_entries
 
 BOX_CSS = """
@@ -35,7 +36,8 @@ def render_agent_insights_tab(main_container=None) -> None:
 
     theme_selector("Theme", key_suffix="agent_insights")
     inject_global_styles()
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
         st.subheader("Virtual Diary")
         with st.expander("📘 Notes", expanded=False):

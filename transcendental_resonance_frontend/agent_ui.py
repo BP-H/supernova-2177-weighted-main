@@ -4,6 +4,7 @@
 """Agent Insights tab renderer for the Transcendental Resonance frontend."""
 
 import streamlit as st
+from contextlib import nullcontext
 
 def render_agent_insights_tab(main_container=None):
     """
@@ -13,8 +14,8 @@ def render_agent_insights_tab(main_container=None):
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         st.subheader("Agent Insights")
-        st.info("Agent insights and controls coming soon!")
-        # Add placeholder UI for agent insights here
-        # E.g., agent performance metrics, interaction logs, configuration options
+        st.warning("Agent logic coming soon...")
+        # Placeholder section for future metrics and configuration
