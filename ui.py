@@ -1387,11 +1387,6 @@ def main() -> None:
             "Social": "social",
             "Profile": "profile",
         }
-        PAGES_DIR = (
-            Path(__file__).resolve().parent
-            / "transcendental_resonance_frontend"
-            / "pages"
-        )
 
 
         page_paths: dict[str, str] = {}
