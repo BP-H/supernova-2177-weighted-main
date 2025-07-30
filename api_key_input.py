@@ -56,12 +56,7 @@ def render_api_key_ui(
         index = 0
     prefix = f"{key_prefix}_" if key_prefix else ""
 
-    choice = st.selectbox(
-        "LLM Model",
-        names,
-        index=index,
-        key=f"{prefix}model",
-    )
+    choice = st.selectbox("LLM Model", names, index=index, key=f"{prefix}model")
     model, key_name = PROVIDERS[choice]
     key_val = ""
     if key_name is not None:
@@ -69,7 +64,7 @@ def render_api_key_ui(
             f"{choice} API Key",
             type="password",
             value=st.session_state.get(key_name, ""),
-            key=f"{prefix}api_key",
+            key=f"{prefix}{model}_api_key",
         )
 
         if key_val:
