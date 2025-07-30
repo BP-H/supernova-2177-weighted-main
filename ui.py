@@ -16,9 +16,13 @@ import math
 import sys
 import traceback
 import sqlite3
+import inspect
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Any, Optional
+
+from frontend import ui_layout
+
 
 
 from modern_ui_components import (
@@ -99,7 +103,6 @@ sys.excepthook = global_exception_handler
 
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
-from streamlit_option_menu import option_menu
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -338,133 +341,7 @@ def inject_dark_theme() -> None:
     """Legacy alias for inject_modern_styles()."""
     inject_modern_styles()
 
-def render_modern_validation_page():
-    """Render the main validation interface."""
-    try:
-        from transcendental_resonance_frontend.pages import validation
-        if hasattr(validation, "render"):
-            validation.render()
-            return
-        if hasattr(validation, "main"):
-            validation.main()
-            return
-    except Exception:
-        pass
-
-    st.markdown(
-        """
-        <div style='text-align:center; padding:2rem 0;'>
-            <h1 style='font-size:3rem; color:#4f8bf9; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
-            <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <div class="status-grid">
-            <div class="status-card">
-                <div style='font-size:2rem;'>✅</div>
-                <div>System Online</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>🔍</div>
-                <div>Ready to Analyze</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>⚡</div>
-                <div>High Performance</div>
-            </div>
-            <div class="status-card">
-                <div style='font-size:2rem;'>🎯</div>
-                <div>Precision Mode</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Main content area
-    st.markdown(
-        """
-        <div style='background:#1e1e1e; border:1px solid #333; padding:2rem; border-radius:8px; margin:2rem 0;'>
-            <h2 style='color:#fff; text-align:center; margin-bottom:1.5rem;'>🔬 Validation Analysis Center</h2>
-            <p style='color:#bbb; text-align:center;'>Upload your validation data or use demo mode to experience the power of superNova_2177</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Interactive demo section
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        st.markdown("### 📊 Validation Input")
-
-        # Beautiful text area
-        st.text_area(
-            "Validation JSON Data",
-            value='{\n  "validations": [\n    {\n      "validator": "Alice",\n      "target": "Proposal_001",\n      "score": 0.95,\n      "timestamp": "2025-07-30T00:28:28Z"\n    }\n  ]\n}',
-            height=200,
-            help="Paste your validation data here or use the sample data",
-        )
-
-        # Modern toggle for demo mode
-        st.toggle("🎮 Demo Mode", value=True, help="Use sample data for testing")
-
-    with col2:
-        st.markdown("### ⚙️ Analysis Settings")
-
-        st.selectbox(
-            "Visualization Mode",
-            ["🌟 Force Layout", "🔄 Circular", "📐 Grid"],
-            help="Choose how to visualize the validation network",
-        )
-
-        st.slider(
-            "Confidence Threshold",
-            0.0,
-            1.0,
-            0.75,
-            help="Minimum confidence level for validation acceptance",
-        )
-
-        if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
-            with st.spinner("Loading..."):
-                # Simulate analysis
-                import time
-
-                time.sleep(2)
-
-                st.success("✅ Analysis completed successfully!")
-
-                # Display results
-                st.markdown("### 📈 Analysis Results")
-
-                result_col1, result_col2, result_col3 = st.columns(3)
-
-                with result_col1:
-                    st.metric("Consensus Score", "0.87", delta="0.12")
-                with result_col2:
-                    st.metric("Network Health", "94.2%", delta="2.3%")
-                with result_col3:
-                    st.metric("Validation Count", "1,247", delta="156")
-
-                # Beautiful results display
-                st.markdown(
-                    """
-                    <div style='background: rgba(76, 175, 80, 0.1); padding: 1.5rem; 
-                                border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3); margin-top: 1rem;'>
-                        <h4 style='color: #4CAF50; margin: 0 0 1rem 0;'>🎉 Excellent Validation Health!</h4>
-                        <p style='color: white; margin: 0;'>
-                            Your validation network shows strong consensus with high integrity scores. 
-                            The system detected no anomalies and recommends proceeding with confidence.
-                        </p>
-                    </div>
-                """,
-                    unsafe_allow_html=True,
-                )
+from frontend import ui_layout
 
 
 def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
@@ -1159,18 +1036,23 @@ def main() -> None:
             "Social": "social",
         }
 
-        choice = option_menu(
-            menu_title=None,
-            options=list(PAGES.keys()),
+        choice = ui_layout.render_navbar(
+            PAGES,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-            orientation="horizontal",
-            key="main_nav_menu",
         )
 
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
         with left_col:
             render_status_icon()
+
+        with center_col:
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{PAGES[choice]}",
+                f"pages.{PAGES[choice]}",
+            ]
+            load_page_with_fallback(choice, module_paths)
+
 
         with center_col:
             page_key = PAGES.get(choice, choice)
