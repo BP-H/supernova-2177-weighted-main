@@ -6,7 +6,10 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List
+from typing import Any, List
+import json
+
+from realtime_comm.video_chat import VideoChatManager
 
 router = APIRouter()
 
@@ -25,16 +28,18 @@ class ConnectionManager:
         if ws in self.active:
             self.active.remove(ws)
 
-    async def broadcast(self, message: str, sender: WebSocket) -> None:
+    async def broadcast(self, message: Any, sender: WebSocket) -> None:
+        data = json.dumps(message) if not isinstance(message, str) else message
         for conn in list(self.active):
             if conn is not sender:
                 try:
-                    await conn.send_text(message)
+                    await conn.send_text(data)
                 except Exception:
                     self.disconnect(conn)
 
 
 manager = ConnectionManager()
+video_manager = VideoChatManager()
 
 
 @router.websocket("/ws/video")
@@ -44,6 +49,22 @@ async def video_ws(websocket: WebSocket) -> None:
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(data, sender=websocket)
+            try:
+                event = json.loads(data)
+            except Exception:
+                await manager.broadcast(data, sender=websocket)
+                continue
+
+            msg_type = event.get("type")
+            if msg_type == "chat":
+                text = event.get("text", "")
+                lang = event.get("lang", "en")
+                video_manager.handle_chat(text, lang)
+            elif msg_type == "frame":
+                frame = event.get("data")
+                if frame:
+                    video_manager.analyze_frame("remote", frame.encode())
+
+            await manager.broadcast(event, sender=websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
