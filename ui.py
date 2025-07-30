@@ -499,7 +499,12 @@ def render_sidebar() -> str:
     # Navigation
     icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
     if "render_modern_sidebar" in globals():
-        choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+        choice = render_modern_sidebar(
+            PAGES,
+            container=st.sidebar,
+            icons=icon_map,
+            session_key="active_page",
+        )
     else:
         choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
 
@@ -1274,6 +1279,7 @@ def main() -> None:
         choice = render_modern_sidebar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         if forced_page in page_paths:
