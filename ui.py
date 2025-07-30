@@ -185,7 +185,7 @@ def render_landing_page():
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-def inject_dark_theme() -> None:
+def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
         """
@@ -263,10 +263,21 @@ def inject_dark_theme() -> None:
             transform: translateY(-2px);
         }
 
+        /* Enhanced metrics styling */
+        [data-testid="stMetric"],
+        [data-testid="metric-container"] {
+            background-color: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: none;
+        }
+
+        /* Sophisticated button styling */
         .stButton > button {
-            background-color: #4f8bf9;
+            background-color: #2d2d2d;
             color: #fff;
-            border: none;
+            border: 1px solid #3a3a3a;
             border-radius: 6px;
             padding: 0.5rem 1.25rem;
             font-weight: 600;
@@ -274,17 +285,9 @@ def inject_dark_theme() -> None:
         }
 
         .stButton > button:hover {
-            background-color: #699cfc;
+            background-color: #4f8bf9;
+            border-color: #4f8bf9;
             transform: translateY(-2px);
-        }
-
-        /* Modern metrics */
-        [data-testid="metric-container"] {
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
-            padding: 1rem;
-            box-shadow: none;
         }
 
         /* Text styling */
@@ -321,19 +324,21 @@ def inject_dark_theme() -> None:
             background: #4f8bf9;
         }
 
-        /* Modern scrollbar */
+        /* Enhanced scrollbar styling */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #252525;
             border-radius: 10px;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #4f8bf9;
             border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #699cfc;
         }
 
         /* Animations */
@@ -341,7 +346,7 @@ def inject_dark_theme() -> None:
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
+        
         .main .block-container > div {
             animation: fadeIn 0.6s ease-out;
         }
@@ -1001,7 +1006,7 @@ def main() -> None:
         )
         
         # Apply dark theme styling
-        inject_dark_theme()
+        inject_modern_styles()
         
         # Initialize session state
         if "session_start_ts" not in st.session_state:
