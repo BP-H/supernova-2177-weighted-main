@@ -77,6 +77,7 @@ render_modern_sidebar = render_sidebar_nav
 # Utility path handling
 from pathlib import Path
 import logging
+from utils.paths import ROOT_DIR, PAGES_DIR
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -96,6 +97,10 @@ except Exception as import_err:  # pragma: no cover - fallback if absolute impor
         def ensure_pages(*_args, **_kwargs) -> None:
             logger.debug("ensure_pages noop fallback used")
             return None
+
+        def get_pages_dir() -> Path:
+            return Path(__file__).resolve().parents[2] / "pages"
+
 
         def get_pages_dir() -> Path:
             return (
@@ -1383,29 +1388,19 @@ def main() -> None:
 
         render_topbar()  # added in codex branch
 
-        # Setup: Pages and Icons (reuse global mapping)
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Chat": "chat",
-            "Social": "social",
-            "Profile": "profile",
+        # Build navigation paths from global mapping
+        page_paths: dict[str, str] = {
+            label: f"/pages/{slug}.py" for label, slug in PAGES.items()
         }
 
-        page_paths: dict[str, str] = {}
-        missing_pages: list[str] = []
-        for label, mod in PAGES.items():
-
-            file_path = ROOT_DIR / "pages" / f"{mod}.py"
-            if file_path.exists():
-                page_paths[label] = f"/pages/{mod}.py"
-            else:
-                missing_pages.append(label)
-
+        # Optional: Warn if any page files are missing
+        missing_pages = [
+            label for label, slug in PAGES.items()
+            if not (ROOT_DIR / "pages" / f"{slug}.py").exists()
+        ]
         if missing_pages:
             st.warning("Missing pages: " + ", ".join(missing_pages))
+
 
         # Determine page from query params and sidebar selection
         try:
@@ -1426,16 +1421,16 @@ def main() -> None:
             )
 
         # Ensure session state defaults are valid
-        if st.session_state.get("sidebar_nav") not in page_paths.values():
+        if st.session_state.get("sidebar_nav") not in PAGES.values():
             st.session_state["sidebar_nav"] = "validation"
 
-        if forced_page not in page_paths.values():
+        if forced_page not in PAGES:
             forced_page = None
 
         # Determine selected label from sidebar or fallback
         choice_label = forced_page or render_modern_sidebar(
             page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            icons=NAV_ICONS,
             session_key="active_page",
         )
 
@@ -1443,8 +1438,8 @@ def main() -> None:
             choice_label = "Validation"
 
         # Normalize and extract slug for loading
-        display_choice = choice_label
-        choice = normalize_choice(PAGES.get(choice_label, choice_label))
+        display_choice = PAGES.get(choice_label, choice_label)
+        choice = normalize_choice(display_choice)
 
         try:
             st.query_params["page"] = display_choice
