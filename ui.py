@@ -459,16 +459,6 @@ def render_modern_validation_page():
                 )
 
 
-# In your main() function, replace the page loading section with:
-def load_page_with_fallback(choice: str) -> None:
-    """Load a page dynamically, with robust fallback logic and diagnostics."""
-    pages = {
-        "Validation": "validation",
-        "Voting": "voting",
-        "Agents": "agents",
-        "Resonance Music": "resonance_music",
-        "Social": "social",
-    }
 def load_page_with_fallback(choice: str) -> None:
     """
     Attempt to import and run a page module by name, with graceful fallback.
@@ -484,7 +474,7 @@ def load_page_with_fallback(choice: str) -> None:
 
     module_paths = [
         f"transcendental_resonance_frontend.pages.{pages.get(choice, '')}",
-        f"pages.{pages.get(choice, '')}",  # Optional fallback path
+        f"pages.{pages.get(choice, '')}",
     ]
 
     for module_path in module_paths:
