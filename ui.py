@@ -452,29 +452,16 @@ def load_page_with_fallback(choice):
     
     try:
         page_module = pages[choice]
-        # Try both possible module paths for maximum compatibility
-        module_paths = [
-            f"transcendental_resonance_frontend.pages.{page_module}",
-            f"pages.{page_module}"
-        ]
-        
-        page_mod = None
-        for module_path in module_paths:
-            try:
-                page_mod = import_module(module_path)
-                break
-            except ImportError:
-                continue
-        
-        if page_mod:
-            if hasattr(page_mod, "render"):
-                page_mod.render()
-            elif hasattr(page_mod, "main"):
-                page_mod.main()
-            else:
-                raise ImportError("No main or render method found")
+        module_path = (
+            f"transcendental_resonance_frontend.pages.{page_module}"
+        )
+
+        page_mod = import_module(module_path)
+
+        if hasattr(page_mod, "main"):
+            page_mod.main()
         else:
-            raise ImportError("Module not found in any path")
+            render_modern_validation_page()
             
     except ImportError:
         _render_fallback(choice)
