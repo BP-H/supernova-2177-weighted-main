@@ -19,21 +19,28 @@ except Exception:  # pragma: no cover - optional dependency
     option_menu = None  # type: ignore
     USE_OPTION_MENU = False
 
-# Sidebar styling for a dark glass look with hover and active states
+# Sidebar styling for lightweight text-based navigation
 SIDEBAR_STYLES = """
 <style>
 .sidebar-nav {
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 12px;
-    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
     margin-bottom: 1rem;
     font-size: 0.75rem;
 }
-.sidebar-nav .nav-item {
+.sidebar-nav.horizontal {
+    flex-direction: row;
+    align-items: center;
+}
+.sidebar-nav .stButton>button {
+    background: none;
+    border: none;
     color: #f0f4f8;
-    font-weight: 500;
-    font-size: 0.75rem;
     padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
     border-radius: 8px;
     margin-bottom: 0.25rem;
     transition: background 0.2s ease;
@@ -41,19 +48,8 @@ SIDEBAR_STYLES = """
     gap: 0.5rem;
     align-items: center;
 }
-.sidebar-nav .nav-item:hover {
+.sidebar-nav .stButton>button:hover {
     background: rgba(255, 255, 255, 0.05);
-}
-.sidebar-nav .nav-item.selected {
-    background: rgba(255, 255, 255, 0.15);
-}
-@media (max-width: 768px) {
-    .sidebar-nav {
-        padding: 0.25rem;
-    }
-    .sidebar-nav .nav-item {
-        padding: 0.75rem;
-    }
 }
 </style>
 """
@@ -102,38 +98,28 @@ def render_modern_sidebar(
     icons: Optional[Dict[str, str]] = None,
     *,
     key: str = "sidebar_nav",
+    horizontal: bool = False,
 ) -> str:
-    """Render a vertical navigation menu with optional icons."""
+    """Render navigation links styled as modern text tabs, with fallback modes."""
     if container is None:
         container = st.sidebar
 
-    state = getattr(st, "session_state", {})
-    key = key or uuid4().hex
-    if key not in state:
-        state[key] = list(pages.keys())[0]
-
     opts = list(pages.keys())
     icon_map = icons or {}
-    short_map = {
-        "Validation": "Validate",
-        "Voting": "Voting",
-        "Agents": "Agent",
-        "Resonance Music": "Music",
-        "Chat": "Chat",
-        "Social": "Social",
-        "Profile": "Profile",
-    }
 
-    # Short display labels or emojis (fallbacks to first word if not mapped)
-    display_opts = [short_map.get(o, o.split()[0]) for o in opts]
+    # Default session state for selected page
+    st.session_state.setdefault(key, opts[0])
 
-    session_key = f"sidebar_{id(pages)}"
-    st.session_state.setdefault(session_key, opts[0])
+    orientation_cls = "horizontal" if horizontal else "vertical"
 
     container_ctx = safe_container(container)
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-        st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='glass-card sidebar-nav {orientation_cls}'>",
+            unsafe_allow_html=True,
+        )
+
         try:
             if USE_OPTION_MENU and option_menu is not None:
                 choice = option_menu(
@@ -142,30 +128,31 @@ def render_modern_sidebar(
                     icons=[icon_map.get(o, "dot") for o in opts],
                     orientation="vertical",
                     key=key,
-                    default_index=opts.index(
-                        st.session_state.get(key, opts[0])
-                    ),
+                    default_index=opts.index(st.session_state.get(key, opts[0])),
                 )
-            elif hasattr(st, "radio"):
+            elif horizontal:
+                # Render as horizontal buttons
+                columns = container.columns(len(opts))
+                for col, label in zip(columns, opts):
+                    disp = f"{icon_map.get(label, '')} {label}".strip()
+                    if col.button(disp, key=f"{key}_{label}"):
+                        st.session_state[key] = label
+                choice = st.session_state[key]
+            else:
+                # Vertical fallback (radio or buttons)
                 choice_disp = st.radio(
                     "Navigate",
                     [f"{icon_map.get(o, '')} {o}".strip() for o in opts],
                     key=key,
-                    index=opts.index(
-                        st.session_state.get(key, opts[0])
-                    ),
+                    index=opts.index(st.session_state.get(key, opts[0])),
                 )
-                choice = opts[[f"{icon_map.get(o, '')} {o}".strip() for o in opts].index(choice_disp)]
-            else:
-                choice = st.session_state.get(key, opts[0])
-                for opt in opts:
-                    icon = icon_map.get(opt, "")
-                    label = f"{icon} {opt}" if icon else opt
-                    if container.button(label, key=f"{key}_{opt}"):
-                        choice = opt
-                        break
+                choice = opts[
+                    [f"{icon_map.get(o, '')} {o}".strip() for o in opts].index(choice_disp)
+                ]
+
         except Exception:
-            choice = opts[0]
+            # Final fallback
+            choice = st.session_state.get(key, opts[0])
 
         st.session_state[key] = choice
         st.markdown("</div>", unsafe_allow_html=True)
