@@ -7,7 +7,9 @@ test:
 	pytest -q
 
 lint:
-	mypy
+	mypy hypothesis_meta_evaluator.py \
+	    causal_trigger.py \
+	    introspection/introspection_pipeline.py
 
 ui:
-        streamlit run ui.py
+	streamlit run ui.py

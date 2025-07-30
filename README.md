@@ -178,7 +178,7 @@ For convenience, the repository includes a `Makefile` with common tasks:
 ```bash
 make install  # set up the environment
 make test     # run tests
-make lint     # run mypy type checks
+make lint     # run mypy type checks on the main modules
 ```
 
 ### Pre-commit Hooks
@@ -601,7 +601,9 @@ You can also run static type checks with `mypy`:
 
 ```bash
 pytest
-mypy .
+mypy hypothesis_meta_evaluator.py \
+     causal_trigger.py \
+     introspection/introspection_pipeline.py
 ```
 
 The provided `Makefile` exposes `make test` and `make lint` wrappers for these commands.
