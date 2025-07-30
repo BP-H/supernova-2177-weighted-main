@@ -943,15 +943,15 @@ def render_validation_ui(
         ui_layout.render_navbar(
             page_paths,
             icons=[
-                "check2-square",
-                "graph-up",
-                "robot",
-                "music-note-beamed",
-                "chat-text",
-                "people",
-                "person-circle",
+
+                "✅",
+                "📊",
+                "🤖",
+                "🎵",
+                "💬",
+                "👥",
+                "👤",
             ],
-            key="main_nav_menu_top",
         )
 
         # Page layout
@@ -1242,15 +1242,14 @@ def main() -> None:
         choice = ui_layout.render_navbar(
             page_paths,
             icons=[
-                "check2-square",
-                "graph-up",
-                "robot",
-                "music-note-beamed",
-                "chat-text",
-                "people",
-                "person-circle",
+                "✅",
+                "📊",
+                "🤖",
+                "🎵",
+                "💬",
+                "👥",
+                "👤",
             ],
-            key="main_nav_menu_sub",
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])

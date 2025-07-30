@@ -32,3 +32,31 @@ The module aims to provide video chat with live translation, lip-sync overlays, 
 - Add a demo interface that layers AR filters and records the session for later playback.
 - Design REST or websocket endpoints for these features and document them under `docs/routes.md`.
 
+
+## Implementation Details
+
+- The `video_chat_router` exposes a `/ws/video` WebSocket for session signaling.
+- `realtime_comm.video_chat.VideoChatManager` manages active streams and provides
+  methods to translate audio using Google TTS when available.
+- Translation overlays are updated in real time and synthesized speech is played
+  back through `pygame` when audio output is enabled.
+- A demo page lives in `transcendental_resonance_frontend/pages/video_chat.py`
+  which starts and stops sessions via the router.
+
+## Configuration Steps
+
+1. Install optional packages for voice and translation:
+   ```bash
+   pip install gtts pygame googletrans==4.0.0rc1
+   ```
+2. Set a `TRANSLATION_API_KEY` environment variable if using a cloud provider.
+3. Start the backend API:
+   ```bash
+   uvicorn superNova_2177:app --reload --port 8000
+   ```
+4. Launch the Streamlit UI and open the **Video Chat** page:
+   ```bash
+   streamlit run ui.py
+   ```
+5. Click **Start Session** to begin a call and choose the target language for
+   live subtitles and voice.

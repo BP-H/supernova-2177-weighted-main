@@ -530,6 +530,17 @@ await dispatch_route(
 The `MessageHub` message bus lets observers react to hook events in real time.
 See `docs/hooks.md` for the full list of event names.
 
+## 🎥 Voice & Video Chat
+
+Start the backend and Streamlit UI as described above. Then open the **Video Chat** page from the sidebar to begin an interactive session.
+
+1. Click **Start Session** to establish the WebSocket connection.
+2. Enter text messages and select a target language to display live translations.
+3. With `gtts` and `pygame` installed, translated speech plays automatically.
+
+This feature is experimental and intended for demo use only.
+
+
 ## 🧪 Running Tests
 
 Before invoking `pre-commit` or `pytest`, install the minimal testing
