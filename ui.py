@@ -1294,7 +1294,10 @@ def render_developer_tools() -> None:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-    ensure_pages(PAGES, PAGES_DIR)
+    try:
+        ensure_pages(PAGES, PAGES_DIR)
+    except Exception as exc:
+        logger.warning("ensure_pages failed: %s", exc)
     # Initialize database BEFORE anything else
     try:
         db_ready = ensure_database_exists()
