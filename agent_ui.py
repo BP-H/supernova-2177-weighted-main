@@ -23,6 +23,12 @@ BOX_CSS = """
     border-radius: 8px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tab-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
 """

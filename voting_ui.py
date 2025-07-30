@@ -25,6 +25,12 @@ BOX_CSS = """
     border-radius: 8px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tab-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
 """
@@ -90,6 +96,11 @@ def render_proposals_tab(main_container=None) -> None:
             padding: 1rem;
             margin-bottom: 1rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .card input,
         .card textarea,
@@ -101,6 +112,12 @@ def render_proposals_tab(main_container=None) -> None:
             background-color: #1DA1F2;
             color: #fff;
             border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-primary > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(29,161,242,0.5);
+            filter: brightness(1.05);
         }
         .ag-theme-streamlit .ag-header,
         .ag-theme-streamlit .ag-header-viewport {
