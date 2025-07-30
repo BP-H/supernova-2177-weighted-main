@@ -36,3 +36,7 @@ The `inject_modern_styles()` helper exposes a few utility classes:
 | `.gradient-btn` | Applies the gradient button styling with hover animations. |
 | `.sidebar-nav .nav-item` | Sidebar navigation element with soft highlights. |
 | `.sidebar-nav .icon` | Emoji icon wrapper used inside nav items. |
+
+``SIDEBAR_STYLES`` in ``modern_ui_components`` exposes the sidebar navigation
+CSS. Inject it via ``st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)`` when
+building custom sidebars to match the default look.

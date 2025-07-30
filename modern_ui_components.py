@@ -19,7 +19,9 @@ except Exception:  # pragma: no cover - optional dependency
     option_menu = None  # type: ignore
     USE_OPTION_MENU = False
 
-# Sidebar styling for lightweight text-based navigation
+# Sidebar styling for lightweight text-based navigation.
+# Inject this CSS string with ``st.markdown`` to keep sidebar navigation
+# consistent across pages.
 SIDEBAR_STYLES = """
 <style>
 [data-testid="stSidebar"] {
@@ -59,6 +61,7 @@ SIDEBAR_STYLES = """
 .sidebar-nav .stButton>button:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+<style>
 .sidebar-nav label {
     display: flex;
     align-items: center;
@@ -88,13 +91,21 @@ SIDEBAR_STYLES = """
     background: rgba(255, 255, 255, 0.1);
     color: var(--neon-accent);
 }
+
+/* Combine both @media rules */
 @media (max-width: 768px) {
     [data-testid="stSidebar"] {
         width: 14rem;
     }
 }
+@media (max-width: 600px) {
+    .sidebar-nav.horizontal {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
 </style>
-"""
+
 
 
 def render_modern_layout() -> None:
@@ -139,10 +150,14 @@ def render_modern_sidebar(
     container: Optional[st.delta_generator.DeltaGenerator] = None,
     icons: Optional[Dict[str, str]] = None,
     *,
-    key: str = "sidebar_nav",
+    session_key: str = "sidebar_nav",
     horizontal: bool = False,
 ) -> str:
-    """Render navigation links styled as modern text tabs, with fallback modes."""
+    """Render navigation links styled as modern text tabs.
+
+    ``session_key`` determines where the active page is stored in
+    ``st.session_state`` so multiple sidebars can coexist without collisions.
+    """
     if container is None:
         container = st.sidebar
 
@@ -150,9 +165,11 @@ def render_modern_sidebar(
     icon_map = icons or {}
 
     # Default session state for selected page
-    st.session_state.setdefault(key, opts[0])
-    if st.session_state.get(key) not in opts:
-        st.session_state[key] = opts[0]
+    st.session_state.setdefault(session_key, opts[0])
+    if st.session_state.get(session_key) not in opts:
+        st.session_state[session_key] = opts[0]
+
+    widget_key = f"{session_key}_ctrl"
 
     orientation_cls = "horizontal" if horizontal else "vertical"
 
@@ -170,25 +187,25 @@ def render_modern_sidebar(
                     menu_title=None,
                     options=opts,
                     icons=[icon_map.get(o, "dot") for o in opts],
-                    orientation="vertical",
-                    key=key,
-                    default_index=opts.index(st.session_state.get(key, opts[0])),
+                    orientation="horizontal" if horizontal else "vertical",
+                    key=widget_key,
+                    default_index=opts.index(st.session_state.get(session_key, opts[0])),
                 )
             elif horizontal:
                 # Render as horizontal buttons
                 columns = container.columns(len(opts))
                 for col, label in zip(columns, opts):
                     disp = f"{icon_map.get(label, '')} {label}".strip()
-                    if col.button(disp, key=f"{key}_{label}"):
-                        st.session_state[key] = label
-                choice = st.session_state[key]
+                    if col.button(disp, key=f"{widget_key}_{label}"):
+                        st.session_state[session_key] = label
+                choice = st.session_state[session_key]
             else:
                 # Vertical fallback (radio or buttons)
                 choice_disp = st.radio(
                     "Navigate",
                     [f"{icon_map.get(o, '')} {o}".strip() for o in opts],
-                    key=key,
-                    index=opts.index(st.session_state.get(key, opts[0])),
+                    key=widget_key,
+                    index=opts.index(st.session_state.get(session_key, opts[0])),
                 )
                 choice = opts[
                     [f"{icon_map.get(o, '')} {o}".strip() for o in opts].index(choice_disp)
@@ -196,10 +213,11 @@ def render_modern_sidebar(
 
         except Exception:
             # Final fallback
-            choice = st.session_state.get(key, opts[0])
+            choice = st.session_state.get(session_key, opts[0])
 
-        if st.session_state.get(key) != choice:
-            st.session_state[key] = choice
+        if st.session_state.get(session_key) != choice:
+            st.session_state[session_key] = choice
+
         st.markdown("</div>", unsafe_allow_html=True)
         return choice
 
@@ -235,6 +253,7 @@ def render_stats_section(stats: dict) -> None:
 
 
 __all__ = [
+    "SIDEBAR_STYLES",
     "render_modern_layout",
     "render_modern_header",
     "render_modern_sidebar",
