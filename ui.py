@@ -359,10 +359,7 @@ def inject_dark_theme() -> None:
 
 
 from frontend.ui_layout import render_title_bar, show_preview_badge
-from streamlit.errors import StreamlitAPIException
-from pathlib import Path
-import importlib
-import traceback
+
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
@@ -370,6 +367,8 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         module = PAGES.get(choice)
         if not module:
             st.error(f"Unknown page: {choice}")
+            if "_render_fallback" in globals():
+                _render_fallback(choice)
             return
         module_paths = [
             f"transcendental_resonance_frontend.pages.{module}",
@@ -387,7 +386,7 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
     for module_path in module_paths:
         page_file = Path(module_path.replace(".", "/") + ".py")
         if page_file.exists():
-            rel_path = str(page_file.relative_to(ROOT_DIR))
+            rel_path = os.path.relpath(page_file, start=Path.cwd())
             try:
                 st.switch_page(rel_path)
                 return
@@ -956,7 +955,10 @@ def render_validation_ui(
         main_container = st
 
     try:
-        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        page_paths = {
+            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
+            for label, mod in PAGES.items()
+        }
         ui_layout.render_navbar(
             page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
@@ -1248,7 +1250,10 @@ def main() -> None:
             "Social": "social",
         }
         
-        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        page_paths = {
+            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
+            for label, mod in PAGES.items()
+        }
         choice = ui_layout.render_navbar(
             page_paths,
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
