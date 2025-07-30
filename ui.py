@@ -53,6 +53,16 @@ PAGES_DIR = (
     Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 )
 
+# Mapping of navigation labels to page module names
+
+PAGES = {
+    "Validation": "validation",
+    "Voting": "voting",
+    "Agents": "agents",
+    "Resonance Music": "resonance_music",
+    "Social": "social",
+}
+
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
@@ -323,6 +333,17 @@ def inject_dark_theme() -> None:
 
 def render_modern_validation_page():
     """Render the main validation interface."""
+    try:
+        from transcendental_resonance_frontend.pages import validation
+        if hasattr(validation, "render"):
+            validation.render()
+            return
+        if hasattr(validation, "main"):
+            validation.main()
+            return
+    except Exception:
+        pass
+
     st.markdown(
         """
         <div style='text-align:center; padding:2rem 0;'>
@@ -439,10 +460,11 @@ def render_modern_validation_page():
                 )
 
 
-# In your main() function, replace the page loading section with:
-def load_page_with_fallback(choice):
-    """Load page with beautiful fallback and maximum compatibility."""
-    # Define pages here since it's not global
+def load_page_with_fallback(choice: str) -> None:
+    """
+    Attempt to import and run a page module by name, with graceful fallback.
+    Tries common candidate paths and invokes either `render()` or `main()` method.
+    """
     pages = {
         "Validation": "validation",
         "Voting": "voting",
@@ -450,52 +472,52 @@ def load_page_with_fallback(choice):
         "Resonance Music": "resonance_music",
         "Social": "social",
     }
-    
-    try:
-        page_module = pages[choice]
-        # Try both possible module paths for maximum compatibility
-        module_paths = [
-            f"transcendental_resonance_frontend.pages.{page_module}",
-            f"pages.{page_module}"
-        ]
-        
-        page_mod = None
-        for module_path in module_paths:
-            try:
-                page_mod = import_module(module_path)
-                break
-            except ImportError:
-                continue
-        
-        if page_mod:
+
+    module_paths = [
+        f"transcendental_resonance_frontend.pages.{pages.get(choice, '')}",
+        f"pages.{pages.get(choice, '')}",
+    ]
+
+    for module_path in module_paths:
+        try:
+            page_mod = import_module(module_path)
             if hasattr(page_mod, "render"):
                 page_mod.render()
+                return
             elif hasattr(page_mod, "main"):
                 page_mod.main()
-            else:
-                raise ImportError("No main or render method found")
-        else:
-            raise ImportError("Module not found in any path")
-            
-    except ImportError:
-        _render_fallback(choice)
-    except Exception as exc:
-        st.error(f"Error loading page: {exc}")
+                return
+        except ImportError:
+            continue
+        except Exception as exc:
+            st.error(f"❌ Error loading page `{choice}`: {exc}")
+            break
+
+    _render_fallback(choice)
+
 
 def _render_fallback(choice: str) -> None:
-    """Render page fallbacks when modules are missing."""
-    if choice == "Validation":
-        render_modern_validation_page()
-    elif choice == "Voting":
-        render_modern_voting_page()
-    elif choice == "Agents":
-        render_modern_agents_page()
-    elif choice == "Resonance Music":
-        render_modern_music_page()
-    elif choice == "Social":
-        render_modern_social_page()
+    """Render modern fallback if module isn't available or fails to load."""
+    fallback_pages = {
+        "Validation": render_modern_validation_page,
+        "Voting": render_modern_voting_page,
+        "Agents": render_modern_agents_page,
+        "Resonance Music": render_modern_music_page,
+        "Social": render_modern_social_page,
+    }
+    fallback_fn = fallback_pages.get(choice)
+    if fallback_fn:
+        fallback_fn()
+    else:
+        st.error(f"No fallback available for page: {choice}")
+
+
+def render_modern_validation_page():
+    st.markdown("# ✅ Validation Console")
+    st.info("🚧 Validation logic coming soon!")
+
+
 def render_modern_voting_page():
-    """Modern voting page fallback using voting_ui widgets."""
     st.markdown("# 🗳️ Voting Dashboard")
     try:
         render_voting_tab()
@@ -504,7 +526,6 @@ def render_modern_voting_page():
 
 
 def render_modern_agents_page():
-    """Modern agents page fallback using agent_ui widgets."""
     st.markdown("# 🤖 AI Agents")
     try:
         render_agent_insights_tab()
@@ -513,25 +534,32 @@ def render_modern_agents_page():
 
 
 def render_modern_music_page():
-    """Modern music page fallback invoking the resonance module if available."""
     st.markdown("# 🎵 Resonance Music")
     try:
         from transcendental_resonance_frontend.pages import resonance_music
-        if hasattr(resonance_music, "main"):
+        if hasattr(resonance_music, "render"):
+            resonance_music.render()
+        elif hasattr(resonance_music, "main"):
             resonance_music.main()
         else:
-            raise RuntimeError("No main method available")
+            raise RuntimeError("No render or main method available in resonance_music")
     except Exception:
         st.info("🚧 Harmonic resonance features coming soon!")
 
 
 def render_modern_social_page():
-    """Modern social page fallback using social_tabs widgets."""
     st.markdown("# 👥 Social Network")
     try:
-        render_social_tab()
+        from transcendental_resonance_frontend.pages import social
+        if hasattr(social, "render"):
+            social.render()
+        elif hasattr(social, "main"):
+            social.main()
+        else:
+            raise RuntimeError("No render or main method available in social")
     except Exception:
         st.info("🚧 Social features in development!")
+
 
 
 # Add this to your main() function after st.set_page_config()
@@ -617,6 +645,50 @@ try:
     from validator_reputation_tracker import update_validator_reputations
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
+
+from typing import Any, Optional
+
+# Optional modules used throughout the UI. Provide simple fallbacks when the associated packages are not available.
+
+try:
+    from protocols import AGENT_REGISTRY
+except ImportError:  # pragma: no cover - optional dependency
+    AGENT_REGISTRY = {}
+
+try:
+    from social_tabs import render_social_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_social_tab() -> None:
+        st.subheader("👥 Social Features")
+        st.info("Social features module not available")
+
+try:
+    from voting_ui import render_voting_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_voting_tab() -> None:
+        st.info("Voting module not available")
+
+try:
+    from agent_ui import render_agent_insights_tab
+except ImportError:  # pragma: no cover - optional dependency
+    def render_agent_insights_tab() -> None:
+        st.subheader("🤖 Agent Insights")
+        st.info("Agent insights module not available. Install required dependencies.")
+        if AGENT_REGISTRY:
+            st.write("Available Agents:")
+            for name, info in AGENT_REGISTRY.items():
+                with st.expander(f"🔧 {name}"):
+                    st.write(f"Description: {info.get('description', 'No description')}")
+                    st.write(f"Class: {info.get('class', 'Unknown')}")
+        else:
+            st.warning("No agents registered")
+
+try:
+    from llm_backends import get_backend
+except ImportError:  # pragma: no cover - optional dependency
+    def get_backend(name, api_key=None):
+        return lambda x: {"response": "dummy backend"}
+
 
 
 
@@ -956,6 +1028,20 @@ def render_validation_ui(
     """Main entry point for the validation analysis UI with error handling."""
     if main_container is None:
         main_container = st
+    if sidebar is None:
+        sidebar = st.sidebar
+
+    page_func = globals().get("render_modern_validation_page")
+    if page_func is None:
+        st.error("Validation UI helper missing")
+        return
+
+    try:
+        with main_container:
+            page_func()
+    except Exception as exc:
+        st.error("Failed to load validation UI")
+        st.code(str(exc))
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
@@ -1039,7 +1125,8 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        pages = {
+
+        PAGES = {
             "Validation": "validation",
             "Voting": "voting",
             "Agents": "agents",
@@ -1047,9 +1134,10 @@ def main() -> None:
             "Social": "social",
         }
 
+        
         choice = option_menu(
             menu_title=None,
-            options=list(pages.keys()),
+            options=list(PAGES.keys()),
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
             orientation="horizontal",
             key="main_nav_menu",
@@ -1058,7 +1146,12 @@ def main() -> None:
         left_col, center_col, right_col = st.columns([1, 3, 1])
 
         with center_col:
-            load_page_with_fallback(choice)
+            page_key = PAGES[choice]
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
         with left_col:
             render_status_icon()
