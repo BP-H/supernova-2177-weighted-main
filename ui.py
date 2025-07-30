@@ -452,9 +452,7 @@ def _render_fallback(choice: str) -> None:
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
         if OFFLINE_MODE:
-            st.toast("Backend unavailable - offline mode active.")
-        if OFFLINE_MODE:
-            st.toast("Backend unavailable - offline mode active.")
+            st.toast("Offline mode: using mock services", icon="⚠️")
 
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
@@ -947,6 +945,8 @@ def render_validation_ui(
             label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
             for label, mod in PAGES.items()
         }
+
+
         ui_layout.render_navbar(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
@@ -1242,8 +1242,16 @@ def main() -> None:
         }
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
-            key="navbar_main",
+            icons=[
+                "✅",
+                "📊",
+                "🤖",
+                "🎵",
+                "💬",
+                "👥",
+                "👤",
+            ],
+            key="main_nav_menu_sub",
         )
 
         
@@ -1291,9 +1299,21 @@ def main() -> None:
 
                 backend_choice = api_info.get("model", "dummy")
                 api_key = api_info.get("api_key", "") or ""
+
+                if AGENT_REGISTRY:
+                    agent_choice = st.selectbox(
+                        "Agent",
+                        sorted(AGENT_REGISTRY.keys()),
+                        key="devtools_agent_select",
+                    )
+                else:
+                    agent_choice = None
+                    st.info("No agents registered")
+
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
+
         
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
