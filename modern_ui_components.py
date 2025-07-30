@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Dict
+from uuid import uuid4
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -26,10 +27,12 @@ SIDEBAR_STYLES = """
     border-radius: 12px;
     padding: 0.5rem;
     margin-bottom: 1rem;
+    font-size: 0.75rem;
 }
 .sidebar-nav .nav-item {
     color: #f0f4f8;
     font-weight: 500;
+    font-size: 0.75rem;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     margin-bottom: 0.25rem;
@@ -105,11 +108,25 @@ def render_modern_sidebar(
         container = st.sidebar
 
     state = getattr(st, "session_state", {})
+    key = key or uuid4().hex
     if key not in state:
         state[key] = list(pages.keys())[0]
 
     opts = list(pages.keys())
     icon_map = icons or {}
+    short_map = {
+        "Validation": "Validate",
+        "Voting": "Voting",
+        "Agents": "Agent",
+        "Resonance Music": "Music",
+        "Chat": "Chat",
+        "Social": "Social",
+        "Profile": "Profile",
+    }
+
+    # Short display labels or emojis (fallbacks to first word if not mapped)
+    display_opts = [short_map.get(o, o.split()[0]) for o in opts]
+
     session_key = f"sidebar_{id(pages)}"
     st.session_state.setdefault(session_key, opts[0])
 
@@ -117,26 +134,42 @@ def render_modern_sidebar(
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
-        if USE_OPTION_MENU and option_menu is not None:
-            choice = option_menu(
-                menu_title=None,
-                options=opts,
-                icons=icons or ["dot"] * len(opts),
-                orientation="vertical",
-                key=key,
-                default_index=opts.index(state.get(key, opts[0])),
-            )
-        else:
-            choice = state.get(key, opts[0])
-            for opt in opts:
-                icon = icon_map.get(opt, "")
-                label = f"{icon} {opt}" if icon else opt
-                if st.button(label, key=f"{key}_{opt}"):
-                    choice = opt
-        state[key] = choice
-        st.markdown("</div>", unsafe_allow_html=True)
-    return state[key]
+        try:
+            if USE_OPTION_MENU and option_menu is not None:
+                choice = option_menu(
+                    menu_title=None,
+                    options=opts,
+                    icons=[icon_map.get(o, "dot") for o in opts],
+                    orientation="vertical",
+                    key=key,
+                    default_index=opts.index(
+                        st.session_state.get(key, opts[0])
+                    ),
+                )
+            elif hasattr(st, "radio"):
+                choice_disp = st.radio(
+                    "Navigate",
+                    [f"{icon_map.get(o, '')} {o}".strip() for o in opts],
+                    key=key,
+                    index=opts.index(
+                        st.session_state.get(key, opts[0])
+                    ),
+                )
+                choice = opts[[f"{icon_map.get(o, '')} {o}".strip() for o in opts].index(choice_disp)]
+            else:
+                choice = st.session_state.get(key, opts[0])
+                for opt in opts:
+                    icon = icon_map.get(opt, "")
+                    label = f"{icon} {opt}" if icon else opt
+                    if container.button(label, key=f"{key}_{opt}"):
+                        choice = opt
+                        break
+        except Exception:
+            choice = opts[0]
 
+        st.session_state[key] = choice
+        st.markdown("</div>", unsafe_allow_html=True)
+        return choice
 
 
 def render_validation_card(entry: dict) -> None:
