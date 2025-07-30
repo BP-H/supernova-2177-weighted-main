@@ -460,24 +460,11 @@ def render_modern_validation_page():
                 )
 
 
-def load_page_with_fallback(choice: str) -> None:
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
     """
     Attempt to import and run a page module by name, with graceful fallback.
-    Tries common candidate paths and invokes either `render()` or `main()` method.
+    Tries each candidate path and checks for `render()` or `main()` method.
     """
-    pages = {
-        "Validation": "validation",
-        "Voting": "voting",
-        "Agents": "agents",
-        "Resonance Music": "resonance_music",
-        "Social": "social",
-    }
-
-    module_paths = [
-        f"transcendental_resonance_frontend.pages.{pages.get(choice, '')}",
-        f"pages.{pages.get(choice, '')}",
-    ]
-
     for module_path in module_paths:
         try:
             page_mod = import_module(module_path)
@@ -488,7 +475,7 @@ def load_page_with_fallback(choice: str) -> None:
                 page_mod.main()
                 return
         except ImportError:
-            continue
+            continue  # Try next path
         except Exception as exc:
             st.error(f"❌ Error loading page `{choice}`: {exc}")
             break
