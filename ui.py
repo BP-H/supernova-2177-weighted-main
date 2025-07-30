@@ -359,14 +359,6 @@ from frontend.ui_layout import render_title_bar, show_preview_badge
 
 def load_page_with_fallback(choice: str) -> None:
     """Attempt to import and render a page by name with graceful fallback."""
-    PAGES = {
-        "Validation": "validation",
-        "Voting": "voting",
-        "Agents": "agents",
-        "Resonance Music": "resonance_music",
-        "Social": "social",
-    }
-
     module = PAGES.get(choice)
     if not module:
         st.error(f"Unknown page: {choice}")
@@ -1250,14 +1242,6 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-
-        PAGES = {
-            "Validation": "validation",
-            "Voting": "voting",
-            "Agents": "agents",
-            "Resonance Music": "resonance_music",
-            "Social": "social",
-        }
 
         choice = ui_layout.render_navbar(
             PAGES,
