@@ -1409,7 +1409,6 @@ def main() -> None:
                                     st.error(f"Audit failed: {exc}")
                     except Exception as exc:
                         st.error(f"Database error: {exc}")
-                else:
                     st.info("Fork operation unavailable")
 
                 with dev_tabs[1]:
