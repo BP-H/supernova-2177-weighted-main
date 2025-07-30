@@ -1212,7 +1212,7 @@ def main() -> None:
             st.session_state.setdefault(k, v)
 
         if st.session_state.get("critical_error"):
-            st.error("Application Error: " + st.session_state["critical_error"])
+            st.error("Application Error: " + st.session_state.get("critical_error", ""))
             if st.button("Reset Application", key="reset_app_critical"):
                 st.session_state.clear()
                 st.rerun()
@@ -1224,7 +1224,7 @@ def main() -> None:
             logger.warning("CSS load failed: %s", exc)
 
         try:
-            apply_theme(st.session_state["theme"])
+            apply_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
 
@@ -1270,6 +1270,9 @@ def main() -> None:
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
 
+        if st.session_state.get("active_page") not in PAGES:
+            st.session_state["active_page"] = "Validation"
+
 
         choice = render_modern_sidebar(
             page_paths,
@@ -1298,7 +1301,7 @@ def main() -> None:
                 info_text = (
                     f"DB: {secrets.get('DATABASE_URL', 'not set')} | "
                     f"ENV: {os.getenv('ENV', 'dev')} | "
-                    f"Session: {st.session_state['session_start_ts']} UTC"
+                    f"Session: {st.session_state.get('session_start_ts', '')} UTC"
                 )
                 st.info(info_text)
 
@@ -1402,10 +1405,10 @@ def main() -> None:
                 # Show agent output
                 if st.session_state.get("agent_output") is not None:
                     st.subheader("Agent Output")
-                    st.json(st.session_state["agent_output"])
+                    st.json(st.session_state.get("agent_output"))
 
                 render_stats_section()
-                st.markdown(f"**Runs:** {st.session_state['run_count']}")
+                st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
 
 
     except Exception as exc:
