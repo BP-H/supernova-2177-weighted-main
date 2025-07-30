@@ -27,15 +27,17 @@ def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "ðŸš
 logger = logging.getLogger("modern_ui")
 
 def inject_modern_styles() -> None:
-    """Inject global CSS for a sleek dark appearance."""
+    """Inject global CSS for a sleek dark appearance.
+
+    Call this before rendering any UI elements so the styles apply correctly.
+    """
     from modern_ui_components import SIDEBAR_STYLES
 
     if st.session_state.get("modern_styles_injected"):
         logger.debug("Modern styles already injected; skipping")
         return
 
-    st.markdown(
-        """
+    css = """
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
@@ -173,9 +175,8 @@ def inject_modern_styles() -> None:
             }
         }
 
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    st.markdown(css, unsafe_allow_html=True)
     st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
     st.session_state["modern_styles_injected"] = True
 
