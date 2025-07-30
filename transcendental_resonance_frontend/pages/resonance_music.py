@@ -9,6 +9,7 @@ import asyncio
 import base64
 import os
 from typing import Any, Optional, Dict
+from pathlib import Path
 
 import requests
 import streamlit as st
@@ -23,6 +24,27 @@ AMBIENT_URL = os.getenv(
     "AMBIENT_MP3_URL",
     "https://raw.githubusercontent.com/anars/blank-audio/master/10-minutes-of-silence.mp3",
 )
+
+DEFAULT_AMBIENT_URL = (
+    "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3"
+)
+
+
+def _load_ambient_audio() -> Optional[bytes]:
+    """Return ambient MP3 bytes from local file or remote URL."""
+    local = Path("ambient_loop.mp3")
+    if local.exists():
+        try:
+            return local.read_bytes()
+        except Exception:
+            pass
+    try:
+        resp = requests.get(DEFAULT_AMBIENT_URL, timeout=5)
+        if resp.ok:
+            return resp.content
+    except Exception:
+        pass
+    return None
 
 
 def _run_async(coro):
@@ -61,7 +83,9 @@ def main(main_container=None, status_container=None) -> None:
             "error",
         )
 
-def render_resonance_music_page(main_container=None):
+    render_resonance_music_page(main_container=main_container, backend_ok=backend_ok)
+
+def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] = None) -> None:
     """
     Render the Resonance Music page with backend MIDI generation and metrics summary.
     Handles dynamic selection of profile/track and safely wraps container logic.
@@ -72,20 +96,32 @@ def render_resonance_music_page(main_container=None):
         st.subheader("Resonance Music")
         centered_container()
 
-        if "play_ambient" not in st.session_state:
-            st.session_state["play_ambient"] = True
-        play_toggle = st.checkbox(
-            "Play ambient music",
-            value=st.session_state["play_ambient"],
-            key="ambient_music_toggle",
+        if backend_ok is None:
+            backend_ok = check_backend(endpoint="/healthz")
+
+        st.session_state.setdefault("ambient_enabled", True)
+        play_music = st.toggle(
+            "🎵 Ambient Loop",
+            value=st.session_state["ambient_enabled"],
+            key="ambient_loop_toggle",
         )
-        st.session_state["play_ambient"] = play_toggle
-        autoplay = "autoplay" if play_toggle else ""
-        muted = "" if play_toggle else "muted"
-        st.markdown(
-            f"<audio id='ambient-audio' src='{AMBIENT_URL}' {autoplay} loop {muted} style='display:none'></audio>",
-            unsafe_allow_html=True,
-        )
+        st.session_state["ambient_enabled"] = play_music
+        if play_music:
+            audio_bytes = _load_ambient_audio()
+            if audio_bytes:
+                encoded = base64.b64encode(audio_bytes).decode()
+                st.markdown(
+                    f"<audio id='ambient-audio' autoplay loop style='display:none'>"
+                    f"<source src='data:audio/mp3;base64,{encoded}' type='audio/mp3'></audio>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.error("Failed to load ambient music. Please try again later.")
+        else:
+            st.markdown(
+                "<script>var a=document.getElementById('ambient-audio');if(a){a.pause();a.remove();}</script>",
+                unsafe_allow_html=True,
+            )
 
         profile_options = ["default", "high_harmony", "high_entropy"]
         track_options = ["Solar Echoes", "Quantum Drift", "Ether Pulse"]
