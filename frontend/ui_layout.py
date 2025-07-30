@@ -66,6 +66,45 @@ def render_profile_card(username: str, avatar_url: str) -> None:
     )
 
 
+def render_top_bar() -> None:
+    """Render a translucent top bar with a logo, search input, and avatar."""
+    st.markdown(
+        """
+        <style>
+        .sn-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        .sn-topbar input {
+            flex: 1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.85);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <div class="sn-topbar">
+            <img src="https://placehold.co/32x32?text=SN" width="32" />
+            <input type="text" placeholder="Search..." />
+            <img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def _render_sidebar_nav(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
@@ -186,4 +225,5 @@ __all__ = [
     "render_title_bar",
     "show_preview_badge",
     "render_profile_card",
+    "render_top_bar",
 ]
