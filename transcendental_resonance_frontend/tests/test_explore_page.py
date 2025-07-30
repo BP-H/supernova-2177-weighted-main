@@ -1,6 +1,14 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+
+import pytest
+pytest.importorskip("nicegui")
+pytestmark = pytest.mark.requires_nicegui
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 import inspect
 
 from pages.explore_page import explore_page

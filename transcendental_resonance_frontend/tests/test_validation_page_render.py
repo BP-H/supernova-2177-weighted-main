@@ -1,3 +1,15 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
+import pytest
+pytest.importorskip("nicegui")
+pytest.importorskip("streamlit")
+pytestmark = [
+    pytest.mark.requires_nicegui,
+    pytest.mark.requires_streamlit,
+]
+
 import sys
 import types
 
