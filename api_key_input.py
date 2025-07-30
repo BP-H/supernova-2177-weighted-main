@@ -27,9 +27,23 @@ def render_api_key_ui(
     *,
     key_prefix: str = "main",
 ) -> dict[str, str | None]:
-    """Render model selection and API key fields.
+    """Render model selection and API key fields with unique widget keys.
 
-    Returns a dictionary with ``model`` and ``api_key`` keys.
+    Parameters
+    ----------
+    default : str
+        The provider name to pre-select in the dropdown.
+    key_prefix : str
+        Prefix used to ensure widget keys are unique when this
+        component is rendered multiple times on a page.
+
+    Returns
+    -------
+    dict[str, str | None]
+        Dictionary containing ``model`` and ``api_key`` values.
+    """
+
+
     """
     if st is None:
         return {"model": "dummy", "api_key": None}
@@ -39,11 +53,13 @@ def render_api_key_ui(
         index = names.index(default)
     else:
         index = 0
+    prefix = f"{key_prefix}_" if key_prefix else ""
+
     choice = st.selectbox(
         "LLM Model",
         names,
         index=index,
-        key=f"{key_prefix}_model",
+        key=f"{prefix}model",
     )
     model, key_name = PROVIDERS[choice]
     key_val = ""
@@ -52,8 +68,9 @@ def render_api_key_ui(
             f"{choice} API Key",
             type="password",
             value=st.session_state.get(key_name, ""),
-            key=f"{key_prefix}_api_key",
+            key=f"{prefix}api_key",
         )
+
         if key_val:
             st.session_state[key_name] = key_val
     st.session_state["selected_model"] = model
