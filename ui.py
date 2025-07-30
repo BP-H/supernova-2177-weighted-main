@@ -70,7 +70,7 @@ PAGES = {
     "Voting": "voting",
     "Agents": "agents",
     "Resonance Music": "resonance_music",
-    "Video Chat": "video",
+    "Video Chat": "video_chat",
     "Social": "social",
 }
 
@@ -429,6 +429,11 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    try:
+        from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
+    except Exception:
+        OFFLINE_MODE = False
+
     fallback_pages = {
         "Validation": render_modern_validation_page,
         "Voting": render_modern_voting_page,
@@ -439,6 +444,8 @@ def _render_fallback(choice: str) -> None:
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
+        if OFFLINE_MODE:
+            st.info("Backend unavailable - offline mode active.")
         show_preview_badge("🚧 Preview Mode")
         fallback_fn()
     else:
@@ -1203,7 +1210,7 @@ def main() -> None:
             "Voting": "voting",
             "Agents": "agents",
             "Resonance Music": "resonance_music",
-            "Video Chat": "video",
+            "Video Chat": "video_chat",
             "Social": "social",
         }
         
