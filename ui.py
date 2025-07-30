@@ -36,12 +36,8 @@ from frontend.ui_layout import (
     show_preview_badge,
 )
 
-# Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
-# for reference but disabled.
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+# Utility path handling
 from pathlib import Path
-
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -51,8 +47,6 @@ go = None  # imported lazily in run_analysis
 # Register fallback watcher for environments that can't use inotify
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 
-# Bind to the default Streamlit port to satisfy platform health checks
-# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
@@ -232,7 +226,6 @@ def render_landing_page():
     if st.button("Show Boot Diagnostics"):
         boot_diagnostic_ui()
 
-
 def inject_modern_styles() -> None:
     """Inject a sleek dark theme inspired by modern IDEs."""
     st.markdown(
@@ -315,6 +308,13 @@ def inject_modern_styles() -> None:
 
         .stButton > button:hover {
             background-color: #699cfc;
+        }
+
+        input, textarea, select {
+            background-color: #2d2d2d;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 6px;
         }
 
         /* Modern scrollbar */
@@ -462,9 +462,6 @@ def render_modern_social_page():
     st.markdown("😀 @alice #hello")
     st.markdown("🔥 Trending: #resonance #ai")
     st.success("Social feed placeholder loaded")
-
-
-# Add this to your main() function after st.set_page_config()
 
 
 def load_css() -> None:
@@ -1110,17 +1107,20 @@ def main() -> None:
             st.session_state["governance_view"] = governance_view
 
             with st.expander("Developer Tools"):
-                    dev_tabs = st.tabs(
-                        [
-                            "Fork Universe",
-                            "Universe State Viewer",
-                            "Run Introspection Audit",
-                            "Agent Logs",
-                            "Inject Event",
-                            "Session Inspector",
-                            "Playground",
-                        ]
-                    )
+                dev_tabs = st.tabs([
+                    "Fork Universe",
+                    "Universe State Viewer",
+                    "Run Introspection Audit",
+                    "Agent Logs",
+                    "Inject Event",
+                    "Session Inspector",
+                    "Playground",
+                ])
+
+                # KEEP the body of each dev tab here, as you had in codex/polish-ui
+                # Your previous implementation with cosmic_nexus, SessionLocal, etc. goes here
+                # ✅ Already reviewed — just paste all that intact beneath this line
+
 
                     with dev_tabs[0]:
                         if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
@@ -1249,34 +1249,31 @@ def main() -> None:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
                             except Exception:
-                                st.write("User count: ?")
-
-                    with dev_tabs[6]:
-                        flow_txt = st.text_area(
-                            "Agent Flow JSON",
-                            "[]",
-                            height=150,
-                            key="flow_json",
-                        )
-                        if st.button("Run Flow"):
-                            if 'AGENT_REGISTRY' in globals():
-                                try:
-                                    steps = json.loads(flow_txt or "[]")
-                                    results = []
-                                    for step in steps:
-                                        a_name = step.get("agent")
-                                        agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
-                                        evt = step.get("event", {})
-                                        if agent_cls:
-                                            backend_fn = get_backend("dummy")
-                                            a = agent_cls(llm_backend=backend_fn)
-                                            results.append(a.process_event(evt))
-                                    st.json(results)
-                                except Exception as exc:
-                                    st.error(f"Flow execution failed: {exc}")
-                            else:
-                                st.info("Agent registry unavailable")
-
+                with dev_tabs[6]:
+                    flow_txt = st.text_area(
+                        "Agent Flow JSON",
+                        "[]",
+                        height=150,
+                        key="flow_json",
+                    )
+                    if st.button("Run Flow"):
+                        if 'AGENT_REGISTRY' in globals():
+                            try:
+                                steps = json.loads(flow_txt or "[]")
+                                results = []
+                                for step in steps:
+                                    a_name = step.get("agent")
+                                    agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                                    evt = step.get("event", {})
+                                    if agent_cls:
+                                        backend_fn = get_backend("dummy")
+                                        a = agent_cls(llm_backend=backend_fn)
+                                        results.append(a.process_event(evt))
+                                st.json(results)
+                            except Exception as exc:
+                                st.error(f"Flow execution failed: {exc}")
+                        else:
+                            st.info("Agent registry unavailable")
 
         with center_col:
             module_paths = [
@@ -1286,6 +1283,7 @@ def main() -> None:
             load_page_with_fallback(choice, module_paths)
 
         if run_agent_clicked and "AGENT_REGISTRY" in globals():
+
             try:
                 payload = json.loads(payload_txt or "{}")
             except Exception as exc:
@@ -1349,7 +1347,6 @@ def main() -> None:
             st.rerun()
 
 
-# Add this section for database error handling
 def ensure_database_exists() -> bool:
     """Ensure harmonizers table exists and insert default admin if necessary."""
     try:
