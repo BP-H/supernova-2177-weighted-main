@@ -83,6 +83,16 @@ logger.propagate = False
 
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+except Exception as exc:  # pragma: no cover - best effort fallback
+    logger.error("Failed to import ensure_pages: %s", exc)
+
+    def ensure_pages(*_args, **_kwargs) -> None:
+        """Fallback no-op when page registry utilities are unavailable."""
+        logger.debug("ensure_pages fallback invoked")
+
+
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
     logger.warning("Primary page_registry import failed: %s", import_err)
     try:

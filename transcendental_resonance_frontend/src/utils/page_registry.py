@@ -10,6 +10,8 @@ import logging
 import streamlit as st
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
+
 
 
 def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
