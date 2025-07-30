@@ -596,7 +596,7 @@ def render_validation_ui(
     if main_container is None:
         main_container = st
 
-try:
+    try:
         # Check for critical errors first
         if st.session_state.get("critical_error"):
             st.error("Application Error: " + st.session_state["critical_error"])
