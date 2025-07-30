@@ -1,22 +1,19 @@
-"""Entry point for the Validation page used by Streamlit multipage."""
+"""Streamlit entry point for the Validation page."""
 
-from transcendental_resonance_frontend.pages.validation import main
+import streamlit as st
+from transcendental_resonance_frontend.pages.validation import main as _frontend_main
 
+# Optional: custom sidebar styles
 try:
     from modern_ui_components import SIDEBAR_STYLES
-except Exception:  # pragma: no cover - optional styling
-    SIDEBAR_STYLES = ""
-
-# optional: custom sidebar styles if you define SIDEBAR_STYLES globally
-try:
-    import streamlit as st
     st.markdown(f"<style>{SIDEBAR_STYLES}</style>", unsafe_allow_html=True)
-except NameError:
-    pass  # no sidebar styling defined yet
+except Exception:
+    pass  # no sidebar styling defined
 
-from transcendental_resonance_frontend.pages.validation import main
+def render() -> None:
+    """Render the validation dashboard."""
+    _frontend_main()
 
-if __name__ == "__main__":  # pragma: no cover - executed by Streamlit
-    main()
-
+if __name__ == "__main__":  # pragma: no cover - manual execution
+    render()
 
