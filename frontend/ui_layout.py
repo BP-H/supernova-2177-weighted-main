@@ -69,9 +69,29 @@ def render_navbar(
         return opts[labels.index(choice)][0]
 
     except Exception as e:
-        st.warning(f"Navigation setup failed: {e}. Falling back to radio.")
-        labels = [label for label, _ in opts]
-        return st.sidebar.radio("", labels, index=index, key=key)
+        st.toast(f"Navigation setup failed: {e}. Falling back to radio.", icon="⚠️")
+
+        try:
+            if USE_OPTION_MENU and option_menu is not None:
+                icon_list = list(icons or ["dot"] * len(opts))
+                return option_menu(
+                    menu_title=None,
+                    options=[label for label, _ in opts],
+                    icons=icon_list,
+                    orientation="horizontal",
+                    key=key,
+                    default_index=index,
+                )
+        except Exception:
+            pass  # silently fallback if option_menu fails unexpectedly
+
+        # Final fallback: plain radio with or without icons
+        labels = [
+            f"{icon} {label}" if icons else label
+            for (label, _), icon in zip(opts, icons or [""] * len(opts))
+        ]
+        choice = st.sidebar.radio("Navigate", labels, key=key, index=index)
+        return [label for label, _ in opts][labels.index(choice)] if icons else choice
 
 
 def render_title_bar(icon: str, label: str) -> None:
