@@ -467,37 +467,55 @@ def render_modern_validation_page():
 
 # In your main() function, replace the page loading section with:
 def load_page_with_fallback(choice):
-    """Load page with beautiful fallback."""
-    # Define pages here since it's not global
+    """Load a page module or fall back to simple renderers."""
     pages = {
         "Validation": "validation",
-        "Voting": "voting", 
+        "Voting": "voting",
         "Agents": "agents",
         "Resonance Music": "resonance_music",
         "Social": "social",
     }
-    
+
     try:
         page_module = pages[choice]
-        module_path = f"pages.{page_module}"
+        module_path = f"transcendental_resonance_frontend.pages.{page_module}"
         page_mod = import_module(module_path)
-        
-        if hasattr(page_mod, 'render'):
+
+        if hasattr(page_mod, "main"):
+            page_mod.main()
+        elif hasattr(page_mod, "render"):
             page_mod.render()
         else:
-            render_modern_validation_page()
+            raise ImportError("No render function found")
     except ImportError:
-        # Beautiful fallback based on page choice
         if choice == "Validation":
             render_modern_validation_page()
         elif choice == "Voting":
-            render_modern_voting_page()
+            try:
+                render_voting_tab()
+            except Exception:
+                render_modern_voting_page()
         elif choice == "Agents":
-            render_modern_agents_page()
+            try:
+                render_agent_insights_tab()
+            except Exception:
+                render_modern_agents_page()
         elif choice == "Resonance Music":
-            render_modern_music_page()
+            try:
+                music_mod = import_module(
+                    "transcendental_resonance_frontend.pages.resonance_music"
+                )
+                if hasattr(music_mod, "main"):
+                    music_mod.main()
+                else:
+                    render_modern_music_page()
+            except Exception:
+                render_modern_music_page()
         elif choice == "Social":
-            render_modern_social_page()
+            try:
+                render_social_tab()
+            except Exception:
+                render_modern_social_page()
     except Exception as exc:
         st.error(f"Error loading page: {exc}")
 def render_modern_voting_page():
