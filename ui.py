@@ -1122,7 +1122,7 @@ def main() -> None:
                 # ✅ Already reviewed — just paste all that intact beneath this line
 
 
-                    with dev_tabs[0]:
+                with dev_tabs[0]:
                         if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
                             try:
                                 user = safe_get_user()
@@ -1141,7 +1141,7 @@ def main() -> None:
                         else:
                             st.info("Fork operation unavailable")
 
-                    with dev_tabs[1]:
+                with dev_tabs[1]:
                         if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                             try:
                                 with SessionLocal() as db:
@@ -1165,7 +1165,7 @@ def main() -> None:
                         else:
                             st.info("Database unavailable")
 
-                    with dev_tabs[2]:
+                with dev_tabs[2]:
                         hid = st.text_input("Hypothesis ID", key="audit_id")
                         if st.button("Run Audit") and hid:
                             if 'dispatch_route' in globals() and 'SessionLocal' in globals():
@@ -1201,7 +1201,7 @@ def main() -> None:
                             else:
                                 st.info("Audit functionality unavailable")
 
-                    with dev_tabs[3]:
+                with dev_tabs[3]:
                         log_path = Path("logchain_main.log")
                         if not log_path.exists():
                             log_path = Path("remix_logchain.log")
@@ -1214,7 +1214,7 @@ def main() -> None:
                         else:
                             st.info("No log file found")
 
-                    with dev_tabs[4]:
+                with dev_tabs[4]:
                         event_json = st.text_area(
                             "Event JSON", value="{}", height=150, key="inject_event"
                         )
@@ -1230,7 +1230,7 @@ def main() -> None:
                             else:
                                 st.info("Agent unavailable")
 
-                    with dev_tabs[5]:
+                with dev_tabs[5]:
                         if 'AGENT_REGISTRY' in globals():
                             st.write("Available agents:", list(AGENT_REGISTRY.keys()))
                         if 'cosmic_nexus' in globals():
@@ -1249,6 +1249,8 @@ def main() -> None:
                                     user_count = len(agent_obj.storage.get_all_users())
                                     st.write(f"User count: {user_count}")
                             except Exception:
+                                st.error("Storage info unavailable")
+
                 with dev_tabs[6]:
                     flow_txt = st.text_area(
                         "Agent Flow JSON",

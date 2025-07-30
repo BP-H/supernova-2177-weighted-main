@@ -4,18 +4,16 @@
 """Validation analysis page."""
 
 import streamlit as st
+from contextlib import nullcontext
 from ui import render_validation_ui
 
 
 def main(main_container=None) -> None:
     """Render the validation UI inside a container."""
-    container = main_container if main_container is not None else st.container()
-
-    try:
-        with container:
-            render_validation_ui(main_container=container)
-    except AttributeError:
-        render_validation_ui(main_container=container)
+    main_container = main_container or st
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
+        render_validation_ui(main_container=main_container)
 
 
 def render() -> None:
