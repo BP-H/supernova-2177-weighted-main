@@ -24,6 +24,8 @@ def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "ðŸš
         st.markdown(f"<div style='font-size:{height // 4}px'>{fallback}</div>", unsafe_allow_html=True)
 
 
+logger = logging.getLogger("modern_ui")
+
 def inject_modern_styles() -> None:
     """Inject global CSS for a sleek dark appearance."""
     from modern_ui_components import SIDEBAR_STYLES
@@ -31,6 +33,19 @@ def inject_modern_styles() -> None:
     if st.session_state.get("modern_styles_injected"):
         logger.debug("Modern styles already injected; skipping")
         return
+
+    st.markdown(
+        """
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+        ... (rest of your CSS)
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
+    st.session_state["modern_styles_injected"] = True
 
     st.markdown(
         """
