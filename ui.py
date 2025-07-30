@@ -57,11 +57,8 @@ def render_sidebar_nav(*args, **kwargs):
     return _base_render_sidebar_nav(*args, **kwargs)
 
 
-
 # Backwards compatibility alias
 render_modern_sidebar = render_sidebar_nav
-
-
 
 
 # Utility path handling
@@ -354,9 +351,9 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
         attempted_paths.add(module_path)
         page_file = PAGES_DIR / (module_path.rsplit(".", 1)[-1] + ".py")
         if page_file.exists():
-            rel_path = os.path.relpath(page_file, start=Path.cwd())
+            rel_path = os.path.relpath(page_file, start=Path.cwd()).replace(os.sep, "/")
             try:
-                st.switch_page(rel_path)
+                st.switch_page(rel_path.lstrip("/"))
                 return
             except StreamlitAPIException as exc:
                 st.toast(f"Switch failed for {choice}: {exc}", icon="⚠️")
@@ -509,7 +506,6 @@ def render_sidebar() -> str:
         choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
 
     return choice
-
 
 
 def load_css() -> None:
@@ -1215,6 +1211,8 @@ def main() -> None:
         }
         for k, v in defaults.items():
             st.session_state.setdefault(k, v)
+        st.session_state.setdefault("users", [])
+        st.session_state.setdefault("logs", [])
 
         if st.session_state.get("critical_error"):
             st.error("Application Error: " + st.session_state.get("critical_error", ""))
@@ -1227,6 +1225,10 @@ def main() -> None:
             inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
+        try:
+            st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
+        except Exception as exc:
+            logger.warning("Sidebar CSS failed: %s", exc)
 
         try:
             apply_theme(st.session_state.get("theme", "light"))
@@ -1261,12 +1263,21 @@ def main() -> None:
             / "transcendental_resonance_frontend"
             / "pages"
         )
-        # Map labels to file system paths relative to the working directory so
-        # ``st.sidebar.page_link`` can locate the correct page modules.
-        page_paths = {
-            label: os.path.relpath(PAGES_DIR / f"{mod}.py", start=Path.cwd())
-            for label, mod in PAGES.items()
-        }
+
+        page_paths: dict[str, str] = {}
+        missing_pages: list[str] = []
+        for label, mod in PAGES.items():
+            file_path = PAGES_DIR / f"{mod}.py"
+            if file_path.exists():
+                web_path = "/" + os.path.relpath(file_path, start=Path.cwd()).replace(
+                    os.sep, "/"
+                )
+                page_paths[label] = web_path
+            else:
+                missing_pages.append(label)
+
+        if missing_pages:
+            st.warning("Missing pages: " + ", ".join(missing_pages))
 
         # Determine page from query params and sidebar selection
         try:
@@ -1291,18 +1302,14 @@ def main() -> None:
             session_key="active_page",
         )
 
-
         # Default to Validation page if nothing selected
         if not choice:
             choice = "Validation"
-
 
         try:
             st.query_params["page"] = choice
         except AttributeError:
             st.experimental_set_query_params(page=choice)
-
-
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
@@ -1431,8 +1438,6 @@ def main() -> None:
             render_stats_section()
             st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
 
-
-
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
         st.error("Critical Application Error")
@@ -1521,7 +1526,11 @@ def safe_get_user():
             return db.query(Harmonizer).first()
     except Exception as exc:
         logger.warning("Failed to fetch user: %s", exc)
-        return None
+
+    users = st.session_state.get("users")
+    if users:
+        return users[0]
+    return None
 
 
 if __name__ == "__main__":
