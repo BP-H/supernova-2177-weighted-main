@@ -60,6 +60,7 @@ from frontend.ui_layout import (
     render_profile_card,
     render_sidebar_nav as _base_render_sidebar_nav,
 )
+from frontend.topbar import render_topbar
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -1352,7 +1353,24 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+        render_topbar()  # added in codex branch
+
         # Setup: Pages and Icons (reuse global mapping)
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Chat": "chat",
+            "Social": "social",
+            "Profile": "profile",
+        }
+        PAGES_DIR = (
+            Path(__file__).resolve().parent
+            / "transcendental_resonance_frontend"
+            / "pages"
+        )
+
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
