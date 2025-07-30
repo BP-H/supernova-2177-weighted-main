@@ -10,13 +10,19 @@ import modern_ui_components as mui
 
 
 def test_render_modern_sidebar_default_container(monkeypatch):
+    calls = []
+    def dummy_button(label, key=None, help=None):
+        calls.append(label)
+        return False
+
     dummy_st = types.SimpleNamespace(
         markdown=lambda *a, **k: None,
-        radio=lambda label, opts, **k: opts[0],
-        sidebar=types.SimpleNamespace(markdown=lambda *a, **k: None, radio=lambda l,o,**k:o[0]),
+        button=dummy_button,
+        sidebar=types.SimpleNamespace(markdown=lambda *a, **k: None, button=dummy_button),
+        session_state={},
     )
     monkeypatch.setattr(mui, "st", dummy_st)
-    monkeypatch.setattr(mui, "USE_OPTION_MENU", False)
     pages = {"A": "a", "B": "b"}
     assert mui.render_modern_sidebar(pages) == "A"
+    assert calls, "buttons rendered"
 
