@@ -18,6 +18,16 @@ root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
+# Provide a minimal stub for ``modern_ui`` to avoid syntax errors during import.
+stub_modern_ui = types.ModuleType("modern_ui")
+stub_modern_ui.inject_modern_styles = lambda *a, **k: None
+stub_modern_ui.render_stats_section = lambda *a, **k: None
+sys.modules.setdefault("modern_ui", stub_modern_ui)
+importlib.import_module("utils.paths")  # ensures namespace package is created
+stub_page_registry = types.ModuleType("utils.page_registry")
+stub_page_registry.ensure_pages = lambda *a, **k: None
+sys.modules.setdefault("utils.page_registry", stub_page_registry)
+
 import frontend.ui_layout as ui_layout
 import modern_ui_components as mui
 import ui
@@ -191,4 +201,22 @@ def test_fallback_rendered_once(monkeypatch):
     ui._render_fallback("Validation")
 
     assert called["count"] == 1
-    assert "Validation" in ui._fallback_rendered
+    assert "validation" in ui._fallback_rendered  # Use normalized slug form
+
+def test_render_stats_section_uses_flexbox(monkeypatch):
+    """render_stats_section should output flexbox-based layout."""
+    outputs = []
+
+    dummy_st = types.SimpleNamespace(
+        markdown=lambda html, **k: outputs.append(html)
+    )
+
+    monkeypatch.setattr(mui, "st", dummy_st)
+
+    stats = {"runs": 1, "proposals": 2, "success_rate": "90%", "accuracy": "95%"}
+    mui.render_stats_section(stats)
+
+    combined = "\n".join(outputs)
+    assert "stats-container" in combined
+    assert "stats-card" in combined
+

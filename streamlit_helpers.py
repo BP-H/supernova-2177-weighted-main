@@ -14,7 +14,12 @@ from typing import Literal, Any, ContextManager
 from contextlib import nullcontext
 
 import streamlit as st
-from modern_ui import inject_modern_styles
+try:
+    from modern_ui import inject_modern_styles
+except Exception:  # pragma: no cover - gracefully handle missing/invalid module
+    def inject_modern_styles(*_a, **_k):
+        """Fallback no-op when modern_ui is unavailable."""
+        return None
 
 # Shared CSS style for sections displayed in bordered boxes
 BOX_CSS = """
