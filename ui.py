@@ -1057,17 +1057,22 @@ def render_developer_tools() -> None:
                     st.toast("Audit functionality unavailable", icon="⚠️")
 
             # Agent logs
-            log_path = Path("logchain_main.log")
-            if not log_path.exists():
-                log_path = Path("remix_logchain.log")
-            if log_path.exists():
+            log_candidates = [
+                Path("logchain_main.log"),
+                Path("remix_logchain.log"),
+                Path("transcendental_resonance.log"),
+            ]
+            log_path = next((p for p in log_candidates if p.exists()), None)
+            searched_msg = ", ".join(p.name for p in log_candidates)
+            if log_path is not None:
                 try:
-                    lines = log_path.read_text().splitlines()[-100:]
+                    lines = log_path.read_text(errors="ignore").splitlines()[-100:]
                     st.text("\n".join(lines))
-                except Exception as exc:
-                    st.error(f"Log read failed: {exc}")
+                except Exception:
+                    st.toast(f"Unable to read log file {log_path.name}", icon="⚠️")
+                st.caption(f"Searched: {searched_msg}")
             else:
-                st.toast("No log file found")
+                st.toast(f"No log file found. Searched: {searched_msg}", icon="⚠️")
 
             # Inject event
             with st.expander("Inject Event", expanded=False):
