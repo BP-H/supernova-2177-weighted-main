@@ -33,14 +33,33 @@ from frontend import ui_layout
 from modern_ui_components import (
     render_validation_card,
     render_stats_section,
-    render_modern_sidebar,
 )
+
+# Prefer modern sidebar render if available
+try:
+    from modern_ui_components import render_modern_sidebar
+except ImportError:
+    render_modern_sidebar = None
+
 from frontend.ui_layout import (
     main_container,
     render_title_bar,
     show_preview_badge,
     render_profile_card,
+    render_sidebar_nav as _base_render_sidebar_nav,
 )
+
+
+def render_sidebar_nav(*args, **kwargs):
+    """Proxy to allow monkeypatching via `render_modern_sidebar` if available."""
+    if render_modern_sidebar and render_modern_sidebar is not render_sidebar_nav:
+        return render_modern_sidebar(*args, **kwargs)
+    return _base_render_sidebar_nav(*args, **kwargs)
+
+
+# Backwards compatibility alias
+render_modern_sidebar = render_sidebar_nav
+
 
 
 # Utility path handling
@@ -459,16 +478,33 @@ def render_sidebar() -> str:
     user = safe_get_user()
     avatar = getattr(user, "profile_pic", "https://via.placeholder.com/64")
     username = getattr(user, "username", "Guest")
+
     render_profile_card(username, avatar)
+
+    # Actions in a cleaner expander format
     with st.sidebar.expander("Create Proposal"):
         st.button("Create Proposal")
     with st.sidebar.expander("Run Validation"):
         st.button("Run Validation")
-    with st.sidebar.expander("Theme"):
-        theme_selector("Theme")
+
+    # Theme toggle
+    dark = st.sidebar.toggle("Dark Mode", value=st.session_state.get("theme") == "dark")
+    st.session_state["theme"] = "dark" if dark else "light"
+
+    # Environment tag
+    env = os.getenv("ENV", "development").lower()
+    env_tag = "🚀 Production" if env.startswith("prod") else "🧪 Development"
+    st.sidebar.markdown(env_tag)
+
+    # Navigation
     icon_map = dict(zip(PAGES.keys(), NAV_ICONS))
-    choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+    if "render_modern_sidebar" in globals():
+        choice = render_modern_sidebar(PAGES, container=st.sidebar, icons=icon_map)
+    else:
+        choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
+
     return choice
+
 
 
 def load_css() -> None:
@@ -901,9 +937,10 @@ def render_validation_ui(
 
         # ...
 
-        choice = render_modern_sidebar(
+        choice = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         # Use 3-column layout for cleaner modern UX
@@ -1195,9 +1232,10 @@ def main() -> None:
         }
 
         # Modern Sidebar Nav
-        choice = render_modern_sidebar(
+        choice = render_sidebar_nav(
             page_paths,
             icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            session_key="active_page",
         )
 
         # Page layout: left for tools, center for content
