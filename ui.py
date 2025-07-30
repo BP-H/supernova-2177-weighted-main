@@ -161,202 +161,138 @@ def render_agent_insights_tab():
 
 # Add this modern UI code to your ui.py - replace the page loading section
 
-def inject_modern_styles():
-    """Inject sleek modern styling."""
-    st.markdown("""
+def inject_dark_theme() -> None:
+    """Inject a sleek dark theme inspired by modern IDEs."""
+    st.markdown(
+        """
         <style>
-        /* Modern glassmorphism design */
         .stApp {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #1e1e1e;
+            color: #ccc;
+            font-family: 'Inter', sans-serif;
         }
-        
-        /* Main container with glassmorphism */
+
         .main .block-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            margin-top: 1rem;
+            background-color: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 2rem 3rem;
         }
-        
-        /* Sidebar modern styling */
-        .css-1d391kg {
-            background: rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        [data-testid="stSidebar"] {
+            background-color: #2d2d2d;
+            color: #ccc;
         }
-        
-        /* Navigation tabs */
-        .stSelectbox > div > div {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+
+        [data-testid="stHorizontalMenu"] ul {
+            display: flex;
+            gap: 0.5rem;
+            background: #252525;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
         }
-        
-        /* Modern buttons */
-        .stButton > button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+        [data-testid="stHorizontalMenu"] a {
+            color: #ccc;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            text-decoration: none;
         }
-        
-        .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+
+        [data-testid="stHorizontalMenu"] a:hover {
+            background: #333;
+            color: #fff;
         }
-        
-        /* Modern metrics */
-        [data-testid="metric-container"] {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+
+        [data-testid="stHorizontalMenu"] .active a {
+            background: #4f8bf9;
+            color: #fff;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-card {
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
             padding: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s;
         }
-        
-        /* Text styling */
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+        .status-card:hover {
+            transform: translateY(-2px);
         }
-        
-        /* Error messages modern styling */
-        .stAlert {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+
+        .stButton > button {
+            background-color: #4f8bf9;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
         }
-        
-        /* File uploader */
-        .stFileUploader {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            padding: 2rem;
-        }
-        
-        /* Input fields */
-        .stTextInput > div > div > input,
-        .stTextArea > div > div > textarea {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-        }
-        
-        /* Slider styling */
-        .stSlider > div > div > div {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Modern scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 10px;
-        }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .main .block-container > div {
-            animation: fadeIn 0.6s ease-out;
+
+        .stButton > button:hover {
+            background-color: #699cfc;
         }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
 def render_modern_validation_page():
-    """Render a beautiful modern validation page."""
-    st.markdown("""
-        <div style='text-align: center; padding: 2rem 0;'>
-            <h1 style='font-size: 3rem; background: linear-gradient(45deg, #667eea, #764ba2); 
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                       margin-bottom: 0.5rem;'>
-                🚀 superNova_2177
-            </h1>
-            <p style='font-size: 1.2rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 2rem;'>
-                Advanced Validation Analysis Platform
-            </p>
+    """Render the main validation interface."""
+    st.markdown(
+        """
+        <div style='text-align:center; padding:2rem 0;'>
+            <h1 style='font-size:3rem; color:#fff; margin-bottom:0.5rem;'>🚀 superNova_2177</h1>
+            <p style='color:#bbb; font-size:1.1rem;'>Advanced Validation Analysis Platform</p>
         </div>
-    """, unsafe_allow_html=True)
-    
-    # Modern status cards
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(76, 175, 80, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3);'>
-                <h2 style='color: #4CAF50; margin: 0; font-size: 2rem;'>✅</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>System Online</h3>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="status-grid">
+            <div class="status-card">
+                <div style='font-size:2rem;'>✅</div>
+                <div>System Online</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(33, 150, 243, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(33, 150, 243, 0.3);'>
-                <h2 style='color: #2196F3; margin: 0; font-size: 2rem;'>🔍</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Ready to Analyze</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>🔍</div>
+                <div>Ready to Analyze</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(255, 193, 7, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(255, 193, 7, 0.3);'>
-                <h2 style='color: #FFC107; margin: 0; font-size: 2rem;'>⚡</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>High Performance</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>⚡</div>
+                <div>High Performance</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(156, 39, 176, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(156, 39, 176, 0.3);'>
-                <h2 style='color: #9C27B0; margin: 0; font-size: 2rem;'>🎯</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Precision Mode</h3>
+            <div class="status-card">
+                <div style='font-size:2rem;'>🎯</div>
+                <div>Precision Mode</div>
             </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Main content area
-    st.markdown("""
-        <div style='background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 20px; 
-                    border: 1px solid rgba(255, 255, 255, 0.1); margin: 2rem 0;'>
-            <h2 style='color: white; text-align: center; margin-bottom: 1.5rem;'>
-                🔬 Validation Analysis Center
-            </h2>
-            <p style='color: rgba(255, 255, 255, 0.8); text-align: center; font-size: 1.1rem;'>
-                Upload your validation data or use demo mode to experience the power of superNova_2177
-            </p>
+    st.markdown(
+        """
+        <div style='background:#1e1e1e; border:1px solid #333; padding:2rem; border-radius:8px; margin:2rem 0;'>
+            <h2 style='color:#fff; text-align:center; margin-bottom:1.5rem;'>🔬 Validation Analysis Center</h2>
+            <p style='color:#bbb; text-align:center;'>Upload your validation data or use demo mode to experience the power of superNova_2177</p>
         </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Interactive demo section
     col1, col2 = st.columns([2, 1])
@@ -477,8 +413,7 @@ def render_modern_social_page():
     st.markdown("# 👥 Social Network")
     st.info("🚧 Social features in development!")
 
-# Add this to your main() function after st.set_page_config():
-inject_modern_styles()
+# Add this to your main() function after st.set_page_config()
 
 def load_css() -> None:
     """Placeholder for loading custom CSS."""
@@ -929,8 +864,8 @@ def main() -> None:
             initial_sidebar_state="expanded"
         )
         
-        # Apply modern styling
-        inject_modern_styles()
+        # Apply dark theme styling
+        inject_dark_theme()
         
         # Initialize session state
         if "session_start_ts" not in st.session_state:
@@ -1005,14 +940,11 @@ def main() -> None:
             key="main_nav_menu"
         )
 
-        # Main content with sidebar
-        main_col, sidebar_col = st.columns([3, 1])
+        # Load selected page
+        load_page_with_fallback(choice)
 
-        with main_col:
-            # Load page content
-            load_page_with_fallback(choice)
-
-        with sidebar_col:
+        # Sidebar controls
+        with st.sidebar:
             with st.expander("Environment Details"):
                 render_status_icon()
                 secrets = get_st_secrets()
