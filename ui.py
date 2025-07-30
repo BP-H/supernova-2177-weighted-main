@@ -1299,7 +1299,7 @@ def main() -> None:
                 render_simulation_stubs()
 
             st.divider()
-            governance_view = st.checkbox(
+            governance_view = st.toggle(
                 "Governance View", value=st.session_state.get("governance_view", False)
             )
             st.session_state["governance_view"] = governance_view

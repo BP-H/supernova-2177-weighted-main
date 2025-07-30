@@ -33,7 +33,6 @@ def main_container() -> st.delta_generator.DeltaGenerator:
     """Return a container for the main content area."""
     return st.container()
 
-    return st.container()
 
 
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
@@ -53,6 +52,19 @@ def render_navbar(
     if default is not None and default in opts:
         index = opts.index(default)
 
+    sidebar = st.sidebar
+    if isinstance(options, dict) and hasattr(sidebar, "page_link"):
+        sidebar.markdown(
+            "<style>.nav-links a{margin-right:0.5rem;}</style>",
+            unsafe_allow_html=True,
+        )
+        with sidebar.container():
+            sidebar.markdown("<div class='nav-links'>", unsafe_allow_html=True)
+            for label, target in options.items():
+                sidebar.page_link(target, label=label)
+            sidebar.markdown("</div>", unsafe_allow_html=True)
+        sidebar.divider()
+
     if USE_OPTION_MENU:
         icon_list = list(icons or ["dot"] * len(opts))
         return option_menu(
@@ -65,9 +77,9 @@ def render_navbar(
     else:
         if icons and len(list(icons)) == len(opts):
             labels = [f"{icon} {label}" for icon, label in zip(icons, opts)]
-            choice = st.sidebar.radio("Navigate", labels, key=key)
+            choice = sidebar.radio("Navigate", labels, key=key, index=index)
             return opts[labels.index(choice)]
-        return st.sidebar.radio("Navigate", opts, key=key)
+        return sidebar.radio("Navigate", opts, key=key, index=index)
 
 
 def render_title_bar(icon: str, label: str) -> None:
