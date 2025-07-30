@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
+import os
 import streamlit as st
 
 try:
@@ -39,6 +40,24 @@ def main_container() -> st.delta_generator.DeltaGenerator:
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
     """Return the sidebar container."""
     return st.sidebar
+
+
+def render_profile_card(username: str, avatar_url: str) -> None:
+    """Render a compact profile card with an environment badge."""
+    env = os.getenv("APP_ENV", "development").lower()
+    badge = "\ud83d\ude80 Production" if env.startswith("prod") else "\ud83e\uddea Development"
+    st.markdown(
+        f"""
+        <div class='glass-card' style='display:flex;align-items:center;gap:0.5rem;'>
+            <img src="{avatar_url}" alt="avatar" width="48" style="border-radius:50%;" />
+            <div>
+                <strong>{username}</strong><br/>
+                <span style='font-size:0.85rem'>{badge}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_navbar(
@@ -128,4 +147,5 @@ __all__ = [
     "render_navbar",
     "render_title_bar",
     "show_preview_badge",
+    "render_profile_card",
 ]
