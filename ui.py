@@ -78,25 +78,21 @@ render_modern_sidebar = render_sidebar_nav
 from pathlib import Path
 import logging
 
+logger = logging.getLogger(__name__)
+logger.propagate = False
+
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
-    logging.getLogger(__name__).warning(
-        "Primary page_registry import failed: %s", import_err
-    )
+    logger.warning("Primary page_registry import failed: %s", import_err)
     try:
         from utils.page_registry import ensure_pages  # type: ignore
     except Exception as fallback_err:
-        logging.getLogger(__name__).warning(
-            "Secondary page_registry import also failed: %s", fallback_err
-        )
+        logger.warning("Secondary page_registry import also failed: %s", fallback_err)
         def ensure_pages(*_a, **_k):
-            logging.getLogger(__name__).warning("ensure_pages noop fallback used")
+            logger.warning("ensure_pages noop fallback used")
             return None
 
-
-logger = logging.getLogger(__name__)
-logger.propagate = False
 
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
