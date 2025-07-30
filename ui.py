@@ -93,6 +93,14 @@ PAGES = {
     "Profile": "profile",
 }
 
+# Case-insensitive lookup for labels
+_PAGE_LABELS = {label.lower(): label for label in PAGES}
+
+
+def normalize_choice(choice: str) -> str:
+    """Return the canonical label for ``choice`` ignoring case."""
+    return _PAGE_LABELS.get(choice.lower(), choice)
+
 # Icons used in the navigation bar. Must be single-character emojis or
 # valid Bootstrap icon codes prefixed with ``"bi bi-"``.
 NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
@@ -318,6 +326,7 @@ def inject_dark_theme() -> None:
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
+    choice = normalize_choice(choice)
     if module_paths is None:
         module = PAGES.get(choice)
         if not module:
@@ -389,6 +398,12 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    choice = normalize_choice(choice)
+
+    page_file = Path.cwd() / "pages" / f"{PAGES.get(choice, choice)}.py"
+    if page_file.exists():
+        logger.debug("Fallback skipped for existing page %s", page_file)
+        return
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
@@ -505,7 +520,7 @@ def render_sidebar() -> str:
     else:
         choice = render_sidebar_nav(PAGES, icons=NAV_ICONS, session_key="active_page")
 
-    return choice
+    return normalize_choice(choice)
 
 
 def load_css() -> None:
@@ -1289,6 +1304,8 @@ def main() -> None:
 
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
+        if forced_page:
+            forced_page = normalize_choice(forced_page)
 
         # Validate session state and query params
         if st.session_state.get("sidebar_nav") not in page_paths:
@@ -1297,15 +1314,18 @@ def main() -> None:
         if forced_page not in page_paths:
             forced_page = None
 
-        choice = forced_page or render_modern_sidebar(
-            page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
-            session_key="active_page",
+        choice = forced_page or normalize_choice(
+            render_modern_sidebar(
+                page_paths,
+                icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+                session_key="active_page",
+            )
         )
 
         # Default to Validation page if nothing selected
         if not choice:
             choice = "Validation"
+        choice = normalize_choice(choice)
 
         try:
             st.query_params["page"] = choice
@@ -1371,7 +1391,8 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Resolve page module
-            page_key = PAGES.get(choice or "", choice or "")
+            label = normalize_choice(choice)
+            page_key = PAGES.get(label, label.lower())
             if page_key:
                 module_paths = [
                     f"transcendental_resonance_frontend.pages.{page_key}",
