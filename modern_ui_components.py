@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 from typing import Optional, Dict
+from uuid import uuid4
 from streamlit_helpers import safe_container
 
 from modern_ui import inject_modern_styles
@@ -101,12 +102,14 @@ def render_modern_sidebar(
     icons: Optional[Dict[str, str]] = None,
     *,
     key: str = "nav_selection",
+
 ) -> str:
     """Render a vertical navigation menu with optional icons."""
     if container is None:
         container = st.sidebar
 
     state = getattr(st, "session_state", {})
+    key = key or uuid4().hex
     if key not in state:
         state[key] = list(pages.keys())[0]
 
@@ -122,6 +125,7 @@ def render_modern_sidebar(
         "Profile": "Profile",
     }
 
+    # Short display labels or emojis (fallbacks to first word if not mapped)
     display_opts = [short_map.get(o, o.split()[0]) for o in opts]
 
     session_key = f"sidebar_{id(pages)}"
@@ -132,27 +136,44 @@ def render_modern_sidebar(
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
 
-        if USE_OPTION_MENU and option_menu is not None:
-            choice_disp = option_menu(
-                menu_title=None,
-                options=display_opts,
-                icons=[icon_map.get(o, "dot") for o in opts],
-                orientation="vertical",
-                key=key,
-                default_index=display_opts.index(short_map.get(state.get(key, opts[0]), opts[0])),
-            )
-        else:
-            choice_disp = st.radio(
-                "Navigate",
-                display_opts,
-                key=key,
-                index=display_opts.index(short_map.get(state.get(key, opts[0]), opts[0])),
-            )
+        try:
+            if USE_OPTION_MENU and option_menu is not None:
+                choice_disp = option_menu(
+                    menu_title=None,
+                    options=display_opts,
+                    icons=[icon_map.get(o, "dot") for o in opts],
+                    orientation="vertical",
+                    key=key,
+                    default_index=display_opts.index(
+                        short_map.get(st.session_state.get(key, opts[0]), opts[0])
+                    ),
+                )
+                choice = opts[display_opts.index(choice_disp)]
+            elif hasattr(st, "radio"):
+                choice_disp = st.radio(
+                    "Navigate",
+                    display_opts,
+                    key=key,
+                    index=display_opts.index(
+                        short_map.get(st.session_state.get(key, opts[0]), opts[0])
+                    ),
+                )
+                choice = opts[display_opts.index(choice_disp)]
+            else:
+                # Fallback mode for limited test environments
+                choice = st.session_state.get(key, opts[0])
+                for opt in opts:
+                    if container.button(opt, key=f"{key}_{opt}"):
+                        choice = opt
+                        break
+        except Exception:
+            # Final fallback for any rendering edge cases
+            choice = opts[0]
 
-    choice = opts[display_opts.index(choice_disp)]
-    state[key] = choice
+    st.session_state[key] = choice
     st.markdown("</div>", unsafe_allow_html=True)
-    return state[key]
+    return choice
+
 
 
 

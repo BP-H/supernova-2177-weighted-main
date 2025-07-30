@@ -1,8 +1,15 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
+import pytest
+pytest.importorskip("nicegui")
+pytestmark = pytest.mark.requires_nicegui
+
 import inspect
 import importlib
 import types
 import utils.api as api_mod
-import pytest
 
 api_call = api_mod.api_call
 

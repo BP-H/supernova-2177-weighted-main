@@ -8,7 +8,7 @@ without introducing heavy dependencies.
 Features:
 - `main_container()` – returns a generic container for page content
 - `sidebar_container()` – accesses the sidebar container
-- `render_navbar(pages)` – horizontal page links UI
+- `render_sidebar_nav(pages)` – vertical sidebar navigation
 - `render_title_bar(icon, label)` – renders a header with an icon
 
 UI Ideas:
@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
+import os
 import streamlit as st
 
 try:
@@ -41,57 +42,81 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
     return st.sidebar
 
 
-def render_navbar(
+def render_profile_card(username: str, avatar_url: str) -> None:
+    """Render a compact profile card with an environment badge."""
+    env = os.getenv("APP_ENV", "development").lower()
+    badge = "🚀 Production" if env.startswith("prod") else "🧪 Development"
+    st.markdown(
+        f"""
+        <div class='glass-card' style='display:flex;align-items:center;gap:0.5rem;'>
+            <img src="{avatar_url}" alt="avatar" width="48" style="border-radius:50%;" />
+            <div>
+                <strong>{username}</strong><br/>
+                <span style='font-size:0.85rem'>{badge}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_sidebar_nav(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
     key: Optional[str] = None,
     default: Optional[str] = None,
+    session_key: str = "active_page",
 ) -> str:
-    """Render a vertical sidebar navigation and return the selected label."""
+    """Render a vertical sidebar navigation and return the selected label.
 
-    opts = (
-        list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
-    )
+    The selected page label is also stored in ``st.session_state`` using
+    ``session_key`` so other components can react to the active page.
+    """
+    opts = list(page_links.items()) if isinstance(page_links, dict) else [
+        (str(o), str(o)) for o in page_links
+    ]
     icon_list = list(icons or [None] * len(opts))
     key = key or uuid4().hex
 
-    index = 0
-    if default is not None and default in [label for label, _ in opts]:
-        index = [label for label, _ in opts].index(default)
+    active = st.session_state.get(session_key, default or opts[0][0])
+    if active not in [label for label, _ in opts]:
+        active = opts[0][0]
+    index = [label for label, _ in opts].index(active)
 
-    try:
-        sidebar = st.sidebar
-        labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
-        with sidebar.container():
-            sidebar.markdown('<div class="sidebar-nav">', unsafe_allow_html=True)
-            choice = sidebar.radio("", labels, index=index, key=key)
-            sidebar.markdown('</div>', unsafe_allow_html=True)
-        return opts[labels.index(choice)][0]
+    choice = active
+    container = st.sidebar.container()
+    with container:
+        if hasattr(st.sidebar, "page_link"):
+            for (label, path), icon in zip(opts, icon_list):
+                st.sidebar.page_link(path, label=label, icon=icon, help=label)
+        elif USE_OPTION_MENU and option_menu is not None:
+            choice = option_menu(
+                menu_title=None,
+                options=[label for label, _ in opts],
+                icons=[icon or "dot" for icon in icon_list],
+                orientation="vertical",
+                key=key,
+                default_index=index,
+            )
+        else:
+            labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
+            choice = st.radio("", labels, index=index, key=key)
+            choice = opts[labels.index(choice)][0]
 
-    except Exception as e:
-        st.toast(f"Navigation setup failed: {e}. Falling back to radio.", icon="⚠️")
+    st.session_state[session_key] = choice
+    return choice
 
-        try:
-            if USE_OPTION_MENU and option_menu is not None:
-                icon_list = list(icons or ["dot"] * len(opts))
-                return option_menu(
-                    menu_title=None,
-                    options=[label for label, _ in opts],
-                    icons=icon_list,
-                    orientation="horizontal",
-                    key=key,
-                    default_index=index,
-                )
-        except Exception:
-            pass  # silently fallback if option_menu fails unexpectedly
 
-        # Final fallback: plain radio with or without icons
-        labels = [
-            f"{icon} {label}" if icons else label
-            for (label, _), icon in zip(opts, icons or [""] * len(opts))
-        ]
-        choice = st.sidebar.radio("Navigate", labels, key=key, index=index)
-        return [label for label, _ in opts][labels.index(choice)] if icons else choice
+
+def render_sidebar_nav(*args, **kwargs):
+    """Wrapper to allow legacy patching via ``render_modern_sidebar``."""
+    if globals().get("render_modern_sidebar") is not render_sidebar_nav:
+        return globals()["render_modern_sidebar"](*args, **kwargs)
+    return _render_sidebar_nav(*args, **kwargs)
+
+
+# Legacy name used in older modules
+render_modern_sidebar = render_sidebar_nav
 
 
 def render_title_bar(icon: str, label: str) -> None:
@@ -125,7 +150,8 @@ def show_preview_badge(text: str = "🚧 Preview Mode") -> None:
 __all__ = [
     "main_container",
     "sidebar_container",
-    "render_navbar",
+    "render_sidebar_nav",
     "render_title_bar",
     "show_preview_badge",
+    "render_profile_card",
 ]

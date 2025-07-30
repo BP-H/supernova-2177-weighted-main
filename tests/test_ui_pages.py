@@ -1,11 +1,17 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import importlib
 import contextlib
 import types
 from pathlib import Path
 import sys
 
-import streamlit as st
 import pytest
+pytest.importorskip("streamlit")
+pytestmark = pytest.mark.requires_streamlit
+import streamlit as st
 
 # Ensure repository root is importable
 root = Path(__file__).resolve().parents[1]
