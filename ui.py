@@ -427,9 +427,23 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
             logging.error("Error executing %s: %s", module_path, exc, exc_info=True)
             break
 
-    st.warning(f"Page not found: {choice}")
-    if "_render_fallback" in globals():
-        _render_fallback(choice)
+    st.warning("Unable to load page. Showing preview.")
+    _render_fallback(choice)
+    if last_exc:
+        with st.expander("Show error details"):
+            st.exception(last_exc)
+
+
+def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
+    """Switch to the first existing page referenced in ``module_paths``."""
+    for module_path in module_paths:
+        page_file = module_path.replace(".", "/") + ".py"
+        if Path(page_file).exists():
+            st.switch_page(page_file)
+            return
+    st.error(f"Page not found: {choice}")
+    st.warning("Unable to load page. Showing preview.")
+    _render_fallback(choice)
     if last_exc:
         with st.expander("Show error details"):
             st.exception(last_exc)
