@@ -859,7 +859,7 @@ def render_validation_ui(
 
 
 def render_developer_tools() -> None:
-    """Display debugging utilities in a modern tab layout."""
+    """Display debugging utilities grouped in a single expander."""
     st.markdown(
         """
         <style>
@@ -870,46 +870,28 @@ def render_developer_tools() -> None:
     )
 
     with st.expander("Developer Tools"):
-        container = st.container()
-        tab_labels = [
-            "Fork Universe",
-            "Universe State Viewer",
-            "Run Introspection Audit",
-            "Agent Logs",
-            "Inject Event",
-            "Session Inspector",
-            "Playground",
-        ]
-        (
-            tab_fork,
-            tab_state,
-            tab_audit,
-            tab_logs,
-            tab_event,
-            tab_session,
-            tab_play,
-        ) = container.tabs(tab_labels)
+        # Frequently used action
+        if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
+            try:
+                user = safe_get_user()
+                if user and st.button("Fork with Mock Config"):
+                    try:
+                        fork_id = cosmic_nexus.fork_universe(
+                            user, {"entropy_threshold": 0.5}
+                        )
+                        st.success(f"Forked universe {fork_id}")
+                    except Exception as exc:
+                        st.error(f"Fork failed: {exc}")
+                elif not user:
+                    st.info("No users available to fork")
+            except Exception as exc:
+                st.error(f"Database error: {exc}")
+        else:
+            st.info("Fork operation unavailable")
 
-        with tab_fork:
-            if 'cosmic_nexus' in globals() and 'Harmonizer' in globals():
-                try:
-                    user = safe_get_user()
-                    if user and st.button("Fork with Mock Config"):
-                        try:
-                            fork_id = cosmic_nexus.fork_universe(
-                                user, {"entropy_threshold": 0.5}
-                            )
-                            st.success(f"Forked universe {fork_id}")
-                        except Exception as exc:
-                            st.error(f"Fork failed: {exc}")
-                    elif not user:
-                        st.info("No users available to fork")
-                except Exception as exc:
-                    st.error(f"Database error: {exc}")
-            else:
-                st.info("Fork operation unavailable")
-
-        with tab_state:
+        # Less common diagnostics
+        with st.expander("Diagnostics & Logs"):
+            # Universe state viewer
             if 'SessionLocal' in globals() and 'UniverseBranch' in globals():
                 try:
                     with SessionLocal() as db:
@@ -929,7 +911,7 @@ def render_developer_tools() -> None:
             else:
                 st.info("Database unavailable")
 
-        with tab_audit:
+            # Run introspection audit
             hid = st.text_input("Hypothesis ID", key="audit_id")
             if st.button("Run Audit") and hid:
                 if 'dispatch_route' in globals() and 'SessionLocal' in globals():
@@ -961,7 +943,7 @@ def render_developer_tools() -> None:
                 else:
                     st.info("Audit functionality unavailable")
 
-        with tab_logs:
+            # Agent logs
             log_path = Path("logchain_main.log")
             if not log_path.exists():
                 log_path = Path("remix_logchain.log")
@@ -974,7 +956,7 @@ def render_developer_tools() -> None:
             else:
                 st.info("No log file found")
 
-        with tab_event:
+            # Inject event
             with st.expander("Inject Event", expanded=False):
                 event_json = st.text_area("Event JSON", value="{}", height=150, key="inject_event")
                 if st.button("Process Event"):
@@ -989,7 +971,7 @@ def render_developer_tools() -> None:
                     else:
                         st.info("Agent unavailable")
 
-        with tab_session:
+            # Session inspector
             if 'AGENT_REGISTRY' in globals():
                 st.write("Available agents:", list(AGENT_REGISTRY.keys()))
             if 'cosmic_nexus' in globals():
@@ -1010,7 +992,8 @@ def render_developer_tools() -> None:
                 except Exception:
                     st.warning("Inspection failed")
 
-        with tab_play:
+        # Playground for quick flows
+        with st.expander("Playground"):
             flow_txt = st.text_area("Agent Flow JSON", "[]", height=150, key="flow_json")
             if st.button("Run Flow"):
                 if 'AGENT_REGISTRY' in globals():
