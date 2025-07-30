@@ -1103,7 +1103,7 @@ def main() -> None:
 
         choice = option_menu(
             menu_title=None,
-            options=list(pages.keys()),
+            options=list(PAGES.keys()),
             icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
             orientation="horizontal",
             key="main_nav_menu",
