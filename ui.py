@@ -1211,12 +1211,12 @@ def main() -> None:
             inject_modern_styles()
         except Exception as exc:
             logger.warning("CSS load failed: %s", exc)
-
+        
         try:
             apply_theme(st.session_state["theme"])
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
-
+        
         st.markdown(
             f"""
             <style>
@@ -1229,30 +1229,39 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-
-            PAGES = {
-                "Validation": "validation",
-                "Voting": "voting",
-                "Agents": "agents",
-                "Resonance Music": "resonance_music",
-                "Social": "social",
-            }
-
-            PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-            page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
-            choice = ui_layout.render_navbar(
-                page_paths,
-                icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
-            )
-
+        
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Social": "social",
+        }
+        
+        PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+        page_paths = {label: str(PAGES_DIR / f"{mod}.py") for label, mod in PAGES.items()}
+        choice = ui_layout.render_navbar(
+            page_paths,
+            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "people"],
+        )
+        
         left_col, center_col, right_col = st.columns([1, 3, 1])
-
+        
         with center_col:
-            st.info("Select a page above to continue.")
-
+            if choice:
+                page_key = PAGES.get(choice, choice)
+                module_paths = [
+                    f"transcendental_resonance_frontend.pages.{page_key}",
+                    f"pages.{page_key}",
+                ]
+                load_page_with_fallback(choice, module_paths)
+            else:
+                st.info("Select a page above to continue.")
+                _render_fallback("Validation")  # Default fallback page as a preview
+        
         with left_col:
             render_status_icon()
-
+        
             with st.expander("Environment Details"):
                 secrets = get_st_secrets()
                 info_text = (
@@ -1261,16 +1270,16 @@ def main() -> None:
                     f"Session: {st.session_state['session_start_ts']} UTC"
                 )
                 st.info(info_text)
-
+        
             with st.expander("Application Settings"):
                 demo_mode = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
                 theme_selector("Theme")
-
+        
             with st.expander("Data Management"):
                 uploaded_file = st.file_uploader("Upload JSON", type="json")
                 if st.button("Run Analysis"):
                     st.success("Analysis complete!")
-
+        
             with st.expander("Agent Configuration"):
                 api_info = render_api_key_ui()
                 backend_choice = api_info.get("model", "dummy")
@@ -1278,17 +1287,17 @@ def main() -> None:
                 event_type = st.text_input("Event", value="LLM_INCOMING")
                 payload_txt = st.text_area("Payload JSON", value="{}", height=100)
                 run_agent_clicked = st.button("Run Agent")
-
+        
             with st.expander("Simulation Tools"):
                 render_simulation_stubs()
-
+        
             st.divider()
             governance_view = st.toggle(
                 "Governance View",
                 value=st.session_state.get("governance_view", False),
             )
             st.session_state["governance_view"] = governance_view
-
+        
             render_developer_tools()
 
         with center_col:
