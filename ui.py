@@ -18,6 +18,7 @@ import traceback
 import sqlite3
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from typing import Any, Optional
 
 
 from modern_ui_components import (
@@ -617,58 +618,6 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any, Optional
-
-# Optional modules used throughout the UI. Provide simple fallbacks
-# when the associated packages are not available.
-try:
-    from protocols import AGENT_REGISTRY
-except ImportError:  # pragma: no cover - optional dependency
-    AGENT_REGISTRY = {}
-
-try:
-    from social_tabs import render_social_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_social_tab() -> None:
-        st.subheader("👥 Social Features")
-        st.info("Social features module not available")
-
-
-try:
-    from voting_ui import render_voting_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_voting_tab() -> None:
-        st.info("Voting module not available")
-
-
-try:
-    from agent_ui import render_agent_insights_tab
-except ImportError:  # pragma: no cover - optional dependency
-
-    def render_agent_insights_tab() -> None:
-        st.subheader("🤖 Agent Insights")
-        st.info("Agent insights module not available. Install required dependencies.")
-
-        if AGENT_REGISTRY:
-            st.write("Available Agents:")
-            for name, info in AGENT_REGISTRY.items():
-                with st.expander(f"🔧 {name}"):
-                    st.write(
-                        f"Description: {info.get('description', 'No description')}"
-                    )
-                    st.write(f"Class: {info.get('class', 'Unknown')}")
-        else:
-            st.warning("No agents registered")
-
-
-try:
-    from llm_backends import get_backend
-except ImportError:  # pragma: no cover - optional dependency
-
-    def get_backend(name, api_key=None):
-        return lambda x: {"response": "dummy backend"}
 
 
 def get_st_secrets() -> dict:
