@@ -943,6 +943,7 @@ def render_validation_ui(
         ui_layout.render_navbar(
             page_paths,
             icons=[
+
                 "✅",
                 "📊",
                 "🤖",
