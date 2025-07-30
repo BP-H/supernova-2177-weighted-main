@@ -165,101 +165,93 @@ def inject_modern_styles():
     """Inject sleek modern styling."""
     st.markdown("""
         <style>
-        /* Modern glassmorphism design */
+        /* Base dark theme */
         .stApp {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e1e1e;
             min-height: 100vh;
         }
         
         /* Main container with glassmorphism */
         .main .block-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: #252525;
+            border-radius: 8px;
+            border: 1px solid #2d2d2d;
             padding: 2rem;
             margin-top: 1rem;
         }
         
         /* Sidebar modern styling */
         .css-1d391kg {
-            background: rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #252525;
+            border-radius: 8px;
+            border: 1px solid #2d2d2d;
         }
         
         /* Navigation tabs */
         .stSelectbox > div > div {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #2d2d2d;
+            border-radius: 6px;
+            border: 1px solid #3a3a3a;
         }
         
         /* Modern buttons */
         .stButton > button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: #4f8bf9;
             border: none;
             border-radius: 12px;
             color: white;
             font-weight: 600;
             padding: 0.75rem 1.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }
         
         .stButton > button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         
         /* Modern metrics */
         [data-testid="metric-container"] {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
             padding: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
         }
         
         /* Text styling */
         .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #f0f0f0;
         }
         
         /* Error messages modern styling */
         .stAlert {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
         }
         
         /* File uploader */
         .stFileUploader {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+            background: #252525;
+            border-radius: 8px;
+            border: 2px dashed #3a3a3a;
             padding: 2rem;
         }
         
         /* Input fields */
         .stTextInput > div > div > input,
         .stTextArea > div > div > textarea {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            color: #f0f0f0;
         }
         
         /* Slider styling */
         .stSlider > div > div > div {
-            background: rgba(255, 255, 255, 0.2);
+            background: #4f8bf9;
         }
         
         /* Modern scrollbar */
@@ -268,12 +260,12 @@ def inject_modern_styles():
         }
         
         ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: #252525;
             border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: #4f8bf9;
             border-radius: 10px;
         }
         
@@ -293,9 +285,7 @@ def render_modern_validation_page():
     """Render a beautiful modern validation page."""
     st.markdown("""
         <div style='text-align: center; padding: 2rem 0;'>
-            <h1 style='font-size: 3rem; background: linear-gradient(45deg, #667eea, #764ba2); 
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                       margin-bottom: 0.5rem;'>
+            <h1 style='font-size: 3rem; color: #4f8bf9; margin-bottom: 0.5rem;'>
                 🚀 superNova_2177
             </h1>
             <p style='font-size: 1.2rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 2rem;'>
@@ -309,37 +299,37 @@ def render_modern_validation_page():
     
     with col1:
         st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(76, 175, 80, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3);'>
-                <h2 style='color: #4CAF50; margin: 0; font-size: 2rem;'>✅</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>System Online</h3>
+            <div style='text-align: center; padding: 1.5rem; background:#2d2d2d;
+                        border-radius:8px; border:1px solid #3a3a3a;'>
+                <h2 style='color:#4CAF50; margin:0; font-size:2rem;'>✅</h2>
+                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>System Online</h3>
             </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(33, 150, 243, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(33, 150, 243, 0.3);'>
-                <h2 style='color: #2196F3; margin: 0; font-size: 2rem;'>🔍</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Ready to Analyze</h3>
+            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
+                        border-radius:8px; border:1px solid #3a3a3a;'>
+                <h2 style='color:#2196F3; margin:0; font-size:2rem;'>🔍</h2>
+                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>Ready to Analyze</h3>
             </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(255, 193, 7, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(255, 193, 7, 0.3);'>
-                <h2 style='color: #FFC107; margin: 0; font-size: 2rem;'>⚡</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>High Performance</h3>
+            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
+                        border-radius:8px; border:1px solid #3a3a3a;'>
+                <h2 style='color:#FFC107; margin:0; font-size:2rem;'>⚡</h2>
+                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>High Performance</h3>
             </div>
         """, unsafe_allow_html=True)
     
     with col4:
         st.markdown("""
-            <div style='text-align: center; padding: 1.5rem; background: rgba(156, 39, 176, 0.1); 
-                        border-radius: 15px; border: 1px solid rgba(156, 39, 176, 0.3);'>
-                <h2 style='color: #9C27B0; margin: 0; font-size: 2rem;'>🎯</h2>
-                <h3 style='color: white; margin: 0.5rem 0 0 0;'>Precision Mode</h3>
+            <div style='text-align: center; padding:1.5rem; background:#2d2d2d;
+                        border-radius:8px; border:1px solid #3a3a3a;'>
+                <h2 style='color:#9C27B0; margin:0; font-size:2rem;'>🎯</h2>
+                <h3 style='color:#f0f0f0; margin:0.5rem 0 0 0;'>Precision Mode</h3>
             </div>
         """, unsafe_allow_html=True)
     
