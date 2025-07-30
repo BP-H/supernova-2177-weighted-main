@@ -4,7 +4,7 @@
 import asyncio
 import json
 import streamlit as st
-from streamlit_helpers import safe_container
+from streamlit_helpers import safe_container, BOX_CSS
 import pandas as pd
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder
@@ -25,10 +25,15 @@ BOX_CSS = """
     border-radius: 8px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tab-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
 """
-
 
 def _sanitize_markdown(text: str) -> str:
     """Return a UTF-8 safe string for ``st.markdown``."""
@@ -51,12 +56,6 @@ def _run_async(coro):
         if loop.is_running():
             return asyncio.run_coroutine_threadsafe(coro, loop).result()
         return loop.run_until_complete(coro)
-
-
-def safe_markdown(text: str, **kwargs) -> None:
-    """Render Markdown text after stripping invalid characters."""
-    clean = text.encode("utf-8", errors="ignore").decode("utf-8")
-    st.markdown(clean, **kwargs)
 
 
 def render_proposals_tab(main_container=None) -> None:
@@ -90,6 +89,11 @@ def render_proposals_tab(main_container=None) -> None:
             padding: 1rem;
             margin-bottom: 1rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .card input,
         .card textarea,
@@ -101,6 +105,12 @@ def render_proposals_tab(main_container=None) -> None:
             background-color: #1DA1F2;
             color: #fff;
             border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-primary > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(29,161,242,0.5);
+            filter: brightness(1.05);
         }
         .ag-theme-streamlit .ag-header,
         .ag-theme-streamlit .ag-header-viewport {

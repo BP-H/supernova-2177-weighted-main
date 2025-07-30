@@ -33,7 +33,6 @@ def main_container() -> st.delta_generator.DeltaGenerator:
     """Return a container for the main content area."""
     return st.container()
 
-    return st.container()
 
 
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
@@ -44,16 +43,58 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 def render_navbar(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
-) -> None:
-    """Render horizontal navigation links using ``st.page_link``."""
+    key: str = "main_nav_menu",
+    default: Optional[str] = None,
+) -> str:
+    """Render horizontal navigation links using ``st.page_link`` and return the selected label."""
     opts = (
         list(page_links.items()) if isinstance(page_links, dict) else [(str(o), str(o)) for o in page_links]
     )
     icon_list = list(icons or [None] * len(opts))
-    cols = st.columns(len(opts))
-    for col, ((label, target), icon) in zip(cols, zip(opts, icon_list)):
-        with col:
-            st.page_link(target, label=label, icon=icon)
+    index = 0
+    if default is not None and default in [label for label, _ in opts]:
+        index = [label for label, _ in opts].index(default)
+
+    try:
+        sidebar = st.sidebar
+        if hasattr(sidebar, "page_link"):
+            sidebar.markdown(
+                "<style>.nav-links a{margin-right:0.5rem;}</style>",
+                unsafe_allow_html=True,
+            )
+            with sidebar.container():
+                sidebar.markdown("<div class='nav-links'>", unsafe_allow_html=True)
+                for (label, target), icon in zip(opts, icon_list):
+                    sidebar.page_link(target, label=label, icon=icon)
+                sidebar.markdown("</div>", unsafe_allow_html=True)
+            sidebar.divider()
+
+        # Fallback to horizontal columns if sidebar fails or for main area display
+        if not st.session_state.get(key, None):
+            st.session_state[key] = default or opts[0][0]  # Initialize with default or first option
+        cols = st.columns(len(opts))
+        for col, ((label, target), icon) in zip(cols, zip(opts, icon_list)):
+            with col:
+                if st.button(label, key=f"{key}_{label}", help=target):
+                    st.session_state[key] = label
+        return st.session_state.get(key, opts[0][0])  # Return current selection
+
+    except Exception as e:
+        st.warning(f"Navigation setup failed: {e}. Falling back to radio.")
+        if USE_OPTION_MENU:
+            icon_list = list(icons or ["dot"] * len(opts))
+            return option_menu(
+                menu_title=None,
+                options=[label for label, _ in opts],
+                icons=icon_list,
+                orientation="horizontal",
+                key=key,
+                default_index=index,
+            )
+        else:
+            labels = [f"{icon} {label}" if icon else label for label, _ in opts for icon in icon_list[:len(opts)]]
+            choice = st.sidebar.radio("Navigate", labels, key=key, index=index)
+            return [label for label, _ in opts][labels.index(choice)] if icons else choice
 
 
 def render_title_bar(icon: str, label: str) -> None:

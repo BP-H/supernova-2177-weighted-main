@@ -59,11 +59,23 @@ def render_social_tab(main_container=None) -> None:
             return
 
         current_user = st.session_state.get("active_user", "")
-        current_user = st.text_input("Current User", value=current_user, key="active_user")
+        cols = st.columns(2)
+        with cols[0]:
+            current_user = st.text_input(
+                "Current User",
+                value=current_user,
+                key="active_user",
+                placeholder="Username",
+            )
+        with cols[1]:
+            target = st.text_input(
+                "Target Username",
+                key="target_username",
+                placeholder="Friend to follow",
+            )
         st.session_state["active_user"] = current_user
 
-        target = st.text_input("Target Username", key="target_username")
-        if st.button("Follow/Unfollow") and target and current_user:
+        if st.button("Follow/Unfollow", use_container_width=True) and target and current_user:
             with SessionLocal() as db:
                 user_obj = db.query(Harmonizer).filter(Harmonizer.username == current_user).first()
                 if not user_obj:
