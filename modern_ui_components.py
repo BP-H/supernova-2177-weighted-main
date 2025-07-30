@@ -22,6 +22,14 @@ except Exception:  # pragma: no cover - optional dependency
 # Sidebar styling for lightweight text-based navigation
 SIDEBAR_STYLES = """
 <style>
+[data-testid="stSidebar"] {
+    background: rgba(20, 25, 40, 0.9);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: width 0.3s ease;
+}
+[data-testid="stSidebar"] .stButton>button {
+    width: 100%;
+}
 .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -50,6 +58,40 @@ SIDEBAR_STYLES = """
 }
 .sidebar-nav .stButton>button:hover {
     background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav label {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s;
+}
+.sidebar-nav label:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav input:checked + div {
+    color: var(--neon-accent);
+}
+.sidebar-nav .nav-item {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.sidebar-nav .nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.sidebar-nav .nav-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--neon-accent);
+}
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        width: 14rem;
+    }
 }
 </style>
 """
@@ -109,6 +151,8 @@ def render_modern_sidebar(
 
     # Default session state for selected page
     st.session_state.setdefault(key, opts[0])
+    if st.session_state.get(key) not in opts:
+        st.session_state[key] = opts[0]
 
     orientation_cls = "horizontal" if horizontal else "vertical"
 
@@ -154,7 +198,8 @@ def render_modern_sidebar(
             # Final fallback
             choice = st.session_state.get(key, opts[0])
 
-        st.session_state[key] = choice
+        if st.session_state.get(key) != choice:
+            st.session_state[key] = choice
         st.markdown("</div>", unsafe_allow_html=True)
         return choice
 
