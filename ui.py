@@ -1508,8 +1508,6 @@ def main() -> None:
                                 st.write(f"User count: {user_count}")
                         except Exception:
                             st.error("Storage info unavailable")
-
-                            else:
                                 user_count = len(agent_obj.storage.get_all_users())
                                 st.write(f"User count: {user_count}")
                         except Exception as exc:
