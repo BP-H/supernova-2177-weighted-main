@@ -4,7 +4,10 @@
 """Chat page with text, video, and voice features."""
 
 import streamlit as st
+from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
+
+inject_modern_styles()
 
 
 ### TRANSLATION_LOGIC

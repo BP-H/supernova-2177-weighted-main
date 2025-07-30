@@ -4,8 +4,11 @@
 """User profile and API configuration page."""
 
 import streamlit as st
+from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
 from api_key_input import render_api_key_ui
+
+inject_modern_styles()
 
 
 def main(main_container=None) -> None:

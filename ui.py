@@ -121,6 +121,9 @@ from modern_ui import (
     open_card_container,
     close_card_container,
 )
+
+# Apply global styles immediately
+inject_modern_styles()
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
 except ImportError:  # optional dependency fallback
@@ -237,124 +240,9 @@ def render_landing_page():
         boot_diagnostic_ui()
 
 def inject_modern_styles() -> None:
-    """Inject a sleek dark theme inspired by modern IDEs."""
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #1e1e1e;
-            color: #ccc;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-
-        .main .block-container {
-            background-color: #252525;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 2rem 3rem;
-            margin-top: 1rem;
-        }
-
-        [data-testid="stSidebar"] {
-            background-color: #2d2d2d;
-            color: #ccc;
-        }
-
-        [data-testid="stHorizontalMenu"] ul {
-            display: flex;
-            gap: 0.5rem;
-            background: #252525;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-        }
-
-        [data-testid="stHorizontalMenu"] a {
-            color: #ccc;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: background 0.2s;
-            text-decoration: none;
-        }
-
-        [data-testid="stHorizontalMenu"] a:hover {
-            background: #333;
-            color: #fff;
-        }
-
-        [data-testid="stHorizontalMenu"] .active a {
-            background: #4f8bf9;
-            color: #fff;
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .status-card {
-            background: #2d2d2d;
-            border: 1px solid #3a3a3a;
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .status-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stButton > button {
-            background-color: #4f8bf9;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 0.5rem 1.25rem;
-            font-weight: 600;
-        }
-
-        .stButton > button:hover {
-            background-color: #699cfc;
-        }
-
-        input, textarea, select {
-            background-color: #2d2d2d;
-            color: #eee;
-            border: 1px solid #555;
-            border-radius: 6px;
-        }
-
-        /* Modern scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #252525;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #4f8bf9;
-            border-radius: 10px;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .main .block-container > div {
-            animation: fadeIn 0.6s ease-out;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Backward compatible alias forwarding to :mod:`modern_ui`."""
+    from modern_ui import inject_modern_styles as _impl
+    _impl()
 
 
 # Backward compatibility alias
