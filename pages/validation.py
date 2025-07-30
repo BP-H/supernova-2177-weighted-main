@@ -1,8 +1,20 @@
+# pages/validation.py
+
+import time
 import streamlit as st
 
-def main():
-    st.title("Validation")
-    st.write("This is the validation module. All systems go ✅")
+# optional: custom sidebar styles if you define SIDEBAR_STYLES globally
+try:
+    st.markdown(f"<style>{SIDEBAR_STYLES}</style>", unsafe_allow_html=True)
+except NameError:
+    pass  # no sidebar styling defined yet
 
-# ✅ required by streamlit to render this as a page
-main()
+st.title("🔍 Validation Dashboard")
+
+# simulate a short loading delay if needed
+time.sleep(0.1)
+
+st.info("Validation page loaded successfully.")
+
+# optional: fetch or display something
+# st.write("Add validation checks or form inputs here.")
