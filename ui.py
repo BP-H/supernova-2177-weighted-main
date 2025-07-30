@@ -32,7 +32,6 @@ import sys
 import traceback
 import sqlite3
 import importlib
-import time
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
