@@ -20,5 +20,10 @@ def main():
             st.rerun()
 
 
+def render() -> None:
+    """Wrapper to keep page loading consistent."""
+    main()
+
+
 if __name__ == "__main__":
     main()
