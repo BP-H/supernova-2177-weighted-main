@@ -13,7 +13,7 @@ import html
 from typing import Literal
 
 import streamlit as st
-from modern_ui import inject_premium_styles
+from modern_ui import inject_modern_styles
 
 
 def alert(
@@ -58,18 +58,18 @@ def safe_apply_theme(theme: str) -> None:
             css = """
                 <style>
                 :root {
-                    --background: #181818;
-                    --secondary-bg: #242424;
-                    --text-color: #e8e6e3;
-                    --primary-color: #4a90e2;
-                    --font-family: monospace; /* Consistent with main branch's dark theme */
+                    --background: #1e1e1e;
+                    --secondary-bg: #252525;
+                    --text-color: #d4d4d4;
+                    --primary-color: #4f8bf9;
+                    --font-family: 'Inter', sans-serif;
                 }
                 .stApp {
                     background-color: var(--background);
                     color: var(--text-color);
                     font-family: var(--font-family);
                 }
-                a { color: var(--primary-color); } /* Explicitly include link color for consistency */
+                a { color: var(--primary-color); }
                 </style>
             """
         elif theme.lower() == "codex":
@@ -119,8 +119,8 @@ def apply_theme(theme: str) -> None:
 
 
 def inject_global_styles() -> None:
-    """Deprecated wrapper that forwards to :func:`modern_ui.inject_premium_styles`."""
-    inject_premium_styles()
+    """Deprecated wrapper that forwards to :func:`modern_ui.inject_modern_styles`."""
+    inject_modern_styles()
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:

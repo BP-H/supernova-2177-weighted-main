@@ -6,7 +6,7 @@
 import streamlit as st
 
 
-def inject_premium_styles() -> None:
+def inject_modern_styles() -> None:
     """Inject global CSS for modern look and feel."""
     st.markdown(
         """
@@ -14,7 +14,7 @@ def inject_premium_styles() -> None:
         body, .stApp {
             background-color: var(--background, #F0F2F6);
             color: var(--text-color, #333333);
-            font-family: var(--font-family, 'Inter', sans-serif);
+            font-family: 'Inter', sans-serif;
         }
         .main .block-container {
             padding-top: 2rem;
@@ -37,12 +37,24 @@ def inject_premium_styles() -> None:
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 1rem;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
         }
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
             font-weight: 600 !important;
             line-height: 1.3 !important;
             margin: 0 0 0.5rem 0 !important;
+        }
+        h1 { font-size: 2.25rem !important; }
+        h2 { font-size: 1.75rem !important; }
+        h3 { font-size: 1.5rem !important; }
+        h4 { font-size: 1.25rem !important; }
+        h5 { font-size: 1rem !important; }
+        h6 { font-size: 0.875rem !important; }
         }
         p, span, div {
             line-height: 1.6 !important;
@@ -62,15 +74,20 @@ def inject_premium_styles() -> None:
             height: auto !important;
         }
         .stButton > button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.6) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5) !important;
             background: linear-gradient(135deg, #5ba0f2 0%, #6bb0ff 100%) !important;
-            filter: brightness(1.1);
+            filter: brightness(1.05);
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+
+def inject_premium_styles() -> None:
+    """Backward compatible alias for :func:`inject_modern_styles`."""
+    inject_modern_styles()
 
 
 def render_modern_header() -> None:
@@ -190,6 +207,7 @@ def close_card_container() -> None:
 
 
 __all__ = [
+    "inject_modern_styles",
     "inject_premium_styles",
     "render_modern_header",
     "render_validation_card",
