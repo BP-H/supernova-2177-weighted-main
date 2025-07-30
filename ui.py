@@ -76,7 +76,15 @@ render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
 from pathlib import Path
-from utils.page_registry import ensure_pages
+try:
+    from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
+except Exception as import_err:  # pragma: no cover - runtime fallback
+    import logging
+    logging.getLogger(__name__).warning(
+        "Primary page_registry import failed: %s", import_err
+    )
+    from utils.page_registry import ensure_pages  # type: ignore
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
