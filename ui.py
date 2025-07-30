@@ -70,9 +70,11 @@ PAGES = {
     "Voting": "voting",
     "Agents": "agents",
     "Resonance Music": "resonance_music",
-    "Video Chat": "video_chat",
+    "Chat": "chat",
     "Social": "social",
+    "Profile": "profile",
 }
+
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
@@ -439,8 +441,9 @@ def _render_fallback(choice: str) -> None:
         "Voting": render_modern_voting_page,
         "Agents": render_modern_agents_page,
         "Resonance Music": render_modern_music_page,
-        "Video Chat": render_modern_video_page,
+        "Chat": render_modern_chat_page,
         "Social": render_modern_social_page,
+        "Profile": render_modern_profile_page,
     }
     fallback_fn = fallback_pages.get(choice)
     if fallback_fn:
@@ -496,10 +499,16 @@ def render_modern_social_page():
     st.success("Social feed placeholder loaded")
 
 
-def render_modern_video_page() -> None:
-    """Simple placeholder page for upcoming video features."""
-    render_title_bar("🎥", "Video Chat")
-    st.info("Video chat module not yet implemented.")
+def render_modern_chat_page() -> None:
+    """Simple placeholder page for the Chat section."""
+    render_title_bar("💬", "Chat")
+    st.info("Chat module not yet implemented.")
+
+
+def render_modern_profile_page() -> None:
+    """Placeholder profile page."""
+    render_title_bar("👤", "Profile")
+    st.info("Profile management pending implementation.")
 
 
 
@@ -933,7 +942,15 @@ def render_validation_ui(
         }
         ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
+            icons=[
+                "check2-square",
+                "graph-up",
+                "robot",
+                "music-note-beamed",
+                "chat-text",
+                "people",
+                "person-circle",
+            ],
         )
 
         # Page layout
@@ -1210,9 +1227,11 @@ def main() -> None:
             "Voting": "voting",
             "Agents": "agents",
             "Resonance Music": "resonance_music",
-            "Video Chat": "video_chat",
+            "Chat": "chat",
             "Social": "social",
+            "Profile": "profile",
         }
+
         
         PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
         page_paths = {
@@ -1221,7 +1240,15 @@ def main() -> None:
         }
         choice = ui_layout.render_navbar(
             page_paths,
-            icons=["check2-square", "graph-up", "robot", "music-note-beamed", "camera-video", "people"],
+            icons=[
+                "check2-square",
+                "graph-up",
+                "robot",
+                "music-note-beamed",
+                "chat-text",
+                "people",
+                "person-circle",
+            ],
         )
         
         left_col, center_col, right_col = st.columns([1, 3, 1])
