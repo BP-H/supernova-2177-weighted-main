@@ -135,3 +135,8 @@ def main(main_container=None, status_container=None) -> None:
 
                 except Exception as exc:
                     alert(f"Failed to load summary: {exc}. Ensure backend is running and 'resonance-summary' route is available.", "error")
+
+
+def render() -> None:
+    """Wrapper to keep page loading consistent."""
+    main()
