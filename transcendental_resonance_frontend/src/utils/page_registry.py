@@ -9,6 +9,9 @@ from pathlib import Path
 import logging
 import streamlit as st
 
+# Track which slugs have already triggered a missing-page warning.
+_warned_slugs: set[str] = set()
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 

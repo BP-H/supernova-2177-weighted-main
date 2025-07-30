@@ -88,13 +88,13 @@ try:
     )
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
     logger.warning("Primary page_registry import failed: %s", import_err)
-    try:  # type: ignore
+    try:
         from utils.page_registry import ensure_pages, get_pages_dir  # type: ignore
     except Exception as fallback_err:  # pragma: no cover - final fallback
         logger.warning("Secondary page_registry import also failed: %s", fallback_err)
 
-        def ensure_pages(*_a, **_k):
-            logger.warning("ensure_pages noop fallback used")
+        def ensure_pages(*_args, **_kwargs) -> None:
+            logger.debug("ensure_pages noop fallback used")
             return None
 
         def get_pages_dir() -> Path:
@@ -103,6 +103,7 @@ except Exception as import_err:  # pragma: no cover - fallback if absolute impor
                 / "transcendental_resonance_frontend"
                 / "pages"
             )
+
 
 
 nx = None  # imported lazily in run_analysis
@@ -147,7 +148,7 @@ NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"]
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
-# Tracks which fallback pages have been rendered in this session.
+# Tracks slugs of fallback pages rendered in this session.
 _fallback_rendered: set[str] = set()
 
 
@@ -183,6 +184,7 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
 )
+
 try:
     from modern_ui import (
         inject_modern_styles,
@@ -194,6 +196,7 @@ except Exception:  # pragma: no cover - gracefully handle missing/invalid module
 
     def render_stats_section(*_a, **_k):
         st.info("stats section unavailable")
+
 
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
@@ -359,8 +362,8 @@ def render_landing_page():
 
 
 def inject_modern_styles() -> None:
-    """Backward compatible alias forwarding to :mod:`modern_ui`."""
-    from modern_ui import inject_modern_styles as _impl
+    """Backward compatible alias for modern theme injection."""
+    from frontend.theme import inject_modern_styles as _impl
 
     _impl()
 
@@ -463,18 +466,19 @@ def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) 
 
 def _render_fallback(choice: str) -> None:
     """Render built-in fallback if module is missing or errors out."""
+    # Normalize and derive slug/module name
+    normalized = normalize_choice(choice)
+    slug = PAGES.get(normalized, str(normalized)).lower()
+
     # Prevent rendering the same fallback repeatedly.
-    if choice in _fallback_rendered:
+    if slug in _fallback_rendered:
         return
-    _fallback_rendered.add(choice)
+    _fallback_rendered.add(slug)
+
     try:
         from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
     except Exception:
         OFFLINE_MODE = False
-
-    # Normalize and derive slug/module name
-    normalized = normalize_choice(choice)
-    slug = PAGES.get(normalized, str(normalized)).lower()
 
     # Candidate paths to try loading from
     page_candidates = [
@@ -483,40 +487,36 @@ def _render_fallback(choice: str) -> None:
         Path.cwd() / "pages" / f"{slug}.py",
     ]
 
+
     loaded = False
-    for page_file in page_candidates:
-        if not page_file.exists():
-            continue
-        logger.debug("Attempting to load %s from %s", slug, page_file)
-        try:
-            spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
-            if not spec or not spec.loader:
+    # Only try to load manually if st.experimental_page is available
+    if hasattr(st, "experimental_page"):
+        for page_file in page_candidates:
+            if not page_file.exists():
                 continue
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = mod
-            spec.loader.exec_module(mod)
-            for fn in ("render", "main"):
-                if hasattr(mod, fn):
-                    try:
-                        getattr(mod, fn)()
-                        loaded = True
-                        break
-                    except Exception as exc:
-                        logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
-            if loaded:
-                break
-        except Exception as exc:
-            logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
+            logger.debug("Attempting to load %s from %s", slug, page_file)
+            try:
+                spec = importlib.util.spec_from_file_location(f"_page_{slug}", page_file)
+                if not spec or not spec.loader:
+                    continue
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = mod
+                spec.loader.exec_module(mod)
+                for fn in ("render", "main"):
+                    if hasattr(mod, fn):
+                        try:
+                            getattr(mod, fn)()
+                            loaded = True
+                            break
+                        except Exception as exc:
+                            logger.error("Error running %s.%s: %s", slug, fn, exc, exc_info=True)
+                if loaded:
+                    break
+            except Exception as exc:
+                logger.error("Error loading page candidate %s: %s", page_file, exc, exc_info=True)
 
     if loaded:
         return
-
-
-    # Prevent duplicate fallback rendering in session
-    if st.session_state.get("_fallback_rendered") == slug:
-        logger.debug("Duplicate fallback suppressed for %s", slug)
-        return
-    st.session_state["_fallback_rendered"] = slug
 
     # Map to fallback UI stubs
     fallback_pages = {
@@ -1384,11 +1384,20 @@ def main() -> None:
         render_topbar()  # added in codex branch
 
         # Setup: Pages and Icons (reuse global mapping)
-
+        PAGES = {
+            "Validation": "validation",
+            "Voting": "voting",
+            "Agents": "agents",
+            "Resonance Music": "resonance_music",
+            "Chat": "chat",
+            "Social": "social",
+            "Profile": "profile",
+        }
 
         page_paths: dict[str, str] = {}
         missing_pages: list[str] = []
         for label, mod in PAGES.items():
+
             file_path = ROOT_DIR / "pages" / f"{mod}.py"
             if file_path.exists():
                 page_paths[label] = f"/pages/{mod}.py"
@@ -1572,8 +1581,13 @@ def main() -> None:
                 st.subheader("Agent Output")
                 st.json(st.session_state.get("agent_output"))
 
-            render_stats_section()
-            st.markdown(f"**Runs:** {st.session_state.get('run_count', 0)}")
+            stats = {
+                "runs": st.session_state.get("run_count", 0),
+                "proposals": st.session_state.get("proposal_count", "N/A"),
+                "success_rate": st.session_state.get("success_rate", "N/A"),
+                "accuracy": st.session_state.get("accuracy", "N/A"),
+            }
+            render_stats_section(stats)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)
