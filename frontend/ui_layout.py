@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
+import os
 import streamlit as st
 
 try:
@@ -41,12 +42,29 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
     return st.sidebar
 
 
+def render_profile_card(username: str, avatar_url: str) -> None:
+    """Render a compact profile card with an environment badge."""
+    env = os.getenv("APP_ENV", "development").lower()
+    badge = "🚀 Production" if env.startswith("prod") else "🧪 Development"
+    st.markdown(
+        f"""
+        <div class='glass-card' style='display:flex;align-items:center;gap:0.5rem;'>
+            <img src="{avatar_url}" alt="avatar" width="48" style="border-radius:50%;" />
+            <div>
+                <strong>{username}</strong><br/>
+                <span style='font-size:0.85rem'>{badge}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def _render_sidebar_nav(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
     key: Optional[str] = None,
     default: Optional[str] = None,
-
     session_key: str = "active_page",
 ) -> str:
     """Render a vertical sidebar navigation and return the selected label.
@@ -54,14 +72,12 @@ def _render_sidebar_nav(
     The selected page label is also stored in ``st.session_state`` using
     ``session_key`` so other components can react to the active page.
     """
-
     opts = list(page_links.items()) if isinstance(page_links, dict) else [
         (str(o), str(o)) for o in page_links
     ]
     icon_list = list(icons or [None] * len(opts))
     key = key or uuid4().hex
 
-    # Determine the currently active option
     active = st.session_state.get(session_key, default or opts[0][0])
     if active not in [label for label, _ in opts]:
         active = opts[0][0]
@@ -89,6 +105,7 @@ def _render_sidebar_nav(
 
     st.session_state[session_key] = choice
     return choice
+
 
 
 def render_sidebar_nav(*args, **kwargs):
@@ -136,4 +153,5 @@ __all__ = [
     "render_sidebar_nav",
     "render_title_bar",
     "show_preview_badge",
+    "render_profile_card",
 ]
