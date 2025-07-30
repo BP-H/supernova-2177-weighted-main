@@ -3,6 +3,7 @@
 # Legal & Ethical Safeguards
 import asyncio
 import json
+from contextlib import nullcontext
 import streamlit as st
 import pandas as pd
 try:
@@ -52,12 +53,19 @@ def _run_async(coro):
         return loop.run_until_complete(coro)
 
 
+def safe_markdown(text: str, **kwargs) -> None:
+    """Render Markdown text after stripping invalid characters."""
+    clean = text.encode("utf-8", errors="ignore").decode("utf-8")
+    st.markdown(clean, **kwargs)
+
+
 def render_proposals_tab(main_container=None) -> None:
     """Display proposal creation, listing and voting controls."""
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         if AgGrid is None or GridOptionsBuilder is None:
             alert(
                 "st_aggrid is not installed – proposal features unavailable.",
@@ -74,7 +82,7 @@ def render_proposals_tab(main_container=None) -> None:
         safe_markdown(
             BOX_CSS
             + """
-        <style>
+            <style>
         .app-container { padding: 1rem; }
         .card {
             background: #fff;
@@ -217,7 +225,8 @@ def render_governance_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         if AgGrid is None or GridOptionsBuilder is None:
             alert(
                 "st_aggrid is not installed – governance features unavailable.",
@@ -281,7 +290,8 @@ def render_agent_ops_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         if dispatch_route is None:
             alert(
                 "Governance routes not enabled—enable them in config.",
@@ -342,7 +352,8 @@ def render_logs_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         if dispatch_route is None:
             alert(
                 "Governance routes not enabled—enable them in config.",
@@ -375,7 +386,8 @@ def render_voting_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    with main_container:
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
         inject_global_styles()
         sub1, sub2, sub3, sub4 = st.tabs(
             [

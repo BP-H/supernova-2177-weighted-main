@@ -12,6 +12,7 @@ from typing import Any, Optional, Dict
 
 import requests
 import streamlit as st
+from contextlib import nullcontext
 from streamlit_helpers import alert, centered_container
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
@@ -56,75 +57,88 @@ def main(main_container=None, status_container=None) -> None:
             "error",
         )
 
-    st.subheader("Resonance Music")
-    centered_container()
+def render_resonance_music_page(main_container=None):
+    """
+    Render the Resonance Music page with backend MIDI generation and metrics summary.
+    Handles dynamic selection of profile/track and safely wraps container logic.
+    """
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
 
-    profile_options = ["default", "high_harmony", "high_entropy"]
-    # Also include the "Solar Echoes", "Quantum Drift", "Ether Pulse" from the other branch
-    track_options = ["Solar Echoes", "Quantum Drift", "Ether Pulse"]
-    combined_options = list(set(profile_options + track_options))  # Remove duplicates
+    with container_ctx:
+        st.subheader("Resonance Music")
+        centered_container()
 
-    choice = st.selectbox(
-        "Select a track or resonance profile",
-        combined_options,
-        index=0,  # Default to first option
-        placeholder="tracks or resonance profiles",
-        key="resonance_profile_select",
-    )
+        profile_options = ["default", "high_harmony", "high_entropy"]
+        track_options = ["Solar Echoes", "Quantum Drift", "Ether Pulse"]
+        combined_options = list(set(profile_options + track_options))
 
-    midi_placeholder = st.empty()  # Placeholder for MIDI audio player
+        choice = st.selectbox(
+            "Select a track or resonance profile",
+            combined_options,
+            index=0,
+            placeholder="tracks or resonance profiles",
+            key="resonance_profile_select"
+        )
 
-    # --- Generate Music Section ---
-    if st.button("Generate music", key="generate_music_btn"):
-        if not backend_ok:  # Check backend status before attempting generation
-            alert(
-                f"Cannot generate music: Backend service unreachable at {BACKEND_URL}.",
-                "error",
-            )
-            return
+        midi_placeholder = st.empty()
 
-        with st.spinner("Generating..."):
-            try:
-                # Use dispatch_route for consistency with other backend calls
-                result = _run_async(
-                    dispatch_route("generate_midi", {"profile": choice})  # Use 'choice' for profile/track
-                )
-                midi_b64 = result.get("midi_base64") if isinstance(result, dict) else None
+        # --- Generate Music Section ---
+        if st.button("Generate music", key="generate_music_btn"):
+            if not backend_ok:
+                alert(f"Cannot generate music: Backend service unreachable at {BACKEND_URL}.", "error")
+                return
 
-                if midi_b64:
-                    midi_bytes = base64.b64decode(midi_b64)
-                    midi_placeholder.audio(midi_bytes, format="audio/midi")
-                    st.toast("Music generated!")
-                else:
-                    alert("No MIDI data returned from generation.", "warning")
-            except Exception as exc:
-                alert(
-                    f"Music generation failed: {exc}. Ensure backend is running and 'generate_midi' route is available.",
-                    "error",
-                )
+            with st.spinner("Generating..."):
+                try:
+                    result = _run_async(
+                        dispatch_route("generate_midi", {"profile": choice})
+                    )
+                    midi_b64 = result.get("midi_base64") if isinstance(result, dict) else None
 
-    # --- Fetch Resonance Summary Section ---
-    if st.button("Fetch resonance summary", key="fetch_summary_btn"):
-        if not backend_ok:  # Check backend status before attempting fetch
-            alert(
-                f"Cannot fetch summary: Backend service unreachable at {BACKEND_URL}.",
-                "error",
-            )
-            return
+                    if midi_b64:
+                        midi_bytes = base64.b64decode(midi_b64)
+                        midi_placeholder.audio(midi_bytes, format="audio/midi")
+                        st.toast("Music generated!")
+                    else:
+                        alert("No MIDI data returned from generation.", "warning")
+                except Exception as exc:
+                    alert(f"Music generation failed: {exc}. Ensure backend is running and 'generate_midi' route is available.", "error")
 
-        with st.spinner("Fetching summary..."):
-            try:
-                # Use the modular get_resonance_summary from utils.api
-                data = _run_async(get_resonance_summary(choice))  # Use 'choice' for summary
+        # --- Fetch Resonance Summary Section ---
+        if st.button("Fetch resonance summary", key="fetch_summary_btn"):
+            if not backend_ok:
+                alert(f"Cannot fetch summary: Backend service unreachable at {BACKEND_URL}.", "error")
+                return
 
-                if data:
-                    metrics = data.get("metrics", {})
-                    midi_bytes_count = data.get("midi_bytes", 0)  # Assuming this is a count, not actual bytes here
+            with st.spinner("Fetching summary..."):
+                try:
+                    data = _run_async(get_resonance_summary(choice))
 
-                    st.subheader("Metrics")
-                    # Display metrics in a table for better readability
-                    if metrics:
-                        st.table({"metric": list(metrics.keys()), "value": list(metrics.values())})
+                    if data:
+                        metrics = data.get("metrics", {})
+                        midi_bytes_count = data.get("midi_bytes", 0)
+
+                        st.subheader("Metrics")
+                        if metrics:
+                            st.table({
+                                "metric": list(metrics.keys()),
+                                "value": list(metrics.values())
+                            })
+                        else:
+                            st.info("No metrics available for this profile.")
+
+                        st.write(f"Associated MIDI bytes (count/size): {midi_bytes_count}")
+
+                        summary_midi_b64 = data.get("midi_base64")
+                        if summary_midi_b64:
+                            summary_midi_bytes = base64.b64decode(summary_midi_b64)
+                            st.audio(summary_midi_bytes, format="audio/midi", key="summary_audio_player")
+                            st.info("Playing associated MIDI from summary.")
+
+                        st.toast("Summary loaded!")
+                except Exception as exc:
+                    alert(f"Summary fetch failed: {exc}", "error")
+
                     else:
                         st.info("No metrics available for this profile.")
 

@@ -381,13 +381,14 @@ def load_page_with_fallback(choice: str, module_paths: list[str]) -> None:
             continue  # Try next candidate module path
         except Exception as exc:
             st.error(f"⚠️ `{choice}` failed: `{exc.__class__.__name__}` — {exc}")
-            st.expander("Show error details").exception(exc)
+            with st.expander("Show error details"):
+                st.exception(exc)
             print("Traceback for debugging:\n", traceback.format_exc())
             break
 
-    _render_fallback(choice)  # Optional: if defined elsewhere
-
-    _render_fallback(choice)
+    # Optional fallback renderer if defined elsewhere
+    if "_render_fallback" in globals():
+        _render_fallback(choice)
 
 
 def _render_fallback(choice: str) -> None:
@@ -1214,15 +1215,17 @@ def main() -> None:
                         "Event JSON", value="{}", height=150, key="inject_event"
                     )
                     if st.button("Process Event"):
-                        if 'agent' in globals() and agent is not None:
+                        agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                        if agent_obj is not None:
                             try:
                                 event = json.loads(event_json or "{}")
-                                agent.process_event(event)
+                                agent_obj.process_event(event)
                                 st.success("Event processed")
                             except Exception as exc:
                                 st.error(f"Event failed: {exc}")
                         else:
                             st.info("Agent unavailable")
+
 
                 with dev_tabs[5]:
                     if 'AGENT_REGISTRY' in globals():
@@ -1232,21 +1235,19 @@ def main() -> None:
                             "Sub universes:",
                             list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                         )
-                    if (
-                        'agent' in globals()
-                        and agent is not None
-                        and 'InMemoryStorage' in globals()
-                    ):
-                        if isinstance(agent.storage, InMemoryStorage):
-                            st.write(
-                                f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
-                            )
-                        else:
-                            try:
-                                user_count = len(agent.storage.get_all_users())
-                            except Exception:
-                                user_count = "?"
-                            st.write(f"User count: {user_count}")
+                    agent_obj = st.session_state.get("agent_instance") or globals().get("agent")
+                    if agent_obj is not None and 'InMemoryStorage' in globals():
+                        try:
+                            if isinstance(agent_obj.storage, InMemoryStorage):
+                                st.write(
+                                    f"Users: {len(agent_obj.storage.users)} / Coins: {len(agent_obj.storage.coins)}"
+                                )
+                            else:
+                                user_count = len(agent_obj.storage.get_all_users())
+                                st.write(f"User count: {user_count}")
+                        except Exception:
+                            st.write("User count: ?")
+
 
                 with dev_tabs[6]:
                     flow_txt = st.text_area(
@@ -1302,9 +1303,12 @@ def main() -> None:
                         else:
                             selected_agent = agent_cls(llm_backend=backend_fn)
 
+                        st.session_state["agent_instance"] = selected_agent
+
                         result = selected_agent.process_event(
                             {"event": event_type, "payload": payload}
                         )
+
                         st.session_state["agent_output"] = result
                         st.success("Agent executed")
                     except Exception as exc:
@@ -1318,7 +1322,14 @@ def main() -> None:
         render_stats_section()
         st.markdown(f"**Runs:** {st.session_state['run_count']}")
 
-        load_page_with_fallback(choice, module_paths)
+        container_ctx = main_container() if callable(main_container) else nullcontext()
+        with container_ctx:
+            page_key = PAGES.get(choice, choice)
+            module_paths = [
+                f"transcendental_resonance_frontend.pages.{page_key}",
+                f"pages.{page_key}",
+            ]
+            load_page_with_fallback(choice, module_paths)
 
     except Exception as exc:
         logger.critical("Unhandled error in main: %s", exc, exc_info=True)

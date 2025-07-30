@@ -5,6 +5,7 @@
 
 import streamlit as st
 from social_tabs import render_social_tab
+from contextlib import nullcontext
 
 
 def main(main_container=None) -> None:
@@ -12,7 +13,9 @@ def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
-    render_social_tab(main_container=main_container)
+    container_ctx = main_container if hasattr(main_container, "__enter__") else nullcontext()
+    with container_ctx:
+        render_social_tab()
 
 
 def render() -> None:
