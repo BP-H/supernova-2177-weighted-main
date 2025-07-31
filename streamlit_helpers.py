@@ -13,6 +13,8 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+
+_FAKE_SESSION: dict[str, Any] = {}
 import inspect
 import streamlit as st
 
@@ -232,14 +234,17 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         likes = 0
 
     if ui is None:
+        html_parts = []
         if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
+            html_parts.append(
+                f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px'/>"
+            )
+        user = html.escape(post_data.get("user", ""))
+        html_parts.append(f"<p><strong>{user}</strong>: {html.escape(text)}</p>")
+        html_parts.append(
+            f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
         )
+        st.markdown("\n".join(html_parts), unsafe_allow_html=True)
         return
 
     try:
@@ -247,10 +252,12 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
             safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
-            ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-            ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
+            if hasattr(ui, "badge"):
+                ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+            ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
     except Exception as exc:  # noqa: BLE001
-        st.toast(f"Post card failed: {exc}", icon="⚠️")
+        if hasattr(st, "toast"):
+            st.toast(f"Post card failed: {exc}", icon="⚠️")
         if img:
             st.image(img, use_column_width=True)
         st.write(text)
@@ -390,11 +397,16 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         key_suffix = "default"
 
     theme_key = f"theme_{key_suffix}"
-    if theme_key not in st.session_state:
-        st.session_state[theme_key] = "light"
-
     unique_key = f"theme_selector_{key_suffix}"
-    current = st.session_state[theme_key]
+
+    try:
+        if theme_key not in st.session_state:
+            st.session_state[theme_key] = "light"
+        current = st.session_state[theme_key]
+    except Exception:
+        global _FAKE_SESSION
+        _FAKE_SESSION = globals().get("_FAKE_SESSION", {})
+        current = _FAKE_SESSION.setdefault(theme_key, "light")
 
     if ui is not None and hasattr(ui, "radio_group"):
         try:
@@ -418,9 +430,14 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
             key=unique_key,
         )
 
-    st.session_state[theme_key] = choice.lower()
-    apply_theme(st.session_state[theme_key])
-    return st.session_state[theme_key]
+    try:
+        st.session_state[theme_key] = choice.lower()
+        apply_theme(st.session_state[theme_key])
+        return st.session_state[theme_key]
+    except Exception:
+        _FAKE_SESSION[theme_key] = choice.lower()
+        apply_theme(_FAKE_SESSION[theme_key])
+        return _FAKE_SESSION[theme_key]
 
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
