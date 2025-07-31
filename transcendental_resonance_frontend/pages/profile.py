@@ -6,7 +6,13 @@
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header, theme_selector, get_active_user
+from streamlit_helpers import (
+    safe_container,
+    header,
+    theme_selector,
+    get_active_user,
+    ensure_active_user,
+)
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
 from transcendental_resonance_frontend.ui.profile_card import (
@@ -100,12 +106,9 @@ def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
     theme_selector("Theme", key_suffix="profile")
-
-    st.session_state.setdefault("active_user", "guest")
+    ensure_active_user()
     container_ctx = safe_container(main_container)
     with container_ctx:
-        if "active_user" not in st.session_state:
-            st.session_state["active_user"] = "guest"
         # Header with status icon
         header_col, status_col = st.columns([8, 1])
         with header_col:
