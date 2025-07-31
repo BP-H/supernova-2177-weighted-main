@@ -24,10 +24,8 @@ if not hasattr(st, "experimental_page"):
 try:
     from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
 except ImportError:
-    # Fallback in case streamlit_helpers doesn't define it
     try:
-        import streamlit_shadcn_ui as shadcn  # type: ignore
-        ui = shadcn
+        import streamlit_shadcn_ui as ui  # type: ignore
     except Exception:
         import types
         ui = types.SimpleNamespace()
@@ -226,7 +224,6 @@ class _UIWrapper:
     @staticmethod
     def tabs(labels: list[str]) -> _StreamlitTabs:
         return _StreamlitTabs(labels)
-
 
 # Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
 if not hasattr(ui, "tabs"):
