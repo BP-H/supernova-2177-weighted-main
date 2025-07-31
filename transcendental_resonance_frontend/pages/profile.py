@@ -20,6 +20,7 @@ from transcendental_resonance_frontend.ui.profile_card import (
     render_profile_card,
 )
 from status_indicator import render_status_icon
+from feed_renderer import render_mock_feed, DEMO_POSTS
 
 
 try:
@@ -35,10 +36,21 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 try:  # Optional DB access for follow/unfollow
-    from db_models import SessionLocal, Harmonizer
+    from db_models import (
+        SessionLocal,
+        Harmonizer,
+        init_db,
+        seed_default_users,
+    )
 except Exception:  # pragma: no cover - optional dependency
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+    def init_db() -> None:  # type: ignore
+        pass
+
+    def seed_default_users() -> None:  # type: ignore
+        pass
 
 import asyncio
 
@@ -104,9 +116,16 @@ def _render_profile(username: str) -> None:
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
+    init_db()
+    seed_default_users()
     theme_selector("Theme", key_suffix="profile")
+    # …inside render_social_tab (or whichever function/file this is)
+    get_active_user()                     # make sure the key exists
+    container_ctx = safe_container(main_container)
+    with container_ctx:
+        get_active_user()                 # retrieve current value when needed
+        # …rest of the code …
 
-    get_active_user()
     container_ctx = safe_container(main_container)
     with container_ctx:
         # Header with status icon
@@ -156,6 +175,7 @@ def main(main_container=None) -> None:
             {**DEFAULT_USER, "username": username},
         )
         render_profile_card(data)
+
 
 
 
