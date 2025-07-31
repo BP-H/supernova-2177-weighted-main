@@ -232,6 +232,16 @@ def safe_container(container: Any) -> ContextManager:
     return nullcontext()
 
 
+def tabs_nav(labels: list[str], *, key: str = "tabs_nav") -> list[Any]:
+    """Render tab navigation using the best available backend."""
+    if ui is not None and hasattr(ui, "tabs"):
+        try:
+            return ui.tabs(labels, key=key)  # type: ignore[return-value]
+        except Exception:  # noqa: BLE001
+            pass
+    return st.tabs(labels, key=key)
+
+
 def inject_instagram_styles() -> None:
     """Inject lightweight CSS tweaks for an Instagram-like aesthetic."""
     st.markdown(
@@ -265,6 +275,7 @@ __all__ = [
     "theme_selector",
     "centered_container",
     "safe_container",
+    "tabs_nav",
     "inject_global_styles",
     "inject_instagram_styles",
     "BOX_CSS",

@@ -25,15 +25,14 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
-from utils.paths import ROOT_DIR, PAGES_DIR
 import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 
-try:                                        # NEW
+try:
     from utils.paths import ROOT_DIR, PAGES_DIR
-except ModuleNotFoundError:                 # fallback when utils isn't installed
-    ROOT_DIR = Path(__file__).resolve().parents[1]      # repo root
+except Exception:  # pragma: no cover - fallback when utils isn't installed
+    ROOT_DIR = Path(__file__).resolve().parents[1]
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
 
