@@ -25,7 +25,6 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
-from utils.paths import ROOT_DIR, PAGES_DIR
 import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
