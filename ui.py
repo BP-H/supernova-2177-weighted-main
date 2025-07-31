@@ -8,6 +8,7 @@ Example:
 import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
+st.set_page_config(layout="wide")
 
 if not hasattr(st, "experimental_page"):
     def _noop_experimental_page(*_args, **_kwargs):
@@ -20,6 +21,8 @@ if not hasattr(st, "experimental_page"):
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+
+import streamlit_shadcn_ui as ui
 
 from datetime import datetime, timezone
 import asyncio
@@ -195,6 +198,8 @@ from streamlit_helpers import (
     header,
     theme_selector,
     safe_container,
+    render_post_card,
+    inject_instagram_styles,
 )
 
 try:
@@ -637,9 +642,15 @@ def render_modern_music_page():
 
 def render_modern_social_page():
     render_title_bar("👥", "Social Network")
-    st.markdown("😀 @alice #hello")
-    st.markdown("🔥 Trending: #resonance #ai")
-    st.success("Social feed placeholder loaded")
+    posts = [
+        {"image": "https://placekitten.com/400/300", "text": "Cute kitten", "likes": 5},
+        {"image": "https://placekitten.com/300/300", "text": "Another cat", "likes": 3},
+        {"image": "https://placekitten.com/500/300", "text": "More cats", "likes": 8},
+    ]
+    cols = st.columns(3)
+    for col, post in zip(cols * (len(posts) // 3 + 1), posts):
+        with col:
+            render_post_card(post)
 
 
 def render_modern_chat_page() -> None:
@@ -1377,9 +1388,9 @@ def main() -> None:
     try:
         st.set_page_config(
             page_title="superNova_2177",
-            layout="wide",
             initial_sidebar_state="collapsed",
         )
+        inject_instagram_styles()
         render_top_bar()
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
