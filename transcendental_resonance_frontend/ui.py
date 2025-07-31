@@ -7,6 +7,9 @@ import sys
 from pathlib import Path
 
 import streamlit as st
+from modern_ui_components import shadcn_card
+
+st.set_page_config(layout="wide")
 
 
 HEALTH_CHECK_PARAM = "healthz"
@@ -21,8 +24,9 @@ for path in (ROOT, PKG_DIR, SRC_DIR):
         sys.path.insert(0, str(path))
 
 # Respond quickly to Cloud health probes before importing heavy modules
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-    st.write("ok")
+if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == f"/{HEALTH_CHECK_PARAM}":
+    with shadcn_card("Health Check"):
+        st.write("ok")
     st.stop()
 
 # Import and run the package's launcher
