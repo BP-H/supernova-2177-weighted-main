@@ -5,7 +5,7 @@
 
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container
+from streamlit_helpers import safe_container, header
 from status_indicator import render_status_icon
 
 inject_modern_styles()
@@ -74,7 +74,7 @@ def main(main_container=None) -> None:
     with container_ctx:
         header_col, status_col = st.columns([8, 1])
         with header_col:
-            st.subheader("💬 Chat")
+            header("💬 Chat")
         with status_col:
             render_status_icon()
         render_chat_interface()

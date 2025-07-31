@@ -8,7 +8,6 @@ Example:
 import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
-st.set_page_config(layout="wide")
 
 if not hasattr(st, "experimental_page"):
     def _noop_experimental_page(*_args, **_kwargs):
@@ -24,7 +23,7 @@ if not hasattr(st, "experimental_page"):
 
 try:
     import streamlit_shadcn_ui as ui  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover - optional dependency or missing at runtime
     import types
     ui = types.SimpleNamespace()
 
@@ -1403,11 +1402,24 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-    st.set_page_config(
-        page_title="superNova_2177",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+    except Exception:
+        # Older Streamlit builds (or re-runs) may raise – that’s OK.
+        pass
+
+    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    try:
+        inject_instagram_styles()
+    except Exception:  # pragma: no cover
+        pass
+
+    # Global CSS for cards / clean background
+
     st.markdown(
         """<style>
         body, .stApp {background:#FAFAFA;}

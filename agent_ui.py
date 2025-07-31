@@ -12,6 +12,7 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
     BOX_CSS,
+    header,
 )
 from voting_ui import (
     render_proposals_tab,
@@ -47,7 +48,7 @@ def render_agent_insights_tab(main_container=None) -> None:
     container_ctx = safe_container(main_container)
     with container_ctx:
         st.markdown(BOX_CSS + "<div class='tab-box'>", unsafe_allow_html=True)
-        st.subheader("Virtual Diary")
+        header("Virtual Diary")
         with st.expander("📘 Notes", expanded=False):
             diary_note = st.text_input("Add note")
             rfc_input = st.text_input("Referenced RFC IDs (comma separated)")
@@ -85,7 +86,7 @@ def render_agent_insights_tab(main_container=None) -> None:
             file_name="diary.json",
         )
 
-        st.subheader("RFCs and Agent Insights")
+        header("RFCs and Agent Insights")
         with st.container():
             with st.expander("Proposed RFCs", expanded=False):
                 rfc_dir = Path("rfcs")
@@ -135,7 +136,7 @@ def render_agent_insights_tab(main_container=None) -> None:
                 if preview_all or st.toggle("Show details", key=f"show_{rfc['id']}"):
                     st.markdown(rfc["text"], unsafe_allow_html=True)
 
-        st.subheader("Protocols")
+        header("Protocols")
         with st.container():
             with st.expander("Repository Protocols", expanded=False):
                 proto_dir = Path("protocols")
