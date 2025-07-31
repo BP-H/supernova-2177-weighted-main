@@ -19,10 +19,21 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 try:
-    from db_models import SessionLocal, Harmonizer
+    from db_models import (
+        SessionLocal,
+        Harmonizer,
+        init_db,
+        seed_default_users,
+    )
 except Exception:  # pragma: no cover - optional
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+    def init_db() -> None:  # type: ignore
+        pass
+
+    def seed_default_users() -> None:  # type: ignore
+        pass
 
 ensure_active_user()
 
@@ -60,6 +71,9 @@ def render_social_tab(main_container=None) -> None:
     """Render basic social interactions."""
     if main_container is None:
         main_container = st
+
+    init_db()
+    seed_default_users()
 
     st.session_state.setdefault("active_user", "guest")
     container_ctx = safe_container(main_container)

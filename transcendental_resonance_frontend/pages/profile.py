@@ -29,10 +29,21 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 try:  # Optional DB access for follow/unfollow
-    from db_models import SessionLocal, Harmonizer
+    from db_models import (
+        SessionLocal,
+        Harmonizer,
+        init_db,
+        seed_default_users,
+    )
 except Exception:  # pragma: no cover - optional dependency
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+    def init_db() -> None:  # type: ignore
+        pass
+
+    def seed_default_users() -> None:  # type: ignore
+        pass
 
 import asyncio
 
@@ -98,6 +109,8 @@ def _render_profile(username: str) -> None:
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
+    init_db()
+    seed_default_users()
     theme_selector("Theme", key_suffix="profile")
 
     st.session_state.setdefault("active_user", "guest")
