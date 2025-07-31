@@ -26,11 +26,15 @@ from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
 import os
+import importlib
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
+from profile_card import render_profile_card as _render_profile_card
 
 try:
-    from utils.paths import ROOT_DIR, PAGES_DIR
+    _paths = importlib.import_module("utils.paths")
+    ROOT_DIR = _paths.ROOT_DIR
+    PAGES_DIR = _paths.PAGES_DIR
 except Exception:  # pragma: no cover - fallback when utils isn't installed
     ROOT_DIR = Path(__file__).resolve().parents[1]
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
@@ -55,21 +59,15 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
 
 
 def render_profile_card(username: str, avatar_url: str) -> None:
-    """Render a compact profile card with an environment badge."""
-    env = os.getenv("APP_ENV", "development").lower()
-    badge = "🚀 Production" if env.startswith("prod") else "🧪 Development"
-    st.markdown(
-        f"""
-        <div class='glass-card' style='display:flex;align-items:center;gap:0.5rem;'>
-            <img src="{avatar_url}" alt="avatar" width="48" style="border-radius:50%;" />
-            <div>
-                <strong>{username}</strong><br/>
-                <span style='font-size:0.85rem'>{badge}</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """Proxy to :func:`profile_card.render_profile_card` using this module's ``st``."""
+    import profile_card
+
+    original = profile_card.st
+    profile_card.st = st
+    try:
+        _render_profile_card(username, avatar_url)
+    finally:
+        profile_card.st = original
 
 
 def render_top_bar() -> None:
