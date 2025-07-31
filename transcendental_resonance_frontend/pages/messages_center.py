@@ -12,9 +12,38 @@ from streamlit_helpers import safe_container, header, theme_selector
 from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Styles
+# ──────────────────────────────────────────────────────────────────────────────
+MESSAGE_CSS = """
+<style>
+.msg-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.msg-bubble {
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+.msg-bubble.receiver {
+    align-self: flex-start;
+    background: #eee;
+}
+.msg-bubble.sender {
+    align-self: flex-end;
+    background: #DCF8C6;
+}
+</style>
+"""
+
 inject_modern_styles()
 
-# Temporary in-memory conversation store
+# ──────────────────────────────────────────────────────────────────────────────
+# Dummy data
+# ──────────────────────────────────────────────────────────────────────────────
 DUMMY_CONVERSATIONS = {
     "alice": [
         {"user": "alice", "text": "Hi there!"},
@@ -29,45 +58,44 @@ DUMMY_CONVERSATIONS = {
     ],
 }
 
-
+# ──────────────────────────────────────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────────────────────────────────────
 def _render_messages(messages: list[dict]) -> None:
-    """Display chat messages with optional media using bubble styling."""
-    bubble_css = """
-    <style>
-    .chat-bubble {background:#f0f2f6;padding:0.5rem 1rem;border-radius:15px;margin-bottom:0.5rem;width:fit-content;}
-    .chat-bubble.me {background:#d1e7dd;margin-left:auto;}
-    </style>
-    """
-    st.markdown(bubble_css, unsafe_allow_html=True)
-    chat_container = st.container()
+    """Display chat messages with optional media using bubbles."""
+    st.markdown(MESSAGE_CSS, unsafe_allow_html=True)
+    st.markdown("<div class='msg-container'>", unsafe_allow_html=True)
+
     for entry in messages:
         user = entry.get("user", "?")
         text = entry.get("text", "")
-        bubble_class = "chat-bubble me" if user == "You" else "chat-bubble"
+        cls = "sender" if user == "You" else "receiver"
+
         if image := entry.get("image"):
-            chat_container.image(image, width=200)
+            st.image(image, width=200)
         if video := entry.get("video"):
-            chat_container.video(video)
-        chat_container.markdown(
-            f"<div class='{bubble_class}'><strong>{user}</strong>: {text}</div>",
-            unsafe_allow_html=True,
-        )
+            st.video(video)
+
+        bubble = f"<div class='msg-bubble {cls}'><strong>{user}:</strong> {text}</div>"
+        st.markdown(bubble, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def _run_async(coro):
-    """Execute ``coro`` in any event loop state."""
+    """Execute *coro* regardless of whether an event loop is already running."""
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coro)
-    else:
-        if loop.is_running():
-            return asyncio.run_coroutine_threadsafe(coro, loop).result()
-        return loop.run_until_complete(coro)
+
+    if loop.is_running():
+        return asyncio.run_coroutine_threadsafe(coro, loop).result()
+    return loop.run_until_complete(coro)
 
 
 def send_message(target: str, text: str) -> None:
-    """Send ``text`` to ``target`` handling offline mode and errors."""
+    """Append or POST a message, depending on offline mode."""
     try:
         if api.OFFLINE_MODE:
             st.session_state["_conversations"].setdefault(target, []).append(
@@ -77,10 +105,12 @@ def send_message(target: str, text: str) -> None:
             result = _run_async(api.api_call("POST", f"/messages/{target}", {"text": text}))
             if result is None:
                 st.toast("Message failed to send", icon="⚠️")
-    except Exception as exc:  # pragma: no cover - UI feedback
+    except Exception as exc:  # pragma: no cover – UI feedback only
         st.toast(f"Failed to send message: {exc}", icon="⚠️")
 
-
+# ──────────────────────────────────────────────────────────────────────────────
+# Page
+# ──────────────────────────────────────────────────────────────────────────────
 def main(main_container=None) -> None:
     """Render the Messages / Chat Center page."""
     if main_container is None:
@@ -88,59 +118,54 @@ def main(main_container=None) -> None:
 
     theme_selector("Theme", key_suffix="msg_center")
 
-    container_ctx = safe_container(main_container)
-    with container_ctx:
+    with safe_container(main_container):
         header_col, status_col = st.columns([8, 1])
         with header_col:
             header("💬 Messages")
         with status_col:
             render_status_icon()
 
-        # initialise conversations if first visit
+        # Initialise conversations on first visit
         st.session_state.setdefault("_conversations", DUMMY_CONVERSATIONS.copy())
         convos = list(st.session_state["_conversations"].keys())
 
-        # two top-level tabs
+        # Top-level tabs
         tab_msgs, tab_calls = st.tabs(["Messages", "Calls"])
 
-        # ── Messages tab ───────────────────────────────────────────────
+        # ── Messages tab ───────────────────────────────────────────
         with tab_msgs:
             left, right = st.columns([1, 3])
 
-            # conversation list
+            # Conversation selector
             with left:
                 st.markdown("**Conversations**")
                 selected = st.radio("", convos, key="selected_convo")
 
-            # message thread + send box
+            # Thread & send box
             with right:
                 msgs = st.session_state["_conversations"].setdefault(selected, [])
                 _render_messages(msgs)
 
-                cols = st.columns([4, 1])
-                with cols[0]:
-                    msg = st.text_input("Message", key="msg_input")
-                with cols[1]:
-                    if st.button("Send message", key="send_msg") and msg:
-                        send_message(selected, msg)
+                col_msg, col_btn = st.columns([4, 1])
+                with col_msg:
+                    msg_input = st.text_input("Message", key="msg_input")
+                with col_btn:
+                    if st.button("Send", key="send_msg") and msg_input:
+                        send_message(selected, msg_input)
                         st.session_state.msg_input = ""
                         st.experimental_rerun()
 
-        # ── Calls tab ─────────────────────────────────────────────────
+        # ── Calls tab ──────────────────────────────────────────────
         with tab_calls:
-            from chat_ui import (
-                render_video_call_controls,
-                render_voice_chat_controls,
-            )
+            from .chat import render_video_call_controls, render_voice_chat_controls
 
             render_video_call_controls()
             st.divider()
             render_voice_chat_controls()
 
 
-
+# Streamlit multipage support --------------------------------------------------
 def render() -> None:
-    """Wrapper for Streamlit multipage support."""
     main()
 
 
