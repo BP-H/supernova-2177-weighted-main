@@ -79,11 +79,6 @@ except Exception:  # noqa: BLE001
         shadcn = None
 
 
-def sanitize_text(text: Any) -> str:
-    """Return ``text`` as a safe UTF-8 string."""
-    if not isinstance(text, str):
-        text = str(text)
-    return text.encode("utf-8", "ignore").decode("utf-8")
 
 
 def safe_element(tag: str, content: str) -> Any:
@@ -232,14 +227,32 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         likes = 0
 
     if ui is None:
-        if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
-        )
+        if all(hasattr(st, attr) for attr in ["image", "write", "caption"]):
+            if img:
+                st.image(img, use_column_width=True)
+            st.write(text)
+            st.caption(f"❤️ {likes}")
+            getattr(st, "markdown", lambda *a, **k: None)(
+                f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            user = sanitize_text(post_data.get("user") or post_data.get("username", ""))
+            parts = []
+            if img:
+                parts.append(
+                    f"<img src='{html.escape(img)}' style='width:100%;border-radius:0.5rem;'/>"
+                )
+            if user:
+                parts.append(f"<strong>{html.escape(user)}</strong>")
+            parts.append(f"<p>{html.escape(text)}</p>")
+            parts.append(f"<div>❤️ {likes}</div>")
+            parts.append(
+                f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            )
+            getattr(st, "markdown", lambda *a, **k: None)(
+                "\n".join(parts), unsafe_allow_html=True
+            )
         return
 
     try:
@@ -247,16 +260,25 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
             safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
-            ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-            ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
+            if hasattr(ui, "badge"):
+                ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(f"<span>❤️ {likes}</span>", unsafe_allow_html=True)
+            if hasattr(ui, "element"):
+                ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(
+                    f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>",
+                    unsafe_allow_html=True,
+                )
     except Exception as exc:  # noqa: BLE001
-        st.toast(f"Post card failed: {exc}", icon="⚠️")
+        getattr(st, "toast", lambda *a, **k: None)(f"Post card failed: {exc}", icon="⚠️")
         if img:
             st.image(img, use_column_width=True)
         st.write(text)
         st.caption(f"❤️ {likes}")
         st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 
