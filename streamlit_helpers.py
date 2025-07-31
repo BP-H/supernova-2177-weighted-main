@@ -10,8 +10,6 @@ applications to keep the UI code concise and consistent.
 
 from __future__ import annotations
 
-import streamlit_shadcn_ui as ui
-
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
@@ -42,7 +40,7 @@ except Exception:  # noqa: BLE001
                 return self
 
         class _DummyUI:
-            def element(self, tag: str, content: str) -> _DummyElement:  # type: ignore
+            def element(self, tag: str, content: str) -> _DummyElement:
                 if tag.lower() == "h1":
                     st.header(content)
                 else:
@@ -61,7 +59,9 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
             def badge(self, text: str) -> _DummyElement:
-                st.markdown(f"<span>{html.escape(text)}</span>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<span>{html.escape(text)}</span>", unsafe_allow_html=True
+                )
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
