@@ -6,7 +6,11 @@
 from __future__ import annotations
 
 import json
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import TOKEN
 from utils.styles import get_theme
@@ -68,4 +72,9 @@ async def debug_panel_page() -> None:
                 ui.button("Invoke", on_click=send).style(
                     f"background: {theme['primary']}; color: {theme['text']};"
                 )
+
+if ui is None:
+    def debug_panel_page(*_a, **_kw):
+        """Fallback debug panel when NiceGUI is unavailable."""
+        st.warning('Debug panel requires NiceGUI.')
 

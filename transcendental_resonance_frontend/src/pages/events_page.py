@@ -5,7 +5,11 @@
 # Legal & Ethical Safeguards
 """
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN, BACKEND_URL
 import httpx
@@ -121,3 +125,8 @@ async def events_page():
                         )
 
         await refresh_events()
+
+if ui is None:
+    def events_page(*_a, **_kw):
+        """Fallback events page when NiceGUI is unavailable."""
+        st.info('Events page requires NiceGUI.')

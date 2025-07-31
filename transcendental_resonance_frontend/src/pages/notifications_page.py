@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """User notifications page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
@@ -58,3 +62,9 @@ async def notifications_page():
 
         ws_task = listen_ws(handle_event)
         ui.context.client.on_disconnect(lambda: ws_task.cancel())
+
+if ui is None:
+    def notifications_page(*_a, **_kw):
+        """Fallback notifications page when NiceGUI is unavailable."""
+        st.info('Notifications page requires NiceGUI.')
+

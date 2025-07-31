@@ -2,7 +2,11 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.features import skeleton_loader
@@ -80,3 +84,9 @@ async def explore_page() -> None:
                 loading["value"] = False
 
         ui.timer(1.0, lambda: ui.run_async(check_scroll()))
+
+if ui is None:
+    def explore_page(*_a, **_kw):
+        """Fallback explore page when NiceGUI is unavailable."""
+        st.info('Explore page requires NiceGUI.')
+
