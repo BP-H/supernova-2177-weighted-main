@@ -169,6 +169,8 @@ def _safe_element(tag: str, content: str):
     else:
         st.markdown(f"<{tag}>{html.escape(content)}</{tag}>", unsafe_allow_html=True)
     return None
+
+
 def alert(
     message: str,
     level: Literal["warning", "error", "info"] = "info",
@@ -604,6 +606,7 @@ def get_active_user() -> str:
 # ──────────────────────────────────────────────────────────────────────────────
 __all__ = [
     "alert",
+    "sanitize_emoji",
     "header",
     "render_post_card",
     "render_instagram_grid",

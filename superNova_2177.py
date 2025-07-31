@@ -632,6 +632,7 @@ if not _session_started and not metrics_started:
             port,
         )
         port = find_free_port()
+        logger.info("Selected free port %s for Prometheus metrics", port)
         prom.start_http_server(port)
     logger.info("Prometheus metrics server listening on port %s", port)
     if st:
