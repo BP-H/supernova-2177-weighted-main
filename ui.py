@@ -22,13 +22,35 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
+    # Try centralized import logic first
+    from streamlit_helpers import ui  # Preferential source of truth
 except ImportError:
     try:
-        import streamlit_shadcn_ui as ui  # type: ignore
+        import streamlit_shadcn_ui as _shadcn_ui  # type: ignore
     except Exception:
-        import types
-        ui = types.SimpleNamespace()
+        _shadcn_ui = None
+
+    class _UIWrapper:
+        """Namespace providing a `tabs` helper compatible with NiceGUI style."""
+
+        def __init__(self, backend: object | None = None) -> None:
+            self._backend = backend
+
+        def tabs(self, labels: list[str]):
+            if self._backend and hasattr(self._backend, "tabs"):
+                try:
+                    return self._backend.tabs(labels)  # type: ignore[return-value]
+                except Exception:
+                    pass
+            from ui import _StreamlitTabs  # local import to avoid circular import
+            return _StreamlitTabs(labels)
+
+        def __getattr__(self, name: str):
+            if self._backend is not None:
+                return getattr(self._backend, name)
+            raise AttributeError(name)
+
+    ui = _UIWrapper(_shadcn_ui)
 
 
 from datetime import datetime, timezone
@@ -221,13 +243,35 @@ class _StreamlitTabs:
 class _UIWrapper:
     """Namespace providing a ``tabs`` helper compatible with NiceGUI style."""
 
-    @staticmethod
-    def tabs(labels: list[str]) -> _StreamlitTabs:
+    def __init__(self, backend: object | None = None) -> None:
+        self._backend = backend
+
+    def tabs(self, labels: list[str]) -> _StreamlitTabs:
+        if self._backend and hasattr(self._backend, "tabs"):
+            try:
+                return self._backend.tabs(labels)  # type: ignore[return-value]
+            except Exception:  # pragma: no cover - fallback
+                pass
         return _StreamlitTabs(labels)
 
-# Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
+    def __getattr__(self, name: str):
+        if self._backend is not None:
+            return getattr(self._backend, name)
+        raise AttributeError(name)
+
+# If `ui` not already defined from streamlit_helpers, create it
+try:
+    from streamlit_helpers import ui  # type: ignore
+except ImportError:
+    try:
+        import streamlit_shadcn_ui as _shadcn_ui  # type: ignore
+    except Exception:
+        _shadcn_ui = None
+    ui = _UIWrapper(_shadcn_ui)
+
+# Ensure `ui.tabs` is present—even if streamlit_helpers imported an incomplete ui
 if not hasattr(ui, "tabs"):
-    ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
+    ui.tabs = _UIWrapper().tabs  # type: ignore[attr-defined]
 
 
 
