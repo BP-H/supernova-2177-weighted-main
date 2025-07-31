@@ -17,15 +17,12 @@ if not hasattr(st, "experimental_page"):
 
     st.experimental_page = _noop_experimental_page
 
+
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-try:
-    import streamlit_shadcn_ui as ui  # type: ignore
-except Exception:  # pragma: no cover - optional dependency or missing at runtime
-    import types
-    ui = types.SimpleNamespace()
+from streamlit_helpers import ui
 
 from datetime import datetime, timezone
 import asyncio
@@ -36,7 +33,6 @@ import logging
 import math
 import sys
 import traceback
-import types
 import sqlite3
 import importlib
 from streamlit.errors import StreamlitAPIException
@@ -223,7 +219,8 @@ class _UIWrapper:
         return _StreamlitTabs(labels)
 
 
-ui = _UIWrapper()
+if not hasattr(ui, "tabs"):
+    ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
 
 
 
