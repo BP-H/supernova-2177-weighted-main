@@ -12,6 +12,7 @@ from typing import List, Dict, Any
 import random
 import streamlit as st
 
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import theme_selector, safe_container
 
@@ -158,6 +159,7 @@ def _init_state() -> None:
 # Page entrypoints
 # ──────────────────────────────────────────────────────────────────────────────
 
+inject_light_theme()
 inject_modern_styles()
 
 

@@ -9,7 +9,10 @@ from typing import Iterable, Dict, Any, Tuple
 
 import streamlit as st
 
-from streamlit_helpers import render_post_card
+import html
+
+from streamlit_helpers import sanitize_text, render_post_card
+from modern_ui_components import shadcn_card
 
 import html
 
@@ -51,9 +54,9 @@ def render_feed(posts: Iterable[Any] | None = None) -> None:
 
     for entry in posts:
         if isinstance(entry, dict):
-            user = entry.get("user") or entry.get("username", "")
-            image = entry.get("image", "")
-            caption = entry.get("text") or entry.get("caption", "")
+            user = sanitize_text(entry.get("user") or entry.get("username", ""))
+            image = sanitize_text(entry.get("image", ""))
+            caption = sanitize_text(entry.get("text") or entry.get("caption", ""))
             likes = entry.get("likes", 0)
         else:
             user, image, caption = entry
@@ -61,7 +64,7 @@ def render_feed(posts: Iterable[Any] | None = None) -> None:
 
         render_post_card({
             "image": image,
-            "text": f"**{html.escape(user)}**: {caption}",
+            "text": f"**{html.escape(user)}**: {caption}" if user else caption,
             "likes": likes,
         })
 

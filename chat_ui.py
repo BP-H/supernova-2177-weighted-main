@@ -12,6 +12,7 @@ CHAT_CSS = """
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding-bottom: 0.5rem;
 }
 .chat-bubble {
     padding: 0.5rem 1rem;
@@ -21,11 +22,22 @@ CHAT_CSS = """
 }
 .chat-bubble.left {
     align-self: flex-start;
-    background: #eee;
+    background: var(--card);
+    color: var(--text-muted);
 }
 .chat-bubble.right {
     align-self: flex-end;
-    background: #DCF8C6;
+    background: var(--accent);
+    color: #fff;
+}
+.chat-input-row .stTextInput input {
+    border-radius: 1.5rem;
+    padding: 0.5rem 1rem;
+}
+.chat-input-row .stButton>button {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 1.5rem;
 }
 </style>
 """
@@ -65,14 +77,21 @@ def render_chat_interface() -> None:
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
+        st.markdown("<div class='chat-input-row'>", unsafe_allow_html=True)
         col1, col2 = st.columns([4, 1])
         with col1:
-            msg = st.text_input("Message", key="chat_input")
+            msg = st.text_input(
+                "Message",
+                key="chat_input",
+                label_visibility="collapsed",
+                placeholder="Type a message...",
+            )
         with col2:
             if st.button("Send", key="send_chat") and msg:
                 st.session_state["chat_history"].append({"sender": "You", "text": msg})
                 st.session_state.chat_input = ""
                 st.experimental_rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with calls_tab:
         render_video_call_controls()

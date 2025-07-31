@@ -71,7 +71,7 @@ def render_profile_card(username: str, avatar_url: str) -> None:
 
 
 def render_top_bar() -> None:
-    """Render a translucent top bar with a logo, search input, and avatar."""
+    """Render a translucent top bar with a logo, search input and controls."""
     st.markdown(
         """
         <style>
@@ -97,16 +97,37 @@ def render_top_bar() -> None:
         """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        """
-        <div class="sn-topbar">
-            <img src="https://placehold.co/32x32?text=SN" width="32" />
-            <input type="text" placeholder="Search..." />
-            <img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+    with st.container():
+        st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
+        cols = st.columns([1, 4, 2, 1])
+        logo_col = cols[0] if len(cols) > 0 else st
+        search_col = cols[1] if len(cols) > 1 else st
+        beta_col = cols[2] if len(cols) > 2 else st
+        avatar_col = cols[3] if len(cols) > 3 else st
+        logo_target = logo_col if hasattr(logo_col, "markdown") else st
+        logo_target.markdown(
+            '<img src="https://placehold.co/32x32?text=SN" width="32" />',
+            unsafe_allow_html=True,
+        )
+        search_target = search_col if hasattr(search_col, "text_input") else st
+        search_target.text_input("", placeholder="Search...", key="topbar_search")
+        toggle_target = beta_col if hasattr(beta_col, "toggle") else st
+        beta_enabled = toggle_target.toggle(
+            "Beta Mode",
+            value=st.session_state.get("beta_mode", False),
+        )
+        st.session_state["beta_mode"] = beta_enabled
+        try:
+            st.query_params["beta"] = "1" if beta_enabled else "0"
+        except Exception:
+            st.experimental_set_query_params(beta="1" if beta_enabled else "0")
+        avatar_target = avatar_col if hasattr(avatar_col, "markdown") else st
+        avatar_target.markdown(
+            '<img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />',
+            unsafe_allow_html=True,
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 def _render_sidebar_nav(
