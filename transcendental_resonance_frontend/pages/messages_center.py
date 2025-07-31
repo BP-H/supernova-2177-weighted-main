@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import asyncio
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container, header, theme_selector
 from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
+inject_light_theme()
 inject_modern_styles()
 
 # Temporary in-memory conversation store
