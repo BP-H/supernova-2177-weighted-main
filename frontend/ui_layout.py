@@ -217,7 +217,13 @@ def _render_sidebar_nav(
             )
         else:
             labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
-            choice = st.radio("", labels, index=index, key=key)
+            choice = st.radio(
+                "Navigation",
+                labels,
+                index=index,
+                key=key,
+                label_visibility="collapsed",
+            )
             choice = opts[labels.index(choice)][0]
 
         st.markdown("</div>", unsafe_allow_html=True)
