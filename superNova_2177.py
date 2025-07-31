@@ -452,10 +452,20 @@ _safe_import("tqdm", attrs=["tqdm"])
 _safe_import("pandas", alias="pd")
 _safe_import("statsmodels.api", alias="sm")
 _safe_import("pulp", attrs=["LpProblem", "LpMinimize", "LpVariable"])
-_safe_import("torch", alias="torch")
-_safe_import("torch.nn", alias="nn")
-_safe_import("torch.optim", alias="optim")
-_safe_import("torch.utils.data", attrs=["Dataset", "DataLoader"])
+
+# torch is optional. If not installed, related ML features will be disabled.
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from torch.utils.data import Dataset, DataLoader
+except ImportError:
+    logging.warning("PyTorch not installed; ML features are disabled.")
+    torch = None
+    nn = None
+    optim = None
+    Dataset = None
+    DataLoader = None
 _safe_import("matplotlib.pyplot", alias="plt")
 _safe_import("scipy.optimize", attrs=["minimize"])
 _safe_import("requests")  # For AI API calls
