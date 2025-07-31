@@ -18,12 +18,12 @@ import streamlit as st
 # ──────────────────────────────────────────────────────────────────────────────
 # UI-backend detection
 # ──────────────────────────────────────────────────────────────────────────────
-# ① Try NiceGUI → ② try streamlit-shadcn-ui → ③ fall back to plain Streamlit
-try:  # NiceGUI available?
-    from nicegui import ui  # type: ignore
+# Prefer streamlit-shadcn-ui and fall back to NiceGUI or plain Streamlit
+try:  # streamlit-shadcn-ui available?
+    import streamlit_shadcn_ui as ui  # type: ignore
 except Exception:  # noqa: BLE001
-    try:  # streamlit-shadcn-ui available?
-        import streamlit_shadcn_ui as ui  # type: ignore
+    try:  # NiceGUI available?
+        from nicegui import ui  # type: ignore
     except Exception:  # noqa: BLE001
         from contextlib import nullcontext
         import html
@@ -160,6 +160,14 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         ui.badge(f"❤️ {likes}").classes("bg-pink-500")
 
 
+def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
+    """Display posts in a responsive grid using ``render_post_card``."""
+    columns = st.columns(cols)
+    for i, post in enumerate(posts):
+        with columns[i % cols]:
+            render_post_card(post)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Theme helpers
 # ──────────────────────────────────────────────────────────────────────────────
@@ -294,6 +302,18 @@ def inject_instagram_styles() -> None:
         .shadcn-card {
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: #fff;
+        }
+        .shadcn-badge {
+            border-radius: 999px;
+            background: #fff;
+            padding: 0.25rem 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .shadcn-btn {
+            border-radius: 999px;
+            padding: 0.25rem 0.75rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         </style>
         """,
@@ -314,6 +334,7 @@ __all__ = [
     "alert",
     "header",
     "render_post_card",
+    "render_instagram_grid",
     "apply_theme",
     "theme_selector",
     "centered_container",

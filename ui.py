@@ -259,6 +259,7 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
     render_post_card,
+    render_instagram_grid,
     inject_instagram_styles,
 )
 
@@ -707,10 +708,7 @@ def render_modern_social_page():
         {"image": "https://placekitten.com/300/300", "text": "Another cat", "likes": 3},
         {"image": "https://placekitten.com/500/300", "text": "More cats", "likes": 8},
     ]
-    cols = st.columns(3)
-    for col, post in zip(cols * (len(posts) // 3 + 1), posts):
-        with col:
-            render_post_card(post)
+    render_instagram_grid(posts, cols=3)
 
 
 def render_modern_chat_page() -> None:
@@ -973,10 +971,7 @@ def run_analysis(validations, *, layout: str = "force"):
         result = analyze_validation_integrity(validations)
 
     header("Validations")
-    cols = st.columns(3)
-    for i, entry in enumerate(validations):
-        with cols[i % 3]:
-            render_post_card(entry)
+    render_instagram_grid(validations, cols=3)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -1430,14 +1425,6 @@ def main() -> None:
 
     # Global CSS for cards / clean background
     st.markdown(
-        """<style>
-        body, .stApp {background:#FAFAFA;}
-        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-        </style>""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(  # ← << duplicated block begins here (delete this one)
         """<style>
         body, .stApp {background:#FAFAFA;}
         .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
