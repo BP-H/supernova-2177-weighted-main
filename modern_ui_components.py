@@ -9,7 +9,12 @@ import importlib
 import streamlit as st
 from typing import Optional, Dict
 from pathlib import Path
-from utils.paths import ROOT_DIR, PAGES_DIR
+try:
+    # Prefer the shared path constants if available
+    from utils.paths import ROOT_DIR, PAGES_DIR  # type: ignore
+except Exception:  # pragma: no cover - fallback for isolated execution
+    ROOT_DIR = Path(__file__).resolve().parents[2]
+    PAGES_DIR = ROOT_DIR / "pages"
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
