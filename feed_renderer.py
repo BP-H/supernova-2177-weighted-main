@@ -10,6 +10,7 @@ from typing import Iterable, Dict, Any
 import streamlit as st
 
 from streamlit_helpers import render_post_card
+from modern_ui_components import shadcn_card
 
 # --- default demo posts -------------------------------------------------------
 DEMO_POSTS: list[dict[str, Any]] = [
