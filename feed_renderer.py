@@ -10,6 +10,7 @@ from typing import Iterable, Dict, Any
 import streamlit as st
 
 from streamlit_helpers import render_post_card
+from modern_ui_components import shadcn_card
 
 # Demo posts used when none are provided
 DEMO_POSTS: list[dict[str, Any]] = [
@@ -43,3 +44,17 @@ def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
 
     for post in posts:
         render_post_card(post)
+
+
+def render_mock_feed(posts: list[dict]) -> None:
+    """Display ``posts`` using simple Shadcn cards."""
+    if not posts:
+        st.info("No posts to display")
+        return
+
+    for post in posts:
+        with shadcn_card():
+            if post.get("image"):
+                st.image(post["image"], use_column_width=True)
+            if post.get("text"):
+                st.markdown(post["text"])

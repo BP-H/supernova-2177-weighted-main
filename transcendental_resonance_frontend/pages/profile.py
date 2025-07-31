@@ -14,6 +14,7 @@ from transcendental_resonance_frontend.ui.profile_ui import (
     render_profile,
 )
 from status_indicator import render_status_icon
+from feed_renderer import render_mock_feed, DEMO_POSTS
 
 
 try:
@@ -150,6 +151,8 @@ def main(main_container=None) -> None:
             {**DEFAULT_USER, "username": username},
         )
         render_profile(data)
+        st.subheader("Recent Posts")
+        render_mock_feed(DEMO_POSTS)
 
 
 
