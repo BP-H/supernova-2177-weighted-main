@@ -13,7 +13,7 @@ from __future__ import annotations
 import random
 from typing import Any, Dict, List
 
-from external_services.llm_client import LLMClient
+from external_services.llm_client import LLMClient, get_speculative_futures
 from external_services.vision_client import VisionClient
 
 # Satirical disclaimer appended to all speculative output
@@ -54,8 +54,11 @@ async def generate_speculative_payload(description: str) -> List[Dict[str, str]]
     results: List[Dict[str, str]] = []
     vision = VisionClient()
     for text in texts:
-        # Mocking or replacing video preview call if removed
-        video_url = f"https://example.com/fake_video_for_{text[:10]}"
+        offline = llm.offline or vision.offline
+        if offline:
+            video_url = "https://example.com/placeholder"
+        else:
+            video_url = f"https://example.com/fake_video_for_{text[:10]}"
         vision_notes = (await vision.analyze_timeline(video_url)).get("events", [])
         results.append(
             {
