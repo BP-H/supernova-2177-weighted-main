@@ -30,6 +30,13 @@ import os
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 
+try:                                        # NEW
+    from utils.paths import ROOT_DIR, PAGES_DIR
+except ModuleNotFoundError:                 # fallback when utils isn't installed
+    ROOT_DIR = Path(__file__).resolve().parents[1]      # repo root
+    PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+
+
 try:
     from streamlit_option_menu import option_menu
     USE_OPTION_MENU = True
