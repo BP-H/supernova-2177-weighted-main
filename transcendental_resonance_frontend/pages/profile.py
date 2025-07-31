@@ -64,6 +64,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
 
 inject_light_theme()
 inject_modern_styles()
+ensure_active_user()
 
 
 def _render_profile(username: str) -> None:
