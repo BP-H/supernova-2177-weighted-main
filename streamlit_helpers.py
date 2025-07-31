@@ -21,13 +21,16 @@ import streamlit as st
 # Prefer streamlit-shadcn-ui and fall back to NiceGUI or plain Streamlit
 try:  # streamlit-shadcn-ui available?
     import streamlit_shadcn_ui as ui  # type: ignore
+    shadcn = ui
 except Exception:  # noqa: BLE001
     try:  # NiceGUI available?
         from nicegui import ui  # type: ignore
+        shadcn = None
     except Exception:  # noqa: BLE001
         from contextlib import nullcontext
         import html
         from typing import Any, ContextManager
+        import streamlit as st
 
         class _DummyElement:
             """Gracefully ignore chained style/class calls and context management."""
@@ -74,6 +77,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
+        shadcn = None
 
 
 # ──────────────────────────────────────────────────────────────────────────────
