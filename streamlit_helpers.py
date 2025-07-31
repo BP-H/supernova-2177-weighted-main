@@ -236,6 +236,10 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             st.image(img, use_column_width=True)
         st.write(text)
         st.caption(f"❤️ {likes}")
+        st.markdown(
+            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            unsafe_allow_html=True,
+        )
         return
 
     try:
@@ -243,22 +247,71 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
             safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
-            ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+            ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+            ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
     except Exception as exc:  # noqa: BLE001
         st.toast(f"Post card failed: {exc}", icon="⚠️")
         if img:
             st.image(img, use_column_width=True)
         st.write(text)
         st.caption(f"❤️ {likes}")
+        st.markdown(
+            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            unsafe_allow_html=True,
+        )
 
 
+import html  # Ensure this is imported at the top if not already
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
     """Display posts in a responsive grid using ``render_post_card``."""
     columns = st.columns(cols)
     for i, post in enumerate(posts):
         with columns[i % cols]:
-            render_post_card(post)
+            username = post.get("username") or post.get("user", "")
+            caption = post.get("caption") or post.get("text", "")
+            if username:
+                st.markdown(f"**{html.escape(username)}**")
+            render_post_card({
+                "image": post.get("image"),
+                "text": caption,
+                "likes": post.get("likes", 0),
+            })
+
+
+def render_mock_feed() -> None:
+    """Render a simple scrolling feed of demo posts."""
+    posts = [
+        (
+            "alice",
+            "https://picsum.photos/seed/alice/400/300",
+            "Enjoying the sunshine!",
+        ),
+        (
+            "bob",
+            "https://picsum.photos/seed/bob/400/300",
+            "Hiking adventures today.",
+        ),
+        (
+            "carol",
+            "https://picsum.photos/seed/carol/400/300",
+            "Coffee time at my favourite spot.",
+        ),
+    ]
+
+    st.markdown(
+        "<div style='max-height: 400px; overflow-y: auto;'>",
+        unsafe_allow_html=True,
+    )
+    with st.container():
+        for username, image, caption in posts:
+            render_post_card({
+                "image": image,
+                "text": f"**{html.escape(username)}**: {caption}",
+                "likes": 0,
+            })
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -433,6 +486,11 @@ def inject_global_styles() -> None:
     inject_modern_styles()
 
 
+def ensure_active_user() -> str:
+    """Ensure ``st.session_state['active_user']`` is initialized."""
+    return st.session_state.setdefault("active_user", "guest")
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Public symbols
 # ──────────────────────────────────────────────────────────────────────────────
@@ -441,6 +499,7 @@ __all__ = [
     "header",
     "render_post_card",
     "render_instagram_grid",
+    "render_mock_feed",
     "sanitize_text",
     "apply_theme",
     "theme_selector",
@@ -450,5 +509,6 @@ __all__ = [
     "tabs_nav",
     "inject_global_styles",
     "inject_instagram_styles",
+    "ensure_active_user",
     "BOX_CSS",
 ]

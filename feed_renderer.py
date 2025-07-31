@@ -1,7 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Simple renderer for a social feed."""
+"""Utilities for rendering a simple (or custom) social feed."""
 
 from __future__ import annotations
 
@@ -12,28 +12,43 @@ import streamlit as st
 from streamlit_helpers import render_post_card
 from modern_ui_components import shadcn_card
 
-# Demo posts used when none are provided
+# --- default demo posts -------------------------------------------------------
 DEMO_POSTS: list[dict[str, Any]] = [
     {
+        "user": "alice",
         "image": "https://placekitten.com/400/300",
-        "text": "Look at this cute kitten!",
+        "text": "Cute kitten!",
         "likes": 5,
     },
     {
-        "image": "https://placekitten.com/500/300",
-        "text": "Another adorable cat appears.",
+        "user": "bob",
+        "image": "https://placebear.com/400/300",
+        "text": "Bear with me.",
         "likes": 3,
     },
     {
-        "image": "https://placekitten.com/450/300",
-        "text": "Cats everywhere!",
+        "user": "carol",
+        "image": "https://placekitten.com/401/301",
+        "text": "Another kitty.",
         "likes": 8,
     },
 ]
 
 
+# -----------------------------------------------------------------------------
+
+
 def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
-    """Render each post using :func:`render_post_card`."""
+    """
+    Render a list of post dictionaries using :func:`render_post_card`.
+
+    Parameters
+    ----------
+    posts
+        An iterable of post dictionaries.  If *None* (default) the built-in
+        ``DEMO_POSTS`` will be shown.  Each post dict should at minimum contain
+        ``image`` and ``text`` keys; ``user`` and ``likes`` are optional.
+    """
     if posts is None:
         posts = DEMO_POSTS
 
@@ -46,15 +61,10 @@ def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
         render_post_card(post)
 
 
-def render_mock_feed(posts: list[dict]) -> None:
-    """Display ``posts`` using simple Shadcn cards."""
-    if not posts:
-        st.info("No posts to display")
-        return
+def render_mock_feed() -> None:
+    """Convenience wrapper that simply calls :func:`render_feed` with demo data."""
+    render_feed(DEMO_POSTS)
 
-    for post in posts:
-        with shadcn_card():
-            if post.get("image"):
-                st.image(post["image"], use_column_width=True)
-            if post.get("text"):
-                st.markdown(post["text"])
+
+__all__ = ["render_feed", "render_mock_feed", "DEMO_POSTS"]
+
