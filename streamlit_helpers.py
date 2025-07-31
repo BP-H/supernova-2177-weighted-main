@@ -110,6 +110,13 @@ st.markdown(BOX_CSS, unsafe_allow_html=True)
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper components
 # ──────────────────────────────────────────────────────────────────────────────
+
+def sanitize_emoji(text: str) -> str:
+    """Return emoji string safe for HTML rendering."""
+    if not isinstance(text, str):
+        return ""
+    return html.escape(text)
+
 def alert(
     message: str,
     level: Literal["warning", "error", "info"] = "info",
@@ -155,7 +162,8 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}</style>",
         unsafe_allow_html=True,
     )
-    ui.element("h1", title)
+    safe_title = sanitize_emoji(title)
+    ui.element("h1", safe_title)
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
@@ -372,6 +380,7 @@ def inject_global_styles() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 __all__ = [
     "alert",
+    "sanitize_emoji",
     "header",
     "render_post_card",
     "render_instagram_grid",
