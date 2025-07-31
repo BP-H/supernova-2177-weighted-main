@@ -10,7 +10,16 @@ import asyncio
 
 import httpx
 import websockets
-from nicegui import ui
+
+try:
+    from nicegui import ui  # type: ignore
+except Exception:  # pragma: no cover - nicegui optional
+    class _UIStub:
+        def notify(self, *args, **kwargs) -> None:
+            """Fallback notify that does nothing."""
+            return None
+
+    ui = _UIStub()  # type: ignore
 
 # Honor offline mode for development/testing
 OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
