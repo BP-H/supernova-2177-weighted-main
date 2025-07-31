@@ -8,6 +8,7 @@ Example:
 import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
+st.set_page_config(layout="wide")
 
 if not hasattr(st, "experimental_page"):
     def _noop_experimental_page(*_args, **_kwargs):
@@ -20,6 +21,8 @@ if not hasattr(st, "experimental_page"):
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+
+import streamlit_shadcn_ui as ui
 
 from datetime import datetime, timezone
 import asyncio
@@ -43,6 +46,7 @@ from frontend import ui_layout
 try:
     from modern_ui_components import (
         render_validation_card,
+        render_post_card,
         render_stats_section,
         shadcn_card,
         shadcn_tabs,
@@ -50,6 +54,9 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     def render_validation_card(*_a, **_k):
         st.info("validation card unavailable")
+
+    def render_post_card(*_a, **_k):
+        st.info("post card unavailable")
 
     def render_stats_section(*_a, **_k):
         st.info("stats section unavailable")
@@ -60,6 +67,7 @@ except Exception:  # pragma: no cover - optional dependency
 
     def shadcn_tabs(labels):
         return st.tabs(labels)
+
 
 # Prefer modern sidebar render if available
 try:
@@ -174,6 +182,46 @@ UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 _fallback_rendered: set[str] = set()
 
 
+class _StreamlitTabs:
+    """Simple context manager to mimic ``ui.tabs`` using Streamlit widgets."""
+
+    def __init__(self, labels: list[str], key: str = "_main_tabs") -> None:
+        self.labels = labels
+        self.key = key
+        self.active = labels[0]
+
+    def __enter__(self) -> "_StreamlitTabs":
+        index = 0
+        current = st.session_state.get(self.key)
+        if isinstance(current, str) and current in self.labels:
+            index = self.labels.index(current)
+        self.active = st.radio(
+            "",
+            self.labels,
+            horizontal=True,
+            index=index,
+            key=self.key,
+        )
+        if self.active is None:
+            self.active = self.labels[index]
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        st.session_state[self.key] = self.active
+        return False
+
+
+class _UIWrapper:
+    """Namespace providing a ``tabs`` helper compatible with NiceGUI style."""
+
+    @staticmethod
+    def tabs(labels: list[str]) -> _StreamlitTabs:
+        return _StreamlitTabs(labels)
+
+
+ui = _UIWrapper()
+
+
 def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
@@ -205,6 +253,8 @@ from streamlit_helpers import (
     header,
     theme_selector,
     safe_container,
+    render_post_card,
+    inject_instagram_styles,
 )
 
 try:
@@ -248,7 +298,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
 
     def render_social_tab() -> None:
-        st.subheader("👥 Social Features")
+        header("👥 Social Features")
         st.info("Social features module not available")
 
 
@@ -265,7 +315,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
 
     def render_agent_insights_tab() -> None:
-        st.subheader("🤖 Agent Insights")
+        header("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
 
         if AGENT_REGISTRY:
@@ -314,7 +364,7 @@ def render_landing_page():
     )
 
     # Show diagnostic information
-    st.subheader("🔧 System Diagnostics")
+    header("🔧 System Diagnostics")
     col1, col2 = st.columns(2)
 
     with col1:
@@ -329,7 +379,7 @@ def render_landing_page():
             st.error("Directory missing")
 
     # Show available fallback features
-    st.subheader("🎮 Available Features")
+    header("🎮 Available Features")
     if st.button("Run Validation Analysis"):
         run_analysis([], layout="force")
 
@@ -647,9 +697,15 @@ def render_modern_music_page():
 
 def render_modern_social_page():
     render_title_bar("👥", "Social Network")
-    st.markdown("😀 @alice #hello")
-    st.markdown("🔥 Trending: #resonance #ai")
-    st.success("Social feed placeholder loaded")
+    posts = [
+        {"image": "https://placekitten.com/400/300", "text": "Cute kitten", "likes": 5},
+        {"image": "https://placekitten.com/300/300", "text": "Another cat", "likes": 3},
+        {"image": "https://placekitten.com/500/300", "text": "More cats", "likes": 8},
+    ]
+    cols = st.columns(3)
+    for col, post in zip(cols * (len(posts) // 3 + 1), posts):
+        with col:
+            render_post_card(post)
 
 
 def render_modern_chat_page() -> None:
@@ -911,9 +967,11 @@ def run_analysis(validations, *, layout: str = "force"):
     with st.spinner("Loading..."):
         result = analyze_validation_integrity(validations)
 
-    st.subheader("Validations")
-    for entry in validations:
-        render_validation_card(entry)
+    header("Validations")
+    cols = st.columns(3)
+    for i, entry in enumerate(validations):
+        with cols[i % 3]:
+            render_post_card(entry)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -940,7 +998,7 @@ def run_analysis(validations, *, layout: str = "force"):
             unsafe_allow_html=True,
         )
 
-    st.subheader("Analysis Result")
+    header("Analysis Result")
     if st.session_state.get("beta_mode"):
         st.json(result)
 
@@ -1060,7 +1118,7 @@ def run_analysis(validations, *, layout: str = "force"):
             )
 
             fig = go.Figure(data=[edge_trace, node_trace])
-            st.subheader("Validator Coordination Graph")
+            header("Validator Coordination Graph")
             st.plotly_chart(fig, use_container_width=True)
 
             img_buf = io.BytesIO()
@@ -1095,14 +1153,14 @@ def boot_diagnostic_ui():
         pass
 
     with shadcn_card("Boot Diagnostic"):
-        st.subheader("Config Test")
+        header("Config Test")
         if Config is not None:
             st.success("Config import succeeded")
             st.write({"METRICS_PORT": Config.METRICS_PORT})
         else:
             alert("Config import failed", "error")
 
-        st.subheader("Harmony Scanner Check")
+        header("Harmony Scanner Check")
         scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
         if scanner:
             st.success("HarmonyScanner instantiated")
@@ -1116,8 +1174,9 @@ def boot_diagnostic_ui():
             except Exception as exc:  # pragma: no cover - debug only
                 alert(f"Dummy scan error: {exc}", "error")
 
-        st.subheader("Validation Analysis")
+        header("Validation Analysis")
         run_analysis([], layout="force")
+
 
 
 def render_validation_ui(
@@ -1360,46 +1419,61 @@ def main() -> None:
             initial_sidebar_state="collapsed",
         )
     except Exception:
+        # Older Streamlit builds (or re-runs) may raise – that’s OK.
         pass
 
+    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    try:
+        inject_instagram_styles()
+    except Exception:  # pragma: no cover
+        pass
+
+    # Global CSS for cards / clean background
+    st.markdown(
+        """
+        <style>
+        body, .stApp {background:#FAFAFA;}
+        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     try:
         ensure_pages(PAGES, PAGES_DIR)
-    except Exception as exc:
+    except Exception as exc:  # pragma: no cover
         logger.warning("ensure_pages failed: %s", exc)
-    # Initialize database BEFORE anything else
-    try:
-        db_ready = ensure_database_exists()
-        if not db_ready:
-            st.warning("Database initialization failed. Running in fallback mode")
-    except Exception as e:
-        st.error(f"Database initialization failed: {e}")
-        st.info("Running in fallback mode")
 
-    # Respond to lightweight health-check probes
+    try:
+        if not ensure_database_exists():
+            st.warning("Database initialization failed. Running in fallback mode")
+    except Exception as exc:
+        st.error(f"Database initialization failed: {exc}")
+        st.info("Running in fallback mode")
     try:
         params = st.query_params
-    except AttributeError:
-        # Fallback for older Streamlit versions
+    except AttributeError:                       # Streamlit < 1.25
         params = st.experimental_get_query_params()
 
-    parse_beta_mode(params)
+    parse_beta_mode(params)                      # updates session state
 
-    value = params.get(HEALTH_CHECK_PARAM)
+    value      = params.get(HEALTH_CHECK_PARAM)
+    path_info  = os.environ.get("PATH_INFO", "").rstrip("/")
 
-    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
         value == "1"
         or (isinstance(value, list) and "1" in value)
         or path_info == f"/{HEALTH_CHECK_PARAM}"
     ):
-
+        # Lightweight OK for load-balancer / CI checks
         with shadcn_card("Health Check"):
             st.write("ok")
         st.stop()
         return
-
     try:
         render_top_bar()
+    except Exception as exc:                     # pragma: no cover
+        logger.error("render_top_bar failed: %s", exc)
+
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
             """
@@ -1536,6 +1610,9 @@ def main() -> None:
         except AttributeError:
             st.experimental_set_query_params(page=display_choice)
 
+        # Sync tab selection with current page choice
+        st.session_state.setdefault("_main_tabs", display_choice)
+
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
@@ -1595,24 +1672,34 @@ def main() -> None:
 
         # Center content area — dynamic page loading
         with center_col:
-            # Resolve page module
-            # Normalize input and resolve page key
-            label = normalize_choice(choice)
-            page_key = PAGES.get(label, label.lower())
+            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
+                selected = tabs.active
+                if selected != display_choice:
+                    try:
+                        st.query_params["page"] = selected
+                    except AttributeError:
+                        st.experimental_set_query_params(page=selected)
+                    st.session_state["_main_tabs"] = selected
+                    st.rerun()
 
-            if page_key:
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                try:
-                    load_page_with_fallback(display_choice, module_paths)
-                except Exception:
-                    st.toast(f"Page not found: {display_choice}", icon="⚠️")
-                    _render_fallback(display_choice)
-            else:
-                st.toast("Select a page above to continue.")
-                _render_fallback("Validation")
+                label = normalize_choice(selected)
+                page_key = PAGES.get(label, label.lower())
+
+                if page_key:
+                    module_paths = [
+                        f"transcendental_resonance_frontend.pages.{page_key}",
+                        f"pages.{page_key}",
+                    ]
+                    try:
+                        load_page_with_fallback(selected, module_paths)
+                    except Exception:
+                        st.toast(
+                            f"Page not found: {selected}", icon="⚠️"
+                        )
+                        _render_fallback(selected)
+                else:
+                    st.toast("Select a page above to continue.")
+                    _render_fallback("Validation")
 
 
 
@@ -1663,7 +1750,7 @@ def main() -> None:
 
             # Show agent output
             if st.session_state.get("agent_output") is not None:
-                st.subheader("Agent Output")
+                header("Agent Output")
                 if st.session_state.get("beta_mode"):
                     st.json(st.session_state.get("agent_output"))
 

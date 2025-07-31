@@ -368,6 +368,22 @@ def render_validation_card(entry: dict) -> None:
     )
 
 
+def render_post_card(entry: dict) -> None:
+    """Render a simple content card using ``.sn-card`` styles."""
+    user = entry.get("user") or entry.get("validator") or entry.get("author", "")
+    content = entry.get("text") or entry.get("content")
+    if content is None:
+        target = entry.get("target") or entry.get("subject")
+        score = entry.get("score")
+        content = f"<strong>{user}</strong> → <em>{target}</em>" + (
+            f"<br>Score: {score}" if score is not None else ""
+        )
+    st.markdown(
+        f"<div class='sn-card' style='background:white;padding:1rem;margin-bottom:1rem;'>{content}</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def render_stats_section(stats: dict) -> None:
     """Display quick stats using a responsive flexbox layout."""
 
@@ -453,5 +469,6 @@ __all__ = [
     "render_modern_header",
     "render_modern_sidebar",
     "render_validation_card",
+    "render_post_card",
     "render_stats_section",
 ]

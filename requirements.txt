@@ -2,6 +2,7 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 streamlit
+streamlit-shadcn-ui
 pytest
 pytest-asyncio>=0.23
 sqlalchemy>=2.0
