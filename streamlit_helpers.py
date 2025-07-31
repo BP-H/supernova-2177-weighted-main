@@ -15,6 +15,10 @@ from contextlib import nullcontext
 
 import streamlit as st
 try:
+    import streamlit_shadcn_ui as ui
+except Exception:  # pragma: no cover - optional dependency
+    ui = None
+try:
     from modern_ui import inject_modern_styles
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
@@ -64,7 +68,25 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}" "</style>",
         unsafe_allow_html=True,
     )
-    st.header(title)
+    if ui is not None:
+        ui.element("h1", title)
+    else:
+        st.header(title)
+
+
+def render_post_card(post_data: dict) -> None:
+    """Render a simple Instagram-style post card using shadcn components."""
+    if ui is None:
+        st.image(post_data.get("image", ""))
+        st.write(post_data.get("text", ""))
+        st.caption(f"❤️ {post_data.get('likes', 0)}")
+        return
+
+    with ui.card(key=f"post_{hash(post_data.get('text', ''))}"):
+        if post_data.get("image"):
+            ui.image(post_data["image"], className="rounded-md")
+        ui.element("p", post_data.get("text", ""))
+        ui.badge(f"❤ {post_data.get('likes', 0)}", className="bg-pink-500")
 
 
 def safe_apply_theme(theme: str) -> None:
@@ -189,6 +211,19 @@ def safe_container(container: Any) -> ContextManager:
     return nullcontext()
 
 
+def inject_instagram_styles() -> None:
+    """Inject lightweight CSS tweaks for an Instagram-like aesthetic."""
+    st.markdown(
+        """
+        <style>
+        body { background: #FAFAFA; }
+        .shadcn-card { border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 __all__ = [
     "alert",
     "header",
@@ -198,4 +233,6 @@ __all__ = [
     "safe_container",
     "inject_global_styles",
     "BOX_CSS",
+    "render_post_card",
+    "inject_instagram_styles",
 ]
