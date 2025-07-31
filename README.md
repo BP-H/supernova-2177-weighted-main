@@ -40,6 +40,7 @@ pip install -r requirements.txt
 # python setup_env.py --run-app
 
 # optional: build the Transcendental Resonance frontend
+# pip install nicegui  # install the NiceGUI package
 # python setup_env.py --build-ui
 # The NiceGUI web interface now lives in `transcendental_resonance_frontend/`.
 # This folder was historically called `web_ui`.
@@ -148,6 +149,18 @@ This project depends on libraries such as `fastapi`, `pydantic-settings`, `struc
    .\venv\Scripts\activate
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
+
+### Extras
+
+The NiceGUI-based frontend under `transcendental_resonance_frontend/` is
+optional. Install `nicegui` if you'd like to build and launch that interface:
+
+```bash
+pip install nicegui
+```
+
+The Streamlit dashboard works without `nicegui`, so you can skip this package
+when using the Streamlit-only UI.
 
 ### System Packages
 
