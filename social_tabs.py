@@ -4,7 +4,13 @@
 import asyncio
 import streamlit as st
 from frontend.light_theme import inject_light_theme
-from streamlit_helpers import alert, safe_container, header, get_active_user
+from streamlit_helpers import (
+    alert,
+    safe_container,
+    header,
+    get_active_user,
+    ensure_active_user,
+)
 
 
 
@@ -71,15 +77,9 @@ def render_social_tab(main_container=None) -> None:
     """Render basic social interactions."""
     if main_container is None:
         main_container = st
-
-    init_db()
-    seed_default_users()
-
-    st.session_state.setdefault("active_user", "guest")
+    ensure_active_user()
     container_ctx = safe_container(main_container)
     with container_ctx:
-        if "active_user" not in st.session_state:
-            st.session_state["active_user"] = "guest"
         header("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")

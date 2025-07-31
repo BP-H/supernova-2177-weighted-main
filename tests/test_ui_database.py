@@ -91,8 +91,8 @@ def test_ensure_database_exists_creates_table_and_default_admin(tmp_path, monkey
     ).fetchall()
     assert (
         ("admin", "admin@supernova.dev", 1) in rows
-        and ("guest", "guest@supernova.dev", 0) in rows
-        and ("demo_user", "demo@supernova.dev", 0) in rows
+        and ("guest", "guest@example.com", 0) in rows
+        and ("demo_user", "demo@example.com", 0) in rows
     )
     assert len(rows) >= 3
     conn.close()

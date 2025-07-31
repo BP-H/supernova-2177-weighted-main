@@ -13,6 +13,8 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+
+_FAKE_SESSION: dict[str, Any] = {}
 import inspect
 import streamlit as st
 
@@ -222,44 +224,69 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
-    """Instagram-style post card that degrades gracefully."""
-    img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
-    text = sanitize_text(post_data.get("text", ""))
-    user = sanitize_text(post_data.get("user", ""))
+    """Render an Instagram-style post card that gracefully degrades."""
+    img   = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text  = sanitize_text(post_data.get("text",  ""))
+    user  = sanitize_text(post_data.get("user",  ""))
     likes = post_data.get("likes", 0)
     try:
         likes = int(likes)
-    except Exception:
+    except Exception:  # keep likes at 0 if conversion fails
         likes = 0
 
+    # ── Plain-Streamlit fallback ─────────────────────────────────────────────
     if ui is None:
-        html_parts = []
+        html_parts: list[str] = []
+
         if img:
-            html_parts.append(f"<img src='{html.escape(img)}' style='width:100%;border-radius:0.375rem'>")
+            html_parts.append(
+                f"<img src='{html.escape(img)}' "
+                "style='width:100%;border-radius:0.375rem;'>"
+            )
+
         if user:
             html_parts.append(f"<p><strong>{html.escape(user)}</strong></p>")
+
         if text:
             html_parts.append(f"<p>{html.escape(text)}</p>")
-        html_parts.append(f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>")
+
+        html_parts.append(
+            f"<div style='color:var(--text-color);font-size:1.2em;'>"
+            f"❤️ {likes} 🔁 💬</div>"
+        )
+
         st.markdown("".join(html_parts), unsafe_allow_html=True)
         return
 
+    # ── Fancy UI backend available (streamlit-shadcn-ui / NiceGUI) ───────────
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
-            safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
+
+            # text / caption
+            if hasattr(ui, "element"):
+                safe_element("p", text).classes("mb-1")
+            else:
+                st.markdown(text)
+
+            # optional like badge (if backend supports it)
             if hasattr(ui, "badge"):
                 ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+
             ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
-    except Exception as exc:  # noqa: BLE001
-        st.toast(f"Post card failed: {exc}", icon="⚠️")
+
+    except Exception as exc:  # fall back if UI component chain fails
+        if hasattr(st, "toast"):
+            st.toast(f"Post card failed: {exc}", icon="⚠️")
+
         if img:
             st.image(img, use_column_width=True)
         st.write(text)
         st.caption(f"❤️ {likes}")
         st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            "<div style='color:var(--text-color);font-size:1.2em;'>"
+            "❤️ 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 
@@ -393,11 +420,16 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         key_suffix = "default"
 
     theme_key = f"theme_{key_suffix}"
-    if theme_key not in st.session_state:
-        st.session_state[theme_key] = "light"
-
     unique_key = f"theme_selector_{key_suffix}"
-    current = st.session_state[theme_key]
+
+    try:
+        if theme_key not in st.session_state:
+            st.session_state[theme_key] = "light"
+        current = st.session_state[theme_key]
+    except Exception:
+        global _FAKE_SESSION
+        _FAKE_SESSION = globals().get("_FAKE_SESSION", {})
+        current = _FAKE_SESSION.setdefault(theme_key, "light")
 
     if ui is not None and hasattr(ui, "radio_group"):
         try:
@@ -421,9 +453,14 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
             key=unique_key,
         )
 
-    st.session_state[theme_key] = choice.lower()
-    apply_theme(st.session_state[theme_key])
-    return st.session_state[theme_key]
+    try:
+        st.session_state[theme_key] = choice.lower()
+        apply_theme(st.session_state[theme_key])
+        return st.session_state[theme_key]
+    except Exception:
+        _FAKE_SESSION[theme_key] = choice.lower()
+        apply_theme(_FAKE_SESSION[theme_key])
+        return _FAKE_SESSION[theme_key]
 
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
