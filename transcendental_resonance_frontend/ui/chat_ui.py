@@ -31,7 +31,16 @@ def render_conversation_list() -> None:
         active = users[0]
     col1, col2 = st.columns([1, 3])
     with col1:
-        selected = st.radio("", users, index=users.index(active)) if users else ""
+        selected = (
+            st.radio(
+                "Conversation",
+                users,
+                index=users.index(active),
+                label_visibility="collapsed",
+            )
+            if users
+            else ""
+        )
         st.session_state["active_chat"] = selected
     with col2:
         st.write("Recent")
