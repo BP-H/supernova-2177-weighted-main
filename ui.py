@@ -21,6 +21,8 @@ if not hasattr(st, "experimental_page"):
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
+import streamlit_shadcn_ui as ui
+
 from datetime import datetime, timezone
 import asyncio
 import difflib
