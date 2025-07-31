@@ -73,14 +73,18 @@ def _load_profile(username: str) -> tuple[dict, dict, dict]:
 inject_light_theme()
 
 
+
 def render_social_tab(main_container=None) -> None:
     """Render basic social interactions."""
     if main_container is None:
         main_container = st
+
     current_user = get_active_user()
     container_ctx = safe_container(main_container)
     with container_ctx:
         header("Friends & Followers")
+        # use current_user for any logic here
+
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")
             return
@@ -120,7 +124,7 @@ def render_social_tab(main_container=None) -> None:
                             if st.session_state.get("beta_mode"):
                                 st.json(result)
                             st.toast("Success!")
-                        except Exception as exc:  # pragma: no cover - UI feedback
+                        except Exception as exc:  # pragma: no cover - UI feedback only
                             alert(f"Operation failed: {exc}", "error")
 
         st.divider()
@@ -136,4 +140,3 @@ def render_social_tab(main_container=None) -> None:
             st.write(followers.get("followers", []))
             st.markdown("**Following**")
             st.write(following.get("following", []))
-
