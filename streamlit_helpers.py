@@ -81,11 +81,6 @@ except Exception:  # noqa: BLE001
         shadcn = None
 
 
-def sanitize_text(text: Any) -> str:
-    """Return ``text`` as a safe UTF-8 string."""
-    if not isinstance(text, str):
-        text = str(text)
-    return text.encode("utf-8", "ignore").decode("utf-8")
 
 
 def safe_element(tag: str, content: str) -> Any:
@@ -224,17 +219,24 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
-    """Render an Instagram-style post card that gracefully degrades."""
+    """
+    Render an Instagram-style post card.
+
+    • Works with streamlit-shadcn-ui / NiceGUI back-ends (via `ui`).
+    • Gracefully degrades to pure-Streamlit (or even very minimal
+      stubs used in tests) when those back-ends aren’t available.
+    """
     img   = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
     text  = sanitize_text(post_data.get("text",  ""))
     user  = sanitize_text(post_data.get("user",  ""))
     likes = post_data.get("likes", 0)
+
     try:
         likes = int(likes)
-    except Exception:  # keep likes at 0 if conversion fails
+    except Exception:  # leave at 0 if conversion fails
         likes = 0
 
-    # ── Plain-Streamlit fallback ─────────────────────────────────────────────
+    # ── Plain-Streamlit (or stub) fallback ────────────────────────────────
     if ui is None:
         html_parts: list[str] = []
 
@@ -243,10 +245,8 @@ def render_post_card(post_data: dict[str, Any]) -> None:
                 f"<img src='{html.escape(img)}' "
                 "style='width:100%;border-radius:0.375rem;'>"
             )
-
         if user:
             html_parts.append(f"<p><strong>{html.escape(user)}</strong></p>")
-
         if text:
             html_parts.append(f"<p>{html.escape(text)}</p>")
 
@@ -258,25 +258,33 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         st.markdown("".join(html_parts), unsafe_allow_html=True)
         return
 
-    # ── Fancy UI backend available (streamlit-shadcn-ui / NiceGUI) ───────────
+    # ── Fancy UI back-end available ───────────────────────────────────────
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
 
-            # text / caption
             if hasattr(ui, "element"):
                 safe_element("p", text).classes("mb-1")
             else:
                 st.markdown(text)
 
-            # optional like badge (if backend supports it)
             if hasattr(ui, "badge"):
                 ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+            else:  # fall back if badge component missing
+                st.markdown(f"<span>❤️ {likes}</span>", unsafe_allow_html=True)
 
-            ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
+            # reactions line
+            if hasattr(ui, "element"):
+                ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
+            else:
+                st.markdown(
+                    f"<div style='color:var(--text-color);font-size:1.2em;'>"
+                    f"❤️ {likes} 🔁 💬</div>",
+                    unsafe_allow_html=True,
+                )
 
-    except Exception as exc:  # fall back if UI component chain fails
+    except Exception as exc:  # total fallback if UI chain fails
         if hasattr(st, "toast"):
             st.toast(f"Post card failed: {exc}", icon="⚠️")
 
@@ -285,8 +293,8 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         st.write(text)
         st.caption(f"❤️ {likes}")
         st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>"
-            "❤️ 🔁 💬</div>",
+            f"<div style='color:var(--text-color);font-size:1.2em;'>"
+            f"❤️ {likes} 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 
