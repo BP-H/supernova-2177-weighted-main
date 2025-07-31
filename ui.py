@@ -25,6 +25,9 @@ if not hasattr(st, "experimental_page"):
 try:
     import streamlit_shadcn_ui as ui  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
+    import types
+    ui = types.SimpleNamespace()
+
 
 
 from datetime import datetime, timezone
@@ -44,9 +47,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Optional
 from frontend import ui_layout
-
-ui = types.SimpleNamespace()
-
 
 try:
     from modern_ui_components import (
