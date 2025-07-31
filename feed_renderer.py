@@ -59,7 +59,7 @@ def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
         if user:
             st.markdown(f"**{html.escape(user)}**")
         if image:
-            st.image(image, use_column_width=True)
+            st.image(image, use_container_width=True)
         if caption:
             st.markdown(html.escape(caption))
         st.markdown(
