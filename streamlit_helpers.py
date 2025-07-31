@@ -161,21 +161,45 @@ def header(title: str, *, layout: str = "centered") -> None:
 def render_post_card(post_data: dict[str, Any]) -> None:
     """Instagram-style post card that degrades gracefully."""
     img = post_data.get("image", "")
-    text = post_data.get("text", "")
+    caption = post_data.get("text", "")
     likes = post_data.get("likes", 0)
+    user = (
+        post_data.get("user")
+        or post_data.get("username")
+        or post_data.get("author")
+        or ""
+    )
 
     if ui is None:
+        parts = [
+            "<div class='sn-card' style='background:#fff;"
+            "padding:1rem;margin-bottom:1rem;"
+            "border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);'>"
+        ]
         if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
+            parts.append(
+                f"<img src='{html.escape(img)}' style='width:100%;"
+                "border-radius:8px;margin-bottom:.5rem;'/>"
+            )
+        if user:
+            parts.append(f"<strong>{html.escape(user)}</strong>")
+        if caption:
+            parts.append(
+                f"<p style='margin:0.25rem 0'>{html.escape(caption)}</p>"
+            )
+        parts.append(f"<div style='font-size:1.2rem;'>❤️ {likes} 🔁 💬</div>")
+        parts.append("</div>")
+        st.markdown("".join(parts), unsafe_allow_html=True)
         return
 
     with ui.card().classes("w-full p-4 mb-4"):
         if img:
             ui.image(img).classes("rounded-md mb-2 w-full")
-        ui.element("p", text).classes("mb-1")
-        ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+        if user:
+            ui.element("strong", user).classes("block mb-1")
+        if caption:
+            ui.element("p", caption).classes("mb-1 text-sm")
+        ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-lg")
 
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:

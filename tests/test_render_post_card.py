@@ -18,7 +18,7 @@ import streamlit_helpers as sh
 
 def test_render_post_card_uses_ui_components(monkeypatch):
     card_called = {}
-    badge_called = {}
+    captured = []
 
     class DummyCard:
         def __enter__(self):
@@ -30,39 +30,36 @@ def test_render_post_card_uses_ui_components(monkeypatch):
             card_called['cls'] = cls
             return self
 
-    def dummy_badge(text):
-        badge_called['text'] = text
-        return types.SimpleNamespace(classes=lambda cls: badge_called.setdefault('cls', cls))
-
     dummy_ui = types.SimpleNamespace(
         card=lambda: DummyCard(),
-        image=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
-        element=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
-        badge=dummy_badge,
+        image=lambda img, **k: types.SimpleNamespace(classes=lambda cls: captured.append(("img", img))),
+        element=lambda tag, content: types.SimpleNamespace(classes=lambda cls: captured.append((tag, content))),
     )
 
     monkeypatch.setattr(sh, "ui", dummy_ui)
     monkeypatch.setattr(sh, "st", types.SimpleNamespace())
 
-    sh.render_post_card({"text": "Hello", "likes": 4})
+    sh.render_post_card({"image": "pic.png", "text": "Hello", "likes": 4, "user": "alice"})
 
     assert card_called.get('entered')
-    assert badge_called.get('text') == "❤️ 4"
+    assert ("img", "pic.png") in captured
+    assert ("div", "❤️ 4 🔁 💬") in captured
 
 
 def test_render_post_card_plain_streamlit(monkeypatch):
     captured = {}
     dummy_st = types.SimpleNamespace(
-        image=lambda img, use_column_width=True: captured.setdefault("image", img),
-        write=lambda text: captured.setdefault("write", text),
-        caption=lambda text: captured.setdefault("caption", text),
+        markdown=lambda html, unsafe_allow_html=True: captured.setdefault("html", html),
     )
 
     monkeypatch.setattr(sh, "ui", None)
     monkeypatch.setattr(sh, "st", dummy_st)
 
-    sh.render_post_card({"image": "img.png", "text": "Hi", "likes": 7})
+    sh.render_post_card({"image": "img.png", "text": "Hi", "likes": 7, "user": "bob"})
 
-    assert captured["image"] == "img.png"
-    assert captured["write"] == "Hi"
-    assert captured["caption"] == "❤️ 7"
+    html_out = captured["html"]
+    assert "img.png" in html_out
+    assert "Hi" in html_out
+    assert "bob" in html_out
+    assert "❤️ 7" in html_out
+    assert "border-radius" in html_out
