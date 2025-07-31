@@ -1430,22 +1430,21 @@ except Exception:  # pragma: no cover
 
 # Global CSS for cards / clean background
 st.markdown(
-    """
-    <style>
-      body, .stApp {background:#FAFAFA;}
-      .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    </style>
-    """,
+    """<style>
+    body, .stApp {background:#FAFAFA;}
+    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    </style>""",
     unsafe_allow_html=True,
 )
 
-    st.markdown(
-        """<style>
-        body, .stApp {background:#FAFAFA;}
-        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-        </style>""",
-        unsafe_allow_html=True,
-    )
+st.markdown(          # ← << duplicated block begins here (delete this one)
+    """<style>
+    body, .stApp {background:#FAFAFA;}
+    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    </style>""",
+    unsafe_allow_html=True,
+)
+
     try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
