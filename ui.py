@@ -1481,11 +1481,11 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-
     try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
         logger.warning("ensure_pages failed: %s", exc)
+
     # Initialize database BEFORE anything else
     try:
         db_ready = ensure_database_exists()
@@ -1494,6 +1494,7 @@ def main() -> None:
     except Exception as e:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
+
 
     # Respond to lightweight health-check probes
     try:
