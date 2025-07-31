@@ -26,12 +26,15 @@ from typing import Dict, Iterable, Optional
 from uuid import uuid4
 from pathlib import Path
 import os
+import importlib
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
 
 try:
-    from utils.paths import ROOT_DIR, PAGES_DIR
+    _paths = importlib.import_module("utils.paths")
+    ROOT_DIR = _paths.ROOT_DIR
+    PAGES_DIR = _paths.PAGES_DIR
 except Exception:  # pragma: no cover - fallback when utils isn't installed
     ROOT_DIR = Path(__file__).resolve().parents[1]
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"

@@ -1,9 +1,34 @@
-"""Common chat UI helpers."""
+"""Reusable chat interface components with translation and call support."""
 
+from __future__ import annotations
 import streamlit as st
 from modern_ui import inject_modern_styles
 
 inject_modern_styles()
+
+CHAT_CSS = """
+<style>
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.chat-bubble {
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+.chat-bubble.left {
+    align-self: flex-start;
+    background: #eee;
+}
+.chat-bubble.right {
+    align-self: flex-end;
+    background: #DCF8C6;
+}
+</style>
+"""
 
 
 def translate_text(text: str, target_lang: str = "en") -> str:
@@ -12,32 +37,47 @@ def translate_text(text: str, target_lang: str = "en") -> str:
         return ""
     try:
         from deep_translator import GoogleTranslator
-
         return GoogleTranslator(source="auto", target=target_lang).translate(text)
     except Exception:
         return text
 
 
 def render_chat_interface() -> None:
-    """Simple real-time chat using session state."""
-    st.session_state.setdefault("chat_messages", [])
+    """Display a styled, translatable chat with call controls."""
+    st.session_state.setdefault("chat_history", [])
+    st.markdown(CHAT_CSS, unsafe_allow_html=True)
+
     language = st.session_state.get("chat_lang", "en")
     language = st.selectbox("Language", ["en", "es", "ko"], key="chat_lang")
 
-    chat_container = st.container()
-    for entry in st.session_state.chat_messages:
-        chat_container.markdown(
-            f"**{entry['user']}**: {translate_text(entry['text'], language)}"
-        )
+    messages_tab, calls_tab = st.tabs(["Messages", "Calls"])
 
-    cols = st.columns([4, 1])
-    with cols[0]:
-        msg = st.text_input("Message", key="chat_input")
-    with cols[1]:
-        if st.button("Send", key="send_chat") and msg:
-            st.session_state.chat_messages.append({"user": "You", "text": msg})
-            st.session_state.chat_input = ""
-            st.experimental_rerun()
+    with messages_tab:
+        st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+        for entry in st.session_state["chat_history"]:
+            sender = entry.get("sender", "")
+            text = entry.get("text", "")
+            cls = "right" if sender == "You" else "left"
+            translated = translate_text(text, language)
+            st.markdown(
+                f"<div class='chat-bubble {cls}'><strong>{sender}:</strong> {translated}</div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            msg = st.text_input("Message", key="chat_input")
+        with col2:
+            if st.button("Send", key="send_chat") and msg:
+                st.session_state["chat_history"].append({"sender": "You", "text": msg})
+                st.session_state.chat_input = ""
+                st.experimental_rerun()
+
+    with calls_tab:
+        render_video_call_controls()
+        st.divider()
+        render_voice_chat_controls()
 
 
 def render_video_call_controls() -> None:
@@ -60,3 +100,4 @@ __all__ = [
     "render_video_call_controls",
     "render_voice_chat_controls",
 ]
+

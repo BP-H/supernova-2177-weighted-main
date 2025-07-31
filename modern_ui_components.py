@@ -12,7 +12,9 @@ from contextlib import contextmanager
 from pathlib import Path
 try:
     # Prefer the shared path constants if available
-    from utils.paths import ROOT_DIR, PAGES_DIR  # type: ignore
+    _paths = importlib.import_module("utils.paths")
+    ROOT_DIR = _paths.ROOT_DIR
+    PAGES_DIR = _paths.PAGES_DIR
 except Exception:  # pragma: no cover – fallback for isolated execution
     ROOT_DIR = Path(__file__).resolve().parents[1]          # repo root
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"

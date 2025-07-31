@@ -5,7 +5,7 @@
 
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, theme_selector
 from status_indicator import render_status_icon
 from chat_ui import (
     render_chat_interface,
@@ -20,6 +20,7 @@ def main(main_container=None) -> None:
     """Render the chat page."""
     if main_container is None:
         main_container = st
+    theme_selector("Theme", key_suffix="chat")
 
     container_ctx = safe_container(main_container)
     with container_ctx:
