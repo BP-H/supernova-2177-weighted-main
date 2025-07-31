@@ -54,6 +54,7 @@ def render_social_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
+    st.session_state.setdefault("active_user", "guest")
     container_ctx = safe_container(main_container)
     with container_ctx:
         header("Friends & Followers")
