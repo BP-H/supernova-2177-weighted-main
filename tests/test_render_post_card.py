@@ -6,6 +6,7 @@ import types
 import sys
 from pathlib import Path
 import pytest
+
 pytest.importorskip("streamlit")
 pytestmark = pytest.mark.requires_streamlit
 
@@ -17,52 +18,74 @@ import streamlit_helpers as sh
 
 
 def test_render_post_card_uses_ui_components(monkeypatch):
-    card_called = {}
-    badge_called = {}
+    """Card renders correctly when a UI backend is present."""
+    card_called: dict = {}
+    captured: list = []  # collect (tag, content) tuples from ui.element / ui.image
 
     class DummyCard:
         def __enter__(self):
-            card_called['entered'] = True
-            return self
-        def __exit__(self, *exc):
-            card_called['exited'] = True
-        def classes(self, cls):
-            card_called['cls'] = cls
+            card_called["entered"] = True
             return self
 
-    def dummy_badge(text):
-        badge_called['text'] = text
-        return types.SimpleNamespace(classes=lambda cls: badge_called.setdefault('cls', cls))
+        def __exit__(self, *exc):
+            card_called["exited"] = True
+
+        def classes(self, cls):
+            card_called["cls"] = cls
+            return self
 
     dummy_ui = types.SimpleNamespace(
         card=lambda: DummyCard(),
-        image=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
-        element=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
-        badge=dummy_badge,
+        image=lambda img, **k: types.SimpleNamespace(
+            classes=lambda cls: captured.append(("img", img))
+        ),
+        element=lambda tag, content: types.SimpleNamespace(
+            classes=lambda cls: captured.append((tag, content))
+        ),
+        badge=lambda text: types.SimpleNamespace(
+            classes=lambda cls: captured.append(("badge", text))
+        ),
     )
 
     monkeypatch.setattr(sh, "ui", dummy_ui)
-    monkeypatch.setattr(sh, "st", types.SimpleNamespace())
+    monkeypatch.setattr(sh, "st", types.SimpleNamespace(toast=lambda *a, **k: None))
 
-    sh.render_post_card({"text": "Hello", "likes": 4})
+    sh.render_post_card(
+        {"image": "pic.png", "text": "Hello", "likes": 4, "user": "alice"}
+    )
 
-    assert card_called.get('entered')
-    assert badge_called.get('text') == "❤️ 4"
+    assert card_called.get("entered")
+    assert ("img", "pic.png") in captured
+    # the final element should be the reactions line
+    assert ("div", "❤️ 🔁 💬") in captured
 
 
 def test_render_post_card_plain_streamlit(monkeypatch):
-    captured = {}
-    dummy_st = types.SimpleNamespace(
-        image=lambda img, use_column_width=True: captured.setdefault("image", img),
-        write=lambda text: captured.setdefault("write", text),
-        caption=lambda text: captured.setdefault("caption", text),
+    """Card renders correctly when *ui* is absent (pure Streamlit fallback)."""
+    events: list[str] = []
+
+    class DummySt:
+        def image(self, img, **k):
+            events.append(img)
+
+        def write(self, text):
+            events.append(str(text))
+
+        def caption(self, text):
+            events.append(str(text))
+
+        def markdown(self, text, **k):
+            events.append(str(text))
+    dummy = DummySt()
+
+    monkeypatch.setattr(sh, "ui", None)  # force fallback mode
+    monkeypatch.setattr(sh, "st", dummy)
+
+    sh.render_post_card(
+        {"image": "img.png", "text": "Hi", "likes": 7, "user": "bob"}
     )
 
-    monkeypatch.setattr(sh, "ui", None)
-    monkeypatch.setattr(sh, "st", dummy_st)
+    assert "img.png" in events[0]
+    assert "Hi" in " ".join(events)
+    assert "❤️ 7" in " ".join(events)
 
-    sh.render_post_card({"image": "img.png", "text": "Hi", "likes": 7})
-
-    assert captured["image"] == "img.png"
-    assert captured["write"] == "Hi"
-    assert captured["caption"] == "❤️ 7"

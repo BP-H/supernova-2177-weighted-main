@@ -6,14 +6,21 @@
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header, get_active_user
+from streamlit_helpers import (
+    safe_container,
+    header,
+    theme_selector,
+    get_active_user,
+    ensure_active_user,
+)
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
-from transcendental_resonance_frontend.ui.profile_ui import (
+from transcendental_resonance_frontend.ui.profile_card import (
     DEFAULT_USER,
-    render_profile,
+    render_profile_card,
 )
 from status_indicator import render_status_icon
+from feed_renderer import render_mock_feed, DEMO_POSTS
 
 
 try:
@@ -29,10 +36,21 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 try:  # Optional DB access for follow/unfollow
-    from db_models import SessionLocal, Harmonizer
+    from db_models import (
+        SessionLocal,
+        Harmonizer,
+        init_db,
+        seed_default_users,
+    )
 except Exception:  # pragma: no cover - optional dependency
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+    def init_db() -> None:  # type: ignore
+        pass
+
+    def seed_default_users() -> None:  # type: ignore
+        pass
 
 import asyncio
 
@@ -64,6 +82,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
 
 inject_light_theme()
 inject_modern_styles()
+ensure_active_user()
 
 
 def _render_profile(username: str) -> None:
@@ -80,7 +99,7 @@ def _render_profile(username: str) -> None:
             }
         except Exception as exc:  # pragma: no cover - runtime fetch may fail
             st.warning(f"Profile fetch failed: {exc}, using placeholder")
-    render_profile(data)
+    render_profile_card(data)
     if dispatch_route is not None and st.button("Follow/Unfollow", key="follow"):
         with st.spinner("Updating..."):
             try:
@@ -97,11 +116,12 @@ def _render_profile(username: str) -> None:
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
-
+    init_db()
+    seed_default_users()
+    theme_selector("Theme", key_suffix="profile")
+    ensure_active_user()
     container_ctx = safe_container(main_container)
     with container_ctx:
-        if "active_user" not in st.session_state:
-            st.session_state["active_user"] = "guest"
         # Header with status icon
         header_col, status_col = st.columns([8, 1])
         with header_col:
@@ -148,7 +168,8 @@ def main(main_container=None) -> None:
             "profile_data",
             {**DEFAULT_USER, "username": username},
         )
-        render_profile(data)
+        render_profile_card(data)
+
 
 
 

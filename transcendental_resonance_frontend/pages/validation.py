@@ -5,8 +5,9 @@
 
 import importlib
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container
+from streamlit_helpers import safe_container, theme_selector
 
 # --------------------------------------------------------------------
 # Dynamic loader with graceful degradation
@@ -25,6 +26,7 @@ def _load_render_ui():
 render_validation_ui = _load_render_ui()
 
 # Inject modern global styles (safe when running in classic Streamlit)
+inject_light_theme()
 inject_modern_styles()
 
 # --------------------------------------------------------------------
@@ -43,6 +45,7 @@ def main(main_container=None) -> None:
     """Render the validation UI inside a safe container."""
     if main_container is None:
         main_container = st
+    theme_selector("Theme", key_suffix="validation")
 
     global render_validation_ui
     # Reload if we initially fell back but the real module may now exist
