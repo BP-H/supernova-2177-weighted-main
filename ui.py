@@ -22,10 +22,12 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    import streamlit_shadcn_ui as ui  # type: ignore
+    import streamlit_shadcn_ui as ui_lib  # type: ignore
+    SHADCN_AVAILABLE = True
 except Exception:  # pragma: no cover - optional dependency or missing at runtime
     import types
-    ui = types.SimpleNamespace()
+    ui_lib = types.SimpleNamespace()
+    SHADCN_AVAILABLE = False
 
 from datetime import datetime, timezone
 import asyncio
@@ -223,7 +225,7 @@ class _UIWrapper:
         return _StreamlitTabs(labels)
 
 
-ui = _UIWrapper()
+ui = ui_lib if SHADCN_AVAILABLE else _UIWrapper()
 
 
 
