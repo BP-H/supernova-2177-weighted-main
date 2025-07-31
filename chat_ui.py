@@ -97,20 +97,26 @@ def render_chat_interface() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
     with calls_tab:
-        render_video_call_controls(key_prefix="chat_")
+        render_video_call_controls()
         st.divider()
-        render_voice_chat_controls(key_prefix="chat_")
+        render_voice_chat_controls()
 
 
-def render_video_call_controls(key_prefix: str = "") -> None:
+def render_video_call_controls(key_prefix: str | None = None) -> None:
     """Placeholder video call controls."""
+    if key_prefix is None:
+        page = st.session_state.get("active_page", "")
+        key_prefix = f"{page}_" if page else ""
     if st.button("Start Video Call", key=f"{key_prefix}start_video"):
         st.toast("Video call placeholder. Integration with WebRTC pending.")
         st.empty()
 
 
-def render_voice_chat_controls(key_prefix: str = "") -> None:
+def render_voice_chat_controls(key_prefix: str | None = None) -> None:
     """Placeholder voice call controls."""
+    if key_prefix is None:
+        page = st.session_state.get("active_page", "")
+        key_prefix = f"{page}_" if page else ""
     if st.button("Start Voice Call", key=f"{key_prefix}start_voice"):
         st.toast("Voice call placeholder. Audio streaming integration pending.")
         st.empty()

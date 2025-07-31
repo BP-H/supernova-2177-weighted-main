@@ -720,6 +720,7 @@ def seed_default_users() -> None:
     """Create default Harmonizer accounts if they don't exist."""
     session = SessionLocal()
     try:
+
         defaults = ["guest", "demo_user"]
         for username in defaults:
             exists = session.query(Harmonizer).filter_by(username=username).first()
@@ -733,6 +734,7 @@ def seed_default_users() -> None:
                     email=email,
                     hashed_password=hashed,
                     bio="Default user",
+
                 )
                 session.add(user)
         session.commit()

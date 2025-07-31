@@ -52,4 +52,3 @@ streamlit-autorefresh
 gtts
 streamlit-javascript
 nicegui
-torch>=2.0

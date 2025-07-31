@@ -31,6 +31,28 @@ import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
 
+LAYOUT_CSS = """
+<style>
+.insta-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.insta-card img {
+    width: 100%;
+    height: auto;
+}
+.insta-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+</style>
+"""
+
 try:
     _paths = importlib.import_module("utils.paths")
     ROOT_DIR = _paths.ROOT_DIR
@@ -49,6 +71,7 @@ except ImportError:
 
 def main_container() -> st.delta_generator.DeltaGenerator:
     """Return a container for the main content area."""
+    st.markdown(LAYOUT_CSS, unsafe_allow_html=True)
     return st.container()
 
 
@@ -111,10 +134,11 @@ def render_top_bar() -> None:
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
+        page = st.session_state.get("active_page", "global")
         search_target.text_input(
             "Search",
             placeholder="Search...",
-            key=f"topbar_search_{st.session_state.get('active_page', 'global')}",
+            key=f"topbar_search_{page}",
             label_visibility="collapsed",
         )
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
@@ -217,7 +241,13 @@ def _render_sidebar_nav(
             )
         else:
             labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
-            choice = st.radio("", labels, index=index, key=key)
+            choice = st.radio(
+                "Navigation",
+                labels,
+                index=index,
+                key=key,
+                label_visibility="collapsed",
+            )
             choice = opts[labels.index(choice)][0]
 
         st.markdown("</div>", unsafe_allow_html=True)

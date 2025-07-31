@@ -12,7 +12,7 @@ def render_profile_card(username: str, avatar_url: str) -> None:
     st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
     col1, col2 = st.columns([1, 3])
     with col1:
-        st.image(avatar_url, width=48)
+        st.image(avatar_url, width=48, use_container_width=True)
     with col2:
         st.markdown(f"**{username}**")
         st.caption(badge)
