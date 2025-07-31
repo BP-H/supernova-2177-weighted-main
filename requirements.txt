@@ -50,3 +50,4 @@ streamlit-aggrid>=1.1.7
 streamlit-autorefresh
 gtts
 streamlit-javascript
+nicegui
