@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Dict, Any
+from typing import Iterable, Dict, Any, Tuple
 
 import streamlit as st
 
@@ -14,59 +14,72 @@ import html
 from streamlit_helpers import sanitize_text, render_post_card
 from modern_ui_components import shadcn_card
 
+import html
+
 # --- default demo posts -------------------------------------------------------
-DEMO_POSTS: list[dict[str, Any]] = [
-    {
-        "user": "alice",
-        "image": "https://placekitten.com/400/300",
-        "text": "Cute kitten!",
-        "likes": 5,
-    },
-    {
-        "user": "bob",
-        "image": "https://placebear.com/400/300",
-        "text": "Bear with me.",
-        "likes": 3,
-    },
-    {
-        "user": "carol",
-        "image": "https://placekitten.com/401/301",
-        "text": "Another kitty.",
-        "likes": 8,
-    },
+DEMO_POSTS: list[Tuple[str, str, str]] = [
+    (
+        "alice",
+        "https://picsum.photos/seed/alice/400/300",
+        "Enjoying the sunshine!",
+    ),
+    (
+        "bob",
+        "https://picsum.photos/seed/bob/400/300",
+        "Hiking adventures today.",
+    ),
+    (
+        "carol",
+        "https://picsum.photos/seed/carol/400/300",
+        "Coffee time at my favourite spot.",
+    ),
 ]
 
 
 # -----------------------------------------------------------------------------
 
 
-def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
-    """Render a list of posts as simple cards."""
-    if posts is None:
-        posts = DEMO_POSTS
+def render_feed(posts: Iterable[Any] | None = None) -> None:
+    """Render a simple scrolling feed of posts."""
 
-    posts = list(posts)
+    active = st.session_state.get("active_user", "guest")
+    if posts is None or not list(posts):
+        posts = DEMO_POSTS if active in {"guest", "demo_user"} else []
+    else:
+        posts = list(posts)
+
     if not posts:
         st.info("No posts to display")
         return
 
-    for post in posts:
-        user = sanitize_text(post.get("user", ""))
-        caption = sanitize_text(post.get("caption") or post.get("text", ""))
-        image = sanitize_text(post.get("image", ""))
+def render_feed(posts: Iterable[Any] | None = None) -> None:
+    """Render a simple scrolling feed of posts."""
 
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        if user:
-            st.markdown(f"**{html.escape(user)}**")
-        if image:
-            st.image(image, use_container_width=True)
-        if caption:
-            st.markdown(html.escape(caption))
-        st.markdown(
-            "<div style='font-size:1.2rem;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+    active = st.session_state.get("active_user", "guest")
+    if posts is None or not list(posts):
+        posts = DEMO_POSTS if active in {"guest", "demo_user"} else []
+    else:
+        posts = list(posts)
+
+    if not posts:
+        st.info("No posts to display")
+        return
+
+    for entry in posts:
+        if isinstance(entry, dict):
+            user = sanitize_text(entry.get("user") or entry.get("username", ""))
+            image = sanitize_text(entry.get("image", ""))
+            caption = sanitize_text(entry.get("text") or entry.get("caption", ""))
+            likes = entry.get("likes", 0)
+        else:
+            user, image, caption = entry
+            likes = 0
+
+        render_post_card({
+            "image": image,
+            "text": f"**{html.escape(user)}**: {caption}" if user else caption,
+            "likes": likes,
+        })
 
 
 def render_mock_feed() -> None:

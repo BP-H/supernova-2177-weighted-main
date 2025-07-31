@@ -33,9 +33,9 @@ def main(main_container=None) -> None:
             render_status_icon()
         render_chat_interface()
         st.divider()
-        render_video_call_controls()
+        render_video_call_controls(key_prefix="chat_")
         st.divider()
-        render_voice_chat_controls()
+        render_voice_chat_controls(key_prefix="chat_")
 
 
 def render() -> None:
