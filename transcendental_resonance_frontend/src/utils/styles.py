@@ -2,7 +2,17 @@
 
 from typing import Dict, Optional
 
-from nicegui import ui
+try:
+    from nicegui import ui  # type: ignore
+except Exception:  # pragma: no cover - nicegui optional
+    class _UIStub:
+        def run_javascript(self, *args, **kwargs):
+            return None
+
+        def add_head_html(self, *args, **kwargs):
+            return None
+
+    ui = _UIStub()  # type: ignore
 
 # Theme palettes. The default "dark" theme matches the original neon aesthetic.
 THEMES: Dict[str, Dict[str, str]] = {
