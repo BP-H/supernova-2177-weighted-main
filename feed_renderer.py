@@ -9,7 +9,9 @@ from typing import Iterable, Dict, Any
 
 import streamlit as st
 
-from streamlit_helpers import render_post_card
+import html
+
+from streamlit_helpers import sanitize_text, render_post_card
 from modern_ui_components import shadcn_card
 
 # --- default demo posts -------------------------------------------------------
@@ -39,16 +41,7 @@ DEMO_POSTS: list[dict[str, Any]] = [
 
 
 def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
-    """
-    Render a list of post dictionaries using :func:`render_post_card`.
-
-    Parameters
-    ----------
-    posts
-        An iterable of post dictionaries.  If *None* (default) the built-in
-        ``DEMO_POSTS`` will be shown.  Each post dict should at minimum contain
-        ``image`` and ``text`` keys; ``user`` and ``likes`` are optional.
-    """
+    """Render a list of posts as simple cards."""
     if posts is None:
         posts = DEMO_POSTS
 
@@ -58,7 +51,22 @@ def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
         return
 
     for post in posts:
-        render_post_card(post)
+        user = sanitize_text(post.get("user", ""))
+        caption = sanitize_text(post.get("caption") or post.get("text", ""))
+        image = sanitize_text(post.get("image", ""))
+
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        if user:
+            st.markdown(f"**{html.escape(user)}**")
+        if image:
+            st.image(image, use_column_width=True)
+        if caption:
+            st.markdown(html.escape(caption))
+        st.markdown(
+            "<div style='font-size:1.2rem;'>❤️ 🔁 💬</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_mock_feed() -> None:
