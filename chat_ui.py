@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Reusable chat interface components with translation and call support."""
 
 from __future__ import annotations
@@ -94,21 +97,21 @@ def render_chat_interface() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
     with calls_tab:
-        render_video_call_controls()
+        render_video_call_controls(key_prefix="chat_")
         st.divider()
-        render_voice_chat_controls()
+        render_voice_chat_controls(key_prefix="chat_")
 
 
-def render_video_call_controls() -> None:
+def render_video_call_controls(key_prefix: str = "") -> None:
     """Placeholder video call controls."""
-    if st.button("Start Video Call", key="start_video"):
+    if st.button("Start Video Call", key=f"{key_prefix}start_video"):
         st.toast("Video call placeholder. Integration with WebRTC pending.")
         st.empty()
 
 
-def render_voice_chat_controls() -> None:
+def render_voice_chat_controls(key_prefix: str = "") -> None:
     """Placeholder voice call controls."""
-    if st.button("Start Voice Call", key="start_voice"):
+    if st.button("Start Voice Call", key=f"{key_prefix}start_voice"):
         st.toast("Voice call placeholder. Audio streaming integration pending.")
         st.empty()
 

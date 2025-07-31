@@ -163,9 +163,9 @@ def main(main_container=None) -> None:
         with tab_calls:
             from .chat import render_video_call_controls, render_voice_chat_controls
 
-            render_video_call_controls()
+            render_video_call_controls(key_prefix="msgcenter_")
             st.divider()
-            render_voice_chat_controls()
+            render_voice_chat_controls(key_prefix="msgcenter_")
 
 
 # Streamlit multipage support --------------------------------------------------
