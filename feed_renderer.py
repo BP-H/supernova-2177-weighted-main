@@ -5,59 +5,65 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Dict, Any
+from typing import Iterable, Dict, Any, Tuple
 
 import streamlit as st
 
 from streamlit_helpers import render_post_card
 
+import html
+
 # --- default demo posts -------------------------------------------------------
-DEMO_POSTS: list[dict[str, Any]] = [
-    {
-        "user": "alice",
-        "image": "https://placekitten.com/400/300",
-        "text": "Cute kitten!",
-        "likes": 5,
-    },
-    {
-        "user": "bob",
-        "image": "https://placebear.com/400/300",
-        "text": "Bear with me.",
-        "likes": 3,
-    },
-    {
-        "user": "carol",
-        "image": "https://placekitten.com/401/301",
-        "text": "Another kitty.",
-        "likes": 8,
-    },
+DEMO_POSTS: list[Tuple[str, str, str]] = [
+    (
+        "alice",
+        "https://picsum.photos/seed/alice/400/300",
+        "Enjoying the sunshine!",
+    ),
+    (
+        "bob",
+        "https://picsum.photos/seed/bob/400/300",
+        "Hiking adventures today.",
+    ),
+    (
+        "carol",
+        "https://picsum.photos/seed/carol/400/300",
+        "Coffee time at my favourite spot.",
+    ),
 ]
 
 
 # -----------------------------------------------------------------------------
 
 
-def render_feed(posts: Iterable[Dict[str, Any]] | None = None) -> None:
-    """
-    Render a list of post dictionaries using :func:`render_post_card`.
+def render_feed(posts: Iterable[Any] | None = None) -> None:
+    """Render a simple scrolling feed of posts."""
 
-    Parameters
-    ----------
-    posts
-        An iterable of post dictionaries.  If *None* (default) the built-in
-        ``DEMO_POSTS`` will be shown.  Each post dict should at minimum contain
-        ``image`` and ``text`` keys; ``user`` and ``likes`` are optional.
-    """
-    if posts is None:
-        posts = DEMO_POSTS
+    active = st.session_state.get("active_user", "guest")
+    if posts is None or not list(posts):
+        posts = DEMO_POSTS if active in {"guest", "demo_user"} else []
+    else:
+        posts = list(posts)
 
-    posts = list(posts)
     if not posts:
         st.info("No posts to display")
         return
 
-    for post in posts:
-        render_post_card(post)
+    for entry in posts:
+        if isinstance(entry, dict):
+            user = entry.get("user") or entry.get("username", "")
+            image = entry.get("image", "")
+            caption = entry.get("text") or entry.get("caption", "")
+            likes = entry.get("likes", 0)
+        else:
+            user, image, caption = entry
+            likes = 0
+
+        render_post_card({
+            "image": image,
+            "text": f"**{html.escape(user)}**: {caption}",
+            "likes": likes,
+        })
 
 
 def render_mock_feed() -> None:

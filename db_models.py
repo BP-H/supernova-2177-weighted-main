@@ -657,7 +657,7 @@ def seed_default_users() -> None:
                 hashed = hashlib.sha256(username.encode()).hexdigest()
                 user = Harmonizer(
                     username=username,
-                    email=f"{username}@example.com",
+                    email=f"{username}@supernova.dev",
                     hashed_password=hashed,
                     bio="Default user",
                 )

@@ -232,14 +232,20 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         likes = 0
 
     if ui is None:
-        if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
+        img_html = (
+            f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px'/>"
+            if img
+            else ""
         )
+        user = post_data.get("user") or post_data.get("username", "")
+        prefix = f"<strong>{html.escape(user)}</strong>: " if user else ""
+        html_block = (
+            "<div class='sn-card' style='background:white;padding:1rem;margin-bottom:1rem;'>"
+            f"{img_html}<p>{prefix}{text}</p>"
+            f"<div>❤️ {likes} 🔁 💬</div>"
+            "</div>"
+        )
+        st.markdown(html_block, unsafe_allow_html=True)
         return
 
     try:
@@ -247,18 +253,31 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
             safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
-            ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-            ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
+            if hasattr(ui, "badge"):
+                ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+                reactions = "❤️ 🔁 💬"
+            else:
+                reactions = f"❤️ {likes} 🔁 💬"
+            ui.element("div", reactions).classes("text-center text-lg")
     except Exception as exc:  # noqa: BLE001
-        st.toast(f"Post card failed: {exc}", icon="⚠️")
-        if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
+        try:
+            st.toast(f"Post card failed: {exc}", icon="⚠️")
+        except Exception:
+            pass
+        img_html = (
+            f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px'/>"
+            if img
+            else ""
         )
+        user = post_data.get("user") or post_data.get("username", "")
+        prefix = f"<strong>{html.escape(user)}</strong>: " if user else ""
+        fallback = (
+            "<div class='sn-card' style='background:white;padding:1rem;margin-bottom:1rem;'>"
+            f"{img_html}<p>{prefix}{text}</p>"
+            f"<div>❤️ {likes} 🔁 💬</div>"
+            "</div>"
+        )
+        st.markdown(fallback, unsafe_allow_html=True)
 
 
 import html  # Ensure this is imported at the top if not already
