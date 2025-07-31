@@ -1481,10 +1481,6 @@ def main() -> None:
         return
 
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            initial_sidebar_state="collapsed",
-        )
         inject_instagram_styles()
 
         render_top_bar()
