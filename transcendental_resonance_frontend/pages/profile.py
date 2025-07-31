@@ -14,6 +14,7 @@ from transcendental_resonance_frontend.ui.profile_card import (
     render_profile_card,
 )
 from status_indicator import render_status_icon
+from feed_renderer import render_mock_feed, DEMO_POSTS
 
 
 try:
@@ -152,6 +153,7 @@ def main(main_container=None) -> None:
             {**DEFAULT_USER, "username": username},
         )
         render_profile_card(data)
+
 
 
 
