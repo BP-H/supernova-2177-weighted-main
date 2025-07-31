@@ -21,9 +21,11 @@ import streamlit as st
 # ① Try NiceGUI → ② try streamlit-shadcn-ui → ③ fall back to plain Streamlit
 try:  # NiceGUI available?
     from nicegui import ui  # type: ignore
+    shadcn = None
 except Exception:  # noqa: BLE001
     try:  # streamlit-shadcn-ui available?
-        import streamlit_shadcn_ui as ui  # type: ignore
+        import streamlit_shadcn_ui as shadcn  # type: ignore
+        ui = shadcn
     except Exception:  # noqa: BLE001
         from contextlib import nullcontext
         import html
@@ -74,6 +76,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
+        shadcn = None
 
 
 # ──────────────────────────────────────────────────────────────────────────────

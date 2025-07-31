@@ -22,10 +22,10 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    import streamlit_shadcn_ui as ui  # type: ignore
+    import streamlit_shadcn_ui as shadcn  # type: ignore
 except Exception:  # pragma: no cover - optional dependency or missing at runtime
     import types
-    ui = types.SimpleNamespace()
+    shadcn = types.SimpleNamespace()
 
 from datetime import datetime, timezone
 import asyncio
@@ -223,7 +223,7 @@ class _UIWrapper:
         return _StreamlitTabs(labels)
 
 
-ui = _UIWrapper()
+ui_wrapper = _UIWrapper()
 
 
 
@@ -1701,7 +1701,7 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
+            with ui_wrapper.tabs(["Validation", "Voting", "Agents"]) as tabs:
                 selected = tabs.active
                 if selected != display_choice:
                     try:
