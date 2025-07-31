@@ -56,12 +56,14 @@ def render_social_tab(main_container=None) -> None:
 
     container_ctx = safe_container(main_container)
     with container_ctx:
+        if "active_user" not in st.session_state:
+            st.session_state["active_user"] = "guest"
         header("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")
             return
 
-        current_user = st.session_state.get("active_user", "")
+        current_user = st.session_state.get("active_user")
         cols = st.columns(2)
         with cols[0]:
             current_user = st.text_input(
