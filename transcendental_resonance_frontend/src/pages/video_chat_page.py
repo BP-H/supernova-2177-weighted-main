@@ -7,7 +7,11 @@ from __future__ import annotations
 
 import json
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import TOKEN, WS_CONNECTION, connect_ws
 from utils.layout import navigation_bar, page_container
@@ -138,5 +142,11 @@ async def video_chat_page() -> None:
         ui.label("Note: Video chat is unavailable when offline.").classes(
             "text-xs opacity-75 mt-2"
         )
+
+if ui is None:
+    def video_chat_page(*_a, **_kw):
+        """Fallback video chat page when NiceGUI is unavailable."""
+        st.info('Video chat page requires NiceGUI.')
+
 
 

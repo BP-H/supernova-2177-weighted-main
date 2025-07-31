@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Page to list universe forks and submit votes."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -54,4 +58,10 @@ async def forks_page() -> None:
                         ui.label(f"Consensus: {f.get('consensus')}").classes('text-sm')
 
         await refresh_forks()
+
+if ui is None:
+    def forks_page(*_a, **_kw):
+        """Fallback forks page when NiceGUI is unavailable."""
+        st.info('Forks page requires NiceGUI.')
+
 

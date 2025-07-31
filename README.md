@@ -57,7 +57,7 @@ pip install -r requirements.txt
 # python setup_env.py --launch-ui
 # or run manually with
 ./start.sh       # launches ui.py on port 8888
-streamlit run ui.py  # launch the Streamlit server
+streamlit run app.py  # launch the Streamlit server
 # or use the CLI directly
 
 # Try demo mode
@@ -86,10 +86,10 @@ To launch the Streamlit UI:
 ```bash
 chmod +x start.sh
 ./start.sh  # launches ui.py
-streamlit run ui.py  # same as above
+streamlit run app.py  # same as above
 ```
 
-Either `start.sh` or `streamlit run ui.py` will launch the dashboard from anywhere in the repo.
+Either `start.sh` or `streamlit run app.py` will launch the dashboard from anywhere in the repo.
 Run `curl http://localhost:8888/?healthz=1` to verify the server is up.
 
 ## ☁️ Launch Online
@@ -342,8 +342,8 @@ python setup_env.py --build-ui --launch-ui
 This command compiles the UI assets and starts the app on
 [http://localhost:8888](http://localhost:8888).
 You can still run `make ui` from the repository root to launch the demo only.
-`ui.py` replaces the previous `app.py` script and is now the canonical entry
-point for the Streamlit interface.  Common UI patterns like alerts, theme
+`ui.py` provides the full dashboard while `app.py` offers a minimal demo
+powered by `render_modern_layout`.  Common UI patterns like alerts, theme
 switching and layout containers live in `streamlit_helpers.py`:
 
 ```python
@@ -352,8 +352,9 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 
 Import these helpers at the top of your Streamlit files to keep the UI code
 clean and consistent.
-Run these commands from the repository root. `ui.py` is the official launcher
-and running `streamlit run ui.py` will start Streamlit automatically.
+Run these commands from the repository root. `ui.py` remains the primary
+launcher, but you can also try the streamlined `app.py` with
+`streamlit run app.py`.
 
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.
@@ -379,7 +380,7 @@ module falls back to a development setup equivalent to:
 The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
 
 ```bash
-streamlit run ui.py
+streamlit run app.py
 ```
 By default the demo listens on port `8888`. Set `STREAMLIT_PORT` or pass
 `--server.port` to use a different port.

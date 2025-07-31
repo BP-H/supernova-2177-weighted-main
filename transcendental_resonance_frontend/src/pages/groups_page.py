@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Group management page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN, get_group_recommendations
 from utils.styles import get_theme
@@ -96,3 +100,9 @@ async def groups_page():
                             ui.label(desc).classes('text-sm')
 
         await load_suggestions()
+
+if ui is None:
+    def groups_page(*_a, **_kw):
+        """Fallback groups page when NiceGUI is unavailable."""
+        st.info('Groups page requires NiceGUI.')
+

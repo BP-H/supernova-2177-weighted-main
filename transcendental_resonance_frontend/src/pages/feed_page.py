@@ -5,7 +5,11 @@
 # Legal & Ethical Safeguards
 """
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
@@ -124,3 +128,9 @@ async def feed_page() -> None:
         ui.button(icon='add', on_click=post_dialog.open).props(
             'fab fixed bottom-right'
         )
+
+if ui is None:
+    def feed_page(*_a, **_kw):
+        """Fallback feed page when NiceGUI is unavailable."""
+        st.info('Feed requires NiceGUI.')
+

@@ -1,6 +1,10 @@
 """Content moderation panel for reviewing flagged posts."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container, navigation_bar
@@ -51,3 +55,9 @@ async def moderation_page() -> None:
 
         ws_task = listen_ws(handle_event)
         ui.context.client.on_disconnect(lambda: ws_task.cancel())
+
+if ui is None:
+    def moderation_page(*_a, **_kw):
+        """Fallback moderation page when NiceGUI is unavailable."""
+        st.info('Moderation page requires NiceGUI.')
+

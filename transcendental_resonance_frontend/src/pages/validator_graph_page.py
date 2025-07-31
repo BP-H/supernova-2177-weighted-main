@@ -5,7 +5,11 @@
 
 import json
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
@@ -130,3 +134,9 @@ async def validator_graph_page():
         )
         filter_input.on("change", lambda _: ui.run_async(refresh_graph()))
         await refresh_graph()
+
+if ui is None:
+    def validator_graph_page(*_a, **_kw):
+        """Fallback validator graph page when NiceGUI is unavailable."""
+        st.info('Validator graph page requires NiceGUI.')
+

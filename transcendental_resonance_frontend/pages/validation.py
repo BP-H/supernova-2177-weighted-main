@@ -3,35 +3,51 @@
 # Legal & Ethical Safeguards
 """Validation analysis page."""
 
+import importlib
 import streamlit as st
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
 
-def render_validation_ui(*, main_container):
-    """Dynamically import and render the validation UI."""
-    from ui import render_validation_ui as _render
-    return _render(main_container=main_container)
+# --------------------------------------------------------------------
+# Dynamic loader with graceful degradation
+# --------------------------------------------------------------------
+def _fallback_validation_ui(*_a, **_k):
+    st.warning("Validation UI unavailable")
 
+def _load_render_ui():
+    """Try to import ui.render_validation_ui, else return a stub."""
+    try:
+        mod = importlib.import_module("ui")
+        return getattr(mod, "render_validation_ui", _fallback_validation_ui)
+    except Exception:  # pragma: no cover
+        return _fallback_validation_ui
 
+render_validation_ui = _load_render_ui()
+
+# Inject modern global styles (safe when running in classic Streamlit)
 inject_modern_styles()
 
-
+# --------------------------------------------------------------------
+# Page decorator (works even if Streamlit’s multipage API absent)
+# --------------------------------------------------------------------
 def _page_decorator(func):
     if hasattr(st, "experimental_page"):
         return st.experimental_page("Validation")(func)
     return func
 
-
+# --------------------------------------------------------------------
+# Main entry point
+# --------------------------------------------------------------------
 @_page_decorator
 def main(main_container=None) -> None:
-    """Render the validation UI inside a container safely."""
+    """Render the validation UI inside a safe container."""
     if main_container is None:
         main_container = st
 
     global render_validation_ui
-    if render_validation_ui is None:
-        from ui import render_validation_ui as _render
-        render_validation_ui = _render
+    # Reload if we initially fell back but the real module may now exist
+    if render_validation_ui is _fallback_validation_ui:
+        render_validation_ui = _load_render_ui()
 
     container_ctx = safe_container(main_container)
 
@@ -39,9 +55,9 @@ def main(main_container=None) -> None:
         with container_ctx:
             render_validation_ui(main_container=main_container)
     except AttributeError:
-        # Fallback: in case container_ctx fails due to unexpected type
+        # If safe_container gave an unexpected object, fall back
         render_validation_ui(main_container=main_container)
 
 def render() -> None:
-    """Wrapper to keep page loading consistent."""
+    """Alias used by other modules/pages."""
     main()

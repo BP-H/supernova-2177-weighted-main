@@ -4,7 +4,11 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import (
     TOKEN,
     api_call,
@@ -205,3 +209,9 @@ async def profile_page(username: str | None = None):
                             ui.label(bio).classes('text-sm')
 
         await load_suggestions()
+
+if ui is None:
+    def profile_page(*_a, **_kw):
+        """Fallback profile page when NiceGUI is unavailable."""
+        st.info('Profile page requires NiceGUI.')
+
