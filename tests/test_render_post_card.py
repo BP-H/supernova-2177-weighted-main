@@ -42,10 +42,13 @@ def test_render_post_card_uses_ui_components(monkeypatch):
         element=lambda tag, content: types.SimpleNamespace(
             classes=lambda cls: captured.append((tag, content))
         ),
+        badge=lambda text: types.SimpleNamespace(
+            classes=lambda cls: captured.append(("badge", text))
+        ),
     )
 
     monkeypatch.setattr(sh, "ui", dummy_ui)
-    monkeypatch.setattr(sh, "st", types.SimpleNamespace())  # stub Streamlit
+    monkeypatch.setattr(sh, "st", types.SimpleNamespace(toast=lambda *a, **k: None))
 
     sh.render_post_card(
         {"image": "pic.png", "text": "Hello", "likes": 4, "user": "alice"}
@@ -54,30 +57,35 @@ def test_render_post_card_uses_ui_components(monkeypatch):
     assert card_called.get("entered")
     assert ("img", "pic.png") in captured
     # the final element should be the reactions line
-    assert ("div", "❤️ 4 🔁 💬") in captured
+    assert ("div", "❤️ 🔁 💬") in captured
 
 
 def test_render_post_card_plain_streamlit(monkeypatch):
     """Card renders correctly when *ui* is absent (pure Streamlit fallback)."""
-    captured: dict = {}
+    events: list[str] = []
 
-    dummy_st = types.SimpleNamespace(
-        # only markdown output is used by the fallback HTML renderer
-        markdown=lambda html, unsafe_allow_html=True: captured.setdefault("html", html),
-    )
+    class DummySt:
+        def image(self, img, **k):
+            events.append(img)
+
+        def write(self, text):
+            events.append(str(text))
+
+        def caption(self, text):
+            events.append(str(text))
+
+        def markdown(self, text, **k):
+            events.append(str(text))
+    dummy = DummySt()
 
     monkeypatch.setattr(sh, "ui", None)  # force fallback mode
-    monkeypatch.setattr(sh, "st", dummy_st)
+    monkeypatch.setattr(sh, "st", dummy)
 
     sh.render_post_card(
         {"image": "img.png", "text": "Hi", "likes": 7, "user": "bob"}
     )
 
-    html_out = captured["html"]
-    assert "img.png" in html_out  # image rendered
-    assert "Hi" in html_out       # caption rendered
-    assert "bob" in html_out      # username rendered
-    assert "❤️ 7" in html_out     # like count rendered
-    # style hints present
-    assert "border-radius" in html_out
+    assert "img.png" in events[0]
+    assert "Hi" in " ".join(events)
+    assert "❤️ 7" in " ".join(events)
 

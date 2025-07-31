@@ -13,6 +13,8 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+
+_FAKE_SESSION: dict[str, Any] = {}
 import inspect
 import streamlit as st
 
@@ -79,11 +81,6 @@ except Exception:  # noqa: BLE001
         shadcn = None
 
 
-def sanitize_text(text: Any) -> str:
-    """Return ``text`` as a safe UTF-8 string."""
-    if not isinstance(text, str):
-        text = str(text)
-    return text.encode("utf-8", "ignore").decode("utf-8")
 
 
 def safe_element(tag: str, content: str) -> Any:
@@ -222,17 +219,31 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
-    """Instagram-style post card that degrades gracefully."""
-    img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
-    text = sanitize_text(post_data.get("text", ""))
-    likes = post_data.get("likes", 0)
+    """
+    Render an Instagram-style post card that works with or without the
+    `streamlit-shadcn-ui` / NiceGUI back-end.
+
+    Parameters
+    ----------
+    post_data
+        Dictionary keys that may be present:
+
+        * ``image`` – image URL
+        * ``text``  – caption / body text
+        * ``user``  / ``username`` – poster’s name
+        * ``likes`` – like counter (int, str or anything castable to int)
+    """
+    # ── Extract & sanitise basic fields ──────────────────────────────────
+    img      = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text     = sanitize_text(post_data.get("text",  ""))
+    username = sanitize_text(post_data.get("user") or post_data.get("username", ""))
+    likes    = post_data.get("likes", 0)
     try:
         likes = int(likes)
-    except Exception:
+    except Exception:        # leave at 0 on any conversion error
         likes = 0
 
     if ui is None:
-        username = post_data.get("user") or post_data.get("username", "")
         if hasattr(st, "image") and hasattr(st, "write"):
             if img:
                 st.image(img, use_column_width=True)
@@ -244,14 +255,14 @@ def render_post_card(post_data: dict[str, Any]) -> None:
                 unsafe_allow_html=True,
             )
         else:
-            html_snippet = ""
+            html_snippet = "<div class='shadcn-card' style='border-radius:12px;padding:8px;'>"
             if img:
-                html_snippet += f"<img src='{html.escape(img)}' style='width:100%;border-radius:4px;'>"
+                html_snippet += f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px;'/>"
             if username:
-                html_snippet += f"<p><strong>{html.escape(username)}</strong>: {html.escape(text)}</p>"
-            else:
-                html_snippet += f"<p>{html.escape(text)}</p>"
+                html_snippet += f"<div><strong>{html.escape(username)}</strong></div>"
+            html_snippet += f"<p>{html.escape(text)}</p>"
             html_snippet += f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            html_snippet += "</div>"
             getattr(st, "markdown", lambda *a, **k: None)(html_snippet, unsafe_allow_html=True)
         return
 
@@ -297,8 +308,6 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             unsafe_allow_html=True,
         )
 
-
-import html  # Ensure this is imported at the top if not already
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
     """Display posts in a responsive grid using ``render_post_card``."""
@@ -422,42 +431,97 @@ def apply_theme(theme: str) -> None:
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:
-    """Render a Light/Dark selector that remembers the choice in session_state."""
+    """Render a Light / Dark selector that remembers the choice in session_state
+    and mirrors it to the page’s ``?theme=`` query-parameter.
+
+    Returns
+    -------
+    str
+        The currently-selected theme, lower-cased (“light” or “dark”).
+    """
+    # ------------------------------------------------------------------ #
+    # Keys and helpers
+    # ------------------------------------------------------------------ #
     if key_suffix is None:
         key_suffix = "default"
+    theme_key   = f"theme_{key_suffix}"          # per-caller key
+    unique_key  = f"theme_selector_{key_suffix}" # widget key
 
-    theme_key = f"theme_{key_suffix}"
+    def _safe_session_set(k: str, v: str) -> None:
+        """Robust setter that also works in test contexts."""
+        try:
+            st.session_state[k] = v
+        except Exception:      # pylint: disable=broad-except
+            _FAKE_SESSION[k] = v                     # type: ignore[name-defined]
+
+    def _safe_session_get(k: str, default: str) -> str:
+        try:
+            return st.session_state.get(k, default)
+        except Exception:      # pylint: disable=broad-except
+            return _FAKE_SESSION.setdefault(k, default)  # type: ignore[name-defined]
+
+    # ------------------------------------------------------------------ #
+    # First-time initialisation: derive default from query-params
+    # ------------------------------------------------------------------ #
     if theme_key not in st.session_state:
-        st.session_state[theme_key] = "light"
+        try:
+            params = st.query_params        # Streamlit ≥1.29
+        except AttributeError:
+            params = st.experimental_get_query_params()
 
-    unique_key = f"theme_selector_{key_suffix}"
-    current = st.session_state[theme_key]
+        param_theme = params.get("theme", None)
+        if isinstance(param_theme, list):          # multi-param edge-case
+            param_theme = param_theme[0]
 
+        initial = str(param_theme).lower() if param_theme in {"light", "dark"} else "light"
+        _safe_session_set(theme_key, initial)
+        _safe_session_set("theme",    initial)     # global alias
+
+    current = _safe_session_get(theme_key, "light")
+
+    # ------------------------------------------------------------------ #
+    # Render selector – prefer shadcn / NiceGUI where available
+    # ------------------------------------------------------------------ #
     if ui is not None and hasattr(ui, "radio_group"):
+        # streamlit-shadcn-ui radio buttons
         try:
             choice = ui.radio_group(
                 ["Light", "Dark"],
                 default_value="Light" if current == "light" else "Dark",
                 key=unique_key,
             )
-        except Exception:  # fallback to Streamlit
+        except Exception:              # fall back to Streamlit
             choice = st.selectbox(
-                label,
-                ["Light", "Dark"],
+                label, ["Light", "Dark"],
                 index=0 if current == "light" else 1,
                 key=unique_key,
             )
     else:
+        # vanilla Streamlit widget
         choice = st.selectbox(
-            label,
-            ["Light", "Dark"],
+            label, ["Light", "Dark"],
             index=0 if current == "light" else 1,
             key=unique_key,
         )
 
-    st.session_state[theme_key] = choice.lower()
-    apply_theme(st.session_state[theme_key])
-    return st.session_state[theme_key]
+    # ------------------------------------------------------------------ #
+    # Persist choice, apply CSS, sync query-params
+    # ------------------------------------------------------------------ #
+    chosen = choice.lower()
+    _safe_session_set(theme_key, chosen)
+    _safe_session_set("theme",    chosen)          # keep global alias
+
+    apply_theme(chosen)
+
+    try:                                           # Streamlit ≥1.29
+        st.query_params["theme"] = chosen
+    except Exception:                              # noqa: BLE001
+        try:                                       # classic API
+            st.experimental_set_query_params(theme=chosen)
+        except Exception:                          # noqa: BLE001
+            pass
+
+    return chosen
 
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
@@ -526,6 +590,13 @@ def inject_global_styles() -> None:
 def ensure_active_user() -> str:
     """Ensure ``st.session_state['active_user']`` is initialized."""
     return st.session_state.setdefault("active_user", "guest")
+
+
+def get_active_user() -> str:
+    """Return the currently active user from ``st.session_state``."""
+    if "active_user" not in st.session_state:
+        st.session_state["active_user"] = "guest"
+    return st.session_state["active_user"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
