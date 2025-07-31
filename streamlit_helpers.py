@@ -220,61 +220,70 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 def render_post_card(post_data: dict[str, Any]) -> None:
     """
-    Render an Instagram-style post card.
+    Render an Instagram-style post card that works with or without the
+    `streamlit-shadcn-ui` / NiceGUI back-end.
 
-    • Works with streamlit-shadcn-ui / NiceGUI back-ends (via `ui`).
-    • Gracefully degrades to pure-Streamlit (or even very minimal
-      stubs used in tests) when those back-ends aren’t available.
+    Parameters
+    ----------
+    post_data
+        Dictionary keys that may be present:
+
+        * ``image`` – image URL
+        * ``text``  – caption / body text
+        * ``user``  / ``username`` – poster’s name
+        * ``likes`` – like counter (int, str or anything castable to int)
     """
-    img   = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
-    text  = sanitize_text(post_data.get("text",  ""))
-    user  = sanitize_text(post_data.get("user",  ""))
-    likes = post_data.get("likes", 0)
-
+    # ── Extract & sanitise basic fields ──────────────────────────────────
+    img      = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text     = sanitize_text(post_data.get("text",  ""))
+    username = sanitize_text(post_data.get("user") or post_data.get("username", ""))
+    likes    = post_data.get("likes", 0)
     try:
         likes = int(likes)
-    except Exception:  # leave at 0 if conversion fails
+    except Exception:        # leave at 0 on any conversion error
         likes = 0
 
-    # ── Plain-Streamlit (or stub) fallback ────────────────────────────────
+    # ── Pure-Streamlit fallback (no `ui` component library available) ────
     if ui is None:
-        html_parts: list[str] = []
+        html_block: list[str] = ["<div class='shadcn-card' "
+                                 "style='border-radius:12px;padding:8px;'>"]
 
         if img:
-            html_parts.append(
+            html_block.append(
                 f"<img src='{html.escape(img)}' "
-                "style='width:100%;border-radius:0.375rem;'>"
+                "style='width:100%;border-radius:8px;'/>"
             )
-        if user:
-            html_parts.append(f"<p><strong>{html.escape(user)}</strong></p>")
+        if username:
+            html_block.append(f"<div><strong>{html.escape(username)}</strong></div>")
         if text:
-            html_parts.append(f"<p>{html.escape(text)}</p>")
+            html_block.append(f"<p>{html.escape(text)}</p>")
 
-        html_parts.append(
+        html_block.append(
             f"<div style='color:var(--text-color);font-size:1.2em;'>"
             f"❤️ {likes} 🔁 💬</div>"
         )
+        html_block.append("</div>")
 
-        st.markdown("".join(html_parts), unsafe_allow_html=True)
+        st.markdown("".join(html_block), unsafe_allow_html=True)
         return
 
-    # ── Fancy UI back-end available ───────────────────────────────────────
+    # ── Rich back-end available (streamlit-shadcn-ui or NiceGUI) ─────────
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
 
+            # caption text
             if hasattr(ui, "element"):
                 safe_element("p", text).classes("mb-1")
             else:
                 st.markdown(text)
 
+            # like badge, if supported
             if hasattr(ui, "badge"):
                 ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-            else:  # fall back if badge component missing
-                st.markdown(f"<span>❤️ {likes}</span>", unsafe_allow_html=True)
 
-            # reactions line
+            # reaction line
             if hasattr(ui, "element"):
                 ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
             else:
@@ -284,7 +293,9 @@ def render_post_card(post_data: dict[str, Any]) -> None:
                     unsafe_allow_html=True,
                 )
 
-    except Exception as exc:  # total fallback if UI chain fails
+    # ── If anything in the rich chain fails, fall back gracefully ───────
+    except Exception as exc:                              # pragma: no cover
+        # best-effort user feedback, if Streamlit toast exists
         if hasattr(st, "toast"):
             st.toast(f"Post card failed: {exc}", icon="⚠️")
 
@@ -298,8 +309,6 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             unsafe_allow_html=True,
         )
 
-
-import html  # Ensure this is imported at the top if not already
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
     """Display posts in a responsive grid using ``render_post_card``."""
@@ -582,6 +591,13 @@ def inject_global_styles() -> None:
 def ensure_active_user() -> str:
     """Ensure ``st.session_state['active_user']`` is initialized."""
     return st.session_state.setdefault("active_user", "guest")
+
+
+def get_active_user() -> str:
+    """Return the currently active user from ``st.session_state``."""
+    if "active_user" not in st.session_state:
+        st.session_state["active_user"] = "guest"
+    return st.session_state["active_user"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
