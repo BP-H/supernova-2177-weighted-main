@@ -26,7 +26,43 @@ except Exception:  # noqa: BLE001
     try:
         import streamlit_shadcn_ui as ui  # type: ignore
     except Exception:  # noqa: BLE001
-        ui = None  # type: ignore
+        class _DummyElement:
+            def __enter__(self) -> "_DummyElement":
+                return self
+
+            def __exit__(self, *_exc: Any) -> None:
+                pass
+
+            def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
+                return self
+
+            def style(self, *_a: Any, **_k: Any) -> "_DummyElement":
+                return self
+
+        class _DummyUI:
+            def element(self, tag: str, content: str) -> _DummyElement:  # type: ignore
+                if tag.lower() == "h1":
+                    st.header(content)
+                else:
+                    st.markdown(
+                        f"<{tag}>{html.escape(content)}</{tag}>",
+                        unsafe_allow_html=True,
+                    )
+                return _DummyElement()
+
+            def card(self) -> _DummyElement:
+                st.container()
+                return _DummyElement()
+
+            def image(self, img: str) -> _DummyElement:
+                st.image(img, use_column_width=True)
+                return _DummyElement()
+
+            def badge(self, text: str) -> _DummyElement:
+                st.markdown(f"<span>{html.escape(text)}</span>", unsafe_allow_html=True)
+                return _DummyElement()
+
+        ui = _DummyUI()  # type: ignore
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
@@ -89,10 +125,7 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}</style>",
         unsafe_allow_html=True,
     )
-    if ui is not None:
-        ui.element("h1", title)
-    else:
-        st.header(title)
+    ui.element("h1", title)
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
