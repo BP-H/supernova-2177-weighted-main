@@ -153,7 +153,10 @@ def normalize_choice(choice: str) -> str:
 
 # Icons used in the navigation bar. Must be single-character emojis or
 # valid Bootstrap icon codes prefixed with ``"bi bi-"``.
-NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤", "✉️"]
+# Emoji icons for sidebar navigation in alphabetical page order.
+# Agents, Chat, Messages, Profile, Resonance Music, Social, Validation,
+# Video Chat, Voting
+NAV_ICONS = ["🤖", "💬", "✉️", "👤", "🎵", "👥", "✅", "🎥", "📊"]
 
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
@@ -915,7 +918,8 @@ def run_analysis(validations, *, layout: str = "force"):
         )
 
     st.subheader("Analysis Result")
-    st.json(result)
+    if st.session_state.get("beta_mode"):
+        st.json(result)
 
     graph_data = build_validation_graph(validations)
     edges = graph_data.get("edges", [])
@@ -1103,13 +1107,13 @@ def render_validation_ui(
         page_paths = {
             label: f"/pages/{mod}.py" for label, mod in PAGES.items()
         }
-        NAV_ICONS = ["✅", "📊", "🤖", "🎵", "💬", "👥", "👤", "✉️"]
+        NAV_ICONS = ["🤖", "💬", "✉️", "👤", "🎵", "👥", "✅", "🎥", "📊"]
 
         # ...
 
         choice_label = render_sidebar_nav(
             page_paths,
-            icons=["✅", "📊", "🤖", "🎵", "💬", "👥", "👤"],
+            icons=NAV_ICONS,
             session_key="active_page",
         )
         choice = PAGES.get(choice_label, str(choice_label)).lower()
@@ -1205,7 +1209,8 @@ def render_developer_tools() -> None:
                                             db=db,
                                         )
                                     )
-                                    st.json(result)
+                                    if st.session_state.get("beta_mode"):
+                                        st.json(result)
                                     st.toast("Success!")
                                 except Exception as exc:
                                     st.error(f"Audit failed: {exc}")
@@ -1217,7 +1222,8 @@ def render_developer_tools() -> None:
                             with st.spinner("Working on it..."):
                                 try:
                                     result = run_full_audit(hid, db)
-                                    st.json(result)
+                                    if st.session_state.get("beta_mode"):
+                                        st.json(result)
                                     st.toast("Success!")
                                 except Exception as exc:
                                     st.error(f"Audit failed: {exc}")
@@ -1302,11 +1308,20 @@ def render_developer_tools() -> None:
                                 backend_fn = get_backend("dummy")
                                 a = agent_cls(llm_backend=backend_fn)
                                 results.append(a.process_event(evt))
-                        st.json(results)
+                        if st.session_state.get("beta_mode"):
+                            st.json(results)
                     except Exception as exc:
                         st.error(f"Flow execution failed: {exc}")
                 else:
                     st.toast("Agent registry unavailable", icon="⚠️")
+
+
+def parse_beta_mode(params: dict) -> bool:
+    """Update session state with beta flag from query params."""
+    val = params.get("beta")
+    enabled = val == "1" or (isinstance(val, list) and "1" in val)
+    st.session_state["beta_mode"] = enabled
+    return enabled
 
 
 def main() -> None:
@@ -1330,6 +1345,8 @@ def main() -> None:
     except AttributeError:
         # Fallback for older Streamlit versions
         params = st.experimental_get_query_params()
+
+    parse_beta_mode(params)
 
     value = params.get(HEALTH_CHECK_PARAM)
 
@@ -1615,7 +1632,8 @@ def main() -> None:
             # Show agent output
             if st.session_state.get("agent_output") is not None:
                 st.subheader("Agent Output")
-                st.json(st.session_state.get("agent_output"))
+                if st.session_state.get("beta_mode"):
+                    st.json(st.session_state.get("agent_output"))
 
             stats = {
                 "runs": st.session_state.get("run_count", 0),
