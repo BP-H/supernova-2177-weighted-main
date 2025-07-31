@@ -3,10 +3,19 @@
 # Legal & Ethical Safeguards
 """Validation analysis page."""
 
+import importlib
 import streamlit as st
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
-from ui import render_validation_ui
+
+def _fallback_validation_ui(*_a, **_k):
+    st.warning("validation UI unavailable")
+
+try:
+    from ui import render_validation_ui as render_validation_ui
+except Exception:  # pragma: no cover - fallback stub for tests
+    render_validation_ui = _fallback_validation_ui
+
 
 inject_modern_styles()
 
@@ -22,6 +31,14 @@ def main(main_container=None) -> None:
     """Render the validation UI inside a container safely."""
     if main_container is None:
         main_container = st
+
+    global render_validation_ui
+    if getattr(render_validation_ui, "__module__", None) == "ui":
+        try:
+            render_mod = importlib.import_module("ui")
+            render_validation_ui = getattr(render_mod, "render_validation_ui", _fallback_validation_ui)
+        except Exception:
+            render_validation_ui = _fallback_validation_ui
 
     container_ctx = safe_container(main_container)
 

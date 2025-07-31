@@ -9,7 +9,11 @@ import importlib
 import streamlit as st
 from typing import Optional, Dict
 from pathlib import Path
-from utils.paths import ROOT_DIR, PAGES_DIR
+try:
+    from utils.paths import ROOT_DIR, PAGES_DIR
+except Exception:  # pragma: no cover - fallback if utils package missing
+    ROOT_DIR = Path(__file__).resolve().parents[1]
+    PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 from uuid import uuid4
 from streamlit_helpers import safe_container
 
