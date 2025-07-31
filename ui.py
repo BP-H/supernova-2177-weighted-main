@@ -22,12 +22,14 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    import streamlit_shadcn_ui as ui_lib  # type: ignore
-    SHADCN_AVAILABLE = True
-except Exception:  # pragma: no cover - optional dependency or missing at runtime
-    import types
-    ui_lib = types.SimpleNamespace()
-    SHADCN_AVAILABLE = False
+    from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
+except ImportError:
+    try:
+        import streamlit_shadcn_ui as ui  # type: ignore
+    except Exception:
+        import types
+        ui = types.SimpleNamespace()
+
 
 from datetime import datetime, timezone
 import asyncio
@@ -38,7 +40,6 @@ import logging
 import math
 import sys
 import traceback
-import types
 import sqlite3
 import importlib
 from streamlit.errors import StreamlitAPIException
@@ -224,8 +225,10 @@ class _UIWrapper:
     def tabs(labels: list[str]) -> _StreamlitTabs:
         return _StreamlitTabs(labels)
 
+# Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
+if not hasattr(ui, "tabs"):
+    ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
 
-ui = ui_lib if SHADCN_AVAILABLE else _UIWrapper()
 
 
 
@@ -261,6 +264,7 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
     render_post_card,
+    render_instagram_grid,
     inject_instagram_styles,
 )
 
@@ -709,10 +713,7 @@ def render_modern_social_page():
         {"image": "https://placekitten.com/300/300", "text": "Another cat", "likes": 3},
         {"image": "https://placekitten.com/500/300", "text": "More cats", "likes": 8},
     ]
-    cols = st.columns(3)
-    for col, post in zip(cols * (len(posts) // 3 + 1), posts):
-        with col:
-            render_post_card(post)
+    render_instagram_grid(posts, cols=3)
 
 
 def render_modern_chat_page() -> None:
@@ -975,10 +976,7 @@ def run_analysis(validations, *, layout: str = "force"):
         result = analyze_validation_integrity(validations)
 
     header("Validations")
-    cols = st.columns(3)
-    for i, entry in enumerate(validations):
-        with cols[i % 3]:
-            render_post_card(entry)
+    render_instagram_grid(validations, cols=3)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -1414,38 +1412,31 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-try:
-    st.set_page_config(
-        page_title="superNova_2177",
-        layout="wide",
-        initial_sidebar_state="collapsed",
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+    except Exception:
+        # Older Streamlit builds (or re-runs) may raise – that’s OK.
+        pass
+
+    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    try:
+        inject_instagram_styles()
+    except Exception:  # pragma: no cover
+        pass
+
+    # Global CSS for cards / clean background
+    st.markdown(
+        """<style>
+        body, .stApp {background:#FAFAFA;}
+        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        </style>""",
+        unsafe_allow_html=True,
     )
-except Exception:
-    # Older Streamlit builds (or re-runs) may raise – that’s OK.
-    pass
 
-# Lightweight “Instagram-style” aesthetic (harmless if helper absent)
-try:
-    inject_instagram_styles()
-except Exception:  # pragma: no cover
-    pass
-
-# Global CSS for cards / clean background
-st.markdown(
-    """<style>
-    body, .stApp {background:#FAFAFA;}
-    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    </style>""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(          # ← << duplicated block begins here (delete this one)
-    """<style>
-    body, .stApp {background:#FAFAFA;}
-    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    </style>""",
-    unsafe_allow_html=True,
-)
 
     try:
         ensure_pages(PAGES, PAGES_DIR)
@@ -1483,10 +1474,6 @@ st.markdown(          # ← << duplicated block begins here (delete this one)
         return
 
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            initial_sidebar_state="collapsed",
-        )
         inject_instagram_styles()
 
         render_top_bar()
@@ -1628,7 +1615,7 @@ st.markdown(          # ← << duplicated block begins here (delete this one)
             except AttributeError:
                 st.experimental_set_query_params(page="validation")
             if "load_page_with_fallback" in globals():
-                load_page_with_fallback(display_choice)
+                load_page_with_fallback(display_choice, None)
             else:
                 _render_fallback(display_choice)
             return
@@ -1703,7 +1690,7 @@ st.markdown(          # ← << duplicated block begins here (delete this one)
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
+            with ui_wrapper.tabs(["Validation", "Voting", "Agents"]) as tabs:
                 selected = tabs.active
                 if selected != display_choice:
                     try:
@@ -1858,6 +1845,20 @@ def ensure_database_exists() -> bool:
                              'Default admin user for superNova_2177',
                              1, 1, 1, 1);
                         """
+                    )
+                )
+                conn.execute(
+                    text(
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('guest','guest@example.com','x','Guest account',1,0,0,1);"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
                     )
                 )
         return True
