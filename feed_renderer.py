@@ -11,7 +11,8 @@ import streamlit as st
 
 import html
 
-from streamlit_helpers import sanitize_text
+from streamlit_helpers import sanitize_text, render_post_card
+from modern_ui_components import shadcn_card
 
 # --- default demo posts -------------------------------------------------------
 DEMO_POSTS: list[dict[str, Any]] = [
