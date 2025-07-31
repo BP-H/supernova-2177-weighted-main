@@ -1,6 +1,7 @@
 import streamlit as st
 from modern_ui import inject_modern_styles
 from agent_ui import render_agent_insights_tab
+from streamlit_helpers import theme_selector
 
 inject_modern_styles()
 
@@ -12,6 +13,7 @@ def main(main_container=None) -> None:
     If no main_container is provided, uses Streamlit root context.
     """
     container = main_container if main_container is not None else st
+    theme_selector("Theme", key_suffix="agents")
 
     try:
         container.title("🤖 Agents")

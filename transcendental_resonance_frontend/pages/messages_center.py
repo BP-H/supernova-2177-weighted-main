@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, theme_selector
 from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
@@ -86,6 +86,8 @@ def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
+    theme_selector("Theme", key_suffix="msg_center")
+
     container_ctx = safe_container(main_container)
     with container_ctx:
         header_col, status_col = st.columns([8, 1])
@@ -93,20 +95,28 @@ def main(main_container=None) -> None:
             header("💬 Messages")
         with status_col:
             render_status_icon()
+
+        # initialise conversations if first visit
         st.session_state.setdefault("_conversations", DUMMY_CONVERSATIONS.copy())
         convos = list(st.session_state["_conversations"].keys())
+
+        # two top-level tabs
         tab_msgs, tab_calls = st.tabs(["Messages", "Calls"])
 
+        # ── Messages tab ───────────────────────────────────────────────
         with tab_msgs:
             left, right = st.columns([1, 3])
 
+            # conversation list
             with left:
                 st.markdown("**Conversations**")
                 selected = st.radio("", convos, key="selected_convo")
 
+            # message thread + send box
             with right:
                 msgs = st.session_state["_conversations"].setdefault(selected, [])
                 _render_messages(msgs)
+
                 cols = st.columns([4, 1])
                 with cols[0]:
                     msg = st.text_input("Message", key="msg_input")
@@ -116,14 +126,17 @@ def main(main_container=None) -> None:
                         st.session_state.msg_input = ""
                         st.experimental_rerun()
 
+        # ── Calls tab ─────────────────────────────────────────────────
         with tab_calls:
-            from .chat import (
+            from chat_ui import (
                 render_video_call_controls,
                 render_voice_chat_controls,
             )
+
             render_video_call_controls()
             st.divider()
             render_voice_chat_controls()
+
 
 
 def render() -> None:
