@@ -171,6 +171,46 @@ UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 _fallback_rendered: set[str] = set()
 
 
+class _StreamlitTabs:
+    """Simple context manager to mimic ``ui.tabs`` using Streamlit widgets."""
+
+    def __init__(self, labels: list[str], key: str = "_main_tabs") -> None:
+        self.labels = labels
+        self.key = key
+        self.active = labels[0]
+
+    def __enter__(self) -> "_StreamlitTabs":
+        index = 0
+        current = st.session_state.get(self.key)
+        if isinstance(current, str) and current in self.labels:
+            index = self.labels.index(current)
+        self.active = st.radio(
+            "",
+            self.labels,
+            horizontal=True,
+            index=index,
+            key=self.key,
+        )
+        if self.active is None:
+            self.active = self.labels[index]
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        st.session_state[self.key] = self.active
+        return False
+
+
+class _UIWrapper:
+    """Namespace providing a ``tabs`` helper compatible with NiceGUI style."""
+
+    @staticmethod
+    def tabs(labels: list[str]) -> _StreamlitTabs:
+        return _StreamlitTabs(labels)
+
+
+ui = _UIWrapper()
+
+
 def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
@@ -1547,6 +1587,9 @@ def main() -> None:
         except AttributeError:
             st.experimental_set_query_params(page=display_choice)
 
+        # Sync tab selection with current page choice
+        st.session_state.setdefault("_main_tabs", display_choice)
+
 
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
@@ -1606,24 +1649,34 @@ def main() -> None:
 
         # Center content area — dynamic page loading
         with center_col:
-            # Resolve page module
-            # Normalize input and resolve page key
-            label = normalize_choice(choice)
-            page_key = PAGES.get(label, label.lower())
+            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
+                selected = tabs.active
+                if selected != display_choice:
+                    try:
+                        st.query_params["page"] = selected
+                    except AttributeError:
+                        st.experimental_set_query_params(page=selected)
+                    st.session_state["_main_tabs"] = selected
+                    st.rerun()
 
-            if page_key:
-                module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
-                    f"pages.{page_key}",
-                ]
-                try:
-                    load_page_with_fallback(display_choice, module_paths)
-                except Exception:
-                    st.toast(f"Page not found: {display_choice}", icon="⚠️")
-                    _render_fallback(display_choice)
-            else:
-                st.toast("Select a page above to continue.")
-                _render_fallback("Validation")
+                label = normalize_choice(selected)
+                page_key = PAGES.get(label, label.lower())
+
+                if page_key:
+                    module_paths = [
+                        f"transcendental_resonance_frontend.pages.{page_key}",
+                        f"pages.{page_key}",
+                    ]
+                    try:
+                        load_page_with_fallback(selected, module_paths)
+                    except Exception:
+                        st.toast(
+                            f"Page not found: {selected}", icon="⚠️"
+                        )
+                        _render_fallback(selected)
+                else:
+                    st.toast("Select a page above to continue.")
+                    _render_fallback("Validation")
 
 
 
