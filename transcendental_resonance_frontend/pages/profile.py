@@ -4,8 +4,9 @@
 """User identity hub with profile and activity overview."""
 
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, get_active_user
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
 from transcendental_resonance_frontend.ui.profile_ui import (
@@ -61,6 +62,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
         )
     return followers or {}, following or {}
 
+inject_light_theme()
 inject_modern_styles()
 
 
@@ -108,7 +110,7 @@ def main(main_container=None) -> None:
             render_status_icon()
 
         # Active user editable section
-        current = st.session_state.get("active_user")
+        current = st.session_state.get("active_user", "guest")
         current = st.text_input("Username", value=current, key="profile_user")
         st.session_state["active_user"] = current
         _render_profile(current)
