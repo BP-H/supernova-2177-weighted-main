@@ -353,7 +353,7 @@ except ImportError:  # pragma: no cover - optional dependency
 
 try:
     from social_tabs import render_social_tab
-except ImportError:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover - optional dependency or invalid module
 
     def render_social_tab() -> None:
         header("👥 Social Features")
@@ -1525,7 +1525,6 @@ def main() -> None:
     try:
         inject_light_theme()
 
-        render_top_bar()
 
         # Inject keyboard shortcuts for quick navigation
         st.markdown(

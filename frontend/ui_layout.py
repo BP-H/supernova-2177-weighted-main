@@ -111,12 +111,11 @@ def render_top_bar() -> None:
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
-        key_prefix = ""
         search_target.text_input(
             "Search",
             placeholder="Search...",
+            key=f"topbar_search_{st.session_state.get('active_page', 'global')}",
             label_visibility="collapsed",
-            key=f"{key_prefix}topbar_search",
         )
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
         beta_enabled = toggle_target.toggle(
