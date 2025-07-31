@@ -225,6 +225,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
     """Instagram-style post card that degrades gracefully."""
     img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
     text = sanitize_text(post_data.get("text", ""))
+    username = sanitize_text(post_data.get("user") or post_data.get("username", ""))
     likes = post_data.get("likes", 0)
     try:
         likes = int(likes)
@@ -232,36 +233,47 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         likes = 0
 
     if ui is None:
+        html_block = "<div class='shadcn-card' style='border-radius:12px;padding:8px;'>"
         if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
-        )
+            html_block += f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px;'/>"
+        if username:
+            html_block += f"<div><strong>{html.escape(username)}</strong></div>"
+        html_block += f"<p>{html.escape(text)}</p>"
+        html_block += f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+        html_block += "</div>"
+        st.markdown(html_block, unsafe_allow_html=True)
         return
 
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
-            safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
-            ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-            ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
+            if hasattr(ui, "element"):
+                safe_element("p", text).classes("mb-1")
+            else:
+                st.markdown(text)
+            if hasattr(ui, "badge"):
+                ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+                if hasattr(ui, "element"):
+                    ui.element("div", "❤️ 🔁 💬").classes("text-center text-lg")
+            elif hasattr(ui, "element"):
+                ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
     except Exception as exc:  # noqa: BLE001
-        st.toast(f"Post card failed: {exc}", icon="⚠️")
-        if img:
+        if hasattr(st, "toast"):
+            st.toast(f"Post card failed: {exc}", icon="⚠️")
+        if img and hasattr(st, "image"):
             st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
-            unsafe_allow_html=True,
-        )
+        if hasattr(st, "write"):
+            st.write(text)
+        if hasattr(st, "caption"):
+            st.caption(f"❤️ {likes}")
+        if hasattr(st, "markdown"):
+            st.markdown(
+                "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+                unsafe_allow_html=True,
+            )
 
 
-import html  # Ensure this is imported at the top if not already
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
     """Display posts in a responsive grid using ``render_post_card``."""
@@ -489,6 +501,13 @@ def inject_global_styles() -> None:
 def ensure_active_user() -> str:
     """Ensure ``st.session_state['active_user']`` is initialized."""
     return st.session_state.setdefault("active_user", "guest")
+
+
+def get_active_user() -> str:
+    """Return the currently active user from ``st.session_state``."""
+    if "active_user" not in st.session_state:
+        st.session_state["active_user"] = "guest"
+    return st.session_state["active_user"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
