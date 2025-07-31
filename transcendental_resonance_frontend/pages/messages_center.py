@@ -8,6 +8,7 @@ from __future__ import annotations
 import streamlit as st
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
+from status_indicator import render_status_icon
 
 inject_modern_styles()
 
@@ -46,7 +47,11 @@ def main(main_container=None) -> None:
 
     container_ctx = safe_container(main_container)
     with container_ctx:
-        st.subheader("💬 Messages")
+        header_col, status_col = st.columns([8, 1])
+        with header_col:
+            st.subheader("💬 Messages")
+        with status_col:
+            render_status_icon()
         st.session_state.setdefault("_conversations", DUMMY_CONVERSATIONS.copy())
         convos = list(st.session_state["_conversations"].keys())
         selected = st.radio("Conversations", convos, key="selected_convo")
