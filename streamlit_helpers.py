@@ -19,16 +19,19 @@ import streamlit as st
 # ──────────────────────────────────────────────────────────────────────────────
 # UI-backend detection
 # ──────────────────────────────────────────────────────────────────────────────
-# ① Try NiceGUI → ② try streamlit-shadcn-ui → ③ fall back to plain Streamlit
-try:  # NiceGUI available?
-    from nicegui import ui  # type: ignore
+# Prefer streamlit-shadcn-ui and fall back to NiceGUI or plain Streamlit
+try:  # streamlit-shadcn-ui available?
+    import streamlit_shadcn_ui as ui  # type: ignore
+    shadcn = ui
 except Exception:  # noqa: BLE001
-    try:  # streamlit-shadcn-ui available?
-        import streamlit_shadcn_ui as ui  # type: ignore
+    try:  # NiceGUI available?
+        from nicegui import ui  # type: ignore
+        shadcn = None
     except Exception:  # noqa: BLE001
         from contextlib import nullcontext
         import html
         from typing import Any, ContextManager
+        import streamlit as st
 
         class _DummyElement:
             """Gracefully ignore chained style/class calls and context management."""
@@ -69,12 +72,11 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
             def badge(self, text: str) -> _DummyElement:
-                st.markdown(
-                    f"<span>{html.escape(text)}</span>", unsafe_allow_html=True
-                )
+                st.markdown(f"<span>{html.escape(text)}</span>", unsafe_allow_html=True)
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
+        shadcn = None
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -83,6 +85,7 @@ except Exception:  # noqa: BLE001
 try:
     from modern_ui import inject_modern_styles  # type: ignore
 except Exception:  # noqa: BLE001
+
     def inject_modern_styles(*_a: Any, **_kw: Any) -> None:  # type: ignore
         """No-op when *modern_ui* is absent."""
         return None
@@ -152,12 +155,27 @@ def alert(
         "info": ("#e8f4fd", "#1e88e5"),
     }
     bg, border = colours.get(level, colours["info"])
-    icon = f"<span>{icons.get(level, '')}</span>" if show_icon else ""
+    icon = icons.get(level, "") if show_icon else ""
+    # Prefer shadcn-ui components when available
+    if ui is not None and hasattr(ui, "card"):
+        try:
+            text = f"{icon} {message}" if icon else message
+            ui.card(content=text)
+            if hasattr(ui, "badges"):
+                variant_map = {
+                    "warning": "secondary",
+                    "error": "destructive",
+                    "info": "default",
+                }
+                ui.badges([(level.title(), variant_map.get(level, "default"))])
+            return
+        except Exception:  # noqa: BLE001 - fallback to Streamlit below
+            pass
     st.markdown(
         f"<div style='border-left:4px solid {border};"
         f"background:{bg};padding:.5em 1em;border-radius:4px;"
         f"margin-bottom:1em;display:flex;align-items:center;gap:.5rem;'>"
-        f"{icon}{html.escape(message)}</div>",
+        f"{f'<span>{html.escape(icon)}</span>' if icon else ''}{html.escape(message)}</div>",
         unsafe_allow_html=True,
     )
 
@@ -196,6 +214,14 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         if hasattr(elem, "classes"):
             elem.classes("mb-1")
         ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+
+
+def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
+    """Display posts in a responsive grid using ``render_post_card``."""
+    columns = st.columns(cols)
+    for i, post in enumerate(posts):
+        with columns[i % cols]:
+            render_post_card(post)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -280,20 +306,32 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
     unique_key = f"theme_selector_{key_suffix}"
     current = st.session_state[theme_key]
 
-    choice = st.selectbox(
-        label,
-        ["Light", "Dark"],
-        index=0 if current == "light" else 1,
-        key=unique_key,
-    )
+    if ui is not None and hasattr(ui, "radio_group"):
+        try:
+            choice = ui.radio_group(
+                ["Light", "Dark"],
+                default_value="Light" if current == "light" else "Dark",
+                key=unique_key,
+            )
+        except Exception:  # fallback to Streamlit
+            choice = st.selectbox(
+                label,
+                ["Light", "Dark"],
+                index=0 if current == "light" else 1,
+                key=unique_key,
+            )
+    else:
+        choice = st.selectbox(
+            label,
+            ["Light", "Dark"],
+            index=0 if current == "light" else 1,
+            key=unique_key,
+        )
+
     st.session_state[theme_key] = choice.lower()
     apply_theme(st.session_state[theme_key])
     return st.session_state[theme_key]
 
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Containers & utilities
-# ──────────────────────────────────────────────────────────────────────────────
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
     st.markdown(
@@ -333,6 +371,18 @@ def inject_instagram_styles() -> None:
         .shadcn-card {
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: #fff;
+        }
+        .shadcn-badge {
+            border-radius: 999px;
+            background: #fff;
+            padding: 0.25rem 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .shadcn-btn {
+            border-radius: 999px;
+            padding: 0.25rem 0.75rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         </style>
         """,
@@ -353,9 +403,11 @@ __all__ = [
     "alert",
     "header",
     "render_post_card",
+    "render_instagram_grid",
     "sanitize_text",
     "apply_theme",
     "theme_selector",
+    "get_active_user",
     "centered_container",
     "safe_container",
     "tabs_nav",
