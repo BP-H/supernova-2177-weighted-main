@@ -22,15 +22,35 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
+    # Try centralized import logic first
+    from streamlit_helpers import ui  # Preferential source of truth
 except ImportError:
-    # Fallback in case streamlit_helpers doesn't define it
     try:
-        import streamlit_shadcn_ui as shadcn  # type: ignore
-        ui = shadcn
+        import streamlit_shadcn_ui as _shadcn_ui  # type: ignore
     except Exception:
-        import types
-        ui = types.SimpleNamespace()
+        _shadcn_ui = None
+
+    class _UIWrapper:
+        """Namespace providing a `tabs` helper compatible with NiceGUI style."""
+
+        def __init__(self, backend: object | None = None) -> None:
+            self._backend = backend
+
+        def tabs(self, labels: list[str]):
+            if self._backend and hasattr(self._backend, "tabs"):
+                try:
+                    return self._backend.tabs(labels)  # type: ignore[return-value]
+                except Exception:
+                    pass
+            from ui import _StreamlitTabs  # local import to avoid circular import
+            return _StreamlitTabs(labels)
+
+        def __getattr__(self, name: str):
+            if self._backend is not None:
+                return getattr(self._backend, name)
+            raise AttributeError(name)
+
+    ui = _UIWrapper(_shadcn_ui)
 
 
 from datetime import datetime, timezone
@@ -223,14 +243,35 @@ class _StreamlitTabs:
 class _UIWrapper:
     """Namespace providing a ``tabs`` helper compatible with NiceGUI style."""
 
-    @staticmethod
-    def tabs(labels: list[str]) -> _StreamlitTabs:
+    def __init__(self, backend: object | None = None) -> None:
+        self._backend = backend
+
+    def tabs(self, labels: list[str]) -> _StreamlitTabs:
+        if self._backend and hasattr(self._backend, "tabs"):
+            try:
+                return self._backend.tabs(labels)  # type: ignore[return-value]
+            except Exception:  # pragma: no cover - fallback
+                pass
         return _StreamlitTabs(labels)
 
+    def __getattr__(self, name: str):
+        if self._backend is not None:
+            return getattr(self._backend, name)
+        raise AttributeError(name)
 
-# Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
+# If `ui` not already defined from streamlit_helpers, create it
+try:
+    from streamlit_helpers import ui  # type: ignore
+except ImportError:
+    try:
+        import streamlit_shadcn_ui as _shadcn_ui  # type: ignore
+    except Exception:
+        _shadcn_ui = None
+    ui = _UIWrapper(_shadcn_ui)
+
+# Ensure `ui.tabs` is present—even if streamlit_helpers imported an incomplete ui
 if not hasattr(ui, "tabs"):
-    ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
+    ui.tabs = _UIWrapper().tabs  # type: ignore[attr-defined]
 
 
 
@@ -1440,11 +1481,11 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-
     try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
         logger.warning("ensure_pages failed: %s", exc)
+
     # Initialize database BEFORE anything else
     try:
         db_ready = ensure_database_exists()
@@ -1453,6 +1494,7 @@ def main() -> None:
     except Exception as e:
         st.error(f"Database initialization failed: {e}")
         st.info("Running in fallback mode")
+
 
     # Respond to lightweight health-check probes
     try:
@@ -1836,11 +1878,12 @@ def ensure_database_exists() -> bool:
             # Check if any user exists
             res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
             count = res.scalar() or 0
+
             if count == 0:
                 conn.execute(
                     text(
                         """
-                        INSERT OR IGNORE INTO harmonizers
+                        INSERT INTO harmonizers
                             (username, email, hashed_password, bio,
                              is_active, is_admin, is_genesis, consent_given)
                         VALUES
@@ -1852,30 +1895,19 @@ def ensure_database_exists() -> bool:
                 )
                 conn.execute(
                     text(
-                        """
-                        INSERT OR IGNORE INTO harmonizers
-                            (username, email, hashed_password, bio,
-                             is_active, is_admin, is_genesis, consent_given)
-                        VALUES
-                            ('guest', 'guest@supernova.dev', 'hashed_password_here',
-                             'Guest user',
-                             1, 0, 0, 1);
-                        """
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('guest','guest@example.com','x','Guest account',1,0,0,1);"
                     )
                 )
                 conn.execute(
                     text(
-                        """
-                        INSERT OR IGNORE INTO harmonizers
-                            (username, email, hashed_password, bio,
-                             is_active, is_admin, is_genesis, consent_given)
-                        VALUES
-                            ('demo_user', 'demo@supernova.dev', 'hashed_password_here',
-                             'Demo profile for showcasing features',
-                             1, 0, 0, 1);
-                        """
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
                     )
                 )
+
         return True
     except (OperationalError, sqlite3.Error) as exc:
         logger.error("Database initialization failed: %s", exc)
@@ -1883,6 +1915,7 @@ def ensure_database_exists() -> bool:
     except Exception as exc:
         logger.error("Unexpected DB init error: %s", exc)
         return False
+
 
 
 def safe_get_user():

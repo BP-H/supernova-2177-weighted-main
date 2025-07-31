@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, theme_selector
 from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
@@ -73,6 +73,7 @@ def main(main_container=None) -> None:
     """Render the Messages / Chat Center page."""
     if main_container is None:
         main_container = st
+    theme_selector("Theme", key_suffix="msg_center")
 
     container_ctx = safe_container(main_container)
     with container_ctx:
@@ -95,7 +96,7 @@ def main(main_container=None) -> None:
                 st.session_state.msg_input = ""
                 st.experimental_rerun()
         st.divider()
-        from .chat import (
+        from chat_ui import (
             render_video_call_controls,
             render_voice_chat_controls,
         )
