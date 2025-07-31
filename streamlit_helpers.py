@@ -13,25 +13,33 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
-
 import streamlit as st
 
 # ──────────────────────────────────────────────────────────────────────────────
 # UI-backend detection
 # ──────────────────────────────────────────────────────────────────────────────
 # ① Try NiceGUI → ② try streamlit-shadcn-ui → ③ fall back to plain Streamlit
-try:
+try:  # NiceGUI available?
     from nicegui import ui  # type: ignore
 except Exception:  # noqa: BLE001
-    try:
+    try:  # streamlit-shadcn-ui available?
         import streamlit_shadcn_ui as ui  # type: ignore
     except Exception:  # noqa: BLE001
-        class _DummyElement:
-            def __enter__(self) -> "_DummyElement":
-                return self
+        from contextlib import nullcontext
+        import html
+        from typing import Any, ContextManager
 
-            def __exit__(self, *_exc: Any) -> None:
-                pass
+        class _DummyElement:
+            """Gracefully ignore chained style/class calls and context management."""
+
+            def __init__(self, cm: ContextManager | None = None) -> None:
+                self._cm = cm or nullcontext()
+
+            def __enter__(self) -> Any:
+                return self._cm.__enter__()
+
+            def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+                self._cm.__exit__(exc_type, exc, tb)
 
             def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
                 return self
@@ -40,6 +48,8 @@ except Exception:  # noqa: BLE001
                 return self
 
         class _DummyUI:
+            """Fallback UI with minimal Streamlit implementations."""
+
             def element(self, tag: str, content: str) -> _DummyElement:
                 if tag.lower() == "h1":
                     st.header(content)
@@ -51,8 +61,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
             def card(self) -> _DummyElement:
-                st.container()
-                return _DummyElement()
+                return _DummyElement(st.container())
 
             def image(self, img: str) -> _DummyElement:
                 st.image(img, use_column_width=True)
@@ -65,6 +74,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
