@@ -185,11 +185,17 @@ class _StreamlitTabs:
     def __enter__(self) -> "_StreamlitTabs":
         index = 0
         current = st.session_state.get(self.key)
+
+        # If there is a saved tab that is no longer in the current list,
+        # keep showing it rather than breaking the UI.
         if isinstance(current, str) and current not in self.labels:
             self.active = current
             return self
+
+        # Otherwise, restore the previously-selected tab (if any).
         if isinstance(current, str) and current in self.labels:
             index = self.labels.index(current)
+
         self.active = st.radio(
             "",
             self.labels,
@@ -197,8 +203,11 @@ class _StreamlitTabs:
             index=index,
             key=self.key,
         )
+
         if self.active is None:
+            # Fallback to the last known selection or default to the first label.
             self.active = current if isinstance(current, str) else self.labels[index]
+
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -215,6 +224,7 @@ class _UIWrapper:
 
 
 ui = _UIWrapper()
+
 
 
 def log(msg: str) -> None:
@@ -358,28 +368,28 @@ def render_landing_page():
         """
     )
 
-    # Show diagnostic information
-    header("🔧 System Diagnostics")
-    col1, col2 = st.columns(2)
+    # Show diagnostic information and demo tools in a card
+    with shadcn_card("Diagnostics"):
+        header("🔧 System Diagnostics")
+        col1, col2 = st.columns(2)
 
-    with col1:
-        st.info("📁 Expected Pages Directory")
-        st.code(str(PAGES_DIR))
+        with col1:
+            st.info("📁 Expected Pages Directory")
+            st.code(str(PAGES_DIR))
 
-    with col2:
-        st.info("🔍 Directory Status")
-        if PAGES_DIR.exists():
-            st.success("Directory exists")
-        else:
-            st.error("Directory missing")
+        with col2:
+            st.info("🔍 Directory Status")
+            if PAGES_DIR.exists():
+                st.success("Directory exists")
+            else:
+                st.error("Directory missing")
 
-    # Show available fallback features
-    header("🎮 Available Features")
-    if st.button("Run Validation Analysis"):
-        run_analysis([], layout="force")
+        header("🎮 Available Features")
+        if st.button("Run Validation Analysis"):
+            run_analysis([], layout="force")
 
-    if st.button("Show Boot Diagnostics"):
-        boot_diagnostic_ui()
+        if st.button("Show Boot Diagnostics"):
+            boot_diagnostic_ui()
 
     # Overlay with quick start actions when no page modules are present
     st.markdown(
@@ -1402,31 +1412,39 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-    try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            layout="wide",
-            initial_sidebar_state="collapsed",
-        )
-    except Exception:
-        # Older Streamlit builds (or re-runs) may raise – that’s OK.
-        pass
-
-    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
-    try:
-        inject_instagram_styles()
-    except Exception:  # pragma: no cover
-        pass
-
-    # Global CSS for cards / clean background
-
-    st.markdown(
-        """<style>
-        body, .stApp {background:#FAFAFA;}
-        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-        </style>""",
-        unsafe_allow_html=True,
+try:
+    st.set_page_config(
+        page_title="superNova_2177",
+        layout="wide",
+        initial_sidebar_state="collapsed",
     )
+except Exception:
+    # Older Streamlit builds (or re-runs) may raise – that’s OK.
+    pass
+
+# Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+try:
+    inject_instagram_styles()
+except Exception:  # pragma: no cover
+    pass
+
+# Global CSS for cards / clean background
+st.markdown(
+    """<style>
+    body, .stApp {background:#FAFAFA;}
+    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    </style>""",
+    unsafe_allow_html=True,
+)
+
+st.markdown(          # ← << duplicated block begins here (delete this one)
+    """<style>
+    body, .stApp {background:#FAFAFA;}
+    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    </style>""",
+    unsafe_allow_html=True,
+)
+
     try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
@@ -1623,6 +1641,7 @@ def main() -> None:
 
 
 
+
         # Page layout: left for tools, center for content
         left_col, center_col, _ = st.columns([1, 3, 1])
 
@@ -1703,14 +1722,11 @@ def main() -> None:
                     try:
                         load_page_with_fallback(selected, module_paths)
                     except Exception:
-                        st.toast(
-                            f"Page not found: {selected}", icon="⚠️"
-                        )
+                        st.toast(f"Page not found: {selected}", icon="⚠️")
                         _render_fallback(selected)
                 else:
                     st.toast("Select a page above to continue.")
                     _render_fallback(selected)
-
 
 
             # Run agent logic if triggered

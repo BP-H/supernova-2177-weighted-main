@@ -13,7 +13,6 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
-
 import streamlit as st
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -26,6 +25,10 @@ except Exception:  # noqa: BLE001
     try:  # streamlit-shadcn-ui available?
         import streamlit_shadcn_ui as ui  # type: ignore
     except Exception:  # noqa: BLE001
+        from contextlib import nullcontext
+        import html
+        from typing import Any, ContextManager
+
         class _DummyElement:
             """Gracefully ignore chained style/class calls and context management."""
 
@@ -47,7 +50,7 @@ except Exception:  # noqa: BLE001
         class _DummyUI:
             """Fallback UI with minimal Streamlit implementations."""
 
-            def element(self, tag: str, content: str) -> _DummyElement:  # type: ignore
+            def element(self, tag: str, content: str) -> _DummyElement:
                 if tag.lower() == "h1":
                     st.header(content)
                 else:
@@ -65,10 +68,13 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
             def badge(self, text: str) -> _DummyElement:
-                st.markdown(f"<span>{html.escape(text)}</span>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<span>{html.escape(text)}</span>", unsafe_allow_html=True
+                )
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
