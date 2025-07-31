@@ -45,6 +45,14 @@ _ws_status_listeners: List[Callable[[str], Any]] = []
 _start_listeners: List[Callable[[], Any]] = []
 _end_listeners: List[Callable[[], Any]] = []
 
+# utils/api.py
+def get_resonance_summary():
+    # Implementation
+    pass
+
+def dispatch_route():
+    # Implementation
+    pass
 
 def on_request_start(func: Callable[[], Any]) -> None:
     """Register a callback fired before each API request."""
