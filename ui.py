@@ -42,11 +42,15 @@ from frontend import ui_layout
 try:
     from modern_ui_components import (
         render_validation_card,
+        render_post_card,
         render_stats_section,
     )
 except Exception:  # pragma: no cover - optional dependency
     def render_validation_card(*_a, **_k):
         st.info("validation card unavailable")
+
+    def render_post_card(*_a, **_k):
+        st.info("post card unavailable")
 
     def render_stats_section(*_a, **_k):
         st.info("stats section unavailable")
@@ -238,7 +242,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
 
     def render_social_tab() -> None:
-        st.subheader("👥 Social Features")
+        header("👥 Social Features")
         st.info("Social features module not available")
 
 
@@ -255,7 +259,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
 
     def render_agent_insights_tab() -> None:
-        st.subheader("🤖 Agent Insights")
+        header("🤖 Agent Insights")
         st.info("Agent insights module not available. Install required dependencies.")
 
         if AGENT_REGISTRY:
@@ -304,7 +308,7 @@ def render_landing_page():
     )
 
     # Show diagnostic information
-    st.subheader("🔧 System Diagnostics")
+    header("🔧 System Diagnostics")
     col1, col2 = st.columns(2)
 
     with col1:
@@ -319,7 +323,7 @@ def render_landing_page():
             st.error("Directory missing")
 
     # Show available fallback features
-    st.subheader("🎮 Available Features")
+    header("🎮 Available Features")
     if st.button("Run Validation Analysis"):
         run_analysis([], layout="force")
 
@@ -901,9 +905,11 @@ def run_analysis(validations, *, layout: str = "force"):
     with st.spinner("Loading..."):
         result = analyze_validation_integrity(validations)
 
-    st.subheader("Validations")
-    for entry in validations:
-        render_validation_card(entry)
+    header("Validations")
+    cols = st.columns(3)
+    for i, entry in enumerate(validations):
+        with cols[i % 3]:
+            render_post_card(entry)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -930,7 +936,7 @@ def run_analysis(validations, *, layout: str = "force"):
             unsafe_allow_html=True,
         )
 
-    st.subheader("Analysis Result")
+    header("Analysis Result")
     if st.session_state.get("beta_mode"):
         st.json(result)
 
@@ -1050,7 +1056,7 @@ def run_analysis(validations, *, layout: str = "force"):
             )
 
             fig = go.Figure(data=[edge_trace, node_trace])
-            st.subheader("Validator Coordination Graph")
+            header("Validator Coordination Graph")
             st.plotly_chart(fig, use_container_width=True)
 
             img_buf = io.BytesIO()
@@ -1081,14 +1087,14 @@ def boot_diagnostic_ui():
     """Render a simple diagnostics UI used during boot."""
     header("Boot Diagnostic", layout="centered")
 
-    st.subheader("Config Test")
+    header("Config Test")
     if Config is not None:
         st.success("Config import succeeded")
         st.write({"METRICS_PORT": Config.METRICS_PORT})
     else:
         alert("Config import failed", "error")
 
-    st.subheader("Harmony Scanner Check")
+    header("Harmony Scanner Check")
     scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
     if scanner:
         st.success("HarmonyScanner instantiated")
@@ -1102,7 +1108,7 @@ def boot_diagnostic_ui():
         except Exception as exc:  # pragma: no cover - debug only
             alert(f"Dummy scan error: {exc}", "error")
 
-    st.subheader("Validation Analysis")
+    header("Validation Analysis")
     run_analysis([], layout="force")
 
 
@@ -1339,6 +1345,18 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
+    st.set_page_config(
+        page_title="superNova_2177",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
+    st.markdown(
+        """<style>
+        body, .stApp {background:#FAFAFA;}
+        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        </style>""",
+        unsafe_allow_html=True,
+    )
     try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
@@ -1375,11 +1393,6 @@ def main() -> None:
         return
 
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            layout="wide",
-            initial_sidebar_state="collapsed",
-        )
         render_top_bar()
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
@@ -1644,7 +1657,7 @@ def main() -> None:
 
             # Show agent output
             if st.session_state.get("agent_output") is not None:
-                st.subheader("Agent Output")
+                header("Agent Output")
                 if st.session_state.get("beta_mode"):
                     st.json(st.session_state.get("agent_output"))
 
