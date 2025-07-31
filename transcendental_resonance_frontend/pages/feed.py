@@ -119,7 +119,7 @@ def _render_post(post: Post) -> None:
             unsafe_allow_html=True,
         )
         # Media
-        st.image(post.media, use_column_width=True, output_format="JPEG")
+        st.image(post.media, use_container_width=True, output_format="JPEG")
         # Caption
         st.markdown(f"<div class='post-caption'>{post.caption}</div>", unsafe_allow_html=True)
 

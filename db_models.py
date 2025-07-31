@@ -730,8 +730,7 @@ def seed_default_users() -> None:
                     email = "demo@supernova.dev"
                 user = Harmonizer(
                     username=username,
-                    email=f"{username}@supernova.dev",
-
+                    email=email,
                     hashed_password=hashed,
                     bio="Default user",
                 )
