@@ -9,9 +9,9 @@ from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container, header, theme_selector, get_active_user
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
-from transcendental_resonance_frontend.ui.profile_ui import (
+from transcendental_resonance_frontend.ui.profile_card import (
     DEFAULT_USER,
-    render_profile,
+    render_profile_card,
 )
 from status_indicator import render_status_icon
 
@@ -81,7 +81,7 @@ def _render_profile(username: str) -> None:
             }
         except Exception as exc:  # pragma: no cover - runtime fetch may fail
             st.warning(f"Profile fetch failed: {exc}, using placeholder")
-    render_profile(data)
+    render_profile_card(data)
     if dispatch_route is not None and st.button("Follow/Unfollow", key="follow"):
         with st.spinner("Updating..."):
             try:
@@ -151,7 +151,7 @@ def main(main_container=None) -> None:
             "profile_data",
             {**DEFAULT_USER, "username": username},
         )
-        render_profile(data)
+        render_profile_card(data)
 
 
 
