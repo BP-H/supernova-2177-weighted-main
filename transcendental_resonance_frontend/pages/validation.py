@@ -6,7 +6,12 @@
 import streamlit as st
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
-from ui import render_validation_ui
+
+
+def render_validation_ui(*, main_container):
+    """Dynamically import and render the validation UI."""
+    from ui import render_validation_ui as _render
+    return _render(main_container=main_container)
 
 inject_modern_styles()
 
