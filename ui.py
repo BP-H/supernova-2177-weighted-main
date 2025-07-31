@@ -1412,38 +1412,38 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-try:
-    st.set_page_config(
-        page_title="superNova_2177",
-        layout="wide",
-        initial_sidebar_state="collapsed",
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+    except Exception:
+        # Older Streamlit builds (or re-runs) may raise – that’s OK.
+        pass
+
+    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    try:
+        inject_instagram_styles()
+    except Exception:  # pragma: no cover
+        pass
+
+    # Global CSS for cards / clean background
+    st.markdown(
+        """<style>
+        body, .stApp {background:#FAFAFA;}
+        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        </style>""",
+        unsafe_allow_html=True,
     )
-except Exception:
-    # Older Streamlit builds (or re-runs) may raise – that’s OK.
-    pass
 
-# Lightweight “Instagram-style” aesthetic (harmless if helper absent)
-try:
-    inject_instagram_styles()
-except Exception:  # pragma: no cover
-    pass
-
-# Global CSS for cards / clean background
-st.markdown(
-    """<style>
-    body, .stApp {background:#FAFAFA;}
-    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    </style>""",
-    unsafe_allow_html=True,
-)
-
-st.markdown(          # ← << duplicated block begins here (delete this one)
-    """<style>
-    body, .stApp {background:#FAFAFA;}
-    .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    </style>""",
-    unsafe_allow_html=True,
-)
+    st.markdown(  # ← << duplicated block begins here (delete this one)
+        """<style>
+        body, .stApp {background:#FAFAFA;}
+        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        </style>""",
+        unsafe_allow_html=True,
+    )
 
     try:
         ensure_pages(PAGES, PAGES_DIR)
@@ -1626,7 +1626,7 @@ st.markdown(          # ← << duplicated block begins here (delete this one)
             except AttributeError:
                 st.experimental_set_query_params(page="validation")
             if "load_page_with_fallback" in globals():
-                load_page_with_fallback(display_choice)
+                load_page_with_fallback(display_choice, None)
             else:
                 _render_fallback(display_choice)
             return
