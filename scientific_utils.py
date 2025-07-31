@@ -821,6 +821,10 @@ def refine_hypotheses_from_evidence(
     -------
     List[Dict[str, Any]]
         Updated list of hypotheses with confidence adjustments and possible status changes.
+
+    citation_uri: https://en.wikipedia.org/wiki/Bayesian_inference
+    assumptions: confidence modeled as a float; falsifiability is tracked by threshold
+    validation_notes: tested against structured prediction logs
     """
     refined = []
     for h in current_hypotheses:
@@ -896,6 +900,10 @@ def detect_emergent_patterns(
     -------
     List[Dict[str, Any]]
         Each result contains a detected pattern and a proposed hypothesis.
+
+    citation_uri: https://en.wikipedia.org/wiki/Phase_transition
+    assumptions: behavioral metrics are normalized; time is monotonic
+    validation_notes: heuristics validated on synthetic pattern logs
     """
     if not behavior_data_stream:
         return []
@@ -955,6 +963,10 @@ def autonomous_literature_synthesis(generated_hypothesis: Dict[str, Any]) -> Dic
     -------
     Dict[str, Any]
         Placeholder output containing a mock literature summary and open questions.
+
+    citation_uri: https://en.wikipedia.org/wiki/Scientific_method
+    assumptions: future version will connect to real literature graph
+    validation_notes: placeholder only; returns synthetic summary
     """
     return {
         "hypothesis_id": generated_hypothesis.get("id"),

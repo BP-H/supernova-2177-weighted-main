@@ -730,6 +730,10 @@ def validate_user_prediction(
     :func:`predict_user_interactions`.  For each action a binary outcome is
     inferred from ``probability > 0.5`` and compared with ``actual_actions``.
     The function returns per-action error metrics and the overall accuracy.
+
+    citation_uri: https://en.wikipedia.org/wiki/Prediction_accuracy
+    assumptions: binary outcome validation
+    validation_notes: tracks prediction vs reality
     """
 
     results = {}
