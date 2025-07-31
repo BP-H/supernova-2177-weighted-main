@@ -243,69 +243,68 @@ def render_post_card(post_data: dict[str, Any]) -> None:
     except Exception:        # leave at 0 on any conversion error
         likes = 0
 
-    # ── Pure-Streamlit fallback (no `ui` component library available) ────
     if ui is None:
-        html_block: list[str] = ["<div class='shadcn-card' "
-                                 "style='border-radius:12px;padding:8px;'>"]
-
-        if img:
-            html_block.append(
-                f"<img src='{html.escape(img)}' "
-                "style='width:100%;border-radius:8px;'/>"
+        if hasattr(st, "image") and hasattr(st, "write"):
+            if img:
+                st.image(img, use_column_width=True)
+            caption_text = f"**{html.escape(username)}**: {text}" if username else text
+            st.write(caption_text)
+            getattr(st, "caption", st.write)(f"❤️ {likes}")
+            getattr(st, "markdown", lambda *a, **k: None)(
+                "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+                unsafe_allow_html=True,
             )
-        if username:
-            html_block.append(f"<div><strong>{html.escape(username)}</strong></div>")
-        if text:
-            html_block.append(f"<p>{html.escape(text)}</p>")
-
-        html_block.append(
-            f"<div style='color:var(--text-color);font-size:1.2em;'>"
-            f"❤️ {likes} 🔁 💬</div>"
-        )
-        html_block.append("</div>")
-
-        st.markdown("".join(html_block), unsafe_allow_html=True)
+        else:
+            html_snippet = "<div class='shadcn-card' style='border-radius:12px;padding:8px;'>"
+            if img:
+                html_snippet += f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px;'/>"
+            if username:
+                html_snippet += f"<div><strong>{html.escape(username)}</strong></div>"
+            html_snippet += f"<p>{html.escape(text)}</p>"
+            html_snippet += f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            html_snippet += "</div>"
+            getattr(st, "markdown", lambda *a, **k: None)(html_snippet, unsafe_allow_html=True)
         return
 
-    # ── Rich back-end available (streamlit-shadcn-ui or NiceGUI) ─────────
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
-
-            # caption text
             if hasattr(ui, "element"):
                 safe_element("p", text).classes("mb-1")
             else:
                 st.markdown(text)
-
-            # like badge, if supported
-            if hasattr(ui, "badge"):
-                ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
-
-            # reaction line
-            if hasattr(ui, "element"):
-                ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
+            badge_fn = getattr(ui, "badge", None)
+            if badge_fn:
+                badge_fn(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+                reaction = "❤️ 🔁 💬"
             else:
-                st.markdown(
-                    f"<div style='color:var(--text-color);font-size:1.2em;'>"
-                    f"❤️ {likes} 🔁 💬</div>",
+                reaction = f"❤️ {likes} 🔁 💬"
+            if hasattr(ui, "element"):
+                ui.element("div", reaction).classes("text-center text-lg")
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(
+                    f"<div style='color:var(--text-color);font-size:1.2em;'>{reaction}</div>",
                     unsafe_allow_html=True,
                 )
-
-    # ── If anything in the rich chain fails, fall back gracefully ───────
-    except Exception as exc:                              # pragma: no cover
-        # best-effort user feedback, if Streamlit toast exists
+    except Exception as exc:  # noqa: BLE001
         if hasattr(st, "toast"):
             st.toast(f"Post card failed: {exc}", icon="⚠️")
-
+        elif hasattr(st, "warning"):
+            st.warning(f"Post card failed: {exc}")
         if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
-        st.markdown(
-            f"<div style='color:var(--text-color);font-size:1.2em;'>"
-            f"❤️ {likes} 🔁 💬</div>",
+            if hasattr(st, "image"):
+                st.image(img, use_column_width=True)
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(
+                    f"<img src='{html.escape(img)}' style='width:100%'>",
+                    unsafe_allow_html=True,
+                )
+        write_fn = getattr(st, "write", getattr(st, "markdown", lambda x: None))
+        write_fn(text)
+        getattr(st, "caption", write_fn)(f"❤️ {likes}")
+        getattr(st, "markdown", lambda *a, **k: None)(
+            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 
