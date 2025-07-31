@@ -4,10 +4,12 @@
 """Governance and voting page."""
 
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from voting_ui import render_voting_tab
 from streamlit_helpers import safe_container, theme_selector
 
+inject_light_theme()
 inject_modern_styles()
 
 
