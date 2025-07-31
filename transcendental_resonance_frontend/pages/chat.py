@@ -22,7 +22,9 @@ def main(main_container=None) -> None:
     """Render the chat page."""
     if main_container is None:
         main_container = st
-    theme_selector("Theme", key_suffix="chat")
+    page = "chat"
+    st.session_state["active_page"] = page
+    theme_selector("Theme", key_suffix=page)
 
     container_ctx = safe_container(main_container)
     with container_ctx:
@@ -33,9 +35,9 @@ def main(main_container=None) -> None:
             render_status_icon()
         render_chat_interface()
         st.divider()
-        render_video_call_controls(key_prefix="chat_")
+        render_video_call_controls(key_prefix=f"{page}_")
         st.divider()
-        render_voice_chat_controls(key_prefix="chat_")
+        render_voice_chat_controls(key_prefix=f"{page}_")
 
 
 def render() -> None:

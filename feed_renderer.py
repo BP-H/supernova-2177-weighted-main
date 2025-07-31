@@ -14,8 +14,6 @@ import html
 from streamlit_helpers import sanitize_text, render_post_card
 from modern_ui_components import shadcn_card
 
-import html
-
 # --- default demo posts -------------------------------------------------------
 DEMO_POSTS: list[Tuple[str, str, str]] = [
     (
@@ -38,19 +36,6 @@ DEMO_POSTS: list[Tuple[str, str, str]] = [
 
 # -----------------------------------------------------------------------------
 
-
-def render_feed(posts: Iterable[Any] | None = None) -> None:
-    """Render a simple scrolling feed of posts."""
-
-    active = st.session_state.get("active_user", "guest")
-    if posts is None or not list(posts):
-        posts = DEMO_POSTS if active in {"guest", "demo_user"} else []
-    else:
-        posts = list(posts)
-
-    if not posts:
-        st.info("No posts to display")
-        return
 
 def render_feed(posts: Iterable[Any] | None = None) -> None:
     """Render a simple scrolling feed of posts."""

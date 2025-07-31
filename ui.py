@@ -742,7 +742,7 @@ def render_modern_agents_page():
     cols = st.columns(len(agents))
     for col, name in zip(cols, agents):
         with col:
-            st.image("https://via.placeholder.com/80", width=80)
+            st.image("https://via.placeholder.com/80", width=80, use_container_width=True)
             st.write(name)
             st.line_chart([1, 3, 2, 4])
 
@@ -1739,7 +1739,7 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui_wrapper.tabs(["Validation", "Voting", "Agents"]) as tabs:
+            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
                 selected = tabs.active
                 if selected != display_choice:
                     try:
