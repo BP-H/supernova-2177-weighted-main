@@ -9,6 +9,11 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     ui = None  # type: ignore
     import streamlit as st
 
+try:  # optional import when NiceGUI is available
+    import streamlit as st  # type: ignore
+except Exception:  # pragma: no cover - streamlit optional
+    st = None  # type: ignore
+
 import asyncio
 import contextlib
 
@@ -173,6 +178,45 @@ async def vibenodes_page():
                         ui.button("Remix", on_click=remix_fn).style(
                             f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
+
+                        if st is not None and st.session_state.get("beta_mode"):
+                            async def ai_remix(vn_id=vn["id"]):
+                                resp = await api_call("POST", f"/vibenodes/{vn_id}/remix")
+                                if resp:
+                                    dlg = ui.dialog()
+                                    with dlg:
+                                        with ui.card().classes("w-full p-4"):
+                                            ui.label(resp.get("name", "AI Remix")).classes("text-lg")
+                                            if resp.get("media_url"):
+                                                render_media_block(resp.get("media_url"), resp.get("media_type", ""))
+                                            ui.markdown(safe_markdown(resp.get("description", ""))).classes("text-sm")
+                                            ui.button("Close", on_click=dlg.close).classes("w-full")
+                                    dlg.open()
+
+                            ui.button(
+                                "AI Remix",
+                                on_click=lambda vn_id=vn["id"]: ui.run_async(ai_remix(vn_id)),
+                            ).style(
+                                f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                            )
+
+                        if st is not None and st.session_state.get("beta_mode"):
+                            async def ai_remix(vn_id=vn["id"]):
+                                resp = await api_call("POST", f"/vibenodes/{vn_id}/remix")
+                                if resp:
+                                    dlg = ui.dialog()
+                                    with dlg:
+                                        with ui.card().classes("w-full p-4"):
+                                            ui.label(resp.get("name", "AI Remix")).classes("text-lg")
+                                            if resp.get("media_url"):
+                                                render_media_block(resp.get("media_url"), resp.get("media_type", ""))
+                                            ui.markdown(safe_markdown(resp.get("description", ""))).classes("text-sm")
+                                            ui.button("Close", on_click=dlg.close).classes("w-full")
+                                    dlg.open()
+
+                            ui.button("AI Remix", on_click=lambda vn_id=vn["id"]: ui.run_async(ai_remix(vn_id))).style(
+                                f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                            )
 
         async def refresh_vibenodes():
             params = {}
