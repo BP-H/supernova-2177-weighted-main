@@ -13,6 +13,7 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+import inspect
 import streamlit as st
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -76,6 +77,36 @@ except Exception:  # noqa: BLE001
         ui = _DummyUI()  # type: ignore
 
 
+def sanitize_text(text: Any) -> str:
+    """Return ``text`` as a safe UTF-8 string."""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.encode("utf-8", "ignore").decode("utf-8")
+
+
+def safe_element(tag: str, content: str) -> Any:
+    """Create a UI element with graceful fallback and debug info."""
+    clean = sanitize_text(content)
+    try:
+        return ui.element(tag, clean)
+    except TypeError as exc:
+        st.toast(f"ui.element signature mismatch: {exc}", icon="⚠️")
+        try:
+            elem = ui.element(tag)
+            if hasattr(elem, "text"):
+                elem.text(clean)
+                return elem
+            if hasattr(elem, "content"):
+                setattr(elem, "content", clean)
+                return elem
+        except Exception as inner_exc:
+            st.toast(f"element fallback failed: {inner_exc}", icon="❌")
+    except Exception as exc:  # noqa: BLE001
+        st.toast(f"ui.element error: {exc}", icon="❌")
+    st.markdown(f"<{tag}>{html.escape(clean)}</{tag}>", unsafe_allow_html=True)
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
 # ──────────────────────────────────────────────────────────────────────────────
@@ -122,11 +153,12 @@ def alert(
     }
     bg, border = colours.get(level, colours["info"])
     icon = f"<span>{icons.get(level, '')}</span>" if show_icon else ""
+    clean = sanitize_text(message)
     st.markdown(
         f"<div style='border-left:4px solid {border};"
         f"background:{bg};padding:.5em 1em;border-radius:4px;"
         f"margin-bottom:1em;display:flex;align-items:center;gap:.5rem;'>"
-        f"{icon}{html.escape(message)}</div>",
+        f"{icon}{html.escape(clean)}</div>",
         unsafe_allow_html=True,
     )
 
@@ -137,13 +169,18 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}</style>",
         unsafe_allow_html=True,
     )
-    ui.element("h1", title)
+    clean = sanitize_text(title)
+    try:
+        safe_element("h1", clean)
+    except Exception as exc:  # noqa: BLE001
+        st.header(clean)
+        st.toast(f"Header fallback: {exc}", icon="⚠️")
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
     """Instagram-style post card that degrades gracefully."""
-    img = post_data.get("image", "")
-    text = post_data.get("text", "")
+    img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text = sanitize_text(post_data.get("text", ""))
     likes = post_data.get("likes", 0)
 
     if ui is None:
@@ -153,11 +190,18 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         st.caption(f"❤️ {likes}")
         return
 
-    with ui.card().classes("w-full p-4 mb-4"):
+    try:
+        with ui.card().classes("w-full p-4 mb-4"):
+            if img:
+                ui.image(img).classes("rounded-md mb-2 w-full")
+            safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
+            ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+    except Exception as exc:  # noqa: BLE001
+        st.toast(f"Post card failed: {exc}", icon="⚠️")
         if img:
-            ui.image(img).classes("rounded-md mb-2 w-full")
-        ui.element("p", text).classes("mb-1")
-        ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+            st.image(img, use_column_width=True)
+        st.write(text)
+        st.caption(f"❤️ {likes}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
