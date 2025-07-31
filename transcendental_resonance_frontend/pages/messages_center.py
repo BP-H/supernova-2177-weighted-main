@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import streamlit as st
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
+from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
 inject_modern_styles()
@@ -40,6 +42,33 @@ def _render_messages(messages: list[dict]) -> None:
         st.markdown(f"**{user}**: {text}")
 
 
+def _run_async(coro):
+    """Execute ``coro`` in any event loop state."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        if loop.is_running():
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        return loop.run_until_complete(coro)
+
+
+def send_message(target: str, text: str) -> None:
+    """Send ``text`` to ``target`` handling offline mode and errors."""
+    try:
+        if api.OFFLINE_MODE:
+            st.session_state["_conversations"].setdefault(target, []).append(
+                {"user": "You", "text": text}
+            )
+        else:
+            result = _run_async(api.api_call("POST", f"/messages/{target}", {"text": text}))
+            if result is None:
+                st.toast("Message failed to send", icon="⚠️")
+    except Exception as exc:  # pragma: no cover - UI feedback
+        st.toast(f"Failed to send message: {exc}", icon="⚠️")
+
+
 def main(main_container=None) -> None:
     """Render the Messages / Chat Center page."""
     if main_container is None:
@@ -62,7 +91,7 @@ def main(main_container=None) -> None:
             msg = st.text_input("Message", key="msg_input")
         with cols[1]:
             if st.button("Send", key="send_msg") and msg:
-                msgs.append({"user": "You", "text": msg})
+                send_message(selected, msg)
                 st.session_state.msg_input = ""
                 st.experimental_rerun()
         st.divider()
