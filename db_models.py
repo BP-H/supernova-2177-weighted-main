@@ -18,6 +18,7 @@ try:
         Table,
         Float,
         JSON,
+        text,
     )
     from sqlalchemy.orm import (
         sessionmaker,
@@ -39,6 +40,7 @@ except Exception:  # pragma: no cover - optional dependency
             Table,
             Float,
             JSON,
+            text,
             sessionmaker,
             relationship,
             Session,
@@ -57,6 +59,7 @@ except Exception:  # pragma: no cover - optional dependency
             Table,
             Float,
             JSON,
+            text,
             sessionmaker,
             relationship,
             Session,
@@ -641,8 +644,72 @@ class FlaggedItem(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
-def init_db() -> None:
-    """Create all tables defined in this module."""
+def init_db(db_url: str | None = None) -> None:
+    """Create all tables and ensure minimal raw schema exists.
+
+    Parameters
+    ----------
+    db_url:
+        Optional database URL used to (re)configure the engine. When provided
+        the module level ``engine`` and ``SessionLocal`` will be rebound to the
+        new connection.
+    """
+
+    global engine, SessionLocal
+
+    if db_url:
+        engine = create_engine(
+            db_url,
+            connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
+        )
+        SessionLocal.configure(bind=engine)
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS harmonizers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    hashed_password VARCHAR(255) NOT NULL,
+                    bio TEXT,
+                    profile_pic VARCHAR(255),
+                    followers INTEGER DEFAULT 0,
+                    following INTEGER DEFAULT 0,
+                    is_active BOOLEAN DEFAULT 1,
+                    is_admin BOOLEAN DEFAULT 0,
+                    is_genesis BOOLEAN DEFAULT 0,
+                    consent_given BOOLEAN DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_passive_aura_timestamp TIMESTAMP,
+                    species VARCHAR(50) DEFAULT 'human',
+                    cultural_preferences TEXT,
+                    harmony_score FLOAT DEFAULT 0.0,
+                    creative_spark FLOAT DEFAULT 0.0,
+                    network_centrality FLOAT DEFAULT 0.0,
+                    karma_score FLOAT DEFAULT 0.0,
+                    engagement_streaks INTEGER DEFAULT 0
+                );
+                """
+            )
+        )
+
+        res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
+        count = res.scalar() or 0
+        if count == 0:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO harmonizers
+                        (username, email, hashed_password, bio,
+                         is_active, is_admin, is_genesis, consent_given, species)
+                    VALUES ('admin','admin@supernova.dev','hashed_password_here',
+                            'Default admin user for superNova_2177',1,1,1,1,'human');
+                    """
+                )
+            )
+
     Base.metadata.create_all(bind=engine)
 
 
@@ -655,9 +722,12 @@ def seed_default_users() -> None:
             exists = session.query(Harmonizer).filter_by(username=username).first()
             if not exists:
                 hashed = hashlib.sha256(username.encode()).hexdigest()
+                email = f"{username}@supernova.dev"
+                if username == "demo_user":
+                    email = "demo@supernova.dev"
                 user = Harmonizer(
                     username=username,
-                    email=f"{username}@example.com",
+                    email=email,
                     hashed_password=hashed,
                     bio="Default user",
                 )

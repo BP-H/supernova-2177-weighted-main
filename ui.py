@@ -845,6 +845,7 @@ except ImportError:  # pragma: no cover - optional dependency
 
 # Database fallback for local testing
 try:
+    import db_models
     from db_models import Harmonizer, SessionLocal, UniverseBranch
 
     DATABASE_AVAILABLE = True
@@ -1836,88 +1837,15 @@ def main() -> None:
 
 
 def ensure_database_exists() -> bool:
-    """Ensure harmonizers table exists and insert default admin if necessary."""
+    """Initialize the database using shared helpers."""
     try:
         secrets = get_st_secrets()
         db_url = secrets.get("DATABASE_URL", "sqlite:///harmonizers.db")
-        engine = create_engine(
-            db_url,
-            connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
-        )
-    except Exception as exc:
-        logger.error("Failed to configure DB engine: %s", exc)
-        return False
-
-    try:
-        with engine.begin() as conn:
-            # Create table if missing
-            conn.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS harmonizers (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username VARCHAR(50) UNIQUE NOT NULL,
-                        email VARCHAR(100) UNIQUE NOT NULL,
-                        hashed_password VARCHAR(255) NOT NULL,
-                        bio TEXT,
-                        profile_pic VARCHAR(255),
-                        is_active BOOLEAN DEFAULT 1,
-                        is_admin BOOLEAN DEFAULT 0,
-                        is_genesis BOOLEAN DEFAULT 0,
-                        consent_given BOOLEAN DEFAULT 0,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        last_passive_aura_timestamp TIMESTAMP,
-                        species VARCHAR(50) DEFAULT 'human',
-                        cultural_preferences TEXT,
-                        harmony_score FLOAT DEFAULT 0.0,
-                        creative_spark FLOAT DEFAULT 0.0,
-                        network_centrality FLOAT DEFAULT 0.0,
-                        karma_score FLOAT DEFAULT 0.0,
-                        engagement_streaks INTEGER DEFAULT 0
-                    );
-                    """
-                )
-            )
-
-            # Check if any user exists
-            res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
-            count = res.scalar() or 0
-
-            if count == 0:
-                conn.execute(
-                    text(
-                        """
-                        INSERT INTO harmonizers
-                            (username, email, hashed_password, bio,
-                             is_active, is_admin, is_genesis, consent_given)
-                        VALUES
-                            ('admin', 'admin@supernova.dev', 'hashed_password_here',
-                             'Default admin user for superNova_2177',
-                             1, 1, 1, 1);
-                        """
-                    )
-                )
-                conn.execute(
-                    text(
-                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
-                        " is_active, is_admin, is_genesis, consent_given)"
-                        " VALUES ('guest','guest@example.com','x','Guest account',1,0,0,1);"
-                    )
-                )
-                conn.execute(
-                    text(
-                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
-                        " is_active, is_admin, is_genesis, consent_given)"
-                        " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
-                    )
-                )
-
+        db_models.init_db(db_url)
+        db_models.seed_default_users()
         return True
-    except (OperationalError, sqlite3.Error) as exc:
-        logger.error("Database initialization failed: %s", exc)
-        return False
     except Exception as exc:
-        logger.error("Unexpected DB init error: %s", exc)
+        logger.error("Database initialization failed: %s", exc)
         return False
 
 
