@@ -6,7 +6,7 @@
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header, get_active_user
+from streamlit_helpers import safe_container, header, theme_selector, get_active_user
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
 from transcendental_resonance_frontend.ui.profile_ui import (
@@ -97,6 +97,7 @@ def _render_profile(username: str) -> None:
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
+    theme_selector("Theme", key_suffix="profile")
 
     container_ctx = safe_container(main_container)
     with container_ctx:

@@ -79,9 +79,40 @@ except Exception:  # noqa: BLE001
         shadcn = None
 
 
+def sanitize_text(text: Any) -> str:
+    """Return ``text`` as a safe UTF-8 string."""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.encode("utf-8", "ignore").decode("utf-8")
+
+
+def safe_element(tag: str, content: str) -> Any:
+    """Create a UI element with graceful fallback and debug info."""
+    clean = sanitize_text(content)
+    try:
+        return ui.element(tag, clean)
+    except TypeError as exc:
+        st.toast(f"ui.element signature mismatch: {exc}", icon="⚠️")
+        try:
+            elem = ui.element(tag)
+            if hasattr(elem, "text"):
+                elem.text(clean)
+                return elem
+            if hasattr(elem, "content"):
+                setattr(elem, "content", clean)
+                return elem
+        except Exception as inner_exc:
+            st.toast(f"element fallback failed: {inner_exc}", icon="❌")
+    except Exception as exc:  # noqa: BLE001
+        st.toast(f"ui.element error: {exc}", icon="❌")
+    st.markdown(f"<{tag}>{html.escape(clean)}</{tag}>", unsafe_allow_html=True)
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
 # ──────────────────────────────────────────────────────────────────────────────
+
 try:
     from modern_ui import inject_modern_styles  # type: ignore
 except Exception:  # noqa: BLE001
@@ -192,7 +223,7 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 def render_post_card(post_data: dict[str, Any]) -> None:
     """Instagram-style post card that degrades gracefully."""
-    img = post_data.get("image", "")
+    img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
     text = sanitize_text(post_data.get("text", ""))
     likes = post_data.get("likes", 0)
     try:
@@ -207,13 +238,19 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         st.caption(f"❤️ {likes}")
         return
 
-    with ui.card().classes("w-full p-4 mb-4"):
+    try:
+        with ui.card().classes("w-full p-4 mb-4"):
+            if img:
+                ui.image(img).classes("rounded-md mb-2 w-full")
+            safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
+            ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+    except Exception as exc:  # noqa: BLE001
+        st.toast(f"Post card failed: {exc}", icon="⚠️")
         if img:
-            ui.image(img).classes("rounded-md mb-2 w-full")
-        elem = _safe_element("p", text)
-        if hasattr(elem, "classes"):
-            elem.classes("mb-1")
-        ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+            st.image(img, use_column_width=True)
+        st.write(text)
+        st.caption(f"❤️ {likes}")
+
 
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
