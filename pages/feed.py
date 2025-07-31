@@ -6,3 +6,4 @@ from transcendental_resonance_frontend.pages.feed import render
 
 if __name__ == "__main__":
     render()
+

@@ -13,6 +13,9 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+
+_FAKE_SESSION: dict[str, Any] = {}
+import inspect
 import streamlit as st
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -67,7 +70,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement(st.container())
 
             def image(self, img: str) -> _DummyElement:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
                 return _DummyElement()
 
             def badge(self, text: str) -> _DummyElement:
@@ -78,9 +81,35 @@ except Exception:  # noqa: BLE001
         shadcn = None
 
 
+
+
+def safe_element(tag: str, content: str) -> Any:
+    """Create a UI element with graceful fallback and debug info."""
+    clean = sanitize_text(content)
+    try:
+        return ui.element(tag, clean)
+    except TypeError as exc:
+        st.toast(f"ui.element signature mismatch: {exc}", icon="⚠️")
+        try:
+            elem = ui.element(tag)
+            if hasattr(elem, "text"):
+                elem.text(clean)
+                return elem
+            if hasattr(elem, "content"):
+                setattr(elem, "content", clean)
+                return elem
+        except Exception as inner_exc:
+            st.toast(f"element fallback failed: {inner_exc}", icon="❌")
+    except Exception as exc:  # noqa: BLE001
+        st.toast(f"ui.element error: {exc}", icon="❌")
+    st.markdown(f"<{tag}>{html.escape(clean)}</{tag}>", unsafe_allow_html=True)
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Optional modern-ui styles injector
 # ──────────────────────────────────────────────────────────────────────────────
+
 try:
     from modern_ui import inject_modern_styles  # type: ignore
 except Exception:  # noqa: BLE001
@@ -110,12 +139,37 @@ st.markdown(BOX_CSS, unsafe_allow_html=True)
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper components
 # ──────────────────────────────────────────────────────────────────────────────
-
-def sanitize_emoji(text: str) -> str:
-    """Return emoji string safe for HTML rendering."""
-    if not isinstance(text, str):
+def sanitize_text(text: Any) -> str:
+    """Return ``text`` as a safe string preserving emojis."""
+    if text is None:
         return ""
-    return html.escape(text)
+    if not isinstance(text, str):
+        text = str(text)
+    return html.escape(text, quote=False)
+
+
+def _safe_element(tag: str, content: str):
+    """Render ``ui.element`` safely across backends."""
+    try:
+        return ui.element(tag, content)
+    except TypeError as exc:
+        st.toast(f"ui.element signature mismatch: {exc}", icon="⚠️")
+        try:
+            elem = ui.element(tag)
+            if hasattr(elem, "text"):
+                elem.text(content)
+            return elem
+        except Exception as inner_exc:  # pragma: no cover - fallback
+            st.toast(f"ui.element fallback failed: {inner_exc}", icon="⚠️")
+    except Exception as exc:  # pragma: no cover - unexpected
+        st.toast(f"ui.element failed: {exc}", icon="⚠️")
+    # final plain Streamlit fallback
+    if tag.lower() == "h1":
+        st.header(content)
+    else:
+        st.markdown(f"<{tag}>{html.escape(content)}</{tag}>", unsafe_allow_html=True)
+    return None
+
 
 def alert(
     message: str,
@@ -162,28 +216,99 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}</style>",
         unsafe_allow_html=True,
     )
-    safe_title = sanitize_emoji(title)
-    ui.element("h1", safe_title)
+    safe_title = sanitize_text(title)
+    _safe_element("h1", safe_title)
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
-    """Instagram-style post card that degrades gracefully."""
-    img = post_data.get("image", "")
-    text = post_data.get("text", "")
-    likes = post_data.get("likes", 0)
+    """
+    Render an Instagram-style post card that works with or without the
+    `streamlit-shadcn-ui` / NiceGUI back-end.
+
+    Parameters
+    ----------
+    post_data
+        Dictionary keys that may be present:
+
+        * ``image`` – image URL
+        * ``text``  – caption / body text
+        * ``user``  / ``username`` – poster’s name
+        * ``likes`` – like counter (int, str or anything castable to int)
+    """
+    # ── Extract & sanitise basic fields ──────────────────────────────────
+    img      = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text     = sanitize_text(post_data.get("text",  ""))
+    username = sanitize_text(post_data.get("user") or post_data.get("username", ""))
+    likes    = post_data.get("likes", 0)
+    try:
+        likes = int(likes)
+    except Exception:        # leave at 0 on any conversion error
+        likes = 0
 
     if ui is None:
-        if img:
-            st.image(img, use_column_width=True)
-        st.write(text)
-        st.caption(f"❤️ {likes}")
+        if hasattr(st, "image") and hasattr(st, "write"):
+            if img:
+                st.image(img, use_container_width=True)
+            caption_text = f"**{html.escape(username)}**: {text}" if username else text
+            st.write(caption_text)
+            getattr(st, "caption", st.write)(f"❤️ {likes}")
+            getattr(st, "markdown", lambda *a, **k: None)(
+                "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            html_snippet = "<div class='shadcn-card' style='border-radius:12px;padding:8px;'>"
+            if img:
+                html_snippet += f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px;'/>"
+            if username:
+                html_snippet += f"<div><strong>{html.escape(username)}</strong></div>"
+            html_snippet += f"<p>{html.escape(text)}</p>"
+            html_snippet += f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            html_snippet += "</div>"
+            getattr(st, "markdown", lambda *a, **k: None)(html_snippet, unsafe_allow_html=True)
         return
 
-    with ui.card().classes("w-full p-4 mb-4"):
+    try:
+        with ui.card().classes("w-full p-4 mb-4"):
+            if img:
+                ui.image(img).classes("rounded-md mb-2 w-full")
+            if hasattr(ui, "element"):
+                safe_element("p", text).classes("mb-1")
+            else:
+                st.markdown(text)
+            badge_fn = getattr(ui, "badge", None)
+            if badge_fn:
+                badge_fn(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+                reaction = "❤️ 🔁 💬"
+            else:
+                reaction = f"❤️ {likes} 🔁 💬"
+            if hasattr(ui, "element"):
+                ui.element("div", reaction).classes("text-center text-lg")
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(
+                    f"<div style='color:var(--text-color);font-size:1.2em;'>{reaction}</div>",
+                    unsafe_allow_html=True,
+                )
+    except Exception as exc:  # noqa: BLE001
+        if hasattr(st, "toast"):
+            st.toast(f"Post card failed: {exc}", icon="⚠️")
+        elif hasattr(st, "warning"):
+            st.warning(f"Post card failed: {exc}")
         if img:
-            ui.image(img).classes("rounded-md mb-2 w-full")
-        ui.element("p", text).classes("mb-1")
-        ui.badge(f"❤️ {likes}").classes("bg-pink-500")
+            if hasattr(st, "image"):
+                st.image(img, use_container_width=True)
+            else:
+                getattr(st, "markdown", lambda *a, **k: None)(
+                    f"<img src='{html.escape(img)}' style='width:100%'>",
+                    unsafe_allow_html=True,
+                )
+        write_fn = getattr(st, "write", getattr(st, "markdown", lambda x: None))
+        write_fn(text)
+        getattr(st, "caption", write_fn)(f"❤️ {likes}")
+        getattr(st, "markdown", lambda *a, **k: None)(
+            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            unsafe_allow_html=True,
+        )
 
 
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
@@ -191,7 +316,50 @@ def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None
     columns = st.columns(cols)
     for i, post in enumerate(posts):
         with columns[i % cols]:
-            render_post_card(post)
+            username = post.get("username") or post.get("user", "")
+            caption = post.get("caption") or post.get("text", "")
+            if username:
+                st.markdown(f"**{html.escape(username)}**")
+            render_post_card({
+                "image": post.get("image"),
+                "text": caption,
+                "likes": post.get("likes", 0),
+            })
+
+
+def render_mock_feed() -> None:
+    """Render a simple scrolling feed of demo posts."""
+    posts = [
+        (
+            "alice",
+            "https://picsum.photos/seed/alice/400/300",
+            "Enjoying the sunshine!",
+        ),
+        (
+            "bob",
+            "https://picsum.photos/seed/bob/400/300",
+            "Hiking adventures today.",
+        ),
+        (
+            "carol",
+            "https://picsum.photos/seed/carol/400/300",
+            "Coffee time at my favourite spot.",
+        ),
+    ]
+
+    st.markdown(
+        "<div style='max-height: 400px; overflow-y: auto;'>",
+        unsafe_allow_html=True,
+    )
+    with st.container():
+        for username, image, caption in posts:
+            render_post_card({
+                "image": image,
+                "text": f"**{html.escape(username)}**: {caption}",
+                "likes": 0,
+            })
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -265,52 +433,98 @@ def apply_theme(theme: str) -> None:
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:
-    """Render a Light/Dark selector that remembers the choice in session_state."""
+    """Render a Light / Dark selector that remembers the choice in session_state
+    and mirrors it to the page’s ``?theme=`` query-parameter.
+
+    Returns
+    -------
+    str
+        The currently-selected theme, lower-cased (“light” or “dark”).
+    """
+    # ------------------------------------------------------------------ #
+    # Keys and helpers
+    # ------------------------------------------------------------------ #
     if key_suffix is None:
         key_suffix = "default"
+    theme_key   = f"theme_{key_suffix}"          # per-caller key
+    unique_key  = f"theme_selector_{key_suffix}" # widget key
 
-    if "theme" not in st.session_state:
-        st.session_state["theme"] = "light"
+    def _safe_session_set(k: str, v: str) -> None:
+        """Robust setter that also works in test contexts."""
+        try:
+            st.session_state[k] = v
+        except Exception:      # pylint: disable=broad-except
+            _FAKE_SESSION[k] = v                     # type: ignore[name-defined]
 
-    unique_key = f"theme_selector_{key_suffix}"
-    current = st.session_state["theme"]
+    def _safe_session_get(k: str, default: str) -> str:
+        try:
+            return st.session_state.get(k, default)
+        except Exception:      # pylint: disable=broad-except
+            return _FAKE_SESSION.setdefault(k, default)  # type: ignore[name-defined]
 
+    # ------------------------------------------------------------------ #
+    # First-time initialisation: derive default from query-params
+    # ------------------------------------------------------------------ #
+    if theme_key not in st.session_state:
+        try:
+            params = st.query_params        # Streamlit ≥1.29
+        except AttributeError:
+            params = st.experimental_get_query_params()
+
+        param_theme = params.get("theme", None)
+        if isinstance(param_theme, list):          # multi-param edge-case
+            param_theme = param_theme[0]
+
+        initial = str(param_theme).lower() if param_theme in {"light", "dark"} else "light"
+        _safe_session_set(theme_key, initial)
+        _safe_session_set("theme",    initial)     # global alias
+
+    current = _safe_session_get(theme_key, "light")
+
+    # ------------------------------------------------------------------ #
+    # Render selector – prefer shadcn / NiceGUI where available
+    # ------------------------------------------------------------------ #
     if ui is not None and hasattr(ui, "radio_group"):
+        # streamlit-shadcn-ui radio buttons
         try:
             choice = ui.radio_group(
                 ["Light", "Dark"],
                 default_value="Light" if current == "light" else "Dark",
                 key=unique_key,
             )
-        except Exception:  # noqa: BLE001 - fallback to Streamlit
+        except Exception:              # fall back to Streamlit
             choice = st.selectbox(
-                label,
-                ["Light", "Dark"],
+                label, ["Light", "Dark"],
                 index=0 if current == "light" else 1,
                 key=unique_key,
             )
     else:
+        # vanilla Streamlit widget
         choice = st.selectbox(
-            label,
-            ["Light", "Dark"],
+            label, ["Light", "Dark"],
             index=0 if current == "light" else 1,
             key=unique_key,
         )
-    st.session_state["theme"] = choice.lower()
-    apply_theme(st.session_state["theme"])
-    return st.session_state["theme"]
 
+    # ------------------------------------------------------------------ #
+    # Persist choice, apply CSS, sync query-params
+    # ------------------------------------------------------------------ #
+    chosen = choice.lower()
+    _safe_session_set(theme_key, chosen)
+    _safe_session_set("theme",    chosen)          # keep global alias
 
-def get_active_user() -> str:
-    """Return the active user from ``st.session_state`` with a default."""
-    if "active_user" not in st.session_state:
-        st.session_state["active_user"] = "guest"
-    return st.session_state["active_user"]
+    apply_theme(chosen)
 
+    try:                                           # Streamlit ≥1.29
+        st.query_params["theme"] = chosen
+    except Exception:                              # noqa: BLE001
+        try:                                       # classic API
+            st.experimental_set_query_params(theme=chosen)
+        except Exception:                          # noqa: BLE001
+            pass
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Containers & utilities
-# ──────────────────────────────────────────────────────────────────────────────
+    return chosen
+
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
     st.markdown(
@@ -375,6 +589,18 @@ def inject_global_styles() -> None:
     inject_modern_styles()
 
 
+def ensure_active_user() -> str:
+    """Ensure ``st.session_state['active_user']`` is initialized."""
+    return st.session_state.setdefault("active_user", "guest")
+
+
+def get_active_user() -> str:
+    """Return the currently active user from ``st.session_state``."""
+    if "active_user" not in st.session_state:
+        st.session_state["active_user"] = "guest"
+    return st.session_state["active_user"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Public symbols
 # ──────────────────────────────────────────────────────────────────────────────
@@ -384,6 +610,8 @@ __all__ = [
     "header",
     "render_post_card",
     "render_instagram_grid",
+    "render_mock_feed",
+    "sanitize_text",
     "apply_theme",
     "theme_selector",
     "get_active_user",
@@ -392,5 +620,6 @@ __all__ = [
     "tabs_nav",
     "inject_global_styles",
     "inject_instagram_styles",
+    "ensure_active_user",
     "BOX_CSS",
 ]

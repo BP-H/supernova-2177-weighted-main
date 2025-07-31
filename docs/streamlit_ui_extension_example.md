@@ -20,6 +20,16 @@ with centered_container():
 Running this example will render a page with the standard header, a theme switcher
 radio button and a centered content area.
 
+The theme selector stores the chosen light or dark mode in `st.session_state` and
+persists the value in the browser query string. Reloading the page keeps your
+selection intact.
+
+`render_top_bar()` now includes a **Beta Mode** toggle. When enabled, the flag is
+saved to `st.session_state['beta_mode']` and experimental features become
+available. For example, the VibeNodes page shows an **AI Remix** button on each
+post that calls `/vibenodes/{id}/remix` and displays the generated remix in a
+modal dialog.
+
 The Streamlit app also supports a lightweight health check for CI or uptime
 monitors. Visiting `/?healthz=1` responds with `ok` and stops execution. This
 serves as a simple fallback when the built-in `/healthz` route isn't available,

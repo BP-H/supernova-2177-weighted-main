@@ -1261,6 +1261,10 @@ def calculate_creative_leap_score(
     """Compute semantic novelty of new content relative to its parent.
 
     Returns a structured dictionary when ``structured`` is True for forward compatibility.
+
+    citation_uri: https://arxiv.org/abs/1605.05396
+    assumptions: embedding similarity approximates novelty
+    validation_notes: bootstrap sampling for confidence
     """
     global _creative_leap_model
     if not new_content:
