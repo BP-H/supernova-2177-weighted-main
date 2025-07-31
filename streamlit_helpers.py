@@ -360,6 +360,11 @@ def inject_global_styles() -> None:
     inject_modern_styles()
 
 
+def ensure_active_user() -> str:
+    """Ensure ``st.session_state['active_user']`` is initialized."""
+    return st.session_state.setdefault("active_user", "guest")
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Public symbols
 # ──────────────────────────────────────────────────────────────────────────────
@@ -375,5 +380,6 @@ __all__ = [
     "tabs_nav",
     "inject_global_styles",
     "inject_instagram_styles",
+    "ensure_active_user",
     "BOX_CSS",
 ]

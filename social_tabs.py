@@ -3,7 +3,7 @@
 # Legal & Ethical Safeguards
 import asyncio
 import streamlit as st
-from streamlit_helpers import alert, safe_container, header
+from streamlit_helpers import alert, safe_container, header, ensure_active_user
 
 
 def safe_markdown(text: str, **kwargs) -> None:
@@ -21,6 +21,8 @@ try:
 except Exception:  # pragma: no cover - optional
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+ensure_active_user()
 
 
 def _run_async(coro):

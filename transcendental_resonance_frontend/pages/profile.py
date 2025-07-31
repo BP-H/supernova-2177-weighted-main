@@ -5,7 +5,7 @@
 
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, ensure_active_user
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
 from transcendental_resonance_frontend.ui.profile_ui import (
@@ -62,6 +62,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
     return followers or {}, following or {}
 
 inject_modern_styles()
+ensure_active_user()
 
 
 def _render_profile(username: str) -> None:
