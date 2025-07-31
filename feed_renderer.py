@@ -52,6 +52,19 @@ def render_feed(posts: Iterable[Any] | None = None) -> None:
         st.info("No posts to display")
         return
 
+def render_feed(posts: Iterable[Any] | None = None) -> None:
+    """Render a simple scrolling feed of posts."""
+
+    active = st.session_state.get("active_user", "guest")
+    if posts is None or not list(posts):
+        posts = DEMO_POSTS if active in {"guest", "demo_user"} else []
+    else:
+        posts = list(posts)
+
+    if not posts:
+        st.info("No posts to display")
+        return
+
     for entry in posts:
         if isinstance(entry, dict):
             user = sanitize_text(entry.get("user") or entry.get("username", ""))
