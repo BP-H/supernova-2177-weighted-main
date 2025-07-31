@@ -8,6 +8,7 @@ from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
+from status_indicator import render_status_icon
 
 try:
     from social_tabs import _load_profile
@@ -53,7 +54,11 @@ def main(main_container=None) -> None:
         main_container = st
     container_ctx = safe_container(main_container)
     with container_ctx:
-        st.subheader("👤 Profile")
+        header_col, status_col = st.columns([8, 1])
+        with header_col:
+            st.subheader("👤 Profile")
+        with status_col:
+            render_status_icon()
         current = st.session_state.get("active_user", "guest")
         current = st.text_input("Username", value=current, key="profile_user")
         st.session_state["active_user"] = current
