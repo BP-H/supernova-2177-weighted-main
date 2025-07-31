@@ -8,6 +8,7 @@ from __future__ import annotations
 import importlib
 import streamlit as st
 from typing import Optional, Dict
+from contextlib import contextmanager
 from pathlib import Path
 try:
     # Prefer the shared path constants if available
@@ -107,6 +108,42 @@ SIDEBAR_STYLES = """
 }
 </style>
 """
+
+# Minimal styling inspired by Shadcn UI
+SHADCN_CARD_CSS = """
+<style>
+.shadcn-card {
+    background: var(--card);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+}
+.shadcn-card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+</style>
+"""
+
+
+@contextmanager
+def shadcn_card(title: Optional[str] = None):
+    """Context manager that renders content inside a Shadcn-style card."""
+    st.markdown(SHADCN_CARD_CSS, unsafe_allow_html=True)
+    st.markdown("<div class='shadcn-card'>", unsafe_allow_html=True)
+    if title:
+        st.markdown(f"<div class='shadcn-card-title'>{title}</div>", unsafe_allow_html=True)
+    with st.container() as container:
+        yield container
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def shadcn_tabs(labels: list[str]):
+    """Render Streamlit tabs with Shadcn styling."""
+    st.markdown(SHADCN_CARD_CSS, unsafe_allow_html=True)
+    return st.tabs(labels)
 
 
 def _icon_html(name: str) -> str:
@@ -425,6 +462,9 @@ def render_stats_section(stats: dict) -> None:
 
 __all__ = [
     "SIDEBAR_STYLES",
+    "SHADCN_CARD_CSS",
+    "shadcn_card",
+    "shadcn_tabs",
     "render_modern_layout",
     "render_modern_header",
     "render_modern_sidebar",

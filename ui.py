@@ -35,6 +35,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+from contextlib import contextmanager
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -47,6 +48,8 @@ try:
         render_validation_card,
         render_post_card,
         render_stats_section,
+        shadcn_card,
+        shadcn_tabs,
     )
 except Exception:  # pragma: no cover - optional dependency
     def render_validation_card(*_a, **_k):
@@ -57,6 +60,14 @@ except Exception:  # pragma: no cover - optional dependency
 
     def render_stats_section(*_a, **_k):
         st.info("stats section unavailable")
+
+    @contextmanager
+    def shadcn_card(*_a, **_k):
+        yield st.container()
+
+    def shadcn_tabs(labels):
+        return st.tabs(labels)
+
 
 # Prefer modern sidebar render if available
 try:
@@ -1136,31 +1147,36 @@ def run_analysis(validations, *, layout: str = "force"):
 
 def boot_diagnostic_ui():
     """Render a simple diagnostics UI used during boot."""
-    header("Boot Diagnostic", layout="centered")
+    try:
+        st.set_page_config(page_title="Boot Diagnostic", layout="wide")
+    except Exception:
+        pass
 
-    header("Config Test")
-    if Config is not None:
-        st.success("Config import succeeded")
-        st.write({"METRICS_PORT": Config.METRICS_PORT})
-    else:
-        alert("Config import failed", "error")
+    with shadcn_card("Boot Diagnostic"):
+        header("Config Test")
+        if Config is not None:
+            st.success("Config import succeeded")
+            st.write({"METRICS_PORT": Config.METRICS_PORT})
+        else:
+            alert("Config import failed", "error")
 
-    header("Harmony Scanner Check")
-    scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
-    if scanner:
-        st.success("HarmonyScanner instantiated")
-    else:
-        alert("HarmonyScanner init failed", "error")
+        header("Harmony Scanner Check")
+        scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
+        if scanner:
+            st.success("HarmonyScanner instantiated")
+        else:
+            alert("HarmonyScanner init failed", "error")
 
-    if st.button("Run Dummy Scan") and scanner:
-        try:
-            scanner.scan("hello world")
-            st.success("Dummy scan completed")
-        except Exception as exc:  # pragma: no cover - debug only
-            alert(f"Dummy scan error: {exc}", "error")
+        if st.button("Run Dummy Scan") and scanner:
+            try:
+                scanner.scan("hello world")
+                st.success("Dummy scan completed")
+            except Exception as exc:  # pragma: no cover - debug only
+                alert(f"Dummy scan error: {exc}", "error")
 
-    header("Validation Analysis")
-    run_analysis([], layout="force")
+        header("Validation Analysis")
+        run_analysis([], layout="force")
+
 
 
 def render_validation_ui(
@@ -1396,61 +1412,68 @@ def parse_beta_mode(params: dict) -> bool:
 
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
-    st.set_page_config(
-        page_title="superNova_2177",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
+    try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+    except Exception:
+        # Older Streamlit builds (or re-runs) may raise – that’s OK.
+        pass
+
+    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    try:
+        inject_instagram_styles()
+    except Exception:  # pragma: no cover
+        pass
+
+    # Global CSS for cards / clean background
     st.markdown(
-        """<style>
+        """
+        <style>
         body, .stApp {background:#FAFAFA;}
         .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-        </style>""",
+        </style>
+        """,
         unsafe_allow_html=True,
     )
     try:
         ensure_pages(PAGES, PAGES_DIR)
-    except Exception as exc:
+    except Exception as exc:  # pragma: no cover
         logger.warning("ensure_pages failed: %s", exc)
-    # Initialize database BEFORE anything else
-    try:
-        db_ready = ensure_database_exists()
-        if not db_ready:
-            st.warning("Database initialization failed. Running in fallback mode")
-    except Exception as e:
-        st.error(f"Database initialization failed: {e}")
-        st.info("Running in fallback mode")
 
-    # Respond to lightweight health-check probes
+    try:
+        if not ensure_database_exists():
+            st.warning("Database initialization failed. Running in fallback mode")
+    except Exception as exc:
+        st.error(f"Database initialization failed: {exc}")
+        st.info("Running in fallback mode")
     try:
         params = st.query_params
-    except AttributeError:
-        # Fallback for older Streamlit versions
+    except AttributeError:                       # Streamlit < 1.25
         params = st.experimental_get_query_params()
 
-    parse_beta_mode(params)
+    parse_beta_mode(params)                      # updates session state
 
-    value = params.get(HEALTH_CHECK_PARAM)
+    value      = params.get(HEALTH_CHECK_PARAM)
+    path_info  = os.environ.get("PATH_INFO", "").rstrip("/")
 
-    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
         value == "1"
         or (isinstance(value, list) and "1" in value)
         or path_info == f"/{HEALTH_CHECK_PARAM}"
     ):
-
-        st.write("ok")
+        # Lightweight OK for load-balancer / CI checks
+        with shadcn_card("Health Check"):
+            st.write("ok")
         st.stop()
         return
-
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            initial_sidebar_state="collapsed",
-        )
-        inject_instagram_styles()
-
         render_top_bar()
+    except Exception as exc:                     # pragma: no cover
+        logger.error("render_top_bar failed: %s", exc)
+
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
             """

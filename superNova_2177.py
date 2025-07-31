@@ -4026,33 +4026,38 @@ def _run_boot_debug() -> None:
     """Render a simple Streamlit diagnostics UI."""
     try:
         import streamlit as st  # type: ignore
+        from modern_ui_components import shadcn_card
 
-        st.header("Boot Diagnostic")
-
-        st.subheader("Config Test")
         try:
-            from config import Config
+            st.set_page_config(page_title="Boot Diagnostic", layout="wide")
+        except Exception:
+            pass
 
-            st.success("Config import succeeded")
-            st.write({"METRICS_PORT": Config.METRICS_PORT})
-        except Exception as exc:  # pragma: no cover - debug only
-            st.error(f"Config import failed: {exc}")
-            Config = None  # type: ignore
-
-        st.subheader("Harmony Scanner Check")
-        scanner = None
-        try:
-            scanner = HarmonyScanner(Config()) if Config else None
-            st.success("HarmonyScanner instantiated")
-        except Exception as exc:  # pragma: no cover - debug only
-            st.error(f"HarmonyScanner init failed: {exc}")
-
-        if st.button("Run Dummy Scan") and scanner:
+        with shadcn_card("Boot Diagnostic"):
+            st.subheader("Config Test")
             try:
-                scanner.scan("hello world")
-                st.success("Dummy scan completed")
+                from config import Config
+
+                st.success("Config import succeeded")
+                st.write({"METRICS_PORT": Config.METRICS_PORT})
             except Exception as exc:  # pragma: no cover - debug only
-                st.error(f"Dummy scan error: {exc}")
+                st.error(f"Config import failed: {exc}")
+                Config = None  # type: ignore
+
+            st.subheader("Harmony Scanner Check")
+            scanner = None
+            try:
+                scanner = HarmonyScanner(Config()) if Config else None
+                st.success("HarmonyScanner instantiated")
+            except Exception as exc:  # pragma: no cover - debug only
+                st.error(f"HarmonyScanner init failed: {exc}")
+
+            if st.button("Run Dummy Scan") and scanner:
+                try:
+                    scanner.scan("hello world")
+                    st.success("Dummy scan completed")
+                except Exception as exc:  # pragma: no cover - debug only
+                    st.error(f"Dummy scan error: {exc}")
     except Exception as exc:  # pragma: no cover - debug only
         logger.error("Streamlit debug view failed: %s", exc)
 
