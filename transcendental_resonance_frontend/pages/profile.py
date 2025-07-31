@@ -4,6 +4,7 @@
 """User identity hub with profile and activity overview."""
 
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container, header
 from api_key_input import render_api_key_ui
@@ -61,6 +62,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
         )
     return followers or {}, following or {}
 
+inject_light_theme()
 inject_modern_styles()
 
 
