@@ -31,15 +31,27 @@ DUMMY_CONVERSATIONS = {
 
 
 def _render_messages(messages: list[dict]) -> None:
-    """Display chat messages with optional media."""
+    """Display chat messages with optional media using bubble styling."""
+    bubble_css = """
+    <style>
+    .chat-bubble {background:#f0f2f6;padding:0.5rem 1rem;border-radius:15px;margin-bottom:0.5rem;width:fit-content;}
+    .chat-bubble.me {background:#d1e7dd;margin-left:auto;}
+    </style>
+    """
+    st.markdown(bubble_css, unsafe_allow_html=True)
+    chat_container = st.container()
     for entry in messages:
         user = entry.get("user", "?")
         text = entry.get("text", "")
+        bubble_class = "chat-bubble me" if user == "You" else "chat-bubble"
         if image := entry.get("image"):
-            st.image(image, width=200)
+            chat_container.image(image, width=200)
         if video := entry.get("video"):
-            st.video(video)
-        st.markdown(f"**{user}**: {text}")
+            chat_container.video(video)
+        chat_container.markdown(
+            f"<div class='{bubble_class}'><strong>{user}</strong>: {text}</div>",
+            unsafe_allow_html=True,
+        )
 
 
 def _run_async(coro):
@@ -83,25 +95,35 @@ def main(main_container=None) -> None:
             render_status_icon()
         st.session_state.setdefault("_conversations", DUMMY_CONVERSATIONS.copy())
         convos = list(st.session_state["_conversations"].keys())
-        selected = st.radio("Conversations", convos, key="selected_convo")
-        msgs = st.session_state["_conversations"].setdefault(selected, [])
-        _render_messages(msgs)
-        cols = st.columns([4, 1])
-        with cols[0]:
-            msg = st.text_input("Message", key="msg_input")
-        with cols[1]:
-            if st.button("Send", key="send_msg") and msg:
-                send_message(selected, msg)
-                st.session_state.msg_input = ""
-                st.experimental_rerun()
-        st.divider()
-        from .chat import (
-            render_video_call_controls,
-            render_voice_chat_controls,
-        )
-        render_video_call_controls()
-        st.divider()
-        render_voice_chat_controls()
+        tab_msgs, tab_calls = st.tabs(["Messages", "Calls"])
+
+        with tab_msgs:
+            left, right = st.columns([1, 3])
+
+            with left:
+                st.markdown("**Conversations**")
+                selected = st.radio("", convos, key="selected_convo")
+
+            with right:
+                msgs = st.session_state["_conversations"].setdefault(selected, [])
+                _render_messages(msgs)
+                cols = st.columns([4, 1])
+                with cols[0]:
+                    msg = st.text_input("Message", key="msg_input")
+                with cols[1]:
+                    if st.button("Send message", key="send_msg") and msg:
+                        send_message(selected, msg)
+                        st.session_state.msg_input = ""
+                        st.experimental_rerun()
+
+        with tab_calls:
+            from .chat import (
+                render_video_call_controls,
+                render_voice_chat_controls,
+            )
+            render_video_call_controls()
+            st.divider()
+            render_voice_chat_controls()
 
 
 def render() -> None:
