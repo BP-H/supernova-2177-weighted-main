@@ -32,6 +32,7 @@ import sys
 import traceback
 import sqlite3
 import importlib
+from contextlib import contextmanager
 from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -43,6 +44,8 @@ try:
     from modern_ui_components import (
         render_validation_card,
         render_stats_section,
+        shadcn_card,
+        shadcn_tabs,
     )
 except Exception:  # pragma: no cover - optional dependency
     def render_validation_card(*_a, **_k):
@@ -50,6 +53,13 @@ except Exception:  # pragma: no cover - optional dependency
 
     def render_stats_section(*_a, **_k):
         st.info("stats section unavailable")
+
+    @contextmanager
+    def shadcn_card(*_a, **_k):
+        yield st.container()
+
+    def shadcn_tabs(labels):
+        return st.tabs(labels)
 
 # Prefer modern sidebar render if available
 try:
@@ -1079,31 +1089,35 @@ def run_analysis(validations, *, layout: str = "force"):
 
 def boot_diagnostic_ui():
     """Render a simple diagnostics UI used during boot."""
-    header("Boot Diagnostic", layout="centered")
+    try:
+        st.set_page_config(page_title="Boot Diagnostic", layout="wide")
+    except Exception:
+        pass
 
-    st.subheader("Config Test")
-    if Config is not None:
-        st.success("Config import succeeded")
-        st.write({"METRICS_PORT": Config.METRICS_PORT})
-    else:
-        alert("Config import failed", "error")
+    with shadcn_card("Boot Diagnostic"):
+        st.subheader("Config Test")
+        if Config is not None:
+            st.success("Config import succeeded")
+            st.write({"METRICS_PORT": Config.METRICS_PORT})
+        else:
+            alert("Config import failed", "error")
 
-    st.subheader("Harmony Scanner Check")
-    scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
-    if scanner:
-        st.success("HarmonyScanner instantiated")
-    else:
-        alert("HarmonyScanner init failed", "error")
+        st.subheader("Harmony Scanner Check")
+        scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
+        if scanner:
+            st.success("HarmonyScanner instantiated")
+        else:
+            alert("HarmonyScanner init failed", "error")
 
-    if st.button("Run Dummy Scan") and scanner:
-        try:
-            scanner.scan("hello world")
-            st.success("Dummy scan completed")
-        except Exception as exc:  # pragma: no cover - debug only
-            alert(f"Dummy scan error: {exc}", "error")
+        if st.button("Run Dummy Scan") and scanner:
+            try:
+                scanner.scan("hello world")
+                st.success("Dummy scan completed")
+            except Exception as exc:  # pragma: no cover - debug only
+                alert(f"Dummy scan error: {exc}", "error")
 
-    st.subheader("Validation Analysis")
-    run_analysis([], layout="force")
+        st.subheader("Validation Analysis")
+        run_analysis([], layout="force")
 
 
 def render_validation_ui(
@@ -1340,6 +1354,15 @@ def parse_beta_mode(params: dict) -> bool:
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
     try:
+        st.set_page_config(
+            page_title="superNova_2177",
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+    except Exception:
+        pass
+
+    try:
         ensure_pages(PAGES, PAGES_DIR)
     except Exception as exc:
         logger.warning("ensure_pages failed: %s", exc)
@@ -1370,16 +1393,12 @@ def main() -> None:
         or path_info == f"/{HEALTH_CHECK_PARAM}"
     ):
 
-        st.write("ok")
+        with shadcn_card("Health Check"):
+            st.write("ok")
         st.stop()
         return
 
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            layout="wide",
-            initial_sidebar_state="collapsed",
-        )
         render_top_bar()
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
