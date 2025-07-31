@@ -89,8 +89,6 @@ def render_social_tab(main_container=None) -> None:
             st.info("Social routes not available")
             return
 
-        current_user = get_active_user()
-
         cols = st.columns(2)
         with cols[0]:
             current_user = st.text_input(
