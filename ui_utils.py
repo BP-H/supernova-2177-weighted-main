@@ -66,10 +66,10 @@ def render_modern_layout() -> None:
     """Demo layout showcasing the modern styles."""
     inject_global_styles()
 
-    pages = {"Home": "home", "Profile": "profile"}
+    pages = {"Home": "home", "Feed": "feed", "Profile": "profile"}
     choice = render_modern_sidebar(
         pages,
-        icons={"Home": "🏠", "Profile": "👤"},
+        icons={"Home": "🏠", "Feed": "📰", "Profile": "👤"},
         session_key="demo_nav",
     )
 
