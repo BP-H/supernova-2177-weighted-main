@@ -4027,6 +4027,7 @@ def _run_boot_debug() -> None:
     try:
         import streamlit as st  # type: ignore
         from modern_ui_components import shadcn_card
+        from streamlit_helpers import header
 
         try:
             st.set_page_config(page_title="Boot Diagnostic", layout="wide")
@@ -4034,7 +4035,7 @@ def _run_boot_debug() -> None:
             pass
 
         with shadcn_card("Boot Diagnostic"):
-            st.subheader("Config Test")
+            header("Config Test")
             try:
                 from config import Config
 
@@ -4044,7 +4045,7 @@ def _run_boot_debug() -> None:
                 st.error(f"Config import failed: {exc}")
                 Config = None  # type: ignore
 
-            st.subheader("Harmony Scanner Check")
+            header("Harmony Scanner Check")
             scanner = None
             try:
                 scanner = HarmonyScanner(Config()) if Config else None

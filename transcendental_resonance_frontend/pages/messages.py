@@ -5,7 +5,7 @@
 
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container
+from streamlit_helpers import safe_container, header
 
 inject_modern_styles()
 
@@ -40,7 +40,7 @@ def _render_conversation_list() -> None:
 
 
 def _render_chat_panel(user: str) -> None:
-    st.subheader(f"Chat with {user}")
+    header(f"Chat with {user}")
     msgs = st.session_state["messages"].setdefault(user, [])
     for msg in msgs:
         st.write(f"{msg['sender']}: {msg['text']}")
@@ -59,7 +59,7 @@ def main(main_container=None) -> None:
     _init_state()
     container_ctx = safe_container(main_container)
     with container_ctx:
-        st.subheader("✉️ Messages")
+        header("✉️ Messages")
         if not st.session_state["conversations"]:
             st.info("No conversations yet")
             return
