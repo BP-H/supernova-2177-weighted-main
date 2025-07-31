@@ -40,6 +40,20 @@ MESSAGE_CSS = """
     align-self: flex-end;
     background: #DCF8C6;
 }
+.msg-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+.msg-row.sender {
+    flex-direction: row-reverse;
+}
+.msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
 </style>
 """
 
@@ -74,14 +88,17 @@ def _render_messages(messages: list[dict]) -> None:
         user = entry.get("user", "?")
         text = entry.get("text", "")
         cls = "sender" if user == "You" else "receiver"
+        avatar = entry.get("avatar") or f"https://robohash.org/{user}.png?size=50x50"
 
+        st.markdown(f"<div class='msg-row {cls}'>", unsafe_allow_html=True)
+        st.markdown(f"<img class='msg-avatar' src='{avatar}' />", unsafe_allow_html=True)
         if image := entry.get("image"):
-            st.image(image, width=200)
+            st.image(image, use_container_width=True)
         if video := entry.get("video"):
             st.video(video)
-
         bubble = f"<div class='msg-bubble {cls}'><strong>{user}:</strong> {text}</div>"
         st.markdown(bubble, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -157,14 +174,16 @@ def main(main_container=None) -> None:
                 msgs = st.session_state["_conversations"].setdefault(selected, [])
                 _render_messages(msgs)
 
-                col_msg, col_btn = st.columns([4, 1])
+                col_msg, col_send, col_refresh = st.columns([4, 1, 1])
                 with col_msg:
                     msg_input = st.text_input("Message", key="msg_input")
-                with col_btn:
+                with col_send:
                     if st.button("Send", key="send_msg") and msg_input:
                         send_message(selected, msg_input)
                         st.session_state.msg_input = ""
                         st.experimental_rerun()
+                with col_refresh:
+                    st.button("🔄", key="refresh_chat", on_click=st.experimental_rerun)
 
         # ── Calls tab ──────────────────────────────────────────────
         with tab_calls:
