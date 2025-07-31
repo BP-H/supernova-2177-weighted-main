@@ -1840,13 +1840,39 @@ def ensure_database_exists() -> bool:
                 conn.execute(
                     text(
                         """
-                        INSERT INTO harmonizers
+                        INSERT OR IGNORE INTO harmonizers
                             (username, email, hashed_password, bio,
                              is_active, is_admin, is_genesis, consent_given)
                         VALUES
                             ('admin', 'admin@supernova.dev', 'hashed_password_here',
                              'Default admin user for superNova_2177',
                              1, 1, 1, 1);
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        """
+                        INSERT OR IGNORE INTO harmonizers
+                            (username, email, hashed_password, bio,
+                             is_active, is_admin, is_genesis, consent_given)
+                        VALUES
+                            ('guest', 'guest@supernova.dev', 'hashed_password_here',
+                             'Guest user',
+                             1, 0, 0, 1);
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        """
+                        INSERT OR IGNORE INTO harmonizers
+                            (username, email, hashed_password, bio,
+                             is_active, is_admin, is_genesis, consent_given)
+                        VALUES
+                            ('demo_user', 'demo@supernova.dev', 'hashed_password_here',
+                             'Demo profile for showcasing features',
+                             1, 0, 0, 1);
                         """
                     )
                 )
