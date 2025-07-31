@@ -363,7 +363,8 @@ def render_agent_ops_tab(main_container=None) -> None:
             with st.spinner("Working on it..."):
                 try:
                     res = _run_async(dispatch_route("launch_agents", payload))
-                    st.json(res)
+                    if st.session_state.get("beta_mode"):
+                        st.json(res)
                     st.toast("Success!")
                 except Exception as exc:
                     alert(f"Launch failed: {exc}", "error")
@@ -372,7 +373,8 @@ def render_agent_ops_tab(main_container=None) -> None:
             with st.spinner("Working on it..."):
                 try:
                     res = _run_async(dispatch_route("step_agents", {}))
-                    st.json(res)
+                    if st.session_state.get("beta_mode"):
+                        st.json(res)
                     st.toast("Success!")
                 except Exception as exc:
                     alert(f"Step failed: {exc}", "error")

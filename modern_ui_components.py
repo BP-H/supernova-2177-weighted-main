@@ -243,6 +243,10 @@ def render_modern_sidebar(
 
         if st.button("☰", key=f"{collapsed_key}_btn"):
             st.session_state[collapsed_key] = not st.session_state[collapsed_key]
+    else:
+        # fallback in case st.button is unavailable (optional)
+        collapsed = st.session_state.get(collapsed_key, False)
+
 
     container_ctx = safe_container(container)
     with container_ctx:
