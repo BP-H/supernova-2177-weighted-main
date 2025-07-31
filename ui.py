@@ -523,10 +523,7 @@ def _render_fallback(choice: str) -> None:
             fallback_fn()
         return
 
-    try:
-        from transcendental_resonance_frontend.src.utils.api import OFFLINE_MODE
-    except Exception:
-        OFFLINE_MODE = False
+    OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
 
     # Candidate paths to try loading from
     page_candidates = [
