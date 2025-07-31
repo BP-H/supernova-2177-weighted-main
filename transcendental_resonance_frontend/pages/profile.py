@@ -100,6 +100,7 @@ def main(main_container=None) -> None:
         main_container = st
     theme_selector("Theme", key_suffix="profile")
 
+    st.session_state.setdefault("active_user", "guest")
     container_ctx = safe_container(main_container)
     with container_ctx:
         if "active_user" not in st.session_state:
