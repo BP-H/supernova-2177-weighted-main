@@ -6,6 +6,7 @@ __all__ = [
     "agents",
     "resonance_music",
     "chat",
+    "feed",
     "social",
     "profile",
     "feed",
