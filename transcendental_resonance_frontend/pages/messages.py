@@ -5,7 +5,9 @@
 
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header
+from streamlit_helpers import safe_container, header, theme_selector
+from chat_ui import render_chat
+
 
 inject_modern_styles()
 
@@ -41,21 +43,15 @@ def _render_conversation_list() -> None:
 
 def _render_chat_panel(user: str) -> None:
     header(f"Chat with {user}")
-    msgs = st.session_state["messages"].setdefault(user, [])
-    for msg in msgs:
-        st.write(f"{msg['sender']}: {msg['text']}")
-    txt = st.text_input("Message", key="msg_input")
-    if st.button("Send", key="send_btn") and txt:
-        msgs.append({"sender": "You", "text": txt})
-        st.session_state.msg_input = ""
-        st.experimental_rerun()
-    if st.button("Start Video Call", key="video_call"):
-        st.toast("Video call integration pending")
+    st.session_state["chat_history"] = st.session_state["messages"].setdefault(user, [])
+    render_chat()
+    st.session_state["messages"][user] = st.session_state.get("chat_history", [])
 
 
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
+    theme_selector("Theme", key_suffix="messages")
     _init_state()
     container_ctx = safe_container(main_container)
     with container_ctx:
