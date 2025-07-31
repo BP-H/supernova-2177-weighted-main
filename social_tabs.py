@@ -3,7 +3,7 @@
 # Legal & Ethical Safeguards
 import asyncio
 import streamlit as st
-from streamlit_helpers import alert, safe_container
+from streamlit_helpers import alert, safe_container, header
 
 
 def safe_markdown(text: str, **kwargs) -> None:
@@ -56,7 +56,7 @@ def render_social_tab(main_container=None) -> None:
 
     container_ctx = safe_container(main_container)
     with container_ctx:
-        st.subheader("Friends & Followers")
+        header("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")
             return
