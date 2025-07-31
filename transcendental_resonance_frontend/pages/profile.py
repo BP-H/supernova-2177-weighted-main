@@ -8,6 +8,10 @@ from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
+from transcendental_resonance_frontend.ui.profile_ui import (
+    DEFAULT_USER,
+    render_profile,
+)
 
 try:
     from social_tabs import _load_profile
@@ -77,41 +81,17 @@ def main(main_container=None) -> None:
             except Exception:
                 st.warning("Profile data unavailable, using placeholder")
                 st.session_state["profile_data"] = {
+                    **DEFAULT_USER,
                     "username": username,
-                    "bio": "Exploring the cosmos.",
-                    "avatar": "https://placehold.co/100",
-                    "interests": ["science", "art"],
                 }
                 st.session_state["profile_followers"] = {"count": 0, "followers": []}
                 st.session_state["profile_following"] = {"count": 0, "following": []}
 
         data = st.session_state.get(
             "profile_data",
-            {
-                "username": username,
-                "bio": "Exploring the cosmos.",
-                "avatar": "https://placehold.co/100",
-                "interests": ["science", "art"],
-            },
+            {**DEFAULT_USER, "username": username},
         )
-        st.image(data.get("avatar", "https://placehold.co/100"), width=100)
-        st.write(f"**{data.get('username', username)}**")
-        st.write(data.get("bio", ""))
-        st.write(
-            "Interests:",
-            ", ".join(data.get("interests", [])),
-        )
-
-        cols = st.columns(3)
-        with cols[0]:
-            st.button("Follow", key="follow_btn")
-        with cols[1]:
-            st.button("Message", key="dm_btn")
-        with cols[2]:
-            st.button("Video Chat", key="video_btn")
-
-        st.markdown("**Badges**: *(coming soon)*")
-        st.markdown("**Portfolio**: *(coming soon)*")
+        render_profile(data)
 
 
 def render() -> None:
