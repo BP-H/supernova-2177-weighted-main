@@ -1,7 +1,9 @@
 # Extending the Streamlit UI
 
 `streamlit_helpers.py` exposes small utilities used by `ui.py` for common tasks.
-Import these helpers in your own modules to keep layouts consistent.
+Import these helpers in your own modules to keep layouts consistent. Header
+labels can include emoji characters and are sanitized automatically to prevent
+HTML injection.
 
 ```python
 import streamlit as st
