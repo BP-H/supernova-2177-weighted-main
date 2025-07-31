@@ -739,4 +739,3 @@ def seed_default_users() -> None:
     finally:
         session.close()
 
-
