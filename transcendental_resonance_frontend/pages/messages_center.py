@@ -143,7 +143,12 @@ def main(main_container=None) -> None:
             # Conversation selector
             with left:
                 st.markdown("**Conversations**")
-                selected = st.radio("", convos, key="selected_convo")
+                selected = st.radio(
+                    "Conversation",
+                    convos,
+                    key="selected_convo",
+                    label_visibility="collapsed",
+                )
 
             # Thread & send box
             with right:
