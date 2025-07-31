@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
