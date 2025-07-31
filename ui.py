@@ -17,12 +17,21 @@ if not hasattr(st, "experimental_page"):
 
     st.experimental_page = _noop_experimental_page
 
-
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-from streamlit_helpers import ui
+try:
+    from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
+except ImportError:
+    # Fallback in case streamlit_helpers doesn't define it
+    try:
+        import streamlit_shadcn_ui as shadcn  # type: ignore
+        ui = shadcn
+    except Exception:
+        import types
+        ui = types.SimpleNamespace()
+
 
 from datetime import datetime, timezone
 import asyncio
@@ -219,8 +228,10 @@ class _UIWrapper:
         return _StreamlitTabs(labels)
 
 
+# Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
 if not hasattr(ui, "tabs"):
     ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
+
 
 
 
@@ -256,6 +267,7 @@ from streamlit_helpers import (
     theme_selector,
     safe_container,
     render_post_card,
+    render_instagram_grid,
     inject_instagram_styles,
 )
 
@@ -704,10 +716,7 @@ def render_modern_social_page():
         {"image": "https://placekitten.com/300/300", "text": "Another cat", "likes": 3},
         {"image": "https://placekitten.com/500/300", "text": "More cats", "likes": 8},
     ]
-    cols = st.columns(3)
-    for col, post in zip(cols * (len(posts) // 3 + 1), posts):
-        with col:
-            render_post_card(post)
+    render_instagram_grid(posts, cols=3)
 
 
 def render_modern_chat_page() -> None:
@@ -970,10 +979,7 @@ def run_analysis(validations, *, layout: str = "force"):
         result = analyze_validation_integrity(validations)
 
     header("Validations")
-    cols = st.columns(3)
-    for i, entry in enumerate(validations):
-        with cols[i % 3]:
-            render_post_card(entry)
+    render_instagram_grid(validations, cols=3)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -1434,13 +1440,6 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    st.markdown(  # ← << duplicated block begins here (delete this one)
-        """<style>
-        body, .stApp {background:#FAFAFA;}
-        .sn-card {border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-        </style>""",
-        unsafe_allow_html=True,
-    )
 
     try:
         ensure_pages(PAGES, PAGES_DIR)
@@ -1698,7 +1697,7 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
+            with ui_wrapper.tabs(["Validation", "Voting", "Agents"]) as tabs:
                 selected = tabs.active
                 if selected != display_choice:
                     try:
