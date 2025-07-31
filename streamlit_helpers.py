@@ -262,7 +262,14 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         key_suffix = "default"
 
     if "theme" not in st.session_state:
-        st.session_state["theme"] = "light"
+        try:
+            params = st.query_params
+        except AttributeError:
+            params = st.experimental_get_query_params()
+        param_theme = params.get("theme", "light")
+        if isinstance(param_theme, list):
+            param_theme = param_theme[0]
+        st.session_state["theme"] = param_theme if str(param_theme).lower() in {"light", "dark"} else "light"
 
     unique_key = f"theme_selector_{key_suffix}"
     current = st.session_state["theme"]
@@ -290,6 +297,10 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         )
     st.session_state["theme"] = choice.lower()
     apply_theme(st.session_state["theme"])
+    try:
+        st.query_params["theme"] = st.session_state["theme"]
+    except Exception:
+        st.experimental_set_query_params(theme=st.session_state["theme"])
     return st.session_state["theme"]
 
 
