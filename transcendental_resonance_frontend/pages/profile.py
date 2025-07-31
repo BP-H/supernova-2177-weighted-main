@@ -26,21 +26,20 @@ inject_modern_styles()
 
 
 def _render_profile(username: str) -> None:
+    data = {**DEFAULT_USER, "username": username}
     if _load_profile is None:
         st.error("Profile services unavailable")
-        return
-    try:
-        user, followers, following = _load_profile(username)
-    except Exception as exc:
-        st.error(f"Profile fetch failed: {exc}")
-        return
-    st.image("https://placehold.co/120x120", width=120)
-    st.markdown(f"### {user.get('username', username)}")
-    st.write(user.get("bio", ""))
-    st.markdown(
-        f"**Followers:** {len(followers.get('followers', []))}  \
-        **Following:** {len(following.get('following', []))}"
-    )
+    else:
+        try:
+            user, followers, following = _load_profile(username)
+            data = {
+                **user,
+                "followers": len(followers.get("followers", [])),
+                "following": len(following.get("following", [])),
+            }
+        except Exception as exc:  # pragma: no cover - runtime fetch may fail
+            st.warning(f"Profile fetch failed: {exc}, using placeholder")
+    render_profile(data)
     if dispatch_route is not None and st.button("Follow/Unfollow", key="follow"):
         with st.spinner("Updating..."):
             try:
