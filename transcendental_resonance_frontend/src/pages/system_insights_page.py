@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Detailed system insights metrics page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
@@ -45,3 +49,9 @@ async def system_insights_page():
 
         await refresh_metrics()
         ui.timer(10, lambda: ui.run_async(refresh_metrics()))
+
+if ui is None:
+    def system_insights_page(*_a, **_kw):
+        """Fallback insights page when NiceGUI is unavailable."""
+        st.info('System insights page requires NiceGUI.')
+

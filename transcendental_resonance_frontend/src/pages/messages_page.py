@@ -4,7 +4,11 @@
 """Messaging system page."""
 
 from components.emoji_toolbar import emoji_toolbar
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import navigation_bar, page_container
@@ -135,4 +139,10 @@ async def messages_page():
                 ui.notify("Realtime updates unavailable", color="warning")
 
         ui.run_async(start_ws())
+
+if ui is None:
+    def messages_page(*_a, **_kw):
+        """Fallback messages page when NiceGUI is unavailable."""
+        st.info('Messages page requires NiceGUI.')
+
 

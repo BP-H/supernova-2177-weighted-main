@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """System status metrics page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
@@ -44,3 +48,9 @@ async def status_page():
 
         await refresh_status()
         ui.timer(5, lambda: ui.run_async(refresh_status()))
+
+if ui is None:
+    def status_page(*_a, **_kw):
+        """Fallback status page when NiceGUI is unavailable."""
+        st.info('Status page requires NiceGUI.')
+

@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Login and registration pages for Transcendental Resonance."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, set_token
 from utils.styles import get_theme
@@ -82,3 +86,13 @@ async def register_page():
         ui.label('Back to Login').classes('text-center cursor-pointer').on_click(
             lambda: ui.open(login_page)
         )
+
+if ui is None:
+    def login_page():
+        """Fallback login page when NiceGUI is unavailable."""
+        st.title('Transcendental Resonance')
+        st.warning('NiceGUI not installed; limited functionality.')
+
+    def register_page():
+        """Fallback registration page when NiceGUI is unavailable."""
+        st.info('Registration not available without NiceGUI.')
