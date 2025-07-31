@@ -10,6 +10,8 @@ applications to keep the UI code concise and consistent.
 
 from __future__ import annotations
 
+import streamlit_shadcn_ui as ui
+
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal

@@ -1699,7 +1699,7 @@ def main() -> None:
                         _render_fallback(selected)
                 else:
                     st.toast("Select a page above to continue.")
-                    _render_fallback("Validation")
+                    _render_fallback(selected)
 
 
 
