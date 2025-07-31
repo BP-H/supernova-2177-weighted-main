@@ -30,7 +30,9 @@ def test_validation_page_renders(monkeypatch):
 
     dummy_ui.render_validation_ui = render_validation_ui
     sys.modules["ui"] = dummy_ui
-
+    import importlib
+    import transcendental_resonance_frontend.pages.validation as validation
+    importlib.reload(validation)
     at = AppTest.from_function(run_validation_page)
     at.run()
     assert len(at.exception) == 0

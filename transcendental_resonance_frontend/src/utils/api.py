@@ -13,13 +13,16 @@ import websockets
 
 try:
     from nicegui import ui  # type: ignore
-except Exception:  # pragma: no cover - nicegui optional
-    class _UIStub:
-        def notify(self, *args, **kwargs) -> None:
-            """Fallback notify that does nothing."""
-            return None
+except ImportError:  # pragma: no cover - optional dependency
+    class _FallbackUI:
+        """Minimal fallback if ``nicegui`` isn't installed."""
 
-    ui = _UIStub()  # type: ignore
+        def notify(self, *args: Any, **kwargs: Any) -> None:
+            """No-op notification method."""
+            return None  # explicitly returns None for clarity
+
+    ui = _FallbackUI()  # type: ignore
+
 
 # Honor offline mode for development/testing
 OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
