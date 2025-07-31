@@ -40,7 +40,11 @@ except Exception:
             )
 
 from frontend import theme
-from streamlit_javascript import st_javascript
+try:
+    from streamlit_javascript import st_javascript
+except Exception:  # pragma: no cover - optional dependency or missing runtime
+    def st_javascript(*_args, **_kwargs):
+        return ""
 
 HAS_LUCIDE = importlib.util.find_spec("lucide-react") is not None
 LUCIDE_LOADED_KEY = "_lucide_js_loaded"

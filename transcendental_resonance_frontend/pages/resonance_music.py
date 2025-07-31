@@ -14,7 +14,7 @@ from pathlib import Path
 import requests
 import streamlit as st
 from modern_ui import inject_modern_styles
-from streamlit_helpers import alert, centered_container, safe_container
+from streamlit_helpers import alert, centered_container, safe_container, header
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
 from utils.api import get_resonance_summary, dispatch_route # Import get_resonance_summary and dispatch_route from utils.api
@@ -96,7 +96,7 @@ def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] 
     container_ctx = safe_container(main_container)
 
     with container_ctx:
-        st.subheader("Resonance Music")
+        header("Resonance Music")
         centered_container()
 
         if backend_ok is None:
@@ -184,7 +184,7 @@ def render_resonance_music_page(main_container=None, backend_ok: Optional[bool] 
                         metrics = data.get("metrics", {})
                         midi_bytes_count = data.get("midi_bytes", 0)
 
-                        st.subheader("Metrics")
+                        header("Metrics")
                         if metrics:
                             st.table(
                                 {"metric": list(metrics.keys()), "value": list(metrics.values())}

@@ -8,7 +8,6 @@ Example:
 import os
 import time
 import streamlit as st  # ensure Streamlit is imported early
-st.set_page_config(layout="wide")
 
 if not hasattr(st, "experimental_page"):
     def _noop_experimental_page(*_args, **_kwargs):
@@ -22,7 +21,10 @@ if not hasattr(st, "experimental_page"):
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-import streamlit_shadcn_ui as ui
+try:
+    import streamlit_shadcn_ui as ui
+except Exception:  # pragma: no cover - optional dependency or no runtime
+    ui = None  # type: ignore
 
 from datetime import datetime, timezone
 import asyncio
@@ -1413,11 +1415,7 @@ def parse_beta_mode(params: dict) -> bool:
 def main() -> None:
     """Entry point with comprehensive error handling and modern UI."""
     try:
-        st.set_page_config(
-            page_title="superNova_2177",
-            layout="wide",
-            initial_sidebar_state="collapsed",
-        )
+        st.set_page_config(layout="wide")
     except Exception:
         # Older Streamlit builds (or re-runs) may raise – that’s OK.
         pass
