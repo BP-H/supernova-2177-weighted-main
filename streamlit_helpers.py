@@ -261,6 +261,8 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         )
 
 
+import html  # Ensure this is imported at the top if not already
+
 def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None:
     """Display posts in a responsive grid using ``render_post_card``."""
     columns = st.columns(cols)
@@ -275,6 +277,40 @@ def render_instagram_grid(posts: list[dict[str, Any]], *, cols: int = 3) -> None
                 "text": caption,
                 "likes": post.get("likes", 0),
             })
+
+
+def render_mock_feed() -> None:
+    """Render a simple scrolling feed of demo posts."""
+    posts = [
+        (
+            "alice",
+            "https://picsum.photos/seed/alice/400/300",
+            "Enjoying the sunshine!",
+        ),
+        (
+            "bob",
+            "https://picsum.photos/seed/bob/400/300",
+            "Hiking adventures today.",
+        ),
+        (
+            "carol",
+            "https://picsum.photos/seed/carol/400/300",
+            "Coffee time at my favourite spot.",
+        ),
+    ]
+
+    st.markdown(
+        "<div style='max-height: 400px; overflow-y: auto;'>",
+        unsafe_allow_html=True,
+    )
+    with st.container():
+        for username, image, caption in posts:
+            render_post_card({
+                "image": image,
+                "text": f"**{html.escape(username)}**: {caption}",
+                "likes": 0,
+            })
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 
@@ -458,6 +494,7 @@ __all__ = [
     "header",
     "render_post_card",
     "render_instagram_grid",
+    "render_mock_feed",
     "sanitize_text",
     "apply_theme",
     "theme_selector",
