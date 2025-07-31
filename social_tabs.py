@@ -3,6 +3,7 @@
 # Legal & Ethical Safeguards
 import asyncio
 import streamlit as st
+from frontend.light_theme import inject_light_theme
 from streamlit_helpers import alert, safe_container, header, get_active_user
 
 
@@ -47,6 +48,9 @@ def _load_profile(username: str) -> tuple[dict, dict, dict]:
             dispatch_route("get_following", {"username": username}, db=db)
         )
     return user, followers, following
+
+
+inject_light_theme()
 
 
 def render_social_tab(main_container=None) -> None:
