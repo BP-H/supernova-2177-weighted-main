@@ -7,6 +7,7 @@ from frontend.light_theme import inject_light_theme
 from streamlit_helpers import alert, safe_container, header, get_active_user
 
 
+
 def safe_markdown(text: str, **kwargs) -> None:
     """Render text as Markdown, stripping invalid characters."""
     clean = text.encode("utf-8", errors="ignore").decode("utf-8")
@@ -22,6 +23,8 @@ try:
 except Exception:  # pragma: no cover - optional
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+ensure_active_user()
 
 
 def _run_async(coro):
@@ -58,6 +61,7 @@ def render_social_tab(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
+    st.session_state.setdefault("active_user", "guest")
     container_ctx = safe_container(main_container)
     with container_ctx:
         if "active_user" not in st.session_state:

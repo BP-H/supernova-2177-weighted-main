@@ -309,16 +309,19 @@ from streamlit_helpers import (
     safe_container,
     render_post_card,
     render_instagram_grid,
-    inject_instagram_styles,
 )
 
 try:
     from modern_ui import (
         inject_modern_styles,
+        inject_light_theme,
         render_stats_section,
     )
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
+        return None
+
+    def inject_light_theme(*_a, **_k):
         return None
 
     def render_stats_section(*_a, **_k):
@@ -1466,9 +1469,9 @@ def main() -> None:
         # Older Streamlit builds (or re-runs) may raise – that’s OK.
         pass
 
-    # Lightweight “Instagram-style” aesthetic (harmless if helper absent)
+    # Simple light theme fallback
     try:
-        inject_instagram_styles()
+        inject_light_theme()
     except Exception:  # pragma: no cover
         pass
 
@@ -1519,9 +1522,10 @@ def main() -> None:
         return
 
     try:
-        inject_instagram_styles()
+        inject_light_theme()
 
         render_top_bar()
+
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
             """
@@ -1878,6 +1882,7 @@ def ensure_database_exists() -> bool:
             # Check if any user exists
             res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
             count = res.scalar() or 0
+
             if count == 0:
                 conn.execute(
                     text(
@@ -1906,6 +1911,7 @@ def ensure_database_exists() -> bool:
                         " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
                     )
                 )
+
         return True
     except (OperationalError, sqlite3.Error) as exc:
         logger.error("Database initialization failed: %s", exc)
@@ -1913,6 +1919,7 @@ def ensure_database_exists() -> bool:
     except Exception as exc:
         logger.error("Unexpected DB init error: %s", exc)
         return False
+
 
 
 def safe_get_user():
