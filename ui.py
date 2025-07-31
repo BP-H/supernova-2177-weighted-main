@@ -1878,6 +1878,7 @@ def ensure_database_exists() -> bool:
             # Check if any user exists
             res = conn.execute(text("SELECT COUNT(*) FROM harmonizers"))
             count = res.scalar() or 0
+
             if count == 0:
                 conn.execute(
                     text(
@@ -1906,6 +1907,7 @@ def ensure_database_exists() -> bool:
                         " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
                     )
                 )
+
         return True
     except (OperationalError, sqlite3.Error) as exc:
         logger.error("Database initialization failed: %s", exc)
@@ -1913,6 +1915,7 @@ def ensure_database_exists() -> bool:
     except Exception as exc:
         logger.error("Unexpected DB init error: %s", exc)
         return False
+
 
 
 def safe_get_user():
