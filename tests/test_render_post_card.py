@@ -19,6 +19,7 @@ import streamlit_helpers as sh
 def test_render_post_card_uses_ui_components(monkeypatch):
     card_called = {}
     badge_called = {}
+    element_calls = []
 
     class DummyCard:
         def __enter__(self):
@@ -34,10 +35,14 @@ def test_render_post_card_uses_ui_components(monkeypatch):
         badge_called['text'] = text
         return types.SimpleNamespace(classes=lambda cls: badge_called.setdefault('cls', cls))
 
+    def dummy_element(tag, content):
+        element_calls.append((tag, content))
+        return types.SimpleNamespace(classes=lambda cls: None)
+
     dummy_ui = types.SimpleNamespace(
         card=lambda: DummyCard(),
         image=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
-        element=lambda *a, **k: types.SimpleNamespace(classes=lambda *b, **c: None),
+        element=dummy_element,
         badge=dummy_badge,
     )
 
@@ -48,6 +53,7 @@ def test_render_post_card_uses_ui_components(monkeypatch):
 
     assert card_called.get('entered')
     assert badge_called.get('text') == "❤️ 4"
+    assert element_calls[-1] == ("div", "❤️ 🔁 💬")
 
 
 def test_render_post_card_plain_streamlit(monkeypatch):
@@ -56,6 +62,7 @@ def test_render_post_card_plain_streamlit(monkeypatch):
         image=lambda img, use_column_width=True: captured.setdefault("image", img),
         write=lambda text: captured.setdefault("write", text),
         caption=lambda text: captured.setdefault("caption", text),
+        markdown=lambda html, unsafe_allow_html=False: captured.setdefault("markdown", html),
     )
 
     monkeypatch.setattr(sh, "ui", None)
@@ -66,3 +73,4 @@ def test_render_post_card_plain_streamlit(monkeypatch):
     assert captured["image"] == "img.png"
     assert captured["write"] == "Hi"
     assert captured["caption"] == "❤️ 7"
+    assert "❤️ 🔁 💬" in captured["markdown"]
