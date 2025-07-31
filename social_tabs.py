@@ -3,7 +3,9 @@
 # Legal & Ethical Safeguards
 import asyncio
 import streamlit as st
-from streamlit_helpers import alert, safe_container, header
+from frontend.light_theme import inject_light_theme
+from streamlit_helpers import alert, safe_container, header, get_active_user
+
 
 
 def safe_markdown(text: str, **kwargs) -> None:
@@ -21,6 +23,8 @@ try:
 except Exception:  # pragma: no cover - optional
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
+
+ensure_active_user()
 
 
 def _run_async(coro):
@@ -49,19 +53,26 @@ def _load_profile(username: str) -> tuple[dict, dict, dict]:
     return user, followers, following
 
 
+inject_light_theme()
+
+
 def render_social_tab(main_container=None) -> None:
     """Render basic social interactions."""
     if main_container is None:
         main_container = st
 
+    st.session_state.setdefault("active_user", "guest")
     container_ctx = safe_container(main_container)
     with container_ctx:
+        if "active_user" not in st.session_state:
+            st.session_state["active_user"] = "guest"
         header("Friends & Followers")
         if dispatch_route is None or SessionLocal is None or Harmonizer is None:
             st.info("Social routes not available")
             return
 
-        current_user = st.session_state.get("active_user", "")
+        current_user = st.session_state.get("active_user", "guest")
+
         cols = st.columns(2)
         with cols[0]:
             current_user = st.text_input(

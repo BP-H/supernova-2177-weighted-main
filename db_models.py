@@ -645,3 +645,25 @@ def init_db() -> None:
     """Create all tables defined in this module."""
     Base.metadata.create_all(bind=engine)
 
+
+def seed_default_users() -> None:
+    """Create default Harmonizer accounts if they don't exist."""
+    session = SessionLocal()
+    try:
+        defaults = ["guest", "demo_user"]
+        for username in defaults:
+            exists = session.query(Harmonizer).filter_by(username=username).first()
+            if not exists:
+                hashed = hashlib.sha256(username.encode()).hexdigest()
+                user = Harmonizer(
+                    username=username,
+                    email=f"{username}@example.com",
+                    hashed_password=hashed,
+                    bio="Default user",
+                )
+                session.add(user)
+        session.commit()
+    finally:
+        session.close()
+
+

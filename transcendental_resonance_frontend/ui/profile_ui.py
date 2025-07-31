@@ -1,13 +1,14 @@
-"""Backwards compatibility wrapper for profile card UI."""
+"""Back-compat wrapper for the refactored profile-card UI."""
 from __future__ import annotations
 
+# Re-export the new implementation so legacy imports continue to work
 from .profile_card import (
     DEFAULT_USER,
     inject_profile_styles,
     render_profile_card,
 )
 
-# Alias for old function name
+# Historical alias
 render_profile = render_profile_card
 
 __all__ = [

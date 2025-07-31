@@ -44,13 +44,37 @@
   gap: 0.25rem;
   margin-top: 1rem;
 }
+.feed-item {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
 .feed-thumb {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 0;
   transition: transform 0.2s ease;
 }
 .feed-thumb:hover {
   transform: scale(1.03);
+}
+.reactions {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+.reaction-btn {
+  background: var(--card);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.reaction-btn:hover {
+  background: var(--accent);
+  color: #fff;
 }
 @media (max-width: 600px) {
   .profile-container {
