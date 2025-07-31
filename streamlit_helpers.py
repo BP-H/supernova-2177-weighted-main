@@ -293,6 +293,13 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
     return st.session_state["theme"]
 
 
+def get_active_user() -> str:
+    """Return the active user from ``st.session_state`` with a default."""
+    if "active_user" not in st.session_state:
+        st.session_state["active_user"] = "guest"
+    return st.session_state["active_user"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Containers & utilities
 # ──────────────────────────────────────────────────────────────────────────────
@@ -370,6 +377,7 @@ __all__ = [
     "render_instagram_grid",
     "apply_theme",
     "theme_selector",
+    "get_active_user",
     "centered_container",
     "safe_container",
     "tabs_nav",
