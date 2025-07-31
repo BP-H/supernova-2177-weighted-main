@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """AI assistance for VibeNodes."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -40,3 +44,8 @@ async def ai_assist_page(vibenode_id: int):
         ui.button('Get AI Help', on_click=get_ai_response).classes('w-full').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
+
+if ui is None:
+    def ai_assist_page(*_a, **_kw):
+        """Fallback when NiceGUI is unavailable."""
+        st.info('AI assist requires NiceGUI.')

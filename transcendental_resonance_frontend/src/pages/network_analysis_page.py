@@ -5,7 +5,11 @@
 
 import json
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
@@ -105,3 +109,9 @@ async def network_page():
 
         await refresh_network()
         ui.timer(10, lambda: ui.run_async(refresh_network()))
+
+if ui is None:
+    def network_page(*_a, **_kw):
+        """Fallback network page when NiceGUI is unavailable."""
+        st.info('Network analysis page requires NiceGUI.')
+

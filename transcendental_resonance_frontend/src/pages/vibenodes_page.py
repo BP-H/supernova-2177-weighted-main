@@ -3,14 +3,17 @@
 # Legal & Ethical Safeguards
 """VibeNodes creation and listing."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 import asyncio
 import contextlib
 
 from components.emoji_toolbar import emoji_toolbar
 from components.media_renderer import render_media_block
-from nicegui import ui
 
 from utils.api import TOKEN, api_call, listen_ws
 from utils.features import skeleton_loader
@@ -335,4 +338,10 @@ async def vibenodes_page():
                 ui.notify("Realtime updates unavailable", color="warning")
 
         ui.run_async(start_ws())
+
+if ui is None:
+    def vibenodes_page(*_a, **_kw):
+        """Fallback vibenodes page when NiceGUI is unavailable."""
+        st.info('VibeNodes page requires NiceGUI.')
+
 

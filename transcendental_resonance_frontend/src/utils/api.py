@@ -10,7 +10,19 @@ import asyncio
 
 import httpx
 import websockets
-from nicegui import ui
+
+try:
+    from nicegui import ui  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    class _FallbackUI:
+        """Minimal fallback if ``nicegui`` isn't installed."""
+
+        def notify(self, *args: Any, **kwargs: Any) -> None:
+            """No-op notification method."""
+            return None  # explicitly returns None for clarity
+
+    ui = _FallbackUI()  # type: ignore
+
 
 # Honor offline mode for development/testing
 OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"

@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Interactive music generation page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -54,3 +58,9 @@ async def music_page():
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
         download_link
+
+if ui is None:
+    def music_page(*_a, **_kw):
+        """Fallback music page when NiceGUI is unavailable."""
+        st.info('Music page requires NiceGUI.')
+

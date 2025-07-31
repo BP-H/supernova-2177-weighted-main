@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Governance proposals page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -75,3 +79,9 @@ async def proposals_page():
                             ui.button('No', on_click=vote_no).style('background: red; color: white;')
 
         await refresh_proposals()
+
+if ui is None:
+    def proposals_page(*_a, **_kw):
+        """Fallback proposals page when NiceGUI is unavailable."""
+        st.info('Proposals page requires NiceGUI.')
+

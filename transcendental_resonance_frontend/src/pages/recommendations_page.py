@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Recommendations discovery page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -69,3 +73,9 @@ async def recommendations_page():
                             )
 
         await refresh_recs()
+
+if ui is None:
+    def recommendations_page(*_a, **_kw):
+        """Fallback recommendations page when NiceGUI is unavailable."""
+        st.info('Recommendations page requires NiceGUI.')
+

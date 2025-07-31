@@ -22,25 +22,63 @@ except Exception:  # pragma: no cover - optional dependencies
     _load_profile = None  # type: ignore
     dispatch_route = None  # type: ignore
 
+try:  # Optional social features
+    from frontend_bridge import dispatch_route
+except Exception:  # pragma: no cover - optional dependency
+    dispatch_route = None  # type: ignore
+
+try:  # Optional DB access for follow/unfollow
+    from db_models import SessionLocal, Harmonizer
+except Exception:  # pragma: no cover - optional dependency
+    SessionLocal = None  # type: ignore
+    Harmonizer = None  # type: ignore
+
+import asyncio
+
+
+def _run_async(coro):
+    """Execute ``coro`` whether or not an event loop is running."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        if loop.is_running():
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        return loop.run_until_complete(coro)
+
+
+def _fetch_social(username: str) -> tuple[dict, dict]:
+    """Return follower and following data for ``username`` via routes."""
+    if dispatch_route is None or SessionLocal is None:
+        return {}, {}
+    with SessionLocal() as db:
+        followers = _run_async(
+            dispatch_route("get_followers", {"username": username}, db=db)
+        )
+        following = _run_async(
+            dispatch_route("get_following", {"username": username}, db=db)
+        )
+    return followers or {}, following or {}
+
 inject_modern_styles()
 
 
 def _render_profile(username: str) -> None:
+    data = {**DEFAULT_USER, "username": username}
     if _load_profile is None:
         st.error("Profile services unavailable")
-        return
-    try:
-        user, followers, following = _load_profile(username)
-    except Exception as exc:
-        st.error(f"Profile fetch failed: {exc}")
-        return
-    st.image("https://placehold.co/120x120", width=120)
-    st.markdown(f"### {user.get('username', username)}")
-    st.write(user.get("bio", ""))
-    st.markdown(
-        f"**Followers:** {len(followers.get('followers', []))}  \
-        **Following:** {len(following.get('following', []))}"
-    )
+    else:
+        try:
+            user, followers, following = _load_profile(username)
+            data = {
+                **user,
+                "followers": len(followers.get("followers", [])),
+                "following": len(following.get("following", [])),
+            }
+        except Exception as exc:  # pragma: no cover - runtime fetch may fail
+            st.warning(f"Profile fetch failed: {exc}, using placeholder")
+    render_profile(data)
     if dispatch_route is not None and st.button("Follow/Unfollow", key="follow"):
         with st.spinner("Updating..."):
             try:
@@ -57,27 +95,35 @@ def _render_profile(username: str) -> None:
 def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
+
     container_ctx = safe_container(main_container)
     with container_ctx:
+        # Header with status icon
         header_col, status_col = st.columns([8, 1])
         with header_col:
             st.subheader("👤 Profile")
         with status_col:
             render_status_icon()
+
+        # Active user editable section
         current = st.session_state.get("active_user", "guest")
         current = st.text_input("Username", value=current, key="profile_user")
         st.session_state["active_user"] = current
         _render_profile(current)
+
+        # Divider + API Keys
         st.divider()
         st.info("Manage API credentials for advanced features.")
         render_api_key_ui(key_prefix="profile")
 
+        # Divider + external profile lookup
         st.divider()
         username = st.text_input(
             "View Profile",
             value=st.session_state.get("profile_username", "demo_user"),
             key="profile_username",
         )
+
         if st.button("Load Profile", key="load_profile"):
             try:
                 user, followers, following = _load_profile(username)
@@ -93,11 +139,13 @@ def main(main_container=None) -> None:
                 st.session_state["profile_followers"] = {"count": 0, "followers": []}
                 st.session_state["profile_following"] = {"count": 0, "following": []}
 
+        # Display fallback/default profile
         data = st.session_state.get(
             "profile_data",
             {**DEFAULT_USER, "username": username},
         )
         render_profile(data)
+
 
 
 def render() -> None:

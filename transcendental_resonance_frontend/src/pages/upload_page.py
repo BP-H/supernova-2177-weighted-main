@@ -3,7 +3,11 @@
 # Legal & Ethical Safeguards
 """Media upload page."""
 
-from nicegui import ui
+try:
+    from nicegui import ui
+except Exception:  # pragma: no cover - fallback to Streamlit
+    ui = None  # type: ignore
+    import streamlit as st
 import asyncio
 import contextlib
 
@@ -76,3 +80,9 @@ async def upload_page():
         ui.upload(on_upload=lambda e: ui.run_async(handle_avatar_upload(e))) \
             .props('label=Choose avatar image') \
             .classes('w-full mb-4')
+
+if ui is None:
+    def upload_page(*_a, **_kw):
+        """Fallback upload page when NiceGUI is unavailable."""
+        st.info('Upload page requires NiceGUI.')
+
