@@ -224,46 +224,69 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
-    """Instagram-style post card that degrades gracefully."""
-    img = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
-    text = sanitize_text(post_data.get("text", ""))
+    """Render an Instagram-style post card that gracefully degrades."""
+    img   = sanitize_text(post_data.get("image", "")) if post_data.get("image") else ""
+    text  = sanitize_text(post_data.get("text",  ""))
+    user  = sanitize_text(post_data.get("user",  ""))
     likes = post_data.get("likes", 0)
     try:
         likes = int(likes)
-    except Exception:
+    except Exception:  # keep likes at 0 if conversion fails
         likes = 0
 
+    # ── Plain-Streamlit fallback ─────────────────────────────────────────────
     if ui is None:
-        html_parts = []
+        html_parts: list[str] = []
+
         if img:
             html_parts.append(
-                f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px'/>"
+                f"<img src='{html.escape(img)}' "
+                "style='width:100%;border-radius:0.375rem;'>"
             )
-        user = html.escape(post_data.get("user", ""))
-        html_parts.append(f"<p><strong>{user}</strong>: {html.escape(text)}</p>")
+
+        if user:
+            html_parts.append(f"<p><strong>{html.escape(user)}</strong></p>")
+
+        if text:
+            html_parts.append(f"<p>{html.escape(text)}</p>")
+
         html_parts.append(
-            f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            f"<div style='color:var(--text-color);font-size:1.2em;'>"
+            f"❤️ {likes} 🔁 💬</div>"
         )
-        st.markdown("\n".join(html_parts), unsafe_allow_html=True)
+
+        st.markdown("".join(html_parts), unsafe_allow_html=True)
         return
 
+    # ── Fancy UI backend available (streamlit-shadcn-ui / NiceGUI) ───────────
     try:
         with ui.card().classes("w-full p-4 mb-4"):
             if img:
                 ui.image(img).classes("rounded-md mb-2 w-full")
-            safe_element("p", text).classes("mb-1") if hasattr(ui, "element") else st.markdown(text)
+
+            # text / caption
+            if hasattr(ui, "element"):
+                safe_element("p", text).classes("mb-1")
+            else:
+                st.markdown(text)
+
+            # optional like badge (if backend supports it)
             if hasattr(ui, "badge"):
                 ui.badge(f"❤️ {likes}").classes("bg-pink-500 mb-1")
+
             ui.element("div", f"❤️ {likes} 🔁 💬").classes("text-center text-lg")
-    except Exception as exc:  # noqa: BLE001
+
+    except Exception as exc:  # fall back if UI component chain fails
         if hasattr(st, "toast"):
             st.toast(f"Post card failed: {exc}", icon="⚠️")
+
         if img:
             st.image(img, use_column_width=True)
         st.write(text)
         st.caption(f"❤️ {likes}")
         st.markdown(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            "<div style='color:var(--text-color);font-size:1.2em;'>"
+            "❤️ 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 

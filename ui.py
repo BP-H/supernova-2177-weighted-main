@@ -1912,6 +1912,7 @@ def ensure_database_exists() -> bool:
                     )
                 )
 
+
         return True
     except (OperationalError, sqlite3.Error) as exc:
         logger.error("Database initialization failed: %s", exc)
