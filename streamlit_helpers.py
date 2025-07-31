@@ -13,6 +13,7 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+import inspect
 import streamlit as st
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -107,6 +108,36 @@ st.markdown(BOX_CSS, unsafe_allow_html=True)
 # ──────────────────────────────────────────────────────────────────────────────
 # Helper components
 # ──────────────────────────────────────────────────────────────────────────────
+def sanitize_text(text: Any) -> str:
+    """Return ``text`` as a safe string preserving emojis."""
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+    return html.escape(text, quote=False)
+
+
+def _safe_element(tag: str, content: str):
+    """Render ``ui.element`` safely across backends."""
+    try:
+        return ui.element(tag, content)
+    except TypeError as exc:
+        st.toast(f"ui.element signature mismatch: {exc}", icon="⚠️")
+        try:
+            elem = ui.element(tag)
+            if hasattr(elem, "text"):
+                elem.text(content)
+            return elem
+        except Exception as inner_exc:  # pragma: no cover - fallback
+            st.toast(f"ui.element fallback failed: {inner_exc}", icon="⚠️")
+    except Exception as exc:  # pragma: no cover - unexpected
+        st.toast(f"ui.element failed: {exc}", icon="⚠️")
+    # final plain Streamlit fallback
+    if tag.lower() == "h1":
+        st.header(content)
+    else:
+        st.markdown(f"<{tag}>{html.escape(content)}</{tag}>", unsafe_allow_html=True)
+    return None
 def alert(
     message: str,
     level: Literal["warning", "error", "info"] = "info",
@@ -137,14 +168,19 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}</style>",
         unsafe_allow_html=True,
     )
-    ui.element("h1", title)
+    safe_title = sanitize_text(title)
+    _safe_element("h1", safe_title)
 
 
 def render_post_card(post_data: dict[str, Any]) -> None:
     """Instagram-style post card that degrades gracefully."""
     img = post_data.get("image", "")
-    text = post_data.get("text", "")
+    text = sanitize_text(post_data.get("text", ""))
     likes = post_data.get("likes", 0)
+    try:
+        likes = int(likes)
+    except Exception:
+        likes = 0
 
     if ui is None:
         if img:
@@ -156,7 +192,9 @@ def render_post_card(post_data: dict[str, Any]) -> None:
     with ui.card().classes("w-full p-4 mb-4"):
         if img:
             ui.image(img).classes("rounded-md mb-2 w-full")
-        ui.element("p", text).classes("mb-1")
+        elem = _safe_element("p", text)
+        if hasattr(elem, "classes"):
+            elem.classes("mb-1")
         ui.badge(f"❤️ {likes}").classes("bg-pink-500")
 
 
@@ -235,11 +273,12 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
     if key_suffix is None:
         key_suffix = "default"
 
-    if "theme" not in st.session_state:
-        st.session_state["theme"] = "light"
+    theme_key = f"theme_{key_suffix}"
+    if theme_key not in st.session_state:
+        st.session_state[theme_key] = "light"
 
     unique_key = f"theme_selector_{key_suffix}"
-    current = st.session_state["theme"]
+    current = st.session_state[theme_key]
 
     choice = st.selectbox(
         label,
@@ -247,9 +286,9 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         index=0 if current == "light" else 1,
         key=unique_key,
     )
-    st.session_state["theme"] = choice.lower()
-    apply_theme(st.session_state["theme"])
-    return st.session_state["theme"]
+    st.session_state[theme_key] = choice.lower()
+    apply_theme(st.session_state[theme_key])
+    return st.session_state[theme_key]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -314,6 +353,7 @@ __all__ = [
     "alert",
     "header",
     "render_post_card",
+    "sanitize_text",
     "apply_theme",
     "theme_selector",
     "centered_container",
