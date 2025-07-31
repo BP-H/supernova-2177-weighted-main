@@ -71,9 +71,7 @@ except Exception:  # noqa: BLE001
                 return _DummyElement()
 
             def badge(self, text: str) -> _DummyElement:
-                st.markdown(
-                    f"<span>{html.escape(text)}</span>", unsafe_allow_html=True
-                )
+                st.markdown(f"<span>{html.escape(text)}</span>", unsafe_allow_html=True)
                 return _DummyElement()
 
         ui = _DummyUI()  # type: ignore
@@ -86,6 +84,7 @@ except Exception:  # noqa: BLE001
 try:
     from modern_ui import inject_modern_styles  # type: ignore
 except Exception:  # noqa: BLE001
+
     def inject_modern_styles(*_a: Any, **_kw: Any) -> None:  # type: ignore
         """No-op when *modern_ui* is absent."""
         return None
@@ -125,12 +124,27 @@ def alert(
         "info": ("#e8f4fd", "#1e88e5"),
     }
     bg, border = colours.get(level, colours["info"])
-    icon = f"<span>{icons.get(level, '')}</span>" if show_icon else ""
+    icon = icons.get(level, "") if show_icon else ""
+    # Prefer shadcn-ui components when available
+    if ui is not None and hasattr(ui, "card"):
+        try:
+            text = f"{icon} {message}" if icon else message
+            ui.card(content=text)
+            if hasattr(ui, "badges"):
+                variant_map = {
+                    "warning": "secondary",
+                    "error": "destructive",
+                    "info": "default",
+                }
+                ui.badges([(level.title(), variant_map.get(level, "default"))])
+            return
+        except Exception:  # noqa: BLE001 - fallback to Streamlit below
+            pass
     st.markdown(
         f"<div style='border-left:4px solid {border};"
         f"background:{bg};padding:.5em 1em;border-radius:4px;"
         f"margin-bottom:1em;display:flex;align-items:center;gap:.5rem;'>"
-        f"{icon}{html.escape(message)}</div>",
+        f"{f'<span>{html.escape(icon)}</span>' if icon else ''}{html.escape(message)}</div>",
         unsafe_allow_html=True,
     )
 
@@ -253,12 +267,27 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
     unique_key = f"theme_selector_{key_suffix}"
     current = st.session_state["theme"]
 
-    choice = st.selectbox(
-        label,
-        ["Light", "Dark"],
-        index=0 if current == "light" else 1,
-        key=unique_key,
-    )
+    if ui is not None and hasattr(ui, "radio_group"):
+        try:
+            choice = ui.radio_group(
+                ["Light", "Dark"],
+                default_value="Light" if current == "light" else "Dark",
+                key=unique_key,
+            )
+        except Exception:  # noqa: BLE001 - fallback to Streamlit
+            choice = st.selectbox(
+                label,
+                ["Light", "Dark"],
+                index=0 if current == "light" else 1,
+                key=unique_key,
+            )
+    else:
+        choice = st.selectbox(
+            label,
+            ["Light", "Dark"],
+            index=0 if current == "light" else 1,
+            key=unique_key,
+        )
     st.session_state["theme"] = choice.lower()
     apply_theme(st.session_state["theme"])
     return st.session_state["theme"]
