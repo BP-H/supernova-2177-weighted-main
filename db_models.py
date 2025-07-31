@@ -732,7 +732,6 @@ def seed_default_users() -> None:
                     username=username,
                     email=email,
                     hashed_password=hashed,
-
                     bio="Default user",
                 )
                 session.add(user)

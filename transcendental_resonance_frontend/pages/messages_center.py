@@ -120,6 +120,8 @@ def main(main_container=None) -> None:
     if main_container is None:
         main_container = st
 
+    page = "messages_center"
+    st.session_state["active_page"] = page
     theme_selector("Theme", key_suffix="msg_center")
 
     with safe_container(main_container):
@@ -168,9 +170,9 @@ def main(main_container=None) -> None:
         with tab_calls:
             from .chat import render_video_call_controls, render_voice_chat_controls
 
-            render_video_call_controls(key_prefix="msgcenter_")
+            render_video_call_controls(key_prefix=f"{page}_")
             st.divider()
-            render_voice_chat_controls(key_prefix="msgcenter_")
+            render_voice_chat_controls(key_prefix=f"{page}_")
 
 
 # Streamlit multipage support --------------------------------------------------
