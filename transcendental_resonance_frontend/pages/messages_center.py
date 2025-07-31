@@ -95,7 +95,7 @@ def main(main_container=None) -> None:
                 st.session_state.msg_input = ""
                 st.experimental_rerun()
         st.divider()
-        from .chat import (
+        from chat_ui import (
             render_video_call_controls,
             render_voice_chat_controls,
         )
