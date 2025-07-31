@@ -22,10 +22,16 @@ if not hasattr(st, "experimental_page"):
 # Legal & Ethical Safeguards
 
 try:
-    import streamlit_shadcn_ui as shadcn  # type: ignore
-except Exception:  # pragma: no cover - optional dependency or missing at runtime
-    import types
-    shadcn = types.SimpleNamespace()
+    from streamlit_helpers import ui  # centralizes shadcn/NiceGUI fallback logic
+except ImportError:
+    # Fallback in case streamlit_helpers doesn't define it
+    try:
+        import streamlit_shadcn_ui as shadcn  # type: ignore
+        ui = shadcn
+    except Exception:
+        import types
+        ui = types.SimpleNamespace()
+
 
 from datetime import datetime, timezone
 import asyncio
@@ -36,7 +42,6 @@ import logging
 import math
 import sys
 import traceback
-import types
 import sqlite3
 import importlib
 from streamlit.errors import StreamlitAPIException
@@ -223,7 +228,10 @@ class _UIWrapper:
         return _StreamlitTabs(labels)
 
 
-ui_wrapper = _UIWrapper()
+# Ensure `ui.tabs` is present—prefer existing `ui` if patched by streamlit_helpers
+if not hasattr(ui, "tabs"):
+    ui.tabs = _UIWrapper.tabs  # type: ignore[attr-defined]
+
 
 
 
