@@ -134,10 +134,11 @@ def render_top_bar() -> None:
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
+        page = st.session_state.get("active_page", "global")
         search_target.text_input(
             "Search",
             placeholder="Search...",
-            key=f"topbar_search_{st.session_state.get('active_page', 'global')}",
+            key=f"topbar_search_{page}",
             label_visibility="collapsed",
         )
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
@@ -240,7 +241,13 @@ def _render_sidebar_nav(
             )
         else:
             labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
-            choice = st.radio("", labels, index=index, key=key)
+            choice = st.radio(
+                "Navigation",
+                labels,
+                index=index,
+                key=key,
+                label_visibility="collapsed",
+            )
             choice = opts[labels.index(choice)][0]
 
         st.markdown("</div>", unsafe_allow_html=True)

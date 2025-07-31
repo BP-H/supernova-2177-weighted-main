@@ -1739,7 +1739,7 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui_wrapper.tabs(["Validation", "Voting", "Agents"]) as tabs:
+            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
                 selected = tabs.active
                 if selected != display_choice:
                     try:
