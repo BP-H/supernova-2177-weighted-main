@@ -94,7 +94,8 @@ def render_social_tab(main_container=None) -> None:
                                     current_user=user_obj,
                                 )
                             )
-                            st.json(result)
+                            if st.session_state.get("beta_mode"):
+                                st.json(result)
                             st.toast("Success!")
                         except Exception as exc:  # pragma: no cover - UI feedback
                             alert(f"Operation failed: {exc}", "error")
