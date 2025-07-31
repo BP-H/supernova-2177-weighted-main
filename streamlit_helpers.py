@@ -15,6 +15,10 @@ from contextlib import nullcontext
 
 import streamlit as st
 try:
+    from nicegui import ui  # type: ignore
+except Exception:  # pragma: no cover - optional nicegui
+    ui = None  # type: ignore
+try:
     from modern_ui import inject_modern_styles
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
@@ -64,7 +68,10 @@ def header(title: str, *, layout: str = "centered") -> None:
         "<style>.app-container{padding:1rem 2rem;}" "</style>",
         unsafe_allow_html=True,
     )
-    st.header(title)
+    if ui is not None:
+        ui.element("h1", title)
+    else:
+        st.header(title)
 
 
 def safe_apply_theme(theme: str) -> None:
