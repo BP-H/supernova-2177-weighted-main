@@ -725,9 +725,9 @@ def seed_default_users() -> None:
             exists = session.query(Harmonizer).filter_by(username=username).first()
             if not exists:
                 hashed = hashlib.sha256(username.encode()).hexdigest()
-                email = f"{username}@example.com"
+                email = f"{username}@supernova.dev"
                 if username == "demo_user":
-                    email = "demo@example.com"
+                    email = "demo@supernova.dev"
                 user = Harmonizer(
                     username=username,
                     email=email,
@@ -738,5 +738,4 @@ def seed_default_users() -> None:
         session.commit()
     finally:
         session.close()
-
 
