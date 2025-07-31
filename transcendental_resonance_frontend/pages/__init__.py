@@ -9,6 +9,5 @@ __all__ = [
     "feed",
     "social",
     "profile",
-    "feed",
 ]
 
