@@ -1850,6 +1850,20 @@ def ensure_database_exists() -> bool:
                         """
                     )
                 )
+                conn.execute(
+                    text(
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('guest','guest@example.com','x','Guest account',1,0,0,1);"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "INSERT INTO harmonizers (username, email, hashed_password, bio,"
+                        " is_active, is_admin, is_genesis, consent_given)"
+                        " VALUES ('demo_user','demo@example.com','x','Demo profile',1,0,0,1);"
+                    )
+                )
         return True
     except (OperationalError, sqlite3.Error) as exc:
         logger.error("Database initialization failed: %s", exc)

@@ -4,7 +4,7 @@
 import asyncio
 import streamlit as st
 from frontend.light_theme import inject_light_theme
-from streamlit_helpers import alert, safe_container, header
+from streamlit_helpers import alert, safe_container, header, get_active_user
 
 
 def safe_markdown(text: str, **kwargs) -> None:
@@ -65,7 +65,7 @@ def render_social_tab(main_container=None) -> None:
             st.info("Social routes not available")
             return
 
-        current_user = st.session_state.get("active_user", "")
+        current_user = get_active_user()
         cols = st.columns(2)
         with cols[0]:
             current_user = st.text_input(
