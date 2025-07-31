@@ -89,9 +89,18 @@ def render_profile(user_data: Optional[Dict[str, object]] = None) -> None:
 
         if feed:
             st.markdown("<div class='feed-grid'>", unsafe_allow_html=True)
-            for src in feed:
+            for i, src in enumerate(feed):
                 st.markdown(
-                    f"<img src='{src}' class='feed-thumb' alt='feed item'>",
+                    f"""
+                    <div class='feed-item'>
+                        <img src='{src}' class='feed-thumb' alt='feed item'>
+                        <div class='reactions'>
+                            <button class='reaction-btn'>❤️</button>
+                            <button class='reaction-btn'>💬</button>
+                            <button class='reaction-btn'>🔄</button>
+                        </div>
+                    </div>
+                    """,
                     unsafe_allow_html=True,
                 )
             st.markdown("</div>", unsafe_allow_html=True)
