@@ -8,5 +8,6 @@ __all__ = [
     "chat",
     "social",
     "profile",
+    "feed",
 ]
 
