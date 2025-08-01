@@ -2,6 +2,8 @@ import os
 import importlib
 from fastapi.testclient import TestClient
 import superNova_2177 as sn
+import db_models
+import login_router
 import uuid
 import pytest
 
@@ -12,8 +14,11 @@ def client(tmp_path, monkeypatch):
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
     monkeypatch.setenv("SECRET_KEY", "testsecret")
+    importlib.reload(db_models)
+    importlib.reload(login_router)
     sn_mod = importlib.reload(sn)
     sn_mod.create_app()
+    sn_mod.Base.metadata.create_all(bind=sn_mod.engine)
     client = TestClient(sn_mod.app)
     with sn_mod.SessionLocal() as db:
         user = sn_mod.Harmonizer(

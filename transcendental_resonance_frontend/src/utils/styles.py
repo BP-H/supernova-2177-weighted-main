@@ -1,6 +1,7 @@
 """Styling utilities for the Transcendental Resonance frontend."""
 
 from typing import Dict, Optional
+from frontend.theme import set_theme as _st_set_theme
 
 try:
     from nicegui import ui  # type: ignore
@@ -119,14 +120,18 @@ def apply_global_styles() -> None:
 
 
 def set_theme(name: str) -> None:
-    """Switch the active theme by name and reapply global styles."""
+    """Switch the active theme and reapply global styles.
+
+    This wrapper updates local theme tracking and delegates to
+    :func:`frontend.theme.set_theme` for CSS injection.
+    """
     global ACTIVE_THEME_NAME, ACTIVE_ACCENT
     ACTIVE_THEME_NAME = name if name in THEMES else "dark"
-    # reset accent to theme default when switching themes
     ACTIVE_ACCENT = THEMES[ACTIVE_THEME_NAME]["accent"]
     ui.run_javascript(f"localStorage.setItem('theme', '{ACTIVE_THEME_NAME}')")
     ui.run_javascript(f"localStorage.setItem('accent', '{ACTIVE_ACCENT}')")
     apply_global_styles()
+    _st_set_theme(ACTIVE_THEME_NAME)
 
 
 def get_theme() -> Dict[str, str]:

@@ -12,7 +12,7 @@ from utils.api import api_call, connect_ws, listen_ws
 from quantum_futures import generate_speculative_payload
 from nicegui import ui
 from utils import api
-from pages.debug_panel_page import debug_panel_page
+from transcendental_resonance_frontend.pages.debug_panel_page import debug_panel_page
 
 
 @pytest.mark.asyncio

@@ -66,7 +66,7 @@ DRAWER_CSS = """
 [data-testid='stSidebar']{background:var(--card);border-right:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;z-index:1002;}
 [data-testid='stSidebar'].collapsed{transform:translateX(-100%);}
 @media(min-width:768px){[data-testid='stSidebar']{transform:none!important;}}
-#drawer_btn{display:none;}
+#drawer_btn{display:none;background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;}
 @media(max-width:768px){#drawer_btn{display:block;}}
 </style>
 """
@@ -78,6 +78,7 @@ BOTTOM_TAB_TEMPLATE = """
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
 @media(max-width:768px){.sn-bottom-tabs{display:flex;align-items:center;justify-content:space-around;}}
+@media(min-width:768px){.sn-bottom-tabs{display:none!important;}}
 </style>
 <div class='sn-bottom-tabs'>
   <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
@@ -124,10 +125,21 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
     if "_drawer_css" not in st.session_state:
         st.markdown(DRAWER_CSS, unsafe_allow_html=True)
         st.session_state["_drawer_css"] = True
-    collapsed = not st.session_state.get("_drawer_open", True)
     st.markdown(
-        f"<script>var sb=document.querySelector('[data-testid=\"stSidebar\"]');"
-        f"if(sb) sb.classList.toggle('collapsed', {str(collapsed).lower()});</script>",
+        """
+        <script>
+        const toggle=window.parent.document.getElementById('drawer_toggle');
+        const sb=document.querySelector('[data-testid="stSidebar"]');
+        function syncDrawer(){
+            if(!sb||!toggle) return;
+            if(window.innerWidth>=768){sb.classList.remove('collapsed');toggle.checked=true;return;}
+            sb.classList.toggle('collapsed', !toggle.checked);
+        }
+        syncDrawer();
+        toggle?.addEventListener('change', syncDrawer);
+        window.addEventListener('resize', syncDrawer);
+        </script>
+        """,
         unsafe_allow_html=True,
     )
     return st.sidebar
@@ -155,13 +167,21 @@ def render_top_bar() -> None:
     if "PYTEST_CURRENT_TEST" in os.environ:  # unit-test stub safety
         return
 
-    # Determine initial drawer state based on viewport width
+    # Determine initial drawer state using localStorage and viewport width
     if "_drawer_open" not in st.session_state:
+        stored = None
         try:
-            width = st_javascript("window.innerWidth")
-            st.session_state["_drawer_open"] = bool(width) and int(width) >= 768
+            stored = st_javascript("window.localStorage.getItem('drawer_open')")
         except Exception:
-            st.session_state["_drawer_open"] = True
+            stored = None
+        if isinstance(stored, str) and stored:
+            st.session_state["_drawer_open"] = stored.lower() == "true"
+        else:
+            try:
+                width = st_javascript("window.innerWidth")
+                st.session_state["_drawer_open"] = bool(width) and int(width) >= 768
+            except Exception:
+                st.session_state["_drawer_open"] = True
 
     # inject styles & FA icons once
     st.markdown(
@@ -176,13 +196,12 @@ def render_top_bar() -> None:
   background:rgba(18,18,18,.65);
 }
 @media(max-width:600px){.sn-topbar{flex-wrap:wrap}}
-.sn-topbar input{
+.sn-topbar input[type='text']{
   flex:1;padding:.45rem .7rem;border-radius:8px;
   border:1px solid rgba(255,255,255,.25);min-width:140px;
   background:rgba(255,255,255,.90);font-size:.9rem;
 }
-#drawer_btn button{background:none;border:none;color:#fff;font-size:1.3rem;}
-#drawer_btn{display:none}
+#drawer_btn{background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:none}
 @media(max-width:768px){#drawer_btn{display:block}}
 .sn-bell{position:relative;background:none;border:none;font-size:1.3rem;color:#fff;cursor:pointer}
 .sn-bell::before{font-family:"Font Awesome 6 Free";font-weight:900;content:"\\f0f3"}
@@ -204,8 +223,17 @@ def render_top_bar() -> None:
         return
     menu_col, logo_col, search_col, bell_col, beta_col, avatar_col = cols
 
-    if menu_col.button("☰", key="drawer_btn", help="Menu", type="secondary"):
-        st.session_state["_drawer_open"] = not st.session_state.get("_drawer_open", True)
+    menu_col.markdown(
+        f"""
+        <input type='checkbox' id='drawer_toggle' {'checked' if st.session_state.get('_drawer_open', True) else ''} hidden>
+        <label for='drawer_toggle' id='drawer_btn'>☰</label>
+        <script>
+        const dt=document.getElementById('drawer_toggle');
+        dt?.addEventListener('change',()=>localStorage.setItem('drawer_open', dt.checked));
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
 
     logo_col.markdown('<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True)
 
@@ -223,7 +251,7 @@ def render_top_bar() -> None:
         options = "".join(f"<option value='{s}'></option>" for s in sugs)
         search_col.markdown(
             f"<datalist id='recent-sugs'>{options}</datalist>"
-            "<script>window.parent.document.querySelector('.sn-topbar input')?.setAttribute('list','recent-sugs');</script>",
+            "<script>window.parent.document.querySelector('.sn-topbar input[type=text]')?.setAttribute('list','recent-sugs');</script>",
             unsafe_allow_html=True,
         )
 
