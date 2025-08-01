@@ -91,6 +91,7 @@ def main(container: st.DeltaGenerator | None = None) -> None:
                             use_container_width=True,
                             alt=msg.get("text", "message image"),
                         )
+
                     st.write(msg["text"])
 
             # Input box
