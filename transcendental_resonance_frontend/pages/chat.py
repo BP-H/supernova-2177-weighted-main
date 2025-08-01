@@ -24,7 +24,7 @@ def main(main_container=None) -> None:
 
     container_ctx = safe_container(main_container)
     with container_ctx:
-        header_col, status_col = st.columns([8, 1])
+        header_col, status_col = st.columns([0.8, 0.2])
         with header_col:
             header("💬 Chat")
         with status_col:

@@ -86,7 +86,7 @@ def render_chat_interface() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='chat-input-row'>", unsafe_allow_html=True)
-        col1, col2 = st.columns([4, 1])
+        col1, col2 = st.columns([0.8, 0.2])
         with col1:
             msg = st.text_input(
                 "Message",
