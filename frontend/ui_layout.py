@@ -97,6 +97,7 @@ def render_top_bar() -> None:
     """Render a translucent top bar with a logo, search input and controls."""
     st.markdown(
         """
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <style>
         .sn-topbar {
             position: sticky;
@@ -116,6 +117,14 @@ def render_top_bar() -> None:
             border: 1px solid rgba(255,255,255,0.3);
             background: rgba(255,255,255,0.85);
         }
+        .sn-topbar button[aria-label="Notifications"] span {
+            display: none;
+        }
+        .sn-topbar button[aria-label="Notifications"]::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            content: "\f0f3"; /* fa-bell */
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -123,23 +132,49 @@ def render_top_bar() -> None:
 
     with st.container():
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-        cols = st.columns([1, 4, 2, 1])
+        cols = st.columns([1, 4, 1, 2, 1])
         logo_col = cols[0] if len(cols) > 0 else st
         search_col = cols[1] if len(cols) > 1 else st
-        beta_col = cols[2] if len(cols) > 2 else st
-        avatar_col = cols[3] if len(cols) > 3 else st
+        notif_col = cols[2] if len(cols) > 2 else st
+        beta_col = cols[3] if len(cols) > 3 else st
+        avatar_col = cols[4] if len(cols) > 4 else st
         logo_target = logo_col if hasattr(logo_col, "markdown") else st
         logo_target.markdown(
             '<img src="https://placehold.co/32x32?text=SN" width="32" />',
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
-        search_target.text_input(
+        search_key = f"{st.session_state.get('active_page','global')}_topbar_search"
+        search_value = search_target.text_input(
             "Search",
             placeholder="Search...",
-            key=f"{st.session_state.get('active_page','global')}_topbar_search",
+            key=search_key,
             label_visibility="collapsed",
         )
+        if search_value:
+            recent = st.session_state.setdefault("recent_searches", [])
+            if search_value not in recent:
+                recent.append(search_value)
+                st.session_state["recent_searches"] = recent[-5:]
+        suggestions = st.session_state.get("recent_searches", [])
+        if suggestions:
+            options = "".join(f"<option value='{s}'></option>" for s in suggestions)
+            search_target.markdown(
+                f"""<datalist id='recent-searches'>{options}</datalist>
+                <script>
+                const input = window.parent.document.querySelector('.sn-topbar input');
+                if(input) {{ input.setAttribute('list','recent-searches'); }}
+                </script>""",
+                unsafe_allow_html=True,
+            )
+        notif_target = notif_col if hasattr(notif_col, "popover") else st
+        with notif_target.popover("Notifications"):
+            notes = st.session_state.get("notifications", [])
+            if notes:
+                for n in notes:
+                    st.write(n)
+            else:
+                st.write("No notifications")
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
         beta_enabled = toggle_target.toggle(
             "Beta Mode",
