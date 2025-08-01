@@ -1,7 +1,6 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-Interactive social-feed page with mock stories, posts, reactions, and comments.
 
 from __future__ import annotations
 
