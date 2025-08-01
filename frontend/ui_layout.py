@@ -110,6 +110,12 @@ def render_top_bar() -> None:
             background: rgba(30, 30, 30, 0.6);
             backdrop-filter: blur(8px);
         }
+        @media (max-width: 600px) {
+            .sn-topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
         .sn-topbar input {
             flex: 1;
             padding: 0.25rem 0.5rem;
@@ -132,7 +138,7 @@ def render_top_bar() -> None:
 
     with st.container():
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-        cols = st.columns([1, 4, 1, 2, 1])
+        cols = st.columns([0.125, 0.5, 0.25, 0.125])
         logo_col = cols[0] if len(cols) > 0 else st
         search_col = cols[1] if len(cols) > 1 else st
         notif_col = cols[2] if len(cols) > 2 else st

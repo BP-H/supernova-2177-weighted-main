@@ -52,7 +52,7 @@ def render_profile_card(user_data: Optional[Dict[str, object]] = None) -> None:
 
     with st.container():
         st.markdown("<div class='profile-container'>", unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 3])
+        col1, col2 = st.columns([0.25, 0.75])
         with col1:
             st.markdown(
                 f"<img class='profile-pic' src='{data.get('avatar_url')}' alt='avatar'>",
