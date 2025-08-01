@@ -1682,8 +1682,8 @@ def main() -> None:
             st.session_state["sidebar_nav"] = "validation"
             try:
                 st.query_params["page"] = "validation"
-            except AttributeError:
-                st.experimental_set_query_params(page="validation")
+            except Exception:
+                pass
             if "load_page_with_fallback" in globals():
                 load_page_with_fallback(display_choice, None)
             else:
@@ -1692,8 +1692,8 @@ def main() -> None:
 
         try:
             st.query_params["page"] = display_choice
-        except AttributeError:
-            st.experimental_set_query_params(page=display_choice)
+        except Exception:
+            pass
 
         # Sync tab selection with current page choice
         st.session_state.setdefault("_main_tabs", display_choice)

@@ -472,10 +472,7 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
     try:                                           # Streamlit ≥1.29
         st.query_params["theme"] = chosen
     except Exception:                              # noqa: BLE001
-        try:                                       # classic API
-            st.experimental_set_query_params(theme=chosen)
-        except Exception:                          # noqa: BLE001
-            pass
+        pass
 
     return chosen
 
@@ -505,10 +502,7 @@ def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> 
     try:
         st.query_params["theme"] = chosen
     except Exception:
-        try:
-            st.experimental_set_query_params(theme=chosen)
-        except Exception:
-            pass
+        pass
 
     return chosen
 
