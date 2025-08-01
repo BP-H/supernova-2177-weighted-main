@@ -97,6 +97,7 @@ def render_top_bar() -> None:
     """Render a translucent top bar with a logo, search input and controls."""
     st.markdown(
         """
+        <link rel="stylesheet" href="/static/fontawesome.min.css">
         <style>
         .sn-topbar {
             position: sticky;
@@ -116,18 +117,31 @@ def render_top_bar() -> None:
             border: 1px solid rgba(255,255,255,0.3);
             background: rgba(255,255,255,0.85);
         }
+        .sn-notif { position: relative; font-size: 1.25rem; }
+        .sn-notif .sn-badge {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.4rem;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 0 0.25rem;
+            font-size: 0.6rem;
+        }
         </style>
+        <script type="module" src="/static/fontawesome.min.js"></script>
         """,
         unsafe_allow_html=True,
     )
 
     with st.container():
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-        cols = st.columns([1, 4, 2, 1])
+        cols = st.columns([1, 4, 1, 2, 1])
         logo_col = cols[0] if len(cols) > 0 else st
         search_col = cols[1] if len(cols) > 1 else st
-        beta_col = cols[2] if len(cols) > 2 else st
-        avatar_col = cols[3] if len(cols) > 3 else st
+        notif_col = cols[2] if len(cols) > 2 else st
+        beta_col = cols[3] if len(cols) > 3 else st
+        avatar_col = cols[4] if len(cols) > 4 else st
         logo_target = logo_col if hasattr(logo_col, "markdown") else st
         logo_target.markdown(
             '<img src="https://placehold.co/32x32?text=SN" width="32" />',
@@ -139,6 +153,11 @@ def render_top_bar() -> None:
             placeholder="Search...",
             key=f"{st.session_state.get('active_page','global')}_topbar_search",
             label_visibility="collapsed",
+        )
+        notif_target = notif_col if hasattr(notif_col, "markdown") else st
+        notif_target.markdown(
+            '<div class="sn-notif"><i class="fa fa-bell"></i><span class="sn-badge" id="notif-count">3</span></div>',
+            unsafe_allow_html=True,
         )
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
         beta_enabled = toggle_target.toggle(
@@ -156,6 +175,30 @@ def render_top_bar() -> None:
             unsafe_allow_html=True,
         )
         st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <script>
+            document.addEventListener('DOMContentLoaded', function(){
+                var input = document.querySelector('.sn-topbar input');
+                if(!input) return;
+                var timer;
+                input.addEventListener('input', function(){
+                    clearTimeout(timer);
+                    var q = this.value.trim();
+                    if(!q) return;
+                    timer = setTimeout(async () => {
+                        try {
+                            const r = await fetch('/suggest?q=' + encodeURIComponent(q));
+                            const data = await r.json();
+                            window.dispatchEvent(new CustomEvent('search-suggestions', {detail: data}));
+                        } catch(e) { console.error(e); }
+                    }, 300);
+                });
+            });
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def _render_sidebar_nav(
