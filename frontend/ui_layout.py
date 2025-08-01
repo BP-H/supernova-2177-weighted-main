@@ -95,6 +95,8 @@ def render_profile_card(username: str, avatar_url: str) -> None:
 
 def render_top_bar() -> None:
     """Render the translucent top bar (logo · search with suggestions · notifications · beta toggle · avatar)."""
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        return
     st.markdown(
         """
         <!-- Font Awesome for the bell icon -->

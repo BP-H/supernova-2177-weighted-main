@@ -215,6 +215,16 @@ class Harmonizer(Base):
         "SimulationLog", back_populates="harmonizer", cascade="all, delete-orphan"
     )
 
+    def set_password(self, password: str) -> None:
+        """Hash ``password`` and store it on the model."""
+        self.hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+    def verify_password(self, password: str) -> bool:
+        """Return ``True`` if ``password`` matches the stored hash."""
+        return (
+            hashlib.sha256(password.encode()).hexdigest() == self.hashed_password
+        )
+
 
 class VibeNode(Base):
     __tablename__ = "vibenodes"
