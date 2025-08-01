@@ -148,8 +148,12 @@ This project depends on libraries such as `fastapi`, `pydantic-settings`, `struc
    # Windows
    .\venv\Scripts\activate
    ```
-4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
-5. On first launch the application seeds `harmonizers.db` with an `admin`,
+4. **Install the pre-commit hooks** so linting and the patch monitor run automatically:
+   ```bash
+   pre-commit install
+   ```
+5. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
+6. On first launch the application seeds `harmonizers.db` with an `admin`,
    `guest`, and `demo_user` account so the UI has sample profiles ready.
 
 ### Extras
