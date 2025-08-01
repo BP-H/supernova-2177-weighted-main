@@ -284,8 +284,7 @@ not set, a secure random value will be generated automatically:
 export SECRET_KEY="your-random-secret"
 ```
 
-`METRICS_PORT` configures the Prometheus metrics server port. Override it if the
-default `8001` is unavailable:
+`METRICS_PORT` configures the Prometheus metrics server port. If unset a free port will be selected automatically. Override it if the default `8001` is unavailable:
 
 ```bash
 export METRICS_PORT=9000
