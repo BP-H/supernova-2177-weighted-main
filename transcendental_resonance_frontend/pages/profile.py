@@ -131,7 +131,6 @@ def main(main_container=None) -> None:
         # Active user editable section
         current = get_active_user()
         current = st.text_input("Username", value=current, key="profile_user")
-        st.session_state["active_user"] = current
         _render_profile(current)
 
         # Divider + API Keys
