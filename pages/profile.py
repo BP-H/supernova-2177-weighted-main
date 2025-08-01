@@ -1,32 +1,41 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+"""Proxy loader for the Profile page."""
 
-from frontend.profile_card import render_profile_card
+from __future__ import annotations
+
+import importlib
+import streamlit as st
+
+
+def _load_real_page() -> bool:
+    try:
+        mod = importlib.import_module(
+            "transcendental_resonance_frontend.pages.profile"
+        )
+    except ModuleNotFoundError:
+        return False
+    for fn in ("main", "render"):
+        if hasattr(mod, fn):
+            getattr(mod, fn)()
+            return True
+    return False
+
+
+def _placeholder() -> None:
+    st.header("Profile 👤")
+    st.info("Profile module not installed.")
+
 
 def main() -> None:
-    # ── fetch / derive your data ──────────────────────────
-    current_user  = st.session_state.get("active_user", "guest")
-    avatar_url    = f"https://robohash.org/{current_user}.png?size=100x100"
-    bio_or_head   = "Default user"
-    follower_cnt  = get_followers(current_user)        # replace w/ real fn
-    following_cnt = get_following(current_user)
-    post_cnt      = get_post_count(current_user)
-    is_following  = is_user_followed(current_user)     # bool
+    if not _load_real_page():
+        _placeholder()
 
-    render_profile_card(
-        username=current_user,
-        avatar_url=avatar_url,
-        tagline=bio_or_head,
-        stats={
-            "Followers": follower_cnt,
-            "Following": following_cnt,
-            "Posts":     post_cnt,
-        },
-        actions=[
-            "Unfollow" if is_following else "Follow",
-            "Message",
-        ],
-    )
 
-    # …everything else (API-credentials box, model picker, etc) …
+def render() -> None:
+    main()
+
+
+if __name__ == "__main__":
+    main()
