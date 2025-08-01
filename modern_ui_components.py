@@ -157,6 +157,8 @@ def _icon_html(name: str) -> str:
     """Return HTML for an icon."""
     if not name:
         return ""
+    if name.startswith("fa"):
+        return f"<i class='{name}'></i>"
     if HAS_LUCIDE:
         return f"<i class='icon' data-lucide='{name}'></i>"
     return name

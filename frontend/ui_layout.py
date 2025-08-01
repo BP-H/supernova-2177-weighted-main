@@ -144,7 +144,6 @@ def render_top_bar() -> None:
     # ────────────────────────────────────────────────────────────────────
     with st.container():
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-
         # Columns: logo | search | bell | beta | avatar
         cols       = st.columns([1, 4, 1, 2, 1])
         logo_col   = cols[0]
@@ -155,7 +154,10 @@ def render_top_bar() -> None:
 
         # ── Logo ────────────────────────────────────────────────────────
         logo_col.markdown(
-            '<img src="https://placehold.co/32x32?text=SN" width="32" />',
+            '<i class="fa-solid fa-rocket fa-lg"></i>',
+            unsafe_allow_html=True,
+        )
+
             unsafe_allow_html=True,
         )
 
@@ -215,10 +217,9 @@ def render_top_bar() -> None:
             st.query_params["beta"] = "1" if beta_enabled else "0"
         except Exception:
             st.experimental_set_query_params(beta="1" if beta_enabled else "0")
-
         # ── Avatar ──────────────────────────────────────────────────────
         avatar_col.markdown(
-            '<img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />',
+            '<i class="fa-solid fa-user-circle fa-lg"></i>',
             unsafe_allow_html=True,
         )
 
@@ -369,12 +370,12 @@ def render_title_bar(icon: str, label: str) -> None:
     )
 
 
-def show_preview_badge(text: str = "🚧 Preview Mode") -> None:
+def show_preview_badge(text: str = "Preview Mode") -> None:
     """Overlay a badge used when a fallback or WIP page is shown."""
     st.markdown(
         f"<div style='position:fixed; top:1rem; right:1rem; background:#ffc107; "
         f"color:#000; padding:0.25rem 0.5rem; border-radius:4px; z-index:1000;'>"
-        f"{text}</div>",
+        f"<i class='fa-solid fa-triangle-exclamation'></i> {text}</div>",
         unsafe_allow_html=True,
     )
 
