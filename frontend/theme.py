@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+
 import streamlit as st
 
 
@@ -90,10 +90,15 @@ button, .stButton>button {{
 </style>"""
 
 
-def set_theme(mode: Literal["light", "dark"]) -> None:
-    """Apply the global CSS for *mode* if not already active."""
+def set_theme(name: str) -> None:
+    """Apply the global CSS for *name* and remember the choice."""
+    mode = name.lower()
+    if mode not in THEMES:
+        mode = "light"
+
     if st.session_state.get("_theme") == mode:
         return
+
     st.markdown(get_global_css(mode), unsafe_allow_html=True)
     st.session_state["_theme"] = mode
 

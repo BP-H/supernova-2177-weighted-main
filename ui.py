@@ -325,15 +325,9 @@ from streamlit_helpers import (
 from frontend.theme import set_theme
 
 try:
-    from modern_ui import (
-        inject_modern_styles,
-        inject_light_theme,
-    )
+    from modern_ui import inject_modern_styles
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
-        return None
-
-    def inject_light_theme(*_a, **_k):
         return None
 
 
@@ -1493,7 +1487,7 @@ def main() -> None:
 
     # Simple light theme fallback
     try:
-        apply_theme("light")
+        set_theme("light")
     except Exception:  # pragma: no cover
         pass
 
@@ -1544,7 +1538,7 @@ def main() -> None:
         return
 
     try:
-        apply_theme("light")
+        set_theme("light")
 
 
         # Inject keyboard shortcuts for quick navigation
