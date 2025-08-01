@@ -182,10 +182,15 @@ def _render_post(post: Post) -> None:
             "</div>",
             unsafe_allow_html=True,
         )
-        # Media
-        st.image(post.media, use_container_width=True, output_format="JPEG")
-        # Caption
+        # Media with alt text
         caption = sanitize_text(post.caption)
+        st.image(
+            post.media,
+            use_container_width=True,
+            output_format="JPEG",
+            alt=caption,
+        )
+        # Caption
         st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
 
         # Reactions & comments
