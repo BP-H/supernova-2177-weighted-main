@@ -131,9 +131,10 @@ def sidebar_container() -> st.delta_generator.DeltaGenerator:
         const toggle=window.parent.document.getElementById('drawer_toggle');
         const sb=document.querySelector('[data-testid="stSidebar"]');
         function syncDrawer(){
-            if(!sb||!toggle) return;
-            if(window.innerWidth>=768){sb.classList.remove('collapsed');toggle.checked=true;return;}
-            sb.classList.toggle('collapsed', !toggle.checked);
+            if(!sb) return;
+            const open = toggle? toggle.checked : window.innerWidth>=768;
+            sb.classList.toggle('collapsed', !open);
+            if(toggle) localStorage.setItem('drawer_open', open);
         }
         syncDrawer();
         toggle?.addEventListener('change', syncDrawer);
@@ -229,7 +230,10 @@ def render_top_bar() -> None:
         <label for='drawer_toggle' id='drawer_btn'>☰</label>
         <script>
         const dt=document.getElementById('drawer_toggle');
-        dt?.addEventListener('change',()=>localStorage.setItem('drawer_open', dt.checked));
+        const saved = localStorage.getItem('drawer_open');
+        if(dt && saved !== null) dt.checked = saved === 'true';
+        function storeDrawer(){{ if(dt) localStorage.setItem('drawer_open', dt.checked); }}
+        dt?.addEventListener('change', storeDrawer);
         </script>
         """,
         unsafe_allow_html=True,
@@ -240,7 +244,12 @@ def render_top_bar() -> None:
     # search box with suggestions
     pid = st.session_state.get("active_page", "global")
     q_key = f"{pid}_search"
-    q = search_col.text_input("", placeholder="Search…", key=q_key, label_visibility="collapsed")
+    q = search_col.text_input(
+        "Search",
+        placeholder="Search…",
+        key=q_key,
+        label_visibility="hidden",
+    )
     if q:
         recent = st.session_state.setdefault("_recent_q", [])
         if q not in recent:
