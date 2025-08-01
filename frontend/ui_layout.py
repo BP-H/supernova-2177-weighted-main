@@ -274,7 +274,7 @@ def render_top_bar() -> None:
     try:
         st.query_params["beta"] = "1" if beta else "0"
     except Exception:
-        st.experimental_set_query_params(beta="1" if beta else "0")
+        pass
 
     # avatar placeholder
     avatar_col.markdown('<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True)

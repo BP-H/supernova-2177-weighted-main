@@ -157,7 +157,6 @@ def test_main_defaults_to_validation(monkeypatch):
     params = {"page": "Unknown"}
     monkeypatch.setattr(st, "query_params", params)
     monkeypatch.setattr(st, "experimental_get_query_params", lambda: params)
-    monkeypatch.setattr(st, "experimental_set_query_params", lambda **k: params.update(k))
 
 
     for helper in [
