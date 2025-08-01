@@ -425,7 +425,7 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
         try:
             params = st.query_params        # Streamlit ≥1.29
         except AttributeError:
-            params = st.experimental_get_query_params()
+            params = st.experimental_get_query_params()  # Legacy fallback
 
         param_theme = params.get("theme", None)
         if isinstance(param_theme, list):          # multi-param edge-case
