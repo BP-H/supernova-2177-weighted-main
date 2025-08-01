@@ -130,7 +130,7 @@ def render_top_bar() -> None:
         avatar_col = cols[3] if len(cols) > 3 else st
         logo_target = logo_col if hasattr(logo_col, "markdown") else st
         logo_target.markdown(
-            '<img src="https://placehold.co/32x32?text=SN" width="32" />',
+            '<i class="fa-solid fa-rocket fa-lg"></i>',
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
@@ -152,7 +152,7 @@ def render_top_bar() -> None:
             st.experimental_set_query_params(beta="1" if beta_enabled else "0")
         avatar_target = avatar_col if hasattr(avatar_col, "markdown") else st
         avatar_target.markdown(
-            '<img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />',
+            '<i class="fa-solid fa-user-circle fa-lg"></i>',
             unsafe_allow_html=True,
         )
         st.markdown('</div>', unsafe_allow_html=True)
@@ -276,12 +276,12 @@ def render_title_bar(icon: str, label: str) -> None:
     )
 
 
-def show_preview_badge(text: str = "🚧 Preview Mode") -> None:
+def show_preview_badge(text: str = "Preview Mode") -> None:
     """Overlay a badge used when a fallback or WIP page is shown."""
     st.markdown(
         f"<div style='position:fixed; top:1rem; right:1rem; background:#ffc107; "
         f"color:#000; padding:0.25rem 0.5rem; border-radius:4px; z-index:1000;'>"
-        f"{text}</div>",
+        f"<i class='fa-solid fa-triangle-exclamation'></i> {text}</div>",
         unsafe_allow_html=True,
     )
 
