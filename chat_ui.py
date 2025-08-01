@@ -62,8 +62,13 @@ def render_chat_interface() -> None:
     st.session_state.setdefault("chat_history", [])
     st.markdown(CHAT_CSS, unsafe_allow_html=True)
 
+    page_prefix = f"{st.session_state.get('active_page', 'global')}_"
     language = st.session_state.get("chat_lang", "en")
-    language = st.selectbox("Language", ["en", "es", "ko"], key="chat_lang")
+    language = st.selectbox(
+        "Language",
+        ["en", "es", "ko"],
+        key=f"{page_prefix}chat_lang",
+    )
 
     messages_tab, calls_tab = st.tabs(["Messages", "Calls"])
 
@@ -85,21 +90,21 @@ def render_chat_interface() -> None:
         with col1:
             msg = st.text_input(
                 "Message",
-                key="chat_input",
+                key=f"{page_prefix}chat_input",
                 label_visibility="collapsed",
                 placeholder="Type a message...",
             )
         with col2:
-            if st.button("Send", key="send_chat") and msg:
+            if st.button("Send", key=f"{page_prefix}send_chat") and msg:
                 st.session_state["chat_history"].append({"sender": "You", "text": msg})
                 st.session_state.chat_input = ""
                 st.experimental_rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
     with calls_tab:
-        render_video_call_controls()
+        render_video_call_controls(key_prefix=page_prefix)
         st.divider()
-        render_voice_chat_controls()
+        render_voice_chat_controls(key_prefix=page_prefix)
 
 
 def render_video_call_controls(key_prefix: str | None = None) -> None:

@@ -54,12 +54,14 @@ def render_chat_panel(user: str) -> None:
     msgs = st.session_state["messages"].setdefault(user, [])
     for msg in msgs:
         st.write(f"{msg['sender']}: {msg['text']}")
-    txt = st.text_input("Message", key="msg_input")
-    if st.button("Send", key="send_btn") and txt:
+
+    key_prefix = f"{st.session_state.get('active_page', 'global')}_"
+    txt = st.text_input("Message", key=f"{key_prefix}msg_input")
+    if st.button("Send", key=f"{key_prefix}send_btn") and txt:
         msgs.append({"sender": "You", "text": txt})
         st.session_state.msg_input = ""
         st.experimental_rerun()
-    if st.button("Start Video Call", key="video_call"):
+    if st.button("Start Video Call", key=f"{key_prefix}video_call"):
         st.toast("Video call integration pending")
 
 
