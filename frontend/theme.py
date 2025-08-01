@@ -74,7 +74,12 @@ def get_global_css(theme: bool | str = True) -> str:
 
 body {{
     background: var(--bg) !important;
+    font-family: Helvetica, Arial, sans-serif;
     transition: background var(--transition);
+}}
+
+button, .stButton>button {{
+    border-radius: var(--radius);
 }}
 
 @keyframes fade-in {{

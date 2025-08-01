@@ -3,7 +3,7 @@
 # Legal & Ethical Safeguards
 import asyncio
 import streamlit as st
-from frontend.light_theme import inject_light_theme
+from frontend.theme import apply_theme
 from streamlit_helpers import (
     alert,
     safe_container,
@@ -70,7 +70,7 @@ def _load_profile(username: str) -> tuple[dict, dict, dict]:
     return user, followers, following
 
 
-inject_light_theme()
+apply_theme("light")
 
 
 
