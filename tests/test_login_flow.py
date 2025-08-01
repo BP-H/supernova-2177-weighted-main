@@ -20,6 +20,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DB_MODE", "central")
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+    db_models.init_db(f"sqlite:///{db_path}")
     monkeypatch.setenv("SECRET_KEY", "testsecret")
     importlib.reload(db_models)
     importlib.reload(login_router)
