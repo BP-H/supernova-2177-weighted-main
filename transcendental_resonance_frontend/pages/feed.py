@@ -14,7 +14,7 @@ import streamlit as st
 
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import theme_selector, safe_container
+from streamlit_helpers import theme_toggle, safe_container
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -167,7 +167,7 @@ def _page_body() -> None:
     """Render the main feed inside the current container."""
     _init_state()
 
-    theme_selector("Theme", key_suffix="feed")
+    theme_toggle("Dark Mode", key_suffix="feed")
     st.toggle("beta mode", key="beta_mode")
 
     posts: List[Post] = st.session_state["posts"]

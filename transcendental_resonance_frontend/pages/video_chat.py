@@ -11,7 +11,7 @@ from modern_ui import inject_modern_styles
 
 from ai_video_chat import create_session
 from video_chat_router import ConnectionManager
-from streamlit_helpers import safe_container, header, theme_selector
+from streamlit_helpers import safe_container, header, theme_toggle
 
 inject_light_theme()
 inject_modern_styles()
@@ -35,7 +35,7 @@ manager = ConnectionManager()
 def main(main_container=None) -> None:
     """Render the simple video chat demo."""
     container = main_container if main_container is not None else st
-    theme_selector("Theme", key_suffix="video_chat")
+    theme_toggle("Dark Mode", key_suffix="video_chat")
 
     container_ctx = safe_container(container)
     with container_ctx:

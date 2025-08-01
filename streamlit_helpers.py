@@ -525,6 +525,39 @@ def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> st
 
     return chosen
 
+
+def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
+    """Switch between light and dark themes using a toggle widget."""
+
+    inject_modern_styles()
+
+    if key_suffix is None:
+        key_suffix = "default"
+
+    theme_key = f"theme_{key_suffix}"
+    toggle_key = f"theme_toggle_{key_suffix}"
+
+    current = st.session_state.get(theme_key, "light")
+    st.markdown("<div class='fade-in rounded'>", unsafe_allow_html=True)
+    is_dark = st.toggle(label, value=current == "dark", key=toggle_key)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    chosen = "dark" if is_dark else "light"
+    st.session_state[theme_key] = chosen
+    st.session_state["theme"] = chosen
+
+    apply_theme(chosen)
+
+    try:
+        st.query_params["theme"] = chosen
+    except Exception:
+        try:
+            st.experimental_set_query_params(theme=chosen)
+        except Exception:
+            pass
+
+    return chosen
+
 def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGenerator":  # type: ignore
     """Return a container with standardized width constraints."""
     st.markdown(
@@ -614,6 +647,7 @@ __all__ = [
     "sanitize_text",
     "apply_theme",
     "theme_selector",
+    "theme_toggle",
     "get_active_user",
     "centered_container",
     "safe_container",

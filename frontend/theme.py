@@ -12,12 +12,14 @@ import streamlit as st
 
 @dataclass(frozen=True)
 class ColorTheme:
-    """Simple container for theme colors."""
+    """Simple container for theme colors and common tokens."""
 
     bg: str
     card: str
     accent: str
     text_muted: str
+    radius: str = "0.5rem"
+    transition: str = "0.3s ease"
 
 
 LIGHT_THEME = ColorTheme(
@@ -52,6 +54,22 @@ def get_global_css(dark: bool = True) -> str:
     --card: {theme.card};
     --accent: {theme.accent};
     --text-muted: {theme.text_muted};
+    --radius: {theme.radius};
+    --transition: {theme.transition};
+}}
+
+.fade-in {{
+    opacity: 0;
+    animation: fade-in var(--transition) forwards;
+}}
+
+.rounded {{
+    border-radius: var(--radius);
+}}
+
+@keyframes fade-in {{
+    from {{ opacity: 0; }}
+    to {{ opacity: 1; }}
 }}
 </style>
 """
