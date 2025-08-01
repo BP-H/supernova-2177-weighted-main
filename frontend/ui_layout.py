@@ -232,7 +232,7 @@ def _render_sidebar_nav(
                     st.sidebar.link_button(label, url=url, icon=icon)
         elif USE_OPTION_MENU and option_menu is not None:
             choice = option_menu(
-                menu_title=None,
+                menu_title="Choose",
                 options=[label for label, _ in opts],
                 icons=[icon or "dot" for icon in icon_list],
                 orientation="vertical",

@@ -33,7 +33,7 @@ def render_conversation_list() -> None:
     with col1:
         selected = (
             st.radio(
-                "Conversation",
+                "Conversations",
                 users,
                 index=users.index(active),
                 label_visibility="collapsed",
