@@ -278,7 +278,9 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         else:
             html_snippet = "<div class='shadcn-card' style='border-radius:12px;padding:8px;'>"
             if img:
-                html_snippet += f"<img src='{html.escape(img)}' style='width:100%;border-radius:8px;'/>"
+                html_snippet += (
+                    f"<img src='{html.escape(img)}' alt='' style='width:100%;border-radius:8px;'/>"
+                )
             if username:
                 html_snippet += f"<div><strong>{html.escape(username)}</strong></div>"
             html_snippet += f"<p>{html.escape(text)}</p>"
@@ -318,7 +320,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
                 st.image(img, use_container_width=True)
             else:
                 getattr(st, "markdown", lambda *a, **k: None)(
-                    f"<img src='{html.escape(img)}' style='width:100%'>",
+                    f"<img src='{html.escape(img)}' alt='' style='width:100%'>",
                     unsafe_allow_html=True,
                 )
         write_fn = getattr(st, "write", getattr(st, "markdown", lambda x: None))

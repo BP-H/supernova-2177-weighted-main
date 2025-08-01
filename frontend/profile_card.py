@@ -70,7 +70,10 @@ def render_profile_card(
 
     # Banner + avatar
     st.markdown('<div class="pc-banner"></div>', unsafe_allow_html=True)
-    st.markdown(f'<img class="pc-avatar" src="{avatar_url}">', unsafe_allow_html=True)
+    st.markdown(
+        f'<img class="pc-avatar" src="{avatar_url}" alt="avatar">',
+        unsafe_allow_html=True,
+    )
 
     # Name & tagline
     st.markdown(f'<div class="pc-name">{username}</div>', unsafe_allow_html=True)
