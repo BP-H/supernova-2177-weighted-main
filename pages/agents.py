@@ -3,7 +3,6 @@
 # Legal & Ethical Safeguards
 """Thin wrapper for the Agents page."""
 
-from transcendental_resonance_frontend.pages.agents import main, render
 from transcendental_resonance_frontend.pages import agents as real_page
 
 
