@@ -134,11 +134,10 @@ def render_top_bar() -> None:
             unsafe_allow_html=True,
         )
         search_target = search_col if hasattr(search_col, "text_input") else st
-        page = st.session_state.get("active_page", "global")
         search_target.text_input(
             "Search",
             placeholder="Search...",
-            key=f"topbar_search_{page}",
+            key=f"{st.session_state.get('active_page','global')}_topbar_search",
             label_visibility="collapsed",
         )
         toggle_target = beta_col if hasattr(beta_col, "toggle") else st
@@ -232,7 +231,7 @@ def _render_sidebar_nav(
                     st.sidebar.link_button(label, url=url, icon=icon)
         elif USE_OPTION_MENU and option_menu is not None:
             choice = option_menu(
-                menu_title=None,
+                menu_title="Choose",
                 options=[label for label, _ in opts],
                 icons=[icon or "dot" for icon in icon_list],
                 orientation="vertical",

@@ -284,8 +284,7 @@ not set, a secure random value will be generated automatically:
 export SECRET_KEY="your-random-secret"
 ```
 
-`METRICS_PORT` configures the Prometheus metrics server port. Override it if the
-default `8001` is unavailable:
+`METRICS_PORT` configures the Prometheus metrics server port. If unset a free port will be selected automatically. Override it if the default `8001` is unavailable:
 
 ```bash
 export METRICS_PORT=9000
@@ -630,6 +629,9 @@ installed, the UI falls back to static emoji icons. Install it with:
 ```bash
 pip install streamlit-lottie
 ```
+
+Machine learning-based content scanning uses PyTorch. Install `torch` to enable
+these features; otherwise they will be automatically disabled.
 
 Installing both requirement files ensures all dependencies used in CI
 are available:

@@ -242,6 +242,11 @@ class RemixAgent:
         and voter engagement. ``proposal_type`` of ``system_parameter_change``
         is treated as more important than ``general`` proposals. ``engagement_score``
         should be ``0`` to ``1`` and typically uses the quorum fraction.
+
+        citation_uri: https://en.wikipedia.org/wiki/Supermajority_vote
+        assumptions: engagement correlates with decision quality
+        validation_notes: heuristic interpolation between quorum and supermajority
+        approximation: heuristic
         """
 
         base = float(self.config.GOV_QUORUM_THRESHOLD)
