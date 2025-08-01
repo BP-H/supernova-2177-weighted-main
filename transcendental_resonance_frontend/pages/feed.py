@@ -15,6 +15,7 @@ import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import theme_selector, safe_container
+from modern_ui_components import st_javascript
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -92,17 +93,48 @@ _STORY_CSS = """
 </style>
 """
 
+_STORY_JS = """
+(() => {
+  const strip = document.getElementById('story-strip');
+  if (!strip || window.storyCarouselInit) return;
+  window.storyCarouselInit = true;
+  let idx = 0;
+  const advance = () => {
+    idx = (idx + 1) % strip.children.length;
+    const el = strip.children[idx];
+    strip.scrollTo({left: el.offsetLeft, behavior: 'smooth'});
+  };
+  let interval = setInterval(advance, 3000);
+  let startX = 0;
+  let scrollLeft = 0;
+  strip.addEventListener('touchstart', (e) => {
+    clearInterval(interval);
+    startX = e.touches[0].pageX;
+    scrollLeft = strip.scrollLeft;
+  });
+  strip.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].pageX;
+    const walk = startX - x;
+    strip.scrollLeft = scrollLeft + walk;
+  });
+  strip.addEventListener('touchend', () => {
+    interval = setInterval(advance, 3000);
+  });
+})();
+"""
+
 
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip."""
     st.markdown(_STORY_CSS, unsafe_allow_html=True)
-    html = "<div class='story-strip'>"
+    html = "<div class='story-strip' id='story-strip'>"
     for u in users:
         html += (
             f"<div class='story-item'><img src='{u.avatar}' width='60'/><br>{u.username}</div>"
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
+    st_javascript(_STORY_JS, key="story_carousel")
 
 
 def _render_post(post: Post) -> None:
@@ -179,17 +211,32 @@ def _page_body() -> None:
     for p in posts[:offset]:
         _render_post(p)
 
-    if offset < len(posts):
-        if st.button("load more", key="load_more"):
-            st.session_state["post_offset"] += 3
-            st.experimental_rerun()
-    else:
-        # Fetch / generate additional demo posts
-        if st.button("load more", key="load_more"):
-            start = len(posts)
-            posts.extend(_generate_posts(3, start=start))
-            st.session_state["post_offset"] += 3
-            st.experimental_rerun()
+    st.markdown("<div id='feed-sentinel'></div>", unsafe_allow_html=True)
+    triggered = st_javascript(
+        """
+        (() => {
+          const sent = document.getElementById('feed-sentinel');
+          if (!sent || window.feedObserverAttached) return false;
+          window.feedObserverAttached = true;
+          return new Promise(resolve => {
+            const obs = new IntersectionObserver(entries => {
+              if (entries[0].isIntersecting) {
+                obs.disconnect();
+                resolve(true);
+              }
+            });
+            obs.observe(sent);
+          });
+        })();
+        """,
+        key="feed_observer",
+    )
+
+    if triggered:
+        if offset >= len(posts):
+            posts.extend(_generate_posts(3, start=len(posts)))
+        st.session_state["post_offset"] += 3
+        st.experimental_rerun()
 
 
 def main(main_container=None) -> None:
