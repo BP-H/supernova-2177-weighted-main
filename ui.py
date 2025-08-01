@@ -185,12 +185,21 @@ def normalize_choice(choice: str) -> str:
     """Return the canonical label for ``choice`` ignoring case."""
     return _PAGE_LABELS.get(choice.lower(), choice)
 
-# Icons used in the navigation bar. Must be single-character emojis or
+# Icons used in the navigation bar. Accepts Font Awesome classes or
 # valid Bootstrap icon codes prefixed with ``"bi bi-"``.
-# Emoji icons for sidebar navigation in alphabetical page order.
 # Agents, Chat, Messages, Profile, Resonance Music, Social, Validation,
 # Video Chat, Voting
-NAV_ICONS = ["🤖", "💬", "✉️", "👤", "🎵", "👥", "✅", "🎥", "📊"]
+NAV_ICONS = [
+    "fa-solid fa-robot",
+    "fa-solid fa-comments",
+    "fa-solid fa-envelope",
+    "fa-solid fa-user",
+    "fa-solid fa-music",
+    "fa-solid fa-users",
+    "fa-solid fa-check",
+    "fa-solid fa-video",
+    "fa-solid fa-chart-bar",
+]
 
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
@@ -307,13 +316,13 @@ if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
 from streamlit_helpers import (
     alert,
-    apply_theme,
     header,
     theme_selector,
     safe_container,
     render_post_card,
     render_instagram_grid,
 )
+from frontend.theme import apply_theme
 
 try:
     from modern_ui import (
@@ -1245,7 +1254,17 @@ def render_validation_ui(
         page_paths = {
             label: f"/pages/{mod}.py" for label, mod in PAGES.items()
         }
-        NAV_ICONS = ["🤖", "💬", "✉️", "👤", "🎵", "👥", "✅", "🎥", "📊"]
+        NAV_ICONS = [
+            "fa-solid fa-robot",
+            "fa-solid fa-comments",
+            "fa-solid fa-envelope",
+            "fa-solid fa-user",
+            "fa-solid fa-music",
+            "fa-solid fa-users",
+            "fa-solid fa-check",
+            "fa-solid fa-video",
+            "fa-solid fa-chart-bar",
+        ]
 
         # ...
 

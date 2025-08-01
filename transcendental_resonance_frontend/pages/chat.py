@@ -6,7 +6,7 @@
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header, theme_selector
+from streamlit_helpers import safe_container, header, theme_toggle
 from status_indicator import render_status_icon
 from chat_ui import render_chat_interface
 
@@ -20,11 +20,11 @@ def main(main_container=None) -> None:
         main_container = st
     page = "chat"
     st.session_state["active_page"] = page
-    theme_selector("Theme", key_suffix=page)
+    theme_toggle("Dark Mode", key_suffix=page)
 
     container_ctx = safe_container(main_container)
     with container_ctx:
-        header_col, status_col = st.columns([8, 1])
+        header_col, status_col = st.columns([0.8, 0.2])
         with header_col:
             header("💬 Chat")
         with status_col:
