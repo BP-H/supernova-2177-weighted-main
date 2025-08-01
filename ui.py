@@ -324,7 +324,8 @@ from streamlit_helpers import (
     render_instagram_grid,
 )
 
-from frontend.theme import set_theme, apply_theme
+from frontend.theme import apply_theme
+from frontend.theme import set_theme
 
 try:
     from modern_ui import inject_modern_styles
