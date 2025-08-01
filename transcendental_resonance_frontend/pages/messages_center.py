@@ -9,14 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import streamlit as st
-from frontend.light_theme import inject_light_theme
+from frontend.theme import apply_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container, theme_toggle
 from status_indicator import render_status_icon
 from transcendental_resonance_frontend.src.utils import api
 
 # ─── Apply global styles ────────────────────────────────────────────────────────
-inject_light_theme()
+apply_theme("light")
 inject_modern_styles()
 
 # ─── Dummy data ────────────────────────────────────────────────────────────────
