@@ -33,11 +33,11 @@ def inject_modern_styles() -> None:
     """Inject global CSS using theme variables and local assets."""
     from modern_ui_components import SIDEBAR_STYLES
 
-    if st.session_state.get("modern_styles_injected"):
-        logger.debug("Modern styles already injected; skipping")
-        return
-
     theme.inject_modern_styles()
+
+    if st.session_state.get("_modern_ui_css_injected"):
+        logger.debug("Modern UI CSS already injected; skipping extra assets")
+        return
 
     css = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,9 +81,7 @@ def inject_modern_styles() -> None:
     """
     st.markdown(css, unsafe_allow_html=True)
     st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-    st.session_state["modern_styles_injected"] = True
-
-
+    st.session_state["_modern_ui_css_injected"] = True
 
 def inject_premium_styles() -> None:
     """Backward compatible alias for :func:`inject_modern_styles`."""

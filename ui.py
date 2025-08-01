@@ -323,6 +323,7 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
+
 from frontend.theme import set_theme, apply_theme
 
 try:
@@ -1563,11 +1564,10 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        if not st.session_state.get("modern_styles_injected"):
-            try:
-                inject_modern_styles()
-            except Exception as exc:
-                logger.warning("CSS load failed: %s", exc)
+        try:
+            inject_modern_styles()
+        except Exception as exc:
+            logger.warning("CSS load failed: %s", exc)
 
         # Initialize session state
         defaults = {
