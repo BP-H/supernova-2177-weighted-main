@@ -8,3 +8,7 @@ backgroundColor = "#001E26"
 secondaryBackgroundColor = "#002B36"
 textColor = "#E0FFFF"
 font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+
+[server]
+# Switch to polling to avoid inotify limits
+fileWatcherType = "poll"

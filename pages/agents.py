@@ -1,8 +1,26 @@
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
+import importlib
+import streamlit as st
 
-from transcendental_resonance_frontend.pages.agents import main
+
+def main() -> None:
+    """Load the real agents page if present, otherwise show a placeholder."""
+    try:
+        mod = importlib.import_module(
+            "transcendental_resonance_frontend.pages.agents"
+        )
+        if hasattr(mod, "main"):
+            return mod.main()
+        if hasattr(mod, "render"):
+            return mod.render()
+    except Exception:
+        pass
+    st.header("Agents")
+    st.info("Agents page not available.")
+
+
+def render() -> None:
+    main()
+
 
 if __name__ == "__main__":
     main()

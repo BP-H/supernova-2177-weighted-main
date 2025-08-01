@@ -1,8 +1,26 @@
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
+import importlib
+import streamlit as st
 
-from transcendental_resonance_frontend.pages.voting import main
+
+def main() -> None:
+    """Load the real voting page if available or show a placeholder."""
+    try:
+        mod = importlib.import_module(
+            "transcendental_resonance_frontend.pages.voting"
+        )
+        if hasattr(mod, "main"):
+            return mod.main()
+        if hasattr(mod, "render"):
+            return mod.render()
+    except Exception:
+        pass
+    st.header("Voting")
+    st.info("Voting page not available.")
+
+
+def render() -> None:
+    main()
+
 
 if __name__ == "__main__":
     main()
