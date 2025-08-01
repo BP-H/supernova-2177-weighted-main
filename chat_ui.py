@@ -179,6 +179,7 @@ def render_chat_interface() -> None:
             avatar_col, msg_col = cols if cls == "left" else reversed(cols)
             with avatar_col:
                 st.image(avatar, width=32, alt=f"{sender} avatar")
+
             with msg_col:
                 st.markdown(
                     f"<div class='chat-message'><div class='chat-bubble {cls}'><strong>{sender}:</strong> {translated}</div></div>",

@@ -87,6 +87,7 @@ def main(container: st.DeltaGenerator | None = None) -> None:
                 with st.chat_message(msg["user"], avatar=avatar):
                     if img := msg.get("image"):
                         st.image(img, use_container_width=True, alt="message image")
+
                     st.write(msg["text"])
 
             # Input box

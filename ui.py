@@ -756,6 +756,7 @@ def render_modern_agents_page():
                 width=80,
                 use_container_width=True,
                 alt=f"{name} avatar",
+
             )
             st.write(name)
             st.line_chart([1, 3, 2, 4])
