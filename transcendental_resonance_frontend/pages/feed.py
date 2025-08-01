@@ -14,7 +14,7 @@ import streamlit as st
 
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import theme_selector, safe_container
+from streamlit_helpers import theme_selector, safe_container, sanitize_text
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -118,8 +118,10 @@ def _render_stories(users: List[User]) -> None:
     st.markdown(_STORY_CSS, unsafe_allow_html=True)
     html = "<div class='story-strip'>"
     for u in users:
+        avatar = sanitize_text(u.avatar)
+        username = sanitize_text(u.username)
         html += (
-            f"<div class='story-item'><img src='{u.avatar}' width='60'/><br>{u.username}</div>"
+            f"<div class='story-item'><img src='{avatar}' width='60'/><br>{username}</div>"
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
@@ -137,9 +139,11 @@ def _render_post(post: Post) -> None:
     with st.container():
         st.markdown("<div class='post-card'>", unsafe_allow_html=True)
         # Header
+        avatar = sanitize_text(post.user.avatar)
+        username = sanitize_text(post.user.username)
         st.markdown(
-            f"<div class='post-header'><img src='{post.user.avatar}'/>"
-            f"<strong>{post.user.username}</strong> "
+            f"<div class='post-header'><img src='{avatar}'/>"
+            f"<strong>{username}</strong> "
             f"<span>{' '.join(post.user.badges)}</span>"
             f"<span style='margin-left:auto;font-size:0.75rem;'>{post.timestamp:%H:%M}</span>"
             "</div>",
@@ -148,7 +152,8 @@ def _render_post(post: Post) -> None:
         # Media
         st.image(post.media, use_container_width=True, output_format="JPEG")
         # Caption
-        st.markdown(f"<div class='post-caption'>{post.caption}</div>", unsafe_allow_html=True)
+        caption = sanitize_text(post.caption)
+        st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
 
         # Reactions & comments
         cols = st.columns(len(reactions) + 1)
@@ -176,11 +181,14 @@ def _render_post(post: Post) -> None:
             with st.popover("💬"):
                 st.markdown("### comments")
                 for c in comments:
-                    st.write(f"**{c['user']}**: {c['text']}")
+                    user = sanitize_text(c['user'])
+                    text = sanitize_text(c['text'])
+                    st.write(f"**{user}**: {text}")
                 new = st.text_input("Add a comment", key=f"c_{post.id}")
                 if st.button("post", key=f"cbtn_{post.id}") and new:
-                    comments.append({"user": "you", "text": new})
+                    comments.append({"user": "you", "text": sanitize_text(new)})
                     st.session_state["comments"][post.id] = comments
+
                     st.experimental_rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
