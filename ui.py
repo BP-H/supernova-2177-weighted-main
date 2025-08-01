@@ -135,13 +135,14 @@ except Exception as import_err:  # pragma: no cover - fallback if absolute impor
             logger.debug("ensure_pages noop fallback used")
             return None
 
-def get_pages_dir() -> Path:
-    """Return the canonical directory for Streamlit page modules."""
-    return (
-        Path(__file__).resolve().parent
-        / "transcendental_resonance_frontend"
-        / "pages"
-    )
+try:
+    from utils.paths import ROOT_DIR, PAGES_DIR, get_pages_dir
+except Exception:  # pragma: no cover - fallback when utils.paths is missing
+    ROOT_DIR = Path(__file__).resolve().parent
+    PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+
+    def get_pages_dir() -> Path:
+        return PAGES_DIR
 
 
 
@@ -156,7 +157,7 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-ROOT_DIR = Path(__file__).resolve().parent
+# ``ROOT_DIR`` and ``PAGES_DIR`` may come from ``utils.paths``
 PAGES_DIR = get_pages_dir()
 
 
@@ -322,7 +323,7 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
-from frontend.theme import set_theme
+from frontend.theme import set_theme, apply_theme
 
 try:
     from modern_ui import inject_modern_styles
