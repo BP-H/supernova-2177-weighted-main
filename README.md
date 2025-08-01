@@ -399,6 +399,11 @@ Additional pages for **Voting**, **Agents**, and **Social** features are
 accessible from the navigation bar. These sections provide early scaffolding
 for governance, AI insights, and community interaction.
 
+Full implementations for these pages live in
+`transcendental_resonance_frontend/pages/`. The lightweight files under the
+top-level `pages/` directory simply import and call those modules.
+
+
 ### Starting the Backend
 
 The API must be reachable at [http://localhost:8000](http://localhost:8000). Start it with:

@@ -337,6 +337,7 @@ except Exception:  # pragma: no cover - gracefully handle missing/invalid module
         return None
 
 
+
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
 except ImportError:  # optional dependency fallback
@@ -1492,7 +1493,7 @@ def main() -> None:
 
     # Simple light theme fallback
     try:
-        inject_light_theme()
+        apply_theme("light")
     except Exception:  # pragma: no cover
         pass
 
@@ -1543,7 +1544,7 @@ def main() -> None:
         return
 
     try:
-        inject_light_theme()
+        apply_theme("light")
 
 
         # Inject keyboard shortcuts for quick navigation

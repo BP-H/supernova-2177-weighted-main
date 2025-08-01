@@ -60,7 +60,7 @@ def render_chat_panel(user: str) -> None:
     if st.button("Send", key=f"{key_prefix}send_btn") and txt:
         msgs.append({"sender": "You", "text": txt})
         st.session_state.msg_input = ""
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Start Video Call", key=f"{key_prefix}video_call"):
         st.toast("Video call integration pending")
 
