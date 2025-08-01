@@ -13,6 +13,7 @@ from __future__ import annotations
 import html
 from contextlib import nullcontext
 from typing import Any, ContextManager, Literal
+from frontend.theme import apply_theme
 
 _FAKE_SESSION: dict[str, Any] = {}
 import inspect
@@ -146,6 +147,24 @@ def sanitize_text(text: Any) -> str:
     if not isinstance(text, str):
         text = str(text)
     return html.escape(text, quote=False)
+
+
+def sanitize_emoji(text: str) -> str:
+    """Return ``text`` with emoji code points HTML-encoded or removed."""
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if cp in (0xFE0E, 0xFE0F, 0x200D):
+            continue  # strip variation selectors and joiners
+        if cp > 0xFFFF:
+            out.append(f"&#x{cp:X};")
+        else:
+            out.append(ch)
+    return "".join(out)
 
 
 def _safe_element(tag: str, content: str):
@@ -365,71 +384,6 @@ def render_mock_feed() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 # Theme helpers
 # ──────────────────────────────────────────────────────────────────────────────
-def _apply_theme_css(theme: str) -> None:
-    """Inject CSS for the selected theme."""
-    if theme.lower() == "dark":
-        css = """
-        <style>
-        :root {
-            --background: #1e1e1e;
-            --secondary-bg: #252525;
-            --text-color: #d4d4d4;
-            --primary-color: #4f8bf9;
-            --font-family: 'Inter', sans-serif;
-        }
-        .stApp {
-            background: var(--background);
-            color: var(--text-color);
-            font-family: var(--font-family);
-        }
-        a { color: var(--primary-color); }
-        </style>
-        """
-    elif theme.lower() == "codex":
-        css = """
-        <style>
-        :root {
-            --background: #202123;
-            --secondary-bg: #343541;
-            --text-color: #ECECF1;
-            --primary-color: #19C37D;
-            --font-family: 'Iosevka', monospace;
-        }
-        .stApp {
-            background: var(--background);
-            color: var(--text-color);
-            font-family: var(--font-family);
-        }
-        a { color: var(--primary-color); }
-        </style>
-        """
-    else:  # light default
-        css = """
-        <style>
-        :root {
-            --background: #F0F2F6;
-            --secondary-bg: #FFFFFF;
-            --text-color: #333333;
-            --primary-color: #0A84FF;
-            --font-family: 'Inter', sans-serif;
-        }
-        .stApp {
-            background: var(--background);
-            color: var(--text-color);
-            font-family: var(--font-family);
-        }
-        a { color: var(--primary-color); }
-        </style>
-        """
-    st.markdown(css, unsafe_allow_html=True)
-
-
-def apply_theme(theme: str) -> None:
-    """Public wrapper around the internal CSS injector."""
-    try:
-        _apply_theme_css(theme)
-    except Exception as exc:  # noqa: BLE001
-        st.warning(f"Theme application failed: {exc}")
 
 
 def theme_selector(label: str = "Theme", *, key_suffix: str | None = None) -> str:

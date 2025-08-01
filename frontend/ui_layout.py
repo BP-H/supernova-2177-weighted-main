@@ -94,54 +94,119 @@ def render_profile_card(username: str, avatar_url: str) -> None:
 
 
 def render_top_bar() -> None:
-    """Render a translucent top bar with a logo, search input and controls."""
+    """Render the translucent top bar (logo · search with suggestions · notifications · beta toggle · avatar)."""
     st.markdown(
         """
+        <!-- Font Awesome for the bell icon -->
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
         <style>
-        .sn-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.5rem 1rem;
-            background: rgba(30, 30, 30, 0.6);
-            backdrop-filter: blur(8px);
+        .sn-topbar{
+            position:sticky;top:0;z-index:1000;
+            display:flex;align-items:center;gap:1rem;
+            padding:.5rem 1rem;
+            background:rgba(30,30,30,.6);
+            backdrop-filter:blur(8px);
         }
-        .sn-topbar input {
-            flex: 1;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.85);
+        @media(max-width:600px){
+            .sn-topbar{flex-direction:column;align-items:stretch;}
+        }
+
+        .sn-topbar input{
+            flex:1;padding:.25rem .5rem;
+            border-radius:6px;
+            border:1px solid rgba(255,255,255,.3);
+            background:rgba(255,255,255,.85);
+        }
+
+        /* Bell button with badge */
+        .sn-bell{
+            position:relative;
+            background:transparent;border:none;cursor:pointer;
+            font-size:1.25rem;color:#fff;
+        }
+        .sn-bell::before{
+            font-family:"Font Awesome 6 Free";font-weight:900;
+            content:"\\f0f3";                      /* fa-bell */
+        }
+        .sn-bell[data-count]::after{
+            content:attr(data-count);
+            position:absolute;top:-.35rem;right:-.45rem;
+            background:red;color:#fff;border-radius:50%;
+            padding:0 .3rem;font-size:.6rem;line-height:1;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
+    # ────────────────────────────────────────────────────────────────────
     with st.container():
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-        cols = st.columns([1, 4, 2, 1])
-        logo_col = cols[0] if len(cols) > 0 else st
-        search_col = cols[1] if len(cols) > 1 else st
-        beta_col = cols[2] if len(cols) > 2 else st
-        avatar_col = cols[3] if len(cols) > 3 else st
-        logo_target = logo_col if hasattr(logo_col, "markdown") else st
-        logo_target.markdown(
+
+        # Columns: logo | search | bell | beta | avatar
+        cols       = st.columns([1, 4, 1, 2, 1])
+        logo_col   = cols[0]
+        search_col = cols[1]
+        bell_col   = cols[2]
+        beta_col   = cols[3]
+        avatar_col = cols[4]
+
+        # ── Logo ────────────────────────────────────────────────────────
+        logo_col.markdown(
             '<img src="https://placehold.co/32x32?text=SN" width="32" />',
             unsafe_allow_html=True,
         )
-        search_target = search_col if hasattr(search_col, "text_input") else st
-        search_target.text_input(
+
+        # ── Search box with recent-query suggestions ────────────────────
+        page_id   = st.session_state.get("active_page", "global")
+        search_key = f"{page_id}_topbar_search"
+
+        query = search_col.text_input(
             "Search",
-            placeholder="Search...",
-            key=f"{st.session_state.get('active_page','global')}_topbar_search",
+            placeholder="Search…",
+            key=search_key,
             label_visibility="collapsed",
         )
-        toggle_target = beta_col if hasattr(beta_col, "toggle") else st
-        beta_enabled = toggle_target.toggle(
+
+        if query:
+            recent = st.session_state.setdefault("recent_searches", [])
+            if query not in recent:
+                recent.append(query)
+                st.session_state["recent_searches"] = recent[-5:]        # keep last 5
+
+        suggestions = st.session_state.get("recent_searches", [])
+        if suggestions:
+            opts = "".join(f"<option value='{s}'></option>" for s in suggestions)
+            search_col.markdown(
+                f"""
+                <datalist id="recent-searches">{opts}</datalist>
+                <script>
+                  const inp = window.parent.document.querySelector('.sn-topbar input');
+                  if (inp) inp.setAttribute('list','recent-searches');
+                </script>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # ── Notifications bell (popover lists messages) ─────────────────
+        note_count = len(st.session_state.get("notifications", []))
+        bell_col.markdown(
+            f'<button class="sn-bell" data-count="{note_count if note_count else ""}" '
+            f'aria-label="Notifications"></button>',
+            unsafe_allow_html=True,
+        )
+        with bell_col.popover("Notifications"):
+            notes = st.session_state.get("notifications", [])
+            if notes:
+                for n in notes:
+                    st.write(n)
+            else:
+                st.write("No notifications")
+
+        # ── Beta mode toggle ────────────────────────────────────────────
+        beta_enabled = beta_col.toggle(
             "Beta Mode",
             value=st.session_state.get("beta_mode", False),
         )
@@ -150,12 +215,40 @@ def render_top_bar() -> None:
             st.query_params["beta"] = "1" if beta_enabled else "0"
         except Exception:
             st.experimental_set_query_params(beta="1" if beta_enabled else "0")
-        avatar_target = avatar_col if hasattr(avatar_col, "markdown") else st
-        avatar_target.markdown(
+
+        # ── Avatar ──────────────────────────────────────────────────────
+        avatar_col.markdown(
             '<img src="https://placehold.co/32x32" width="32" style="border-radius:50%" />',
             unsafe_allow_html=True,
         )
-        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # (Optional) JS stub for external suggestion endpoint demonstration
+    st.markdown(
+        """
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const inp = document.querySelector('.sn-topbar input');
+          if (!inp) return;
+          let t;
+          inp.addEventListener('input', () => {
+            clearTimeout(t);
+            const q = inp.value.trim();
+            if (!q) return;
+            t = setTimeout(async () => {
+              try {
+                const res = await fetch('/suggest?q=' + encodeURIComponent(q));
+                const data = await res.json();
+                window.dispatchEvent(new CustomEvent('search-suggestions', {detail: data}));
+              } catch(e){ console.error(e); }
+            }, 300);
+          });
+        });
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _render_sidebar_nav(
