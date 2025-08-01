@@ -1,261 +1,239 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""UI Layout Helpers
+"""UI layout helpers and navigation components.
 
-Reusable Streamlit layout helpers and navigation components for pages.
+This module centralises small, **streamlit-only** helpers so that individual
+pages stay lean while the overall look & feel remains coherent and modern.
+The goal is to achieve a lightweight "LinkedIn × Instagram" vibe: glassy cards,
+sleek top-bar, icon-first navigation – all while avoiding heavyweight
+frameworks.
 
-These functions are lightweight and centralized for easy reuse across modules
-without introducing heavy dependencies.
-
-Features:
-- `main_container()` – returns a generic container for page content
-- `sidebar_container()` – accesses the sidebar container
-- `render_sidebar_nav(pages)` – vertical sidebar navigation
-- `render_title_bar(icon, label)` – renders a header with an icon
-
-UI Ideas:
-- Glassy navbar with icons
-- Title bar with emoji label
-- Preview badge overlay for unfinished pages
+Exported helpers
+----------------
+* ``main_container`` – returns a styled container for primary page content.
+* ``sidebar_container`` – thin wrapper around ``st.sidebar``.
+* ``render_top_bar`` – translucent sticky header (logo · search · bell ·
+  beta-toggle · avatar).
+* ``render_sidebar_nav`` – glass-morphic vertical nav (option-menu fallback).
+* ``render_title_bar`` – emoji/icon + label heading.
+* ``render_profile_card`` – thin proxy around the shared profile-card util.
+* ``show_preview_badge`` – overlay badge for WIP pages.
 """
 
 from __future__ import annotations
 
+import importlib
+import os
+from pathlib import Path
 from typing import Dict, Iterable, Optional
 from uuid import uuid4
-from pathlib import Path
-import os
-import importlib
+
 import streamlit as st
-from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
+from modern_ui_components import SIDEBAR_STYLES
 
-LAYOUT_CSS = """
-<style>
-.insta-card {
-    display: flex;
-    flex-direction: column;
-    background: var(--card);
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform .2s ease, box-shadow .2s ease;
-}
-.insta-card img {
-    width: 100%;
-    height: auto;
-}
-.insta-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-</style>
-"""
-
+# -----------------------------------------------------------------------------
+# Paths – gracefully fall back if the optional utils module is absent
+# -----------------------------------------------------------------------------
 try:
     _paths = importlib.import_module("utils.paths")
-    ROOT_DIR = _paths.ROOT_DIR
-    PAGES_DIR = _paths.PAGES_DIR
-except Exception:  # pragma: no cover - fallback when utils isn't installed
+    ROOT_DIR: Path = _paths.ROOT_DIR  # type: ignore[attr-defined]
+    PAGES_DIR: Path = _paths.PAGES_DIR  # type: ignore[attr-defined]
+except Exception:  # pragma: no cover – optional dependency
     ROOT_DIR = Path(__file__).resolve().parents[1]
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
-
+# -----------------------------------------------------------------------------
+# Third-party optional helpers (we fail gracefully if absent)
+# -----------------------------------------------------------------------------
 try:
-    from streamlit_option_menu import option_menu
+    from streamlit_option_menu import option_menu  # type: ignore
+
     USE_OPTION_MENU = True
-except ImportError:
+except ImportError:  # pragma: no cover – optional dependency
+    option_menu = None  # type: ignore
     USE_OPTION_MENU = False
 
+# -----------------------------------------------------------------------------
+# Re-usable CSS snippets
+# -----------------------------------------------------------------------------
+LAYOUT_CSS = """
+<style>
+:root {
+  /* these are set globally by modern_ui / theme.py – but we redeclare fallbacks */
+  --bg: #001e26;
+  --card: #002b36;
+  --accent: #00f0ff;
+  --radius: 0.75rem;
+  --transition: 0.25s ease;
+}
 
-def main_container() -> st.delta_generator.DeltaGenerator:
-    """Return a container for the main content area."""
-    st.markdown(LAYOUT_CSS, unsafe_allow_html=True)
+html, body {
+  scroll-behavior: smooth;
+}
+
+/* Generic glass card */
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+}
+
+/* Instagram-like media card */
+.insta-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.insta-card img { width: 100%; height: auto; }
+.insta-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+}
+
+/* Sidebar nav tweaks */
+.sidebar-nav a:hover { filter: brightness(1.2); }
+</style>
+"""
+
+# -----------------------------------------------------------------------------
+# Public helpers
+# -----------------------------------------------------------------------------
+
+def main_container() -> st.delta_generator.DeltaGenerator:  # noqa: D401 – we want a short description
+    """Return the standard page container and inject global CSS once."""
+    if not st.session_state.get("_layout_css_injected"):
+        st.markdown(LAYOUT_CSS, unsafe_allow_html=True)
+        st.session_state["_layout_css_injected"] = True
     return st.container()
 
 
-
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
-    """Return the sidebar container."""
+    """Shorthand alias for ``st.sidebar`` (symmetry with *main_container*)."""
     return st.sidebar
 
 
+# -----------------------------------------------------------------------------
+# Profile card proxy (avoids circular streamlit import clashes)
+# -----------------------------------------------------------------------------
+
 def render_profile_card(username: str, avatar_url: str) -> None:
-    """Proxy to :func:`profile_card.render_profile_card` using this module's ``st``."""
-    import profile_card
+    """Render the shared profile card, temporarily monkey-patching *st*."""
+    import profile_card  # local import to avoid optional dep on import
 
     original = profile_card.st
-    profile_card.st = st
+    profile_card.st = st  # type: ignore[assignment]
     try:
         _render_profile_card(username, avatar_url)
     finally:
-        profile_card.st = original
+        profile_card.st = original  # type: ignore[assignment]
 
+
+# -----------------------------------------------------------------------------
+# Top bar (sticky, translucent, minimal)
+# -----------------------------------------------------------------------------
 
 def render_top_bar() -> None:
-    """Render the translucent top bar (logo · search with suggestions · notifications · beta toggle · avatar)."""
+    """Glassy top bar with search, notifications and beta toggle."""
     if "PYTEST_CURRENT_TEST" in os.environ:
-        return
+        return  # skip during unit tests
+
     st.markdown(
         """
-        <!-- Font Awesome for the bell icon -->
-        <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
         <style>
         .sn-topbar{
-            position:sticky;top:0;z-index:1000;
-            display:flex;align-items:center;gap:1rem;
-            padding:.5rem 1rem;
-            background:rgba(30,30,30,.6);
-            backdrop-filter:blur(8px);
+            position:sticky; top:0; z-index:1020;
+            display:flex; align-items:center; gap:1rem;
+            padding:.5rem 1rem; background:rgba(20,20,20,.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
-        @media(max-width:600px){
-            .sn-topbar{flex-direction:column;align-items:stretch;}
-        }
-
+        @media(max-width:600px){ .sn-topbar{flex-direction:column; align-items:stretch;} }
         .sn-topbar input{
-            flex:1;padding:.25rem .5rem;
-            border-radius:6px;
-            border:1px solid rgba(255,255,255,.3);
-            background:rgba(255,255,255,.85);
+            flex:1 1 auto; padding:.35rem .6rem; border-radius:var(--radius);
+            border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.9);
         }
-
-        /* Bell button with badge */
-        .sn-bell{
-            position:relative;
-            background:transparent;border:none;cursor:pointer;
-            font-size:1.25rem;color:#fff;
-        }
-        .sn-bell::before{
-            font-family:"Font Awesome 6 Free";font-weight:900;
-            content:"\\f0f3";                      /* fa-bell */
-        }
+        .sn-bell{ position:relative; background:transparent; border:none; cursor:pointer; font-size:1.25rem; color:#fff; }
+        .sn-bell::before{ font-family:"Font Awesome 6 Free"; font-weight:900; content:"\f0f3"; }
         .sn-bell[data-count]::after{
-            content:attr(data-count);
-            position:absolute;top:-.35rem;right:-.45rem;
-            background:red;color:#fff;border-radius:50%;
-            padding:0 .3rem;font-size:.6rem;line-height:1;
+            content:attr(data-count); position:absolute; top:-.35rem; right:-.45rem;
+            background:crimson; color:#fff; border-radius:50%; padding:0 .3rem;
+            font-size:.55rem; line-height:1;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # ────────────────────────────────────────────────────────────────────
+    # -------------------- layout columns --------------------
     with st.container():
-        st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
-        # Columns: logo | search | bell | beta | avatar
-        cols = st.columns([1, 4, 1, 2, 1])
-        if len(cols) < 5:  # pragma: no cover - test stubs may return fewer cols
+        st.markdown("<div class='sn-topbar'>", unsafe_allow_html=True)
+        cols = st.columns([1, 4, 1, 2, 1])  # logo · search · bell · beta · avatar
+        if len(cols) < 5:
+            st.markdown("</div>", unsafe_allow_html=True)
             return
 
-        logo_col = cols[0]
-        search_col = cols[1]
-        bell_col = cols[2]
-        beta_col = cols[3]
-        avatar_col = cols[4]
+        logo_col, search_col, bell_col, beta_col, avatar_col = cols
 
-        # ── Logo ────────────────────────────────────────────────────────
-        logo_col.markdown(
-            '<i class="fa-solid fa-rocket fa-lg"></i>',
-            unsafe_allow_html=True,
-        )
+        # Logo (could be an SVG later)
+        logo_col.markdown("<i class='fa-solid fa-user-astronaut fa-lg'></i>", unsafe_allow_html=True)
 
-            unsafe_allow_html=True,
-        )
-
-        # ── Search box with recent-query suggestions ────────────────────
-        page_id   = st.session_state.get("active_page", "global")
-        search_key = f"{page_id}_topbar_search"
-
-        query = search_col.text_input(
-            "Search",
-            placeholder="Search…",
-            key=search_key,
-            label_visibility="collapsed",
-        )
-
+        # Search field with simple recent-query suggestions
+        page_id = st.session_state.get("active_page", "global")
+        search_key = f"{page_id}_search"
+        query = search_col.text_input("search", placeholder="Search…", key=search_key, label_visibility="collapsed")
         if query:
-            recent = st.session_state.setdefault("recent_searches", [])
-            if query not in recent:
-                recent.append(query)
-                st.session_state["recent_searches"] = recent[-5:]        # keep last 5
+            hist = st.session_state.setdefault("recent_searches", [])
+            if query not in hist:
+                hist.append(query)
+                st.session_state["recent_searches"] = hist[-6:]
 
-        suggestions = st.session_state.get("recent_searches", [])
-        if suggestions:
-            opts = "".join(f"<option value='{s}'></option>" for s in suggestions)
+        if (suggest := st.session_state.get("recent_searches")):
+            datalist = "".join(f"<option value='{s}'></option>" for s in suggest)
             search_col.markdown(
-                f"""
-                <datalist id="recent-searches">{opts}</datalist>
-                <script>
-                  const inp = window.parent.document.querySelector('.sn-topbar input');
-                  if (inp) inp.setAttribute('list','recent-searches');
-                </script>
-                """,
+                f"<datalist id='recent-searches'>{datalist}</datalist><script>const i=document.querySelector('.sn-topbar input');if(i)i.setAttribute('list','recent-searches');</script>",
                 unsafe_allow_html=True,
             )
 
-        # ── Notifications bell (popover lists messages) ─────────────────
-        note_count = len(st.session_state.get("notifications", []))
+        # Notifications bell
+        notif_cnt = len(st.session_state.get("notifications", []))
         bell_col.markdown(
-            f'<button class="sn-bell" data-count="{note_count if note_count else ""}" '
-            f'aria-label="Notifications"></button>',
+            f"<button class='sn-bell' data-count='{notif_cnt if notif_cnt else ''}'></button>",
             unsafe_allow_html=True,
         )
         with bell_col.popover("Notifications"):
             notes = st.session_state.get("notifications", [])
-            if notes:
-                for n in notes:
-                    st.write(n)
-            else:
-                st.write("No notifications")
+            if not notes:
+                st.write("No notifications ✨")
+            for n in notes:
+                st.write(n)
 
-        # ── Beta mode toggle ────────────────────────────────────────────
-        beta_enabled = beta_col.toggle(
-            "Beta Mode",
-            value=st.session_state.get("beta_mode", False),
-        )
-        st.session_state["beta_mode"] = beta_enabled
-        try:
-            st.query_params["beta"] = "1" if beta_enabled else "0"
-        except Exception:
-            st.experimental_set_query_params(beta="1" if beta_enabled else "0")
-        # ── Avatar ──────────────────────────────────────────────────────
-        avatar_col.markdown(
-            '<i class="fa-solid fa-user-circle fa-lg"></i>',
-            unsafe_allow_html=True,
-        )
+        # Beta toggle
+        beta = beta_col.toggle("β Beta", value=st.session_state.get("beta_mode", False))
+        st.session_state["beta_mode"] = beta
+
+        # Avatar placeholder (would switch to profile pic)
+        avatar_col.markdown("<i class='fa-solid fa-circle-user fa-lg'></i>", unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # (Optional) JS stub for external suggestion endpoint demonstration
-    st.markdown(
-        """
-        <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const inp = document.querySelector('.sn-topbar input');
-          if (!inp) return;
-          let t;
-          inp.addEventListener('input', () => {
-            clearTimeout(t);
-            const q = inp.value.trim();
-            if (!q) return;
-            t = setTimeout(async () => {
-              try {
-                const res = await fetch('/suggest?q=' + encodeURIComponent(q));
-                const data = await res.json();
-                window.dispatchEvent(new CustomEvent('search-suggestions', {detail: data}));
-              } catch(e){ console.error(e); }
-            }, 300);
-          });
-        });
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
 
+# -----------------------------------------------------------------------------
+# Sidebar navigation
+# -----------------------------------------------------------------------------
 
 def _render_sidebar_nav(
     page_links: Iterable[str] | Dict[str, str],
@@ -264,89 +242,66 @@ def _render_sidebar_nav(
     default: Optional[str] = None,
     session_key: str = "active_page",
 ) -> str:
-    """Render a vertical sidebar navigation and return the selected label.
+    """Render a vertical nav and return the selected label."""
 
-    ``page_links`` may be provided as an iterable of page paths/slugs or a
-    mapping of labels to those paths. The data is normalized into a
-    ``{label: slug}`` dictionary with lowercase slugs. Duplicate slugs are
-    ignored and links are sorted alphabetically before rendering.
-    The selected page label is also stored in ``st.session_state`` using
-    ``session_key`` so other components can react to the active page.
-    """
-
-    # Normalize to label -> slug dictionary
-    items = list(page_links.items()) if isinstance(page_links, dict) else [
-        (None, str(o)) for o in page_links
-    ]
-    icon_list = list(icons or [None] * len(items))
-    key = key or uuid4().hex
-
-    normalized: Dict[str, str] = {}
-    seen_slugs: set[str] = set()
-    for (label, path), icon in zip(items, icon_list):
+    # 1. Normalise {label: slug}
+    pairs = (
+        list(page_links.items()) if isinstance(page_links, dict) else [(None, str(p)) for p in page_links]
+    )
+    icons = list(icons or [None] * len(pairs))
+    mapping: Dict[str, str] = {}
+    for (label, path), ico in zip(pairs, icons):
         slug = Path(path).stem.lower()
-        if slug in seen_slugs:
+        if slug in mapping.values():
             continue
-        seen_slugs.add(slug)
-        if not label:
-            label = Path(path).stem.replace("_", " ").title()
-        normalized[label] = slug
+        mapping[label or slug.replace("_", " ").title()] = slug
 
-    # filter out slugs that don't exist and show an error
-    valid_opts: list[tuple[str, str]] = []
+    # 2. Filter out non-existent pages, warn user
+    valid: list[tuple[str, str]] = []
     valid_icons: list[Optional[str]] = []
-    for (label, slug), icon in zip(normalized.items(), icon_list):
+    for (label, slug), ico in zip(mapping.items(), icons):
         candidates = [ROOT_DIR / slug, PAGES_DIR / slug]
-        exists = any(c.with_suffix(".py").exists() for c in candidates)
-        if not exists:
+        if any((c.with_suffix(".py").exists() for c in candidates)):
+            valid.append((label, slug))
+            valid_icons.append(ico)
+        else:
             st.sidebar.error(f"Page not found: {slug}")
-            continue
-        valid_opts.append((label, slug))
-        valid_icons.append(icon)
 
-    sorted_pairs = sorted(zip(valid_opts, valid_icons), key=lambda p: p[0][0].lower())
-    opts = [p for p, _ in sorted_pairs]
-    icon_list = [ico for _, ico in sorted_pairs]
-    if not opts:
+    if not valid:
         return ""
 
-    active = st.session_state.get(session_key, default or opts[0][0])
-    if active not in [label for label, _ in opts]:
-        active = opts[0][0]
-    index = [label for label, _ in opts].index(active)
+    valid.sort(key=lambda p: p[0].lower())
+    labels = [l for l, _ in valid]
+    slugs = [s for _, s in valid]
+    valid_icons = valid_icons[: len(valid)]
 
-    choice = active
-    container = st.sidebar.container()
-    with container:
+    key = key or uuid4().hex
+    active_label = st.session_state.get(session_key, default or labels[0])
+    if active_label not in labels:
+        active_label = labels[0]
+    default_idx = labels.index(active_label)
+
+    with st.sidebar.container():
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
+
         if hasattr(st.sidebar, "page_link"):
-            for (label, slug), icon in zip(opts, icon_list):
-                page_path = f"/pages/{slug}.py"
-                try:
-                    st.sidebar.page_link(page_path, label=label, icon=icon, help=label)
-                except Exception:
-                    url = f"?page={label}"
-                    st.sidebar.link_button(label, url=url, icon=icon)
-        elif USE_OPTION_MENU and option_menu is not None:
+            for lbl, slug, ico in zip(labels, slugs, valid_icons):
+                st.sidebar.page_link(f"/pages/{slug}.py", label=lbl, icon=ico or "circle")
+            choice = active_label  # page_link handles nav behind the scenes
+        elif USE_OPTION_MENU and option_menu:
             choice = option_menu(
-                menu_title="Choose",
-                options=[label for label, _ in opts],
-                icons=[icon or "dot" for icon in icon_list],
+                menu_title="Navigation",
+                options=labels,
+                icons=[ico or "dot" for ico in valid_icons],
                 orientation="vertical",
                 key=key,
-                default_index=index,
+                default_index=default_idx,
             )
         else:
-            labels = [f"{icon or ''} {label}".strip() for (label, _), icon in zip(opts, icon_list)]
-            choice = st.radio(
-                "Navigation",
-                labels,
-                index=index,
-                key=key,
-                label_visibility="collapsed",
-            )
-            choice = opts[labels.index(choice)][0]
+            decorated = [f"{ico or ''} {lbl}".strip() for lbl, ico in zip(labels, valid_icons)]
+            selected = st.radio("Navigation", decorated, index=default_idx, key=key, label_visibility="collapsed")
+            choice = labels[decorated.index(selected)]
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -354,46 +309,51 @@ def _render_sidebar_nav(
     return choice
 
 
-
-def render_sidebar_nav(*args, **kwargs):
-    """Wrapper to allow legacy patching via ``render_modern_sidebar``."""
+def render_sidebar_nav(*args, **kwargs):  # noqa: D401 – keep legacy name
+    """Public wrapper (keeps older modules functional)."""
     if globals().get("render_modern_sidebar") is not render_sidebar_nav:
+        # someone monkey-patched the legacy alias – defer to that
         return globals()["render_modern_sidebar"](*args, **kwargs)
     return _render_sidebar_nav(*args, **kwargs)
 
-
-# Legacy name used in older modules
+# maintain older alias
 render_modern_sidebar = render_sidebar_nav
 
 
+# -----------------------------------------------------------------------------
+# Misc helpers
+# -----------------------------------------------------------------------------
+
 def render_title_bar(icon: str, label: str) -> None:
-    """Display a stylized page title with icon."""
+    """Large heading with icon/emoji and subtle fade-in."""
     st.markdown(
-        f"<h1 style='display:flex;align-items:center;'>"
-        f"<span style='margin-right:0.5rem'>{icon}</span>{label}</h1>",
+        f"""
+        <h1 style='display:flex; gap:.5rem; align-items:center;' class='fade-in'>
+            <span>{icon}</span>
+            <span>{label}</span>
+        </h1>
+        """,
         unsafe_allow_html=True,
     )
 
 
-def show_preview_badge(text: str = "Preview Mode") -> None:
-    """Overlay a badge used when a fallback or WIP page is shown."""
+def show_preview_badge(text: str = "Preview") -> None:
+    """Fixed corner badge signalling WIP / fallback mode."""
     st.markdown(
-        f"<div style='position:fixed; top:1rem; right:1rem; background:#ffc107; "
-        f"color:#000; padding:0.25rem 0.5rem; border-radius:4px; z-index:1000;'>"
-        f"<i class='fa-solid fa-triangle-exclamation'></i> {text}</div>",
+        f"""
+        <div style='position:fixed; top:1rem; right:1rem; background:#ffc107; color:#000;
+                    padding:0.35rem 0.6rem; border-radius:6px; font-weight:600; z-index:1040;'
+             class='fade-in'>
+             <i class='fa-solid fa-triangle-exclamation' style='margin-right:.4rem'></i>{text}
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
 
-"""\
-## UI Ideas
-
-- Glassmorphism cards for data panels
-- Sidebar navigation with emoji icons
-- Animated progress bars for background tasks
-- Reaction badges for interactive elements
-"""
-
+# -----------------------------------------------------------------------------
+# Re-export list
+# -----------------------------------------------------------------------------
 __all__ = [
     "main_container",
     "sidebar_container",
