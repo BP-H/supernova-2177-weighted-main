@@ -1,0 +1,45 @@
+import os
+import importlib
+from fastapi.testclient import TestClient
+import superNova_2177 as sn
+import uuid
+import pytest
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("DB_MODE", "central")
+    db_path = tmp_path / "test.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+    monkeypatch.setenv("SECRET_KEY", "testsecret")
+    sn_mod = importlib.reload(sn)
+    sn_mod.create_app()
+    client = TestClient(sn_mod.app)
+    with sn_mod.SessionLocal() as db:
+        user = sn_mod.Harmonizer(
+            username="bob",
+            email="b@example.com",
+            hashed_password=sn_mod.get_password_hash("password"),
+        )
+        db.add(user)
+        db.commit()
+    return client
+
+
+def test_login_success(client):
+    resp = client.post("/login", data={"username": "bob", "password": "password"})
+    assert resp.status_code == 200
+    assert "session" in resp.cookies
+
+
+def test_login_failure(client):
+    resp = client.post("/login", data={"username": "bob", "password": "wrong"})
+    assert resp.status_code == 401
+
+
+def test_logout_clears_cookie(client):
+    client.post("/login", data={"username": "bob", "password": "password"})
+    assert "session" in client.cookies
+    resp = client.post("/logout")
+    assert resp.status_code == 200
+    assert "session" not in client.cookies or client.cookies.get("session") == ""

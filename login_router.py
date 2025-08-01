@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -69,3 +69,27 @@ def login_for_access_token(
         "token_type": "bearer",
         "universe_id": universe_id,
     }
+
+
+@router.post("/login", tags=["Harmonizers"])
+def login(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """Validate credentials and set a signed session cookie."""
+    result = login_for_access_token(form_data, db)
+    response.set_cookie(
+        "session",
+        result["access_token"],
+        httponly=True,
+        samesite="lax",
+    )
+    return {"detail": "login successful", "universe_id": result["universe_id"]}
+
+
+@router.post("/logout", tags=["Harmonizers"])
+def logout(response: Response) -> dict:
+    """Clear the session cookie."""
+    response.delete_cookie("session")
+    return {"detail": "logged out"}
