@@ -51,6 +51,7 @@ except ImportError:
             raise AttributeError(name)
 
     ui = _UIWrapper(_shadcn_ui)
+    ui_wrapper = ui
 
 
 from datetime import datetime, timezone
@@ -272,6 +273,9 @@ except ImportError:
 # Ensure `ui.tabs` is present—even if streamlit_helpers imported an incomplete ui
 if not hasattr(ui, "tabs"):
     ui.tabs = _UIWrapper().tabs  # type: ignore[attr-defined]
+
+# Alias used by older code paths
+ui_wrapper = ui
 
 
 

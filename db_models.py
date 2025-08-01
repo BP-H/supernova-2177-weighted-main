@@ -720,13 +720,18 @@ def seed_default_users() -> None:
     """Create default Harmonizer accounts if they don't exist."""
     session = SessionLocal()
     try:
+        # Accounts we always want in a fresh DB
         defaults = ["guest", "demo_user"]
+
         for username in defaults:
             # Skip if the user already exists
             if session.query(Harmonizer).filter_by(username=username).first():
                 continue
 
+            # Very small “hash” for demo purposes only – **not** production-secure
             hashed = hashlib.sha256(username.encode()).hexdigest()
+
+            # Branded e-mail addresses
             email = f"{username}@supernova.dev"
             if username == "demo_user":
                 email = "demo@supernova.dev"
@@ -739,8 +744,10 @@ def seed_default_users() -> None:
                     bio="Default user",
                 )
             )
+
         session.commit()
     finally:
         session.close()
+
 
 
