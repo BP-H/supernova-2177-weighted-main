@@ -631,6 +631,9 @@ installed, the UI falls back to static emoji icons. Install it with:
 pip install streamlit-lottie
 ```
 
+Machine learning-based content scanning uses PyTorch. Install `torch` to enable
+these features; otherwise they will be automatically disabled.
+
 Installing both requirement files ensures all dependencies used in CI
 are available:
 
