@@ -322,7 +322,7 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
-from frontend.theme import apply_theme
+from frontend.theme import set_theme
 
 try:
     from modern_ui import (
@@ -1601,7 +1601,7 @@ def main() -> None:
             return
 
         try:
-            apply_theme(st.session_state.get("theme", "light"))
+            set_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
 
