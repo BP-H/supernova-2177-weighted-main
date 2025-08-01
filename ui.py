@@ -322,18 +322,12 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
-from frontend.theme import set_theme
+from frontend.theme import set_theme, apply_theme
 
 try:
-    from modern_ui import (
-        inject_modern_styles,
-        inject_light_theme,
-    )
+    from modern_ui import inject_modern_styles
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
-        return None
-
-    def inject_light_theme(*_a, **_k):
         return None
 
 
@@ -1568,11 +1562,10 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        if not st.session_state.get("modern_styles_injected"):
-            try:
-                inject_modern_styles()
-            except Exception as exc:
-                logger.warning("CSS load failed: %s", exc)
+        try:
+            inject_modern_styles()
+        except Exception as exc:
+            logger.warning("CSS load failed: %s", exc)
 
         # Initialize session state
         defaults = {
