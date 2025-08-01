@@ -7,7 +7,7 @@ import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from social_tabs import render_social_tab
-from streamlit_helpers import safe_container, render_mock_feed, theme_selector
+from streamlit_helpers import safe_container, render_mock_feed, theme_toggle
 from feed_renderer import render_feed
 
 inject_light_theme()
@@ -18,7 +18,7 @@ def main(main_container=None) -> None:
     """Render the social page content within ``main_container``."""
     if main_container is None:
         main_container = st
-    theme_selector("Theme", key_suffix="social")
+    theme_toggle("Dark Mode", key_suffix="social")
 
     container_ctx = safe_container(main_container)
     with container_ctx:
