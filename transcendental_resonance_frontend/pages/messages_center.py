@@ -164,8 +164,7 @@ def main(main_container=None) -> None:
             with left:
                 st.markdown("**Conversations**")
                 selected = st.radio(
-                    "Conversations",
-
+                    "Conversation",
                     convos,
                     key=f"{key_prefix}selected_convo",
                     label_visibility="collapsed",
