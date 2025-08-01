@@ -4,8 +4,18 @@
 """Reusable chat interface components with translation and call support."""
 
 from __future__ import annotations
+import asyncio
+import threading
+from typing import Optional
+
 import streamlit as st
+from streamlit.runtime.scriptrunner import add_script_run_ctx
 from modern_ui import inject_modern_styles
+
+try:
+    import websockets
+except Exception:  # pragma: no cover - optional dependency
+    websockets = None
 
 inject_modern_styles()
 
@@ -57,9 +67,51 @@ def translate_text(text: str, target_lang: str = "en") -> str:
         return text
 
 
+def _start_ws_listener(url: str = "ws://localhost:8765") -> None:
+    """Connect to the broadcast WebSocket server in a background thread."""
+    if websockets is None or st.session_state.get("_ws_thread"):
+        return
+
+    async def _listen() -> None:
+        try:
+            async with websockets.connect(url) as ws:
+                st.session_state["_ws"] = ws
+                async for message in ws:
+                    st.session_state["chat_history"].append({
+                        "sender": "Peer",
+                        "text": message,
+                    })
+                    st.experimental_rerun()
+        except Exception:
+            st.session_state["_ws"] = None
+
+    loop = asyncio.new_event_loop()
+
+    def _run() -> None:
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(_listen())
+
+    thread = threading.Thread(target=_run, daemon=True)
+    add_script_run_ctx(thread)
+    thread.start()
+    st.session_state["_ws_thread"] = thread
+    st.session_state["_ws_loop"] = loop
+
+
+def _send_ws(message: str) -> bool:
+    """Send ``message`` through the WebSocket if connected."""
+    ws = st.session_state.get("_ws")
+    loop: Optional[asyncio.AbstractEventLoop] = st.session_state.get("_ws_loop")
+    if ws and loop:
+        loop.call_soon_threadsafe(asyncio.create_task, ws.send(message))
+        return True
+    return False
+
+
 def render_chat_interface() -> None:
     """Display a styled, translatable chat with call controls."""
     st.session_state.setdefault("chat_history", [])
+    _start_ws_listener()
     st.markdown(CHAT_CSS, unsafe_allow_html=True)
 
     page_prefix = f"{st.session_state.get('active_page', 'global')}_"
@@ -97,8 +149,10 @@ def render_chat_interface() -> None:
         with col2:
             if st.button("Send", key=f"{page_prefix}send_chat") and msg:
                 st.session_state["chat_history"].append({"sender": "You", "text": msg})
+                sent = _send_ws(msg)
                 st.session_state.chat_input = ""
-                st.experimental_rerun()
+                if not sent:
+                    st.experimental_rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
     with calls_tab:
