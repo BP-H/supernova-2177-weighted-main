@@ -5,13 +5,13 @@
 
 Key helpers
 -----------
-main_container()            → returns the main content container
-sidebar_container()         → returns the sidebar container
-render_top_bar()            → sticky translucent navbar (logo · search · bell · beta · avatar)
-render_sidebar_nav(...)     → vertical nav (option-menu or radio fallback)
-render_title_bar(icon,txt)  → page H1 with emoji / icon
-show_preview_badge(text)    → floating “Preview” badge
-render_profile_card(user)   → tiny proxy around profile_card.render_profile_card
+main_container()            – main page container
+sidebar_container()         – Streamlit sidebar wrapper
+render_top_bar()            – sticky translucent navbar (logo · search · bell · beta · avatar)
+render_sidebar_nav(...)     – vertical nav (option-menu or radio fallback)
+render_title_bar(icon,txt)  – page H1 with emoji / icon
+show_preview_badge(text)    – floating “Preview” badge
+render_profile_card(user)   – proxy around profile_card.render_profile_card
 """
 
 from __future__ import annotations
@@ -26,11 +26,12 @@ import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
 
-# ─────────────────────────────────────────  CONST / GLOBALS  ─────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTANTS & GLOBAL CSS
+# ═══════════════════════════════════════════════════════════════════════════════
 _EMOJI_FALLBACK = "🔖"
 LAYOUT_CSS = """
 <style>
-/* glassy card utility */
 .glass-card{
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.10);
@@ -38,7 +39,6 @@ LAYOUT_CSS = """
   border-radius:1rem;
   padding:1rem;
 }
-/* generic insta-card demo class */
 .insta-card{
   display:flex;flex-direction:column;
   background:var(--card);
@@ -54,41 +54,44 @@ LAYOUT_CSS = """
 </style>
 """
 
-# Resolve repo roots even if utils.paths is unavailable during tests
+# ─────────────────────────────  repo paths (fallback if utils.paths missing)
 try:
     _paths = importlib.import_module("utils.paths")
     ROOT_DIR: Path = _paths.ROOT_DIR
     PAGES_DIR: Path = _paths.PAGES_DIR
-except Exception:  # pragma: no cover – tests or missing helper
+except Exception:  # pragma: no cover
     ROOT_DIR = Path(__file__).resolve().parents[1]
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
-# Optional pretty-sidebar lib
+# optional pretty-sidebar package
 try:
     from streamlit_option_menu import option_menu
-
     USE_OPTION_MENU = True
-except ImportError:
+except ImportError:  # pragma: no cover
     USE_OPTION_MENU = False
 
-# ─────────────────────────────────────────  BASIC CONTAINERS  ─────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# BASIC CONTAINERS
+# ═══════════════════════════════════════════════════════════════════════════════
 def main_container() -> st.delta_generator.DeltaGenerator:
-    """Return a main content container with base layout CSS injected once."""
+    """Main content container (injects base CSS once)."""
     if "_layout_css_injected" not in st.session_state:
         st.markdown(LAYOUT_CSS, unsafe_allow_html=True)
         st.session_state["_layout_css_injected"] = True
     return st.container()
 
 
-def sidebar_container() -> st.delta_generator.DeltaGenerator:  # noqa: D401
-    """The Streamlit sidebar (thin wrapper for consistency)."""
+def sidebar_container() -> st.delta_generator.DeltaGenerator:
+    """Thin wrapper around *st.sidebar* for consistency."""
     return st.sidebar
 
 
-# ─────────────────────────────────────────  PROFILE CARD PROXY  ──────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# PROFILE CARD PROXY
+# ═══════════════════════════════════════════════════════════════════════════════
 def render_profile_card(username: str, avatar_url: str) -> None:
-    """Thin proxy so profile_card can temporarily use this module’s st."""
-    import profile_card as _pc  # local import to avoid circular deps
+    """Call *profile_card.render_profile_card* with the current Streamlit ctx."""
+    import profile_card as _pc
 
     original_st = _pc.st
     _pc.st = st
@@ -98,68 +101,72 @@ def render_profile_card(username: str, avatar_url: str) -> None:
         _pc.st = original_st
 
 
-# ─────────────────────────────────────────────  TOP BAR  ─────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# TOP BAR (mobile-friendly)
+# ═══════════════════════════════════════════════════════════════════════════════
 def render_top_bar() -> None:
-    """Sticky translucent top-navigation bar (mobile-friendly)."""
-    if "PYTEST_CURRENT_TEST" in os.environ:  # tests stub out st.columns
+    if "PYTEST_CURRENT_TEST" in os.environ:  # unit-test stub safety
         return
 
+    # inject styles & FA icons once
     st.markdown(
         """
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 .sn-topbar{
-    position:sticky;top:0;inset-inline:0;z-index:1001;
-    display:flex;align-items:center;gap:.75rem;
-    padding:.6rem 1rem;backdrop-filter:blur(10px);
-    background:rgba(18,18,18,.65);
+  position:sticky;top:0;inset-inline:0;z-index:1001;
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem 1rem;backdrop-filter:blur(10px);
+  background:rgba(18,18,18,.65);
 }
 @media(max-width:600px){.sn-topbar{flex-wrap:wrap}}
 .sn-topbar input{
-    flex:1;padding:.45rem .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.90);min-width:140px;font-size:.9rem;
+  flex:1;padding:.45rem .7rem;border-radius:8px;
+  border:1px solid rgba(255,255,255,.25);min-width:140px;
+  background:rgba(255,255,255,.90);font-size:.9rem;
 }
-.sn-bell{position:relative;background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer}
+.sn-bell{position:relative;background:none;border:none;font-size:1.3rem;color:#fff;cursor:pointer}
 .sn-bell::before{font-family:"Font Awesome 6 Free";font-weight:900;content:"\\f0f3"}
 .sn-bell[data-count]::after{
-   content:attr(data-count);position:absolute;top:-.35rem;right:-.45rem;
-   background:#ff4757;color:#fff;border-radius:999px;padding:0 .33rem;
-   font-size:.62rem;line-height:1
+  content:attr(data-count);position:absolute;top:-.35rem;right:-.45rem;
+  background:#ff4757;color:#fff;border-radius:999px;padding:0 .33rem;
+  font-size:.62rem;line-height:1;
 }
 </style>
+<div class="sn-topbar">
 """,
         unsafe_allow_html=True,
     )
 
-    # -- layout columns ------------------------------------------------
-    cols = st.columns([1, 4, 1, 2, 1])  # logo | search | bell | beta | avatar
-    if len(cols) < 5:  # safety for mocked st.columns in unit tests
+    # layout: logo | search | bell | beta | avatar
+    cols = st.columns([1, 4, 1, 2, 1])
+    if len(cols) < 5:  # mocked st.columns
+        st.markdown("</div>", unsafe_allow_html=True)
         return
     logo_col, search_col, bell_col, beta_col, avatar_col = cols
 
-    # Logo
     logo_col.markdown('<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True)
 
-    # Search with datalist suggestions
-    page_id = st.session_state.get("active_page", "global")
-    key_search = f"{page_id}_search"
-    query = search_col.text_input("", placeholder="Search…", key=key_search, label_visibility="collapsed")
-    if query:
+    # search box with suggestions
+    pid = st.session_state.get("active_page", "global")
+    q_key = f"{pid}_search"
+    q = search_col.text_input("", placeholder="Search…", key=q_key, label_visibility="collapsed")
+    if q:
         recent = st.session_state.setdefault("_recent_q", [])
-        if query not in recent:
-            recent.append(query)
-            st.session_state["_recent_q"] = recent[-6:]  # keep last 6
+        if q not in recent:
+            recent.append(q)
+            st.session_state["_recent_q"] = recent[-6:]
 
     if (sugs := st.session_state.get("_recent_q")):
-        opts = "".join(f"<option value='{s}'></option>" for s in sugs)
+        options = "".join(f"<option value='{s}'></option>" for s in sugs)
         search_col.markdown(
-            f"<datalist id='recent-sugs'>{opts}</datalist>"
+            f"<datalist id='recent-sugs'>{options}</datalist>"
             "<script>window.parent.document.querySelector('.sn-topbar input')?.setAttribute('list','recent-sugs');</script>",
             unsafe_allow_html=True,
         )
 
-    # Notifications
+    # notifications bell
     n_notes = len(st.session_state.get("notifications", []))
     bell_col.markdown(
         f'<button class="sn-bell" data-count="{n_notes or ""}" aria-label="Notifications"></button>',
@@ -167,12 +174,12 @@ def render_top_bar() -> None:
     )
     with bell_col.popover("Notifications"):
         if n_notes:
-            for nt in st.session_state["notifications"]:
-                st.write(nt)
+            for note in st.session_state["notifications"]:
+                st.write(note)
         else:
             st.write("No notifications")
 
-    # Beta toggle (persists into query params)
+    # beta toggle
     beta = beta_col.toggle("Beta", value=st.session_state.get("beta_mode", False))
     st.session_state["beta_mode"] = beta
     try:
@@ -180,72 +187,93 @@ def render_top_bar() -> None:
     except Exception:
         st.experimental_set_query_params(beta="1" if beta else "0")
 
-    # Avatar placeholder
+    # avatar placeholder
     avatar_col.markdown('<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)  # close .sn-topbar
+
+    # close .sn-topbar
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ─────────────────────────────────────────  SIDEBAR NAV  ────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR NAV
+# ═══════════════════════════════════════════════════════════════════════════════
 def _render_sidebar_nav(
     page_links: Iterable[str] | Dict[str, str],
     icons: Optional[Iterable[str]] = None,
+    *,
     key: Optional[str] = None,
     default: Optional[str] = None,
     session_key: str = "active_page",
 ) -> str:
-    """Render vertical nav & return selected label (option-menu on mobile)."""
-    # --- normalize {label:slug} -------------------------------------
-    pairs = list(page_links.items()) if isinstance(page_links, dict) else [(None, p) for p in page_links]
-    icons = list(icons or [None] * len(pairs))
+    """Vertical sidebar nav; returns the *label* of the chosen page."""
+    raw_pairs = (
+        list(page_links.items()) if isinstance(page_links, dict)
+        else [(None, p) for p in page_links]
+    )
+    icons = list(icons or [None] * len(raw_pairs))
     key = key or f"nav_{uuid4().hex}"
 
     mapping: Dict[str, str] = {}
-    for (lbl, path), ico in zip(pairs, icons):
+    icon_map: Dict[str, Optional[str]] = {}
+    for (lbl, path), ico in zip(raw_pairs, icons):
         slug = Path(path).stem.lower()
         lbl = lbl or Path(path).stem.replace("_", " ").title()
-        mapping[lbl] = slug  # last wins – duplicates ignored gracefully
+        if lbl in mapping:  # de-dupe – keep first
+            continue
+        mapping[lbl] = slug
+        icon_map[lbl] = ico
 
-    # --- ensure page exists -----------------------------------------
-    choices, icon_list = [], []
+    # keep only pages that actually exist
+    choices: list[tuple[str, str]] = []
     for lbl, slug in mapping.items():
-        exists = any((ROOT_DIR / slug).with_suffix(".py").exists() or (PAGES_DIR / slug).with_suffix(".py").exists())
-        if exists:
+        page_ok = any(
+            (ROOT_DIR / slug).with_suffix(".py").exists()
+            or (PAGES_DIR / slug).with_suffix(".py").exists()
+        )
+        if page_ok:
             choices.append((lbl, slug))
-            icon_list.append(icon_list.append or None)  # placeholder to align, will re-assign next
-    # real icon assignment after validation
-    icon_list = [ico for (_, _), ico in zip(pairs, icons) if _ in mapping]
 
-    if not choices:  # nothing valid
+    if not choices:
         return ""
 
     default_lbl = default or choices[0][0]
     active_lbl = st.session_state.get(session_key, default_lbl)
-    if active_lbl not in [lbl for lbl, _ in choices]:
+    if active_lbl not in [l for l, _ in choices]:
         active_lbl = default_lbl
-    idx_default = [lbl for lbl, _ in choices].index(active_lbl)
+    default_idx = [l for l, _ in choices].index(active_lbl)
 
-    # --- render ------------------------------------------------------
     with st.sidebar:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
         st.markdown("<div class='glass-card sidebar-nav'>", unsafe_allow_html=True)
 
-        if hasattr(st.sidebar, "page_link"):  # native linking (Streamlit ≥v1.29)
-            for (lbl, slug), ico in zip(choices, icon_list):
-                st.sidebar.page_link(f"/pages/{slug}.py", label=lbl, icon=ico or _EMOJI_FALLBACK, help=lbl)
+        # 1️⃣ native page_link if available (Streamlit 1.29+)
+        if hasattr(st.sidebar, "page_link"):
+            for lbl, slug in choices:
+                ico = icon_map.get(lbl) or _EMOJI_FALLBACK
+                st.sidebar.page_link(f"/pages/{slug}.py", label=lbl, icon=ico, help=lbl)
             chosen = active_lbl
+
+        # 2️⃣ pretty option-menu
         elif USE_OPTION_MENU:
             chosen = option_menu(
                 menu_title="",
-                options=[lbl for lbl, _ in choices],
-                icons=[ico or "dot" for ico in icon_list],
+                options=[l for l, _ in choices],
+                icons=[icon_map.get(l) or "dot" for l, _ in choices],
                 orientation="vertical",
                 key=key,
-                default_index=idx_default,
+                default_index=default_idx,
             )
-        else:  # final fallback: radio
-            radio_labels = [f"{ico or ''} {lbl}".strip() for (lbl, _), ico in zip(choices, icon_list)]
-            chosen_radio = st.radio("Navigation", radio_labels, index=idx_default, key=key, label_visibility="collapsed")
-            chosen = choices[radio_labels.index(chosen_radio)][0]
+
+        # 3️⃣ fallback radio
+        else:
+            radio_labels = [
+                f"{icon_map.get(lbl) or ''} {lbl}".strip() for lbl, _ in choices
+            ]
+            picked = st.radio(
+                "Navigation", radio_labels,
+                index=default_idx, key=key, label_visibility="collapsed"
+            )
+            chosen = choices[radio_labels.index(picked)][0]
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -253,9 +281,9 @@ def _render_sidebar_nav(
     return chosen
 
 
-# Public alias (+ legacy compatibility)
-def render_sidebar_nav(*a, **kw):  # noqa: D401
-    """Wrapper so old code using render_modern_sidebar keeps working."""
+# public alias (+ legacy compat)
+def render_sidebar_nav(*a, **kw):
+    """Wrapper so legacy code using *render_modern_sidebar* keeps working."""
     if globals().get("render_modern_sidebar") is not render_sidebar_nav:
         return globals()["render_modern_sidebar"](*a, **kw)
     return _render_sidebar_nav(*a, **kw)
@@ -263,8 +291,10 @@ def render_sidebar_nav(*a, **kw):  # noqa: D401
 
 render_modern_sidebar = render_sidebar_nav  # legacy alias
 
-# ─────────────────────────────────────────  TITLE & BADGE  ──────────────────────────────────────────
-def render_title_bar(icon: str, label: str) -> None:  # noqa: D401
+# ═══════════════════════════════════════════════════════════════════════════════
+# TITLE & BADGE
+# ═══════════════════════════════════════════════════════════════════════════════
+def render_title_bar(icon: str, label: str) -> None:
     """Large H1 with emoji/icon."""
     st.markdown(
         f"<h1 style='display:flex;align-items:center;gap:.6rem;margin-bottom:1rem'>"
@@ -274,7 +304,7 @@ def render_title_bar(icon: str, label: str) -> None:  # noqa: D401
 
 
 def show_preview_badge(text: str = "Preview") -> None:
-    """Floating  badge in upper-right corner."""
+    """Floating badge in the top-right corner."""
     st.markdown(
         f"<div style='position:fixed;top:1.1rem;right:1.1rem;"
         f"background:#ffc107;color:#000;padding:.28rem .6rem;border-radius:6px;"
@@ -283,8 +313,7 @@ def show_preview_badge(text: str = "Preview") -> None:
         unsafe_allow_html=True,
     )
 
-
-# ─────────────────────────────────────────  EXPORTED NAMES  ─────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
 __all__ = [
     "main_container",
     "sidebar_container",
