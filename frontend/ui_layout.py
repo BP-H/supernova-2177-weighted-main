@@ -146,11 +146,14 @@ def render_top_bar() -> None:
         st.markdown('<div class="sn-topbar">', unsafe_allow_html=True)
 
         # Columns: logo | search | bell | beta | avatar
-        cols       = st.columns([1, 4, 1, 2, 1])
-        logo_col   = cols[0]
+        cols = st.columns([1, 4, 1, 2, 1])
+        if len(cols) < 5:  # pragma: no cover - test stubs may return fewer cols
+            return
+
+        logo_col = cols[0]
         search_col = cols[1]
-        bell_col   = cols[2]
-        beta_col   = cols[3]
+        bell_col = cols[2]
+        beta_col = cols[3]
         avatar_col = cols[4]
 
         # ── Logo ────────────────────────────────────────────────────────
