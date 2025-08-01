@@ -52,3 +52,4 @@ streamlit-autorefresh
 gtts
 streamlit-javascript
 nicegui
+torch  # optional ML features
