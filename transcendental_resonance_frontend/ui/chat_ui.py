@@ -29,7 +29,7 @@ def render_conversation_list() -> None:
     active = st.session_state.get("active_chat")
     if active not in users and users:
         active = users[0]
-    col1, col2 = st.columns([1, 3])
+    col1, col2 = st.columns([0.25, 0.75])
     with col1:
         selected = (
             st.radio(

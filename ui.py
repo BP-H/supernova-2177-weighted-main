@@ -316,13 +316,13 @@ if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
 from streamlit_helpers import (
     alert,
-    apply_theme,
     header,
     theme_selector,
     safe_container,
     render_post_card,
     render_instagram_grid,
 )
+from frontend.theme import apply_theme
 
 try:
     from modern_ui import (
