@@ -92,6 +92,26 @@ _STORY_CSS = """
 </style>
 """
 
+_REACTION_CSS = """
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+.reaction-btn{background:transparent;border:none;font-size:1.1rem;cursor:pointer;margin-right:0.25rem;transition:transform 0.1s ease;}
+.reaction-btn:active{transform:scale(1.2);}
+</style>
+"""
+
+_SCROLL_JS = """
+<script>
+const sentinel = document.getElementById('load-sentinel');
+if(sentinel){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){const btn=document.getElementById('load-more-btn');btn&&btn.click();}});
+  });
+  observer.observe(sentinel);
+}
+</script>
+"""
+
 
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip."""
@@ -109,6 +129,13 @@ def _render_stories(users: List[User]) -> None:
 
 def _render_post(post: Post) -> None:
     """Render an individual post card with reactions & comments."""
+    reactions = st.session_state.setdefault("reactions", {}).setdefault(
+        post.id, post.reactions.copy()
+    )
+    comments = st.session_state.setdefault("comments", {}).setdefault(
+        post.id, post.comments.copy()
+    )
+
     with st.container():
         st.markdown("<div class='post-card'>", unsafe_allow_html=True)
         # Header
@@ -129,23 +156,39 @@ def _render_post(post: Post) -> None:
         st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
 
         # Reactions & comments
-        cols = st.columns(len(post.reactions) + 1)
-        for idx, (emoji, count) in enumerate(post.reactions.items()):
-            if cols[idx].button(f"{emoji} {count}", key=f"react_{post.id}_{emoji}"):
-                post.reactions[emoji] += 1
+        cols = st.columns(len(reactions) + 1)
+        icon_map = {"❤️": "fa-heart", "🔥": "fa-fire", "👍": "fa-thumbs-up"}
+        for idx, (emoji, count) in enumerate(reactions.items()):
+            btn_key = f"react_{post.id}_{emoji}"
+            if cols[idx].button(str(count), key=btn_key):
+                reactions[emoji] += 1
+                st.session_state["reactions"][post.id] = reactions
                 st.experimental_rerun()
+            cols[idx].markdown(
+                f"""
+                <script>
+                const btns = document.querySelectorAll('button[data-testid="widget-button"]');
+                const btn = btns[btns.length-1];
+                if(btn){{btn.id='{btn_key}';btn.classList.add('reaction-btn','fa-solid','{icon_map.get(emoji, 'fa-heart')}');
+                if(!btn.querySelector('i'))btn.insertAdjacentHTML('afterbegin','<i class="fa-solid {icon_map.get(emoji, 'fa-heart')}"></i> ');}}
+                </script>
+                """,
+                unsafe_allow_html=True,
+            )
 
         # Pop-over for comments
         with cols[-1]:
             with st.popover("💬"):
                 st.markdown("### comments")
-                for c in post.comments:
+                for c in comments:
                     user = sanitize_text(c['user'])
                     text = sanitize_text(c['text'])
                     st.write(f"**{user}**: {text}")
                 new = st.text_input("Add a comment", key=f"c_{post.id}")
                 if st.button("post", key=f"cbtn_{post.id}") and new:
-                    post.comments.append({"user": "you", "text": sanitize_text(new)})
+                    comments.append({"user": "you", "text": sanitize_text(new)})
+                    st.session_state["comments"][post.id] = comments
+
                     st.experimental_rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
@@ -160,6 +203,30 @@ def _init_state() -> None:
     if "posts" not in st.session_state:
         st.session_state["posts"] = _generate_posts(6)
     st.session_state.setdefault("post_offset", 3)
+    if "reactions" not in st.session_state:
+        st.session_state["reactions"] = {
+            p.id: p.reactions.copy() for p in st.session_state["posts"]
+        }
+    if "comments" not in st.session_state:
+        st.session_state["comments"] = {
+            p.id: p.comments.copy() for p in st.session_state["posts"]
+        }
+
+
+def _load_more_posts() -> None:
+    posts: List[Post] = st.session_state["posts"]
+    offset = st.session_state["post_offset"]
+    if offset < len(posts):
+        st.session_state["post_offset"] += 3
+        return
+
+    start = len(posts)
+    new_posts = _generate_posts(3, start=start)
+    posts.extend(new_posts)
+    st.session_state["post_offset"] += 3
+    for p in new_posts:
+        st.session_state["reactions"][p.id] = p.reactions.copy()
+        st.session_state["comments"][p.id] = p.comments.copy()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -181,22 +248,26 @@ def _page_body() -> None:
     users = _sample_users()
 
     _render_stories(users)
+    st.markdown(_REACTION_CSS, unsafe_allow_html=True)
 
     offset = st.session_state["post_offset"]
     for p in posts[:offset]:
         _render_post(p)
 
-    if offset < len(posts):
-        if st.button("load more", key="load_more"):
-            st.session_state["post_offset"] += 3
-            st.experimental_rerun()
-    else:
-        # Fetch / generate additional demo posts
-        if st.button("load more", key="load_more"):
-            start = len(posts)
-            posts.extend(_generate_posts(3, start=start))
-            st.session_state["post_offset"] += 3
-            st.experimental_rerun()
+    if st.button("load more", key="load_more", on_click=_load_more_posts):
+        st.experimental_rerun()
+    st.markdown('<div id="load-sentinel"></div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <script>
+        const _btns=document.querySelectorAll('button[data-testid="widget-button"]');
+        const _btn=_btns[_btns.length-1];
+        if(_btn){_btn.id='load-more-btn';}
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(_SCROLL_JS, unsafe_allow_html=True)
 
 
 def main(main_container=None) -> None:
