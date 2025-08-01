@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+
 import streamlit as st
 
 
@@ -92,6 +92,37 @@ button, .stButton>button {{
 
 def _resolve_mode(name: bool | str) -> str:
     """Normalize ``name`` to ``light`` or ``dark``."""
+    if isinstance(name, str):
+        mode = name.lower()
+        return mode if mode in THEMES else "light"
+    return "dark" if name else "light"
+
+
+def apply_theme(name: bool | str = True) -> None:
+    """Inject the base CSS variables for ``name`` and remember it."""
+    mode = _resolve_mode(name)
+    st.markdown(get_global_css(mode), unsafe_allow_html=True)
+    st.session_state["_theme"] = mode
+
+
+def set_theme(name: str) -> None:
+    """Store ``name`` in session state and apply CSS once."""
+    mode = _resolve_mode(name)
+
+    # If both theme and modern styles are already applied, do nothing
+    if st.session_state.get("_theme") == mode and st.session_state.get("_styles_injected"):
+        return
+
+    # Remember the theme name
+    st.session_state["_theme"] = mode
+
+    # If modern extras were already injected, just reapply base CSS;
+    # otherwise inject everything (base + modern)
+    if st.session_state.get("_styles_injected"):
+        apply_theme(mode)
+    else:
+        inject_modern_styles(mode)
+
     if isinstance(name, str):
         mode = name.lower()
         return mode if mode in THEMES else "light"

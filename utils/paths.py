@@ -13,4 +13,10 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 # Default directory where Streamlit pages are located
 PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
-__all__ = ["ROOT_DIR", "PAGES_DIR"]
+
+def get_pages_dir() -> Path:
+    """Return the canonical directory for Streamlit page modules."""
+    return PAGES_DIR
+
+
+__all__ = ["ROOT_DIR", "PAGES_DIR", "get_pages_dir"]
