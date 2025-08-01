@@ -8,6 +8,8 @@ from modern_ui import inject_modern_styles
 from agent_ui import render_agent_insights_tab
 from streamlit_helpers import theme_selector
 
+__all__ = ["main", "render"]
+
 inject_light_theme()
 inject_modern_styles()
 
