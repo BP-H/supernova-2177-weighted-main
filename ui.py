@@ -322,14 +322,18 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
-from frontend.theme import apply_theme
+from frontend.theme import set_theme
 
 try:
     from modern_ui import (
         inject_modern_styles,
+        inject_light_theme,
     )
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
+        return None
+
+    def inject_light_theme(*_a, **_k):
         return None
 
 
@@ -1598,7 +1602,7 @@ def main() -> None:
             return
 
         try:
-            apply_theme(st.session_state.get("theme", "light"))
+            set_theme(st.session_state.get("theme", "light"))
         except Exception as exc:
             st.warning(f"Theme load failed: {exc}")
 

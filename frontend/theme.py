@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import Literal
 import streamlit as st
 
 
@@ -89,13 +90,26 @@ button, .stButton>button {{
 </style>"""
 
 
+def set_theme(mode: Literal["light", "dark"]) -> None:
+    """Apply the global CSS for *mode* if not already active."""
+    if st.session_state.get("_theme") == mode:
+        return
+    st.markdown(get_global_css(mode), unsafe_allow_html=True)
+    st.session_state["_theme"] = mode
+
+
 def apply_theme(name: bool | str = True) -> None:
     """
     Inject the global CSS variables for the given theme,
     and remember it in session state.
     """
-    st.markdown(get_global_css(name), unsafe_allow_html=True)
-    st.session_state["_theme"] = name
+    if isinstance(name, str):
+        mode = name.lower()
+        mode = mode if mode in THEMES else "light"
+    else:
+        mode = "dark" if name else "light"
+
+    set_theme(mode)
 
 
 def inject_modern_styles(theme: bool | str = True) -> None:
@@ -106,7 +120,13 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     if st.session_state.get("_styles_injected"):
         return
 
-    apply_theme(theme)
+    if isinstance(theme, str):
+        mode = theme.lower()
+        mode = mode if mode in THEMES else "light"
+    else:
+        mode = "dark" if theme else "light"
+
+    set_theme(mode)
 
     extra = """
     <style>
