@@ -86,7 +86,11 @@ def main(container: st.DeltaGenerator | None = None) -> None:
                 avatar = msg.get("avatar", f"https://robohash.org/{msg['user']}.png?size=40x40")
                 with st.chat_message(msg["user"], avatar=avatar):
                     if img := msg.get("image"):
-                        st.image(img, use_container_width=True)
+                        st.image(
+                            img,
+                            use_container_width=True,
+                            alt=msg.get("text", "message image"),
+                        )
                     st.write(msg["text"])
 
             # Input box
