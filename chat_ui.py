@@ -106,7 +106,7 @@ def _start_ws_listener(url: str = "ws://localhost:8765") -> None:
                         "sender": "Peer",
                         "text": message,
                     })
-                    st.experimental_rerun()
+                    st.rerun()
         except Exception:
             st.session_state["_ws"] = None
 
@@ -147,7 +147,7 @@ def render_chat_interface() -> None:
                     "avatar": payload.get("avatar", "https://via.placeholder.com/32"),
                 }
             )
-            st.experimental_rerun()
+            st.rerun()
 
         manager.add_listener(handle_msg)
         manager.start()
@@ -204,7 +204,7 @@ def render_chat_interface() -> None:
             )
             if st.button("+", key=f"{page_prefix}add_emoji"):
                 st.session_state[f"{page_prefix}chat_input"] = (msg or "") + emoji
-                st.experimental_rerun()
+                st.rerun()
         with col3:
             if st.button("Send", key=f"{page_prefix}send_chat") and msg:
                 payload = {"sender": "You", "text": msg}
