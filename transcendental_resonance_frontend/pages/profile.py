@@ -119,15 +119,8 @@ def main(main_container=None) -> None:
     init_db()
     seed_default_users()
     theme_toggle("Dark Mode", key_suffix="profile")
-    # …inside render_social_tab (or whichever function/file this is)
-    get_active_user()                     # make sure the key exists
-    container_ctx = safe_container(main_container)
-    with container_ctx:
-        get_active_user()                 # retrieve current value when needed
-        # …rest of the code …
 
-    container_ctx = safe_container(main_container)
-    with container_ctx:
+    with safe_container(main_container):
         # Header with status icon
         header_col, status_col = st.columns([8, 1])
         with header_col:
