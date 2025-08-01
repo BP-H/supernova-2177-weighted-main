@@ -239,12 +239,22 @@ def render_stats_section(stats: dict | None = None) -> None:
         "success_rate": "94%",
         "accuracy": "98.2%",
     }
-    data = stats or default_stats
+    default_stats = {
+        "runs": "0",
+        "proposals": "12",
+        "success_rate": "94%",
+        "accuracy": "98.2%",
+    }
+    # Merge user-provided stats on top of defaults without mutating them
+    data = default_stats.copy()
+    if stats:
+        data.update(stats)
+
     entries = [
-        ("🏃‍♂️", "Runs", data.get("runs", "0")),
-        ("📝", "Proposals", data.get("proposals", "N/A")),
-        ("⚡", "Success Rate", data.get("success_rate", "N/A")),
-        ("🎯", "Accuracy", data.get("accuracy", "N/A")),
+        ("🏃‍♂️", "Runs", data["runs"]),
+        ("📝", "Proposals", data["proposals"]),
+        ("⚡", "Success Rate", data["success_rate"]),
+        ("🎯", "Accuracy", data["accuracy"]),
     ]
 
     st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
