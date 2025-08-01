@@ -20,6 +20,7 @@ from typing import Any, Awaitable, Callable, Dict, Union
 import logging
 import inspect
 
+from realtime_comm.feed_ws import subscribe_feed, post_update
 
 # background task support
 class BackgroundTask:
@@ -232,6 +233,20 @@ import quantum_sim.ui_hook  # noqa: F401 - route registration
 import virtual_diary.ui_hook  # noqa: F401 - route registration
 import proposals.ui_hook  # noqa: F401 - route registration
 
+
+# Real-time feed routes
+register_route_once(
+    "subscribe_feed",
+    subscribe_feed,
+    "Subscribe to the live feed websocket",
+    "social",
+)
+register_route_once(
+    "post_update",
+    post_update,
+    "Broadcast a new post to feed subscribers",
+    "social",
+)
 
 # Protocol agent management routes
 from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
