@@ -25,6 +25,12 @@ from uuid import uuid4
 import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
+from frontend import theme
+try:
+    from streamlit_javascript import st_javascript
+except Exception:  # pragma: no cover - optional dependency
+    def st_javascript(*_a, **_kw):
+        return None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS & GLOBAL CSS
@@ -52,6 +58,38 @@ LAYOUT_CSS = """
   box-shadow:0 8px 22px rgba(0,0,0,.18);
 }
 </style>
+"""
+
+# Slide-in drawer & mobile bottom tabs
+DRAWER_CSS = """
+<style>
+[data-testid='stSidebar']{background:var(--card);border-right:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;z-index:1002;}
+[data-testid='stSidebar'].collapsed{transform:translateX(-100%);}
+@media(min-width:768px){[data-testid='stSidebar']{transform:none!important;}}
+#drawer_btn{display:none;}
+@media(max-width:768px){#drawer_btn{display:block;}}
+</style>
+"""
+
+BOTTOM_TAB_TEMPLATE = """
+<style>
+.sn-bottom-tabs{position:fixed;bottom:0;left:0;right:0;display:none;background:var(--card);border-top:1px solid rgba(255,255,255,0.1);z-index:1001;}
+.sn-bottom-tabs a{flex:1;text-align:center;padding:.4rem 0;color:var(--text-muted);text-decoration:none;}
+.sn-bottom-tabs a i{font-size:1.2rem;}
+.sn-bottom-tabs a.active{color:{accent};}
+@media(max-width:768px){.sn-bottom-tabs{display:flex;align-items:center;justify-content:space-around;}}
+</style>
+<div class='sn-bottom-tabs'>
+  <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
+  <a href='#' data-tag='video'><i class='fa-solid fa-video'></i></a>
+  <a href='#' data-tag='network'><i class='fa-solid fa-user-group'></i></a>
+  <a href='#' data-tag='notifications'><i class='fa-solid fa-bell'></i></a>
+  <a href='#' data-tag='jobs'><i class='fa-solid fa-briefcase'></i></a>
+</div>
+<script>
+  var active='{active}';
+  document.querySelectorAll('.sn-bottom-tabs a').forEach(a=>{if(a.dataset.tag===active){a.classList.add('active');}});
+</script>
 """
 
 # ─────────────────────────────  repo paths (fallback if utils.paths missing)
@@ -82,7 +120,16 @@ def main_container() -> st.delta_generator.DeltaGenerator:
 
 
 def sidebar_container() -> st.delta_generator.DeltaGenerator:
-    """Thin wrapper around *st.sidebar* for consistency."""
+    """Sidebar wrapper implementing a slide-in drawer."""
+    if "_drawer_css" not in st.session_state:
+        st.markdown(DRAWER_CSS, unsafe_allow_html=True)
+        st.session_state["_drawer_css"] = True
+    collapsed = not st.session_state.get("_drawer_open", True)
+    st.markdown(
+        f"<script>var sb=document.querySelector('[data-testid=\"stSidebar\"]');"
+        f"if(sb) sb.classList.toggle('collapsed', {str(collapsed).lower()});</script>",
+        unsafe_allow_html=True,
+    )
     return st.sidebar
 
 
@@ -108,6 +155,14 @@ def render_top_bar() -> None:
     if "PYTEST_CURRENT_TEST" in os.environ:  # unit-test stub safety
         return
 
+    # Determine initial drawer state based on viewport width
+    if "_drawer_open" not in st.session_state:
+        try:
+            width = st_javascript("window.innerWidth")
+            st.session_state["_drawer_open"] = bool(width) and int(width) >= 768
+        except Exception:
+            st.session_state["_drawer_open"] = True
+
     # inject styles & FA icons once
     st.markdown(
         """
@@ -126,6 +181,9 @@ def render_top_bar() -> None:
   border:1px solid rgba(255,255,255,.25);min-width:140px;
   background:rgba(255,255,255,.90);font-size:.9rem;
 }
+#drawer_btn button{background:none;border:none;color:#fff;font-size:1.3rem;}
+#drawer_btn{display:none}
+@media(max-width:768px){#drawer_btn{display:block}}
 .sn-bell{position:relative;background:none;border:none;font-size:1.3rem;color:#fff;cursor:pointer}
 .sn-bell::before{font-family:"Font Awesome 6 Free";font-weight:900;content:"\\f0f3"}
 .sn-bell[data-count]::after{
@@ -139,12 +197,15 @@ def render_top_bar() -> None:
         unsafe_allow_html=True,
     )
 
-    # layout: logo | search | bell | beta | avatar
-    cols = st.columns([1, 4, 1, 2, 1])
-    if len(cols) < 5:  # mocked st.columns
+    # layout: menu | logo | search | bell | beta | avatar
+    cols = st.columns([1, 1, 4, 1, 2, 1])
+    if len(cols) < 6:  # mocked st.columns
         st.markdown("</div>", unsafe_allow_html=True)
         return
-    logo_col, search_col, bell_col, beta_col, avatar_col = cols
+    menu_col, logo_col, search_col, bell_col, beta_col, avatar_col = cols
+
+    if menu_col.button("☰", key="drawer_btn", help="Menu", type="secondary"):
+        st.session_state["_drawer_open"] = not st.session_state.get("_drawer_open", True)
 
     logo_col.markdown('<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True)
 
@@ -192,6 +253,8 @@ def render_top_bar() -> None:
 
     # close .sn-topbar
     st.markdown("</div>", unsafe_allow_html=True)
+
+    render_bottom_tab_bar()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -313,6 +376,16 @@ def show_preview_badge(text: str = "Preview") -> None:
         unsafe_allow_html=True,
     )
 
+
+def render_bottom_tab_bar() -> None:
+    """Bottom navigation bar for mobile screens."""
+    accent = theme.get_accent_color()
+    active = st.session_state.get("active_page", "home")
+    st.markdown(
+        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active),
+        unsafe_allow_html=True,
+    )
+
 # ═══════════════════════════════════════════════════════════════════════════════
 __all__ = [
     "main_container",
@@ -322,4 +395,5 @@ __all__ = [
     "show_preview_badge",
     "render_profile_card",
     "render_top_bar",
+    "render_bottom_tab_bar",
 ]
