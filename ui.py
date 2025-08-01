@@ -322,19 +322,8 @@ from streamlit_helpers import (
     render_post_card,
     render_instagram_grid,
 )
-from frontend.theme import apply_theme
-
-try:
-    from modern_ui import (
-        inject_modern_styles,
-        inject_light_theme,
-    )
-except Exception:  # pragma: no cover - gracefully handle missing/invalid module
-    def inject_modern_styles(*_a, **_k):
-        return None
-
-    def inject_light_theme(*_a, **_k):
-        return None
+from frontend.theme import apply_theme, inject_modern_styles
+from frontend.light_theme import inject_light_theme
 
 
 try:
