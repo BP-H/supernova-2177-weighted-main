@@ -244,12 +244,7 @@ def render_top_bar() -> None:
     # search box with suggestions
     pid = st.session_state.get("active_page", "global")
     q_key = f"{pid}_search"
-    q = search_col.text_input(
-        "Search",
-        placeholder="Search…",
-        key=q_key,
-        label_visibility="hidden",
-    )
+    q = search_col.text_input("Search", placeholder="Search…", key=q_key, label_visibility="hidden")
     if q:
         recent = st.session_state.setdefault("_recent_q", [])
         if q not in recent:
