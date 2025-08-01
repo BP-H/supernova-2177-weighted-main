@@ -200,7 +200,7 @@ def _render_post(post: Post) -> None:
             if cols[idx].button(str(count), key=btn_key):
                 reactions[emoji] += 1
                 st.session_state["reactions"][post.id] = reactions
-                st.experimental_rerun()
+                st.rerun()
             cols[idx].markdown(
                 f"""
                 <script>
@@ -226,7 +226,7 @@ def _render_post(post: Post) -> None:
                     comments.append({"user": "you", "text": sanitize_text(new)})
                     st.session_state["comments"][post.id] = comments
 
-                    st.experimental_rerun()
+                    st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -318,7 +318,7 @@ def _page_body() -> None:
         if offset >= len(posts):
             posts.extend(_generate_posts(3, start=len(posts)))
         st.session_state["post_offset"] += 3
-        st.experimental_rerun()
+        st.rerun()
 
 
 
