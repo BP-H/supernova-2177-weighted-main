@@ -1522,7 +1522,7 @@ def main() -> None:
         params = st.query_params
     except AttributeError:
         # Fallback for older Streamlit versions
-        params = st.experimental_get_query_params()
+        params = st.experimental_get_query_params()  # Legacy fallback
 
     parse_beta_mode(params)
 
@@ -1639,7 +1639,7 @@ def main() -> None:
             query = st.query_params
         except AttributeError:
             # Fallback for legacy versions
-            query = st.experimental_get_query_params()
+            query = st.experimental_get_query_params()  # Legacy fallback
 
         param = query.get("page")
         forced_page = param[0] if isinstance(param, list) else param
