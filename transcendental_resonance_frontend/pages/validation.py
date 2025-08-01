@@ -7,6 +7,7 @@ import importlib
 import streamlit as st
 from frontend.theme import apply_theme
 from modern_ui import inject_modern_styles
+
 from streamlit_helpers import safe_container, theme_toggle
 
 # --------------------------------------------------------------------

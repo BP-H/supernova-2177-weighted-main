@@ -333,6 +333,7 @@ except Exception:  # pragma: no cover - gracefully handle missing/invalid module
         return None
 
 
+
 try:
     from frontend.ui_layout import overlay_badge, render_title_bar
 except ImportError:  # optional dependency fallback
