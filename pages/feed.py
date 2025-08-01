@@ -3,7 +3,18 @@
 # Legal & Ethical Safeguards
 """Thin wrapper for the Feed page."""
 
-from transcendental_resonance_frontend.pages.feed import main, render
+from __future__ import annotations
+
+from transcendental_resonance_frontend.pages import feed as real_page
+
+
+def main() -> None:
+    real_page.main()
+
+
+def render() -> None:
+    real_page.main()
+
 
 
 if __name__ == "__main__":

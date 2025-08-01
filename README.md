@@ -399,10 +399,10 @@ Additional pages for **Voting**, **Agents**, and **Social** features are
 accessible from the navigation bar. These sections provide early scaffolding
 for governance, AI insights, and community interaction.
 
-Page implementations live in `transcendental_resonance_frontend/pages/`.
-Files inside `pages/` are minimal wrappers that simply import and run the
-corresponding module. Keep all logic in the frontend directory when
-modifying or adding pages.
+Full implementations for these pages live in
+`transcendental_resonance_frontend/pages/`. The lightweight files under the
+top-level `pages/` directory simply import and call those modules.
+
 
 ### Starting the Backend
 

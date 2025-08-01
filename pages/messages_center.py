@@ -3,7 +3,18 @@
 # Legal & Ethical Safeguards
 """Thin wrapper for the Messages Center page."""
 
-from transcendental_resonance_frontend.pages.messages_center import main, render
+from __future__ import annotations
+
+from transcendental_resonance_frontend.pages import messages_center as real_page
+
+
+def main() -> None:
+    real_page.main()
+
+
+def render() -> None:
+    real_page.main()
+
 
 
 if __name__ == "__main__":

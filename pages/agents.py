@@ -4,7 +4,17 @@
 """Thin wrapper for the Agents page."""
 
 from transcendental_resonance_frontend.pages.agents import main, render
+from transcendental_resonance_frontend.pages import agents as real_page
 
 
-if __name__ == "__main__":
+def main() -> None:  # Streamlit runs this when the file is opened
+    real_page.main()
+
+
+def render() -> None:  # keep legacy compatibility
+    real_page.main()
+
+
+if __name__ == "__main__":  # manual execution
+
     main()
