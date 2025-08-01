@@ -103,7 +103,6 @@ def render_social_tab(main_container=None) -> None:
                 key="target_username",
                 placeholder="Friend to follow",
             )
-        st.session_state["active_user"] = current_user
 
         if st.button("Follow/Unfollow", use_container_width=True) and target and current_user:
             with SessionLocal() as db:
