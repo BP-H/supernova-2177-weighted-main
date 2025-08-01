@@ -8,7 +8,7 @@ pytestmark = pytest.mark.requires_nicegui
 
 import inspect
 
-from pages import register_page, network_page
+from transcendental_resonance_frontend.pages import register_page, network_page
 
 
 def test_register_page_importable():

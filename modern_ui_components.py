@@ -15,26 +15,17 @@ try:
     _paths = importlib.import_module("utils.paths")
     ROOT_DIR = _paths.ROOT_DIR
     PAGES_DIR = _paths.PAGES_DIR
+    get_pages_dir = _paths.get_pages_dir
 except Exception:  # pragma: no cover – fallback for isolated execution
     ROOT_DIR = Path(__file__).resolve().parents[1]          # repo root
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
+    def get_pages_dir() -> Path:
+        return PAGES_DIR
+
 from uuid import uuid4
 from streamlit_helpers import safe_container
 from frontend.theme import inject_modern_styles
-
-try:
-    from transcendental_resonance_frontend.src.utils.page_registry import get_pages_dir
-except Exception:
-    try:  # type: ignore
-        from utils.page_registry import get_pages_dir  # type: ignore
-    except Exception:  # pragma: no cover - final fallback
-        def get_pages_dir() -> Path:
-            return (
-                Path(__file__).resolve().parent
-                / "transcendental_resonance_frontend"
-                / "pages"
-            )
 
 from frontend import theme
 try:

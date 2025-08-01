@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     import streamlit as st
 
 from utils.api import TOKEN, api_call, listen_ws
-from utils.layout import navigation_bar, page_container
+from utils.layout import page_container
 from utils.safe_markdown import safe_markdown
 from utils.styles import get_theme
 
@@ -27,8 +27,6 @@ async def messages_page():
 
     THEME = get_theme()
     with page_container(THEME):
-        if TOKEN:
-            navigation_bar()
         ui.label("Messages").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )

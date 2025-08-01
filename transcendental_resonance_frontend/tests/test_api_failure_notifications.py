@@ -8,9 +8,9 @@ pytestmark = pytest.mark.requires_nicegui
 
 import types
 
-import pages.network_analysis_page as network_page
-import pages.system_insights_page as system_insights_page
-import pages.events_page as events_page
+import transcendental_resonance_frontend.pages.network_analysis_page as network_page
+import transcendental_resonance_frontend.pages.system_insights_page as system_insights_page
+import transcendental_resonance_frontend.pages.events_page as events_page
 from utils import layout
 
 class DummyElement:

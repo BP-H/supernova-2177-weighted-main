@@ -11,7 +11,7 @@ pytestmark = pytest.mark.requires_nicegui
 # Legal & Ethical Safeguards
 import inspect
 
-from pages.explore_page import explore_page
+from transcendental_resonance_frontend.pages.explore_page import explore_page
 
 
 def test_explore_page_is_async():
