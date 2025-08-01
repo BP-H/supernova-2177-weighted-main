@@ -7,7 +7,7 @@ pytest.importorskip("nicegui")
 pytestmark = pytest.mark.requires_nicegui
 
 import inspect
-from pages.validator_graph_page import validator_graph_page
+from transcendental_resonance_frontend.pages.validator_graph_page import validator_graph_page
 
 
 def test_validator_graph_page_is_async():

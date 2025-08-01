@@ -12,7 +12,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     import streamlit as st
 
 from utils.api import TOKEN, api_call
-from utils.layout import page_container, navigation_bar
+from utils.layout import page_container
 from utils.styles import get_theme
 from utils.features import quick_post_button, skeleton_loader, swipeable_glow_card
 from quantum_futures import generate_speculative_futures, DISCLAIMER
@@ -29,8 +29,6 @@ async def feed_page() -> None:
 
     theme = get_theme()
     with page_container(theme):
-        if TOKEN:
-            navigation_bar()
         ui.label('Feed').classes('text-2xl font-bold mb-2').style(
             f'color: {theme["accent"]};'
         )

@@ -35,36 +35,6 @@ from .styles import get_theme
 from .api import combined_search, OFFLINE_MODE
 
 
-def navigation_bar() -> Element:
-    """Render a simple navigation bar linking major pages."""
-    theme = get_theme()
-    try:
-        from pages.profile_page import profile_page
-        from pages.messages_page import messages_page
-        from pages.groups_page import groups_page
-        from pages.events_page import events_page
-        from pages.status_page import status_page
-    except Exception:
-        # During testing, NiceGUI or page modules may not be available
-        return Element()
-
-    with ui.row().classes('w-full justify-around mb-4') as nav:
-        ui.button('Profile', on_click=lambda: ui.open(profile_page)).style(
-            f'background: {theme["primary"]}; color: {theme["text"]};'
-        )
-        ui.button('Messages', on_click=lambda: ui.open(messages_page)).style(
-            f'background: {theme["accent"]}; color: {theme["background"]};'
-        )
-        ui.button('Groups', on_click=lambda: ui.open(groups_page)).style(
-            f'background: {theme["accent"]}; color: {theme["background"]};'
-        )
-        ui.button('Events', on_click=lambda: ui.open(events_page)).style(
-            f'background: {theme["accent"]}; color: {theme["background"]};'
-        )
-        ui.button('Status', on_click=lambda: ui.open(status_page)).style(
-            f'background: {theme["accent"]}; color: {theme["background"]};'
-        )
-    return nav
 
 
 def search_widget() -> Element:

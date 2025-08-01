@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
-from utils.layout import page_container, navigation_bar
+from utils.layout import page_container
 from .login_page import login_page
 
 
@@ -24,8 +24,6 @@ async def forks_page() -> None:
 
     THEME = get_theme()
     with page_container(THEME):
-        if TOKEN:
-            navigation_bar()
         ui.label('Universe Forks').classes('text-2xl font-bold mb-4').style(
             f'color: {THEME["accent"]};'
         )

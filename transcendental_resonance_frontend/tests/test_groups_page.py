@@ -7,7 +7,7 @@ pytest.importorskip("nicegui")
 pytestmark = pytest.mark.requires_nicegui
 
 import inspect
-from pages.groups_page import groups_page
+from transcendental_resonance_frontend.pages.groups_page import groups_page
 
 def test_groups_page_is_async():
     assert inspect.iscoroutinefunction(groups_page)

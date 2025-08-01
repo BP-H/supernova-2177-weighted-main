@@ -141,7 +141,7 @@ async def test_offline_client(monkeypatch):
 @pytest.mark.asyncio
 async def test_login_failed_notification(monkeypatch):
     dummy = setup_dummy_ui(monkeypatch)
-    import pages.login_page as lp
+    import transcendental_resonance_frontend.pages.login_page as lp
     importlib.reload(lp)
 
     async def fake_call(*_a, **_kw):
@@ -162,7 +162,7 @@ async def test_login_failed_notification(monkeypatch):
 @pytest.mark.asyncio
 async def test_feed_post_failure_notification(monkeypatch):
     dummy = setup_dummy_ui(monkeypatch)
-    import pages.feed_page as fp
+    import transcendental_resonance_frontend.pages.feed_page as fp
     importlib.reload(fp)
 
     async def fake_call(method, endpoint, *_a, **_kw):

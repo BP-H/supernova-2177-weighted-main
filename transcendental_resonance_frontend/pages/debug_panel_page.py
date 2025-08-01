@@ -14,7 +14,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
 
 from utils.api import TOKEN
 from utils.styles import get_theme
-from utils.layout import page_container, navigation_bar
+from utils.layout import page_container
 from utils.api import TOKEN, OFFLINE_MODE
 from frontend_bridge import ROUTES, dispatch_route
 
@@ -39,8 +39,6 @@ async def debug_panel_page() -> None:
     """Render controls for invoking ``frontend_bridge`` routes."""
     theme = get_theme()
     with page_container(theme):
-        if TOKEN:
-            navigation_bar()
         ui.label("Debug Panel").classes("text-2xl font-bold mb-4").style(
             f"color: {theme['accent']};"
         )
