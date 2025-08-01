@@ -4,3 +4,4 @@
 """Utilities for experimental real-time communication modules."""
 
 from .video_chat import FrameMetadata, VideoChatManager  # noqa: F401
+from .chat_ws import ChatWebSocketManager  # noqa: F401
