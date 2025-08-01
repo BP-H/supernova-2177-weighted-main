@@ -14,7 +14,8 @@ import streamlit as st
 
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import theme_selector, safe_container
+from streamlit_helpers import theme_selector, safe_container, sanitize_text
+from modern_ui_components import st_javascript
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -92,6 +93,36 @@ _STORY_CSS = """
 </style>
 """
 
+_STORY_JS = """
+(() => {
+  const strip = document.getElementById('story-strip');
+  if (!strip || window.storyCarouselInit) return;
+  window.storyCarouselInit = true;
+  let idx = 0;
+  const advance = () => {
+    idx = (idx + 1) % strip.children.length;
+    const el = strip.children[idx];
+    strip.scrollTo({left: el.offsetLeft, behavior: 'smooth'});
+  };
+  let interval = setInterval(advance, 3000);
+  let startX = 0;
+  let scrollLeft = 0;
+  strip.addEventListener('touchstart', (e) => {
+    clearInterval(interval);
+    startX = e.touches[0].pageX;
+    scrollLeft = strip.scrollLeft;
+  });
+  strip.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].pageX;
+    const walk = startX - x;
+    strip.scrollLeft = scrollLeft + walk;
+  });
+  strip.addEventListener('touchend', () => {
+    interval = setInterval(advance, 3000);
+  });
+})();
+"""
+
 _REACTION_CSS = """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -112,17 +143,22 @@ if(sentinel){
 </script>
 """
 
+"""
+
 
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip."""
     st.markdown(_STORY_CSS, unsafe_allow_html=True)
-    html = "<div class='story-strip'>"
+    html = "<div class='story-strip' id='story-strip'>"
     for u in users:
+        avatar = sanitize_text(u.avatar)
+        username = sanitize_text(u.username)
         html += (
-            f"<div class='story-item'><img src='{u.avatar}' width='60'/><br>{u.username}</div>"
+            f"<div class='story-item'><img src='{avatar}' width='60'/><br>{username}</div>"
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
+    st_javascript(_STORY_JS, key="story_carousel")
 
 
 def _render_post(post: Post) -> None:
@@ -137,9 +173,11 @@ def _render_post(post: Post) -> None:
     with st.container():
         st.markdown("<div class='post-card'>", unsafe_allow_html=True)
         # Header
+        avatar = sanitize_text(post.user.avatar)
+        username = sanitize_text(post.user.username)
         st.markdown(
-            f"<div class='post-header'><img src='{post.user.avatar}'/>"
-            f"<strong>{post.user.username}</strong> "
+            f"<div class='post-header'><img src='{avatar}'/>"
+            f"<strong>{username}</strong> "
             f"<span>{' '.join(post.user.badges)}</span>"
             f"<span style='margin-left:auto;font-size:0.75rem;'>{post.timestamp:%H:%M}</span>"
             "</div>",
@@ -148,7 +186,8 @@ def _render_post(post: Post) -> None:
         # Media
         st.image(post.media, use_container_width=True, output_format="JPEG")
         # Caption
-        st.markdown(f"<div class='post-caption'>{post.caption}</div>", unsafe_allow_html=True)
+        caption = sanitize_text(post.caption)
+        st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
 
         # Reactions & comments
         cols = st.columns(len(reactions) + 1)
@@ -176,11 +215,14 @@ def _render_post(post: Post) -> None:
             with st.popover("💬"):
                 st.markdown("### comments")
                 for c in comments:
-                    st.write(f"**{c['user']}**: {c['text']}")
+                    user = sanitize_text(c['user'])
+                    text = sanitize_text(c['text'])
+                    st.write(f"**{user}**: {text}")
                 new = st.text_input("Add a comment", key=f"c_{post.id}")
                 if st.button("post", key=f"cbtn_{post.id}") and new:
-                    comments.append({"user": "you", "text": new})
+                    comments.append({"user": "you", "text": sanitize_text(new)})
                     st.session_state["comments"][post.id] = comments
+
                     st.experimental_rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
@@ -233,7 +275,7 @@ def _page_body() -> None:
     """Render the main feed inside the current container."""
     _init_state()
 
-    theme_selector("Theme", key_suffix="feed")
+    theme_toggle("Dark Mode", key_suffix="feed")
     st.toggle("beta mode", key="beta_mode")
 
     posts: List[Post] = st.session_state["posts"]
@@ -246,20 +288,35 @@ def _page_body() -> None:
     for p in posts[:offset]:
         _render_post(p)
 
-    if st.button("load more", key="load_more", on_click=_load_more_posts):
-        st.experimental_rerun()
-    st.markdown('<div id="load-sentinel"></div>', unsafe_allow_html=True)
-    st.markdown(
+    # ── Infinite scroll sentinel ───────────────────────────────────────
+    st.markdown("<div id='feed-sentinel'></div>", unsafe_allow_html=True)
+    triggered = st_javascript(
         """
-        <script>
-        const _btns=document.querySelectorAll('button[data-testid="widget-button"]');
-        const _btn=_btns[_btns.length-1];
-        if(_btn){_btn.id='load-more-btn';}
-        </script>
+        (() => {
+          const sent = document.getElementById('feed-sentinel');
+          if (!sent || window.feedObserverAttached) return false;
+          window.feedObserverAttached = true;
+          return new Promise(resolve => {
+            const obs = new IntersectionObserver(entries => {
+              if (entries[0].isIntersecting) {
+                obs.disconnect();
+                resolve(true);
+              }
+            });
+            obs.observe(sent);
+          });
+        })();
         """,
-        unsafe_allow_html=True,
+        key="feed_observer",
     )
-    st.markdown(_SCROLL_JS, unsafe_allow_html=True)
+
+    if triggered:
+        # load more posts when sentinel comes into view
+        if offset >= len(posts):
+            posts.extend(_generate_posts(3, start=len(posts)))
+        st.session_state["post_offset"] += 3
+        st.experimental_rerun()
+
 
 
 def main(main_container=None) -> None:

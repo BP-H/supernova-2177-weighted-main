@@ -42,6 +42,7 @@ def inject_modern_styles() -> None:
     css = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="/static/lucide-react.min.js"></script>
     <style>
     body, .stApp {
@@ -238,18 +239,24 @@ def render_stats_section(stats: dict | None = None) -> None:
         "success_rate": "94%",
         "accuracy": "98.2%",
     }
-    if stats is None:
-        stats = default_stats
-    else:
-        default_stats.update(stats)
-        stats = default_stats
+    default_stats = {
+        "runs": "0",
+        "proposals": "12",
+        "success_rate": "94%",
+        "accuracy": "98.2%",
+    }
+    # Merge user-provided stats on top of defaults without mutating them
+    data = default_stats.copy()
+    if stats:
+        data.update(stats)
 
     entries = [
-        ("🏃‍♂️", "Runs", stats.get("runs")),
-        ("📝", "Proposals", stats.get("proposals")),
-        ("⚡", "Success Rate", stats.get("success_rate")),
-        ("🎯", "Accuracy", stats.get("accuracy")),
+        ("🏃‍♂️", "Runs", data["runs"]),
+        ("📝", "Proposals", data["proposals"]),
+        ("⚡", "Success Rate", data["success_rate"]),
+        ("🎯", "Accuracy", data["accuracy"]),
     ]
+
     st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
     for icon, label, value in entries:
         st.markdown(
