@@ -142,7 +142,6 @@ if(sentinel){
 </script>
 """
 
-"""
 
 
 def _render_stories(users: List[User]) -> None:
