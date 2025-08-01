@@ -4,5 +4,11 @@
 
 import streamlit as st
 
-def main():
-    st.write("Placeholder page.")
+
+def render() -> None:
+    """Simple placeholder for the Validation page."""
+    st.write("Validation page coming soon.")
+
+
+def main() -> None:
+    render()

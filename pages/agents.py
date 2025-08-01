@@ -2,7 +2,17 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-from transcendental_resonance_frontend.pages.agents import main
+import streamlit as st
+
+
+def render() -> None:
+    """Simple placeholder page for Agents."""
+    st.write("Agents page coming soon.")
+
+
+def main() -> None:
+    render()
+
 
 if __name__ == "__main__":
     main()
