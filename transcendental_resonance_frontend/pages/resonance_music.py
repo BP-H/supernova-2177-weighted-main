@@ -20,7 +20,7 @@ from streamlit_helpers import (
     centered_container,
     safe_container,
     header,
-    theme_selector,
+    theme_toggle,
 )
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
@@ -77,7 +77,7 @@ def main(main_container=None, status_container=None) -> None:
         main_container = st
     if status_container is None:
         status_container = st
-    theme_selector("Theme", key_suffix="music")
+    theme_toggle("Dark Mode", key_suffix="music")
 
     # Auto-refresh for backend health check (global, outside main_container)
     st_autorefresh(interval=30000, key="status_ping")

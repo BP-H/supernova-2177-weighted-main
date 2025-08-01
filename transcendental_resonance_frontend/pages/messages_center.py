@@ -9,7 +9,7 @@ import asyncio
 import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import safe_container, header, theme_selector
+from streamlit_helpers import safe_container, header, theme_toggle
 from transcendental_resonance_frontend.src.utils import api
 from status_indicator import render_status_icon
 
@@ -140,7 +140,7 @@ def main(main_container=None) -> None:
     page = "messages_center"
     st.session_state["active_page"] = page
     key_prefix = f"{page}_"
-    theme_selector("Theme", key_suffix="msg_center")
+    theme_toggle("Dark Mode", key_suffix="msg_center")
 
     with safe_container(main_container):
         header_col, status_col = st.columns([8, 1])

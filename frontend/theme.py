@@ -12,12 +12,14 @@ import streamlit as st
 
 @dataclass(frozen=True)
 class ColorTheme:
-    """Simple container for theme colors."""
+    """Simple container for theme colors and common tokens."""
 
     bg: str
     card: str
     accent: str
     text_muted: str
+    radius: str = "0.5rem"
+    transition: str = "0.3s ease"
 
     def css_vars(self) -> str:
         """Return CSS variable declarations for this theme."""
@@ -57,12 +59,33 @@ def get_theme(name: bool | str = True) -> ColorTheme:
 def get_global_css(theme: bool | str = True) -> str:
     """Return ``:root`` CSS variables for the selected theme."""
 
-    cfg = get_theme(theme)
-    return (
-        "<style>\n:root {\n    "
-        + cfg.css_vars()
-        + "\n}\n</style>"
-    )
+    theme_obj = get_theme(dark)
+    return f"""
+<style>
+:root {{
+    --bg: {theme_obj.bg};
+    --card: {theme_obj.card};
+    --accent: {theme_obj.accent};
+    --text-muted: {theme_obj.text_muted};
+    --radius: {theme_obj.radius};
+    --transition: {theme_obj.transition};
+}}
+
+.fade-in {{
+    opacity: 0;
+    animation: fade-in var(--transition) forwards;
+}}
+
+.rounded {{
+    border-radius: var(--radius);
+}}
+
+@keyframes fade-in {{
+    from {{ opacity: 0; }}
+    to {{ opacity: 1; }}
+}}
+</style>
+"""
 
 
 def apply_theme(name: str) -> None:

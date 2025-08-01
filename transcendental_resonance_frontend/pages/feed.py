@@ -241,7 +241,7 @@ def _page_body() -> None:
     """Render the main feed inside the current container."""
     _init_state()
 
-    theme_selector("Theme", key_suffix="feed")
+    theme_toggle("Dark Mode", key_suffix="feed")
     st.toggle("beta mode", key="beta_mode")
 
     posts: List[Post] = st.session_state["posts"]

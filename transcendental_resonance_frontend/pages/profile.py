@@ -9,7 +9,7 @@ from modern_ui import inject_modern_styles
 from streamlit_helpers import (
     safe_container,
     header,
-    theme_selector,
+    theme_toggle,
     get_active_user,
     ensure_active_user,
 )
@@ -118,7 +118,7 @@ def main(main_container=None) -> None:
         main_container = st
     init_db()
     seed_default_users()
-    theme_selector("Theme", key_suffix="profile")
+    theme_toggle("Dark Mode", key_suffix="profile")
     # …inside render_social_tab (or whichever function/file this is)
     get_active_user()                     # make sure the key exists
     container_ctx = safe_container(main_container)
