@@ -9,7 +9,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     ui = None  # type: ignore
     import streamlit as st
 
-from utils.api import api_call, TOKEN, get_group_recommendations
+from transcendental_resonance_frontend.src.utils.api import api_call, TOKEN, get_group_recommendations
 from utils.styles import get_theme
 from utils.layout import page_container
 from utils.features import skeleton_loader
