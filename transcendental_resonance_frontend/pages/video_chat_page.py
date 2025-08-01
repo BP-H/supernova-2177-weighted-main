@@ -14,7 +14,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     import streamlit as st
 
 from utils.api import TOKEN, WS_CONNECTION, connect_ws
-from utils.layout import navigation_bar, page_container
+from utils.layout import page_container
 from utils.styles import get_theme
 
 from realtime_comm import VideoChatManager
@@ -31,8 +31,6 @@ async def video_chat_page() -> None:
 
     THEME = get_theme()
     with page_container(THEME):
-        if TOKEN:
-            navigation_bar()
         ui.label("Video Chat").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )

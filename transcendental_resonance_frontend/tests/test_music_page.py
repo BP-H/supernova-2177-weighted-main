@@ -7,7 +7,7 @@ pytest.importorskip("nicegui")
 pytestmark = pytest.mark.requires_nicegui
 
 import inspect
-from pages.music_page import music_page
+from transcendental_resonance_frontend.pages.music_page import music_page
 
 
 def test_music_page_is_async():

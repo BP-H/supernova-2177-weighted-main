@@ -24,7 +24,7 @@ Replace the backend URL with the `BACKEND_URL` environment variable if your API 
 
 ## Structure
 
-- `src/pages/` – individual UI pages (login, profile, VibeNodes, etc.)
+- `pages/` – individual UI pages (login, profile, VibeNodes, etc.)
 - `src/utils/` – shared utilities for API calls and styling
 - `src/main.py` – entry point registering pages and launching the app
 - `tests/` – pytest-based unit tests (package marked by `__init__.py`)
