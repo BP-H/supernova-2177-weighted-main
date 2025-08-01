@@ -226,7 +226,7 @@ try:
 except ImportError:
 
     class TempConfig:
-        METRICS_PORT = 8001
+        METRICS_PORT = int(os.environ.get("METRICS_PORT", "8001"))
 
     CONFIG = TempConfig
 import argparse
@@ -549,7 +549,9 @@ try:  # pragma: no cover - fallback only used if optional import fails
 
     CONFIG = SystemConfig
 except Exception:  # pragma: no cover - extremely defensive
-    CONFIG = types.SimpleNamespace(METRICS_PORT=8001)
+    CONFIG = types.SimpleNamespace(
+        METRICS_PORT=int(os.environ.get("METRICS_PORT", "8001"))
+    )
 
 # --- MODULE: logging_setup.py ---
 # Logging setup with thematic flavor
@@ -623,7 +625,7 @@ else:
 
 _session_started = bool(st and st.session_state.get("metrics_started"))
 if not _session_started and not metrics_started:
-    port = Config.METRICS_PORT
+    port = int(os.environ.get("METRICS_PORT", str(Config.METRICS_PORT)))
     try:
         prom.start_http_server(port)
     except OSError:
@@ -1736,7 +1738,7 @@ class Config:
     SCIENTIFIC_REASONING_CYCLE_INTERVAL_SECONDS: int = 3600
     ADAPTIVE_OPTIMIZATION_INTERVAL_SECONDS: int = 3600
     ANNUAL_AUDIT_INTERVAL_SECONDS: int = 86400 * 365
-    METRICS_PORT: int = 8001
+    METRICS_PORT: int = int(os.environ.get("METRICS_PORT", "8001"))
 
     # Cooldown to prevent excessive universe forking
     FORK_COOLDOWN_SECONDS: int = 3600
