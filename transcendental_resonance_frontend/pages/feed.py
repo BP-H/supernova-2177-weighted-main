@@ -13,7 +13,8 @@ import streamlit as st
 
 from frontend.theme import set_theme
 from modern_ui import inject_modern_styles
-from streamlit_helpers import theme_selector, safe_container, sanitize_text
+from streamlit_helpers import theme_toggle, safe_container, sanitize_text
+
 from modern_ui_components import st_javascript
 from frontend.assets import story_css, story_js, reaction_css, scroll_js
 

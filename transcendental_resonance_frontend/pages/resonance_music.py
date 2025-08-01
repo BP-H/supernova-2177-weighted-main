@@ -26,6 +26,7 @@ from streamlit_autorefresh import st_autorefresh
 from status_indicator import render_status_icon, check_backend # Ensure check_backend is imported
 from transcendental_resonance_frontend.src.utils.api import get_resonance_summary, dispatch_route # Import get_resonance_summary and dispatch_route from utils.api
 
+
 set_theme("light")
 inject_modern_styles()
 

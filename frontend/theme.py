@@ -75,8 +75,20 @@ def get_global_css(theme: bool | str = True) -> str:
 
 body {{
     background: var(--bg) !important;
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
     transition: background var(--transition);
+}}
+
+.card {{
+    background: var(--card);
+}}
+
+a {{
+    color: var(--accent);
+}}
+
+.text-muted {{
+    color: var(--text-muted);
 }}
 
 button, .stButton>button {{
@@ -92,37 +104,6 @@ button, .stButton>button {{
 
 def _resolve_mode(name: bool | str) -> str:
     """Normalize ``name`` to ``light`` or ``dark``."""
-    if isinstance(name, str):
-        mode = name.lower()
-        return mode if mode in THEMES else "light"
-    return "dark" if name else "light"
-
-
-def apply_theme(name: bool | str = True) -> None:
-    """Inject the base CSS variables for ``name`` and remember it."""
-    mode = _resolve_mode(name)
-    st.markdown(get_global_css(mode), unsafe_allow_html=True)
-    st.session_state["_theme"] = mode
-
-
-def set_theme(name: str) -> None:
-    """Store ``name`` in session state and apply CSS once."""
-    mode = _resolve_mode(name)
-
-    # If both theme and modern styles are already applied, do nothing
-    if st.session_state.get("_theme") == mode and st.session_state.get("_styles_injected"):
-        return
-
-    # Remember the theme name
-    st.session_state["_theme"] = mode
-
-    # If modern extras were already injected, just reapply base CSS;
-    # otherwise inject everything (base + modern)
-    if st.session_state.get("_styles_injected"):
-        apply_theme(mode)
-    else:
-        inject_modern_styles(mode)
-
     if isinstance(name, str):
         mode = name.lower()
         return mode if mode in THEMES else "light"
@@ -201,3 +182,11 @@ def set_theme(name: str) -> None:
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
     return get_theme(st.session_state.get("_theme", "light")).accent
+
+
+__all__ = [
+    "apply_theme",
+    "set_theme",
+    "inject_modern_styles",
+    "get_accent_color",
+]
