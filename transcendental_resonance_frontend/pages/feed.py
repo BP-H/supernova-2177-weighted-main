@@ -153,7 +153,7 @@ def _render_stories(users: List[User]) -> None:
         avatar = sanitize_text(u.avatar)
         username = sanitize_text(u.username)
         html += (
-            f"<div class='story-item'><img src='{avatar}' width='60'/><br>{username}</div>"
+            f"<div class='story-item'><img src='{avatar}' width='60' alt='avatar'/><br>{username}</div>"
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
@@ -175,7 +175,7 @@ def _render_post(post: Post) -> None:
         avatar = sanitize_text(post.user.avatar)
         username = sanitize_text(post.user.username)
         st.markdown(
-            f"<div class='post-header'><img src='{avatar}'/>"
+            f"<div class='post-header'><img src='{avatar}' alt='avatar'/>"
             f"<strong>{username}</strong> "
             f"<span>{' '.join(post.user.badges)}</span>"
             f"<span style='margin-left:auto;font-size:0.75rem;'>{post.timestamp:%H:%M}</span>"
