@@ -1,10 +1,9 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Proxy loader for the Agents page."""
+"""Thin wrapper for the Agents page."""
 
-from __future__ import annotations
-
+from transcendental_resonance_frontend.pages.agents import main, render
 from transcendental_resonance_frontend.pages import agents as real_page
 
 
@@ -17,4 +16,5 @@ def render() -> None:  # keep legacy compatibility
 
 
 if __name__ == "__main__":  # manual execution
+
     main()

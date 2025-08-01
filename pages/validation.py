@@ -1,7 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Proxy loader for the Validation page."""
+"""Thin wrapper for the Validation page."""
 
 from __future__ import annotations
 

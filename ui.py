@@ -327,14 +327,11 @@ from frontend.theme import apply_theme
 try:
     from modern_ui import (
         inject_modern_styles,
-        inject_light_theme,
     )
 except Exception:  # pragma: no cover - gracefully handle missing/invalid module
     def inject_modern_styles(*_a, **_k):
         return None
 
-    def inject_light_theme(*_a, **_k):
-        return None
 
 
 try:
@@ -1492,7 +1489,7 @@ def main() -> None:
 
     # Simple light theme fallback
     try:
-        inject_light_theme()
+        apply_theme("light")
     except Exception:  # pragma: no cover
         pass
 
@@ -1543,7 +1540,7 @@ def main() -> None:
         return
 
     try:
-        inject_light_theme()
+        apply_theme("light")
 
 
         # Inject keyboard shortcuts for quick navigation

@@ -1,7 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Proxy loader for the Voting page."""
+"""Thin wrapper for the Voting page."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ def main() -> None:
 
 def render() -> None:
     real_page.main()
+
 
 
 if __name__ == "__main__":

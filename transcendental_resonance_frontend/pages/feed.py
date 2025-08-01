@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 import random
 import streamlit as st
 
-from frontend.light_theme import inject_light_theme
+from frontend.theme import apply_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import theme_selector, safe_container, sanitize_text
 from modern_ui_components import st_javascript
@@ -142,7 +142,6 @@ if(sentinel){
 </script>
 """
 
-"""
 
 
 def _render_stories(users: List[User]) -> None:
@@ -153,7 +152,7 @@ def _render_stories(users: List[User]) -> None:
         avatar = sanitize_text(u.avatar)
         username = sanitize_text(u.username)
         html += (
-            f"<div class='story-item'><img src='{avatar}' width='60'/><br>{username}</div>"
+            f"<div class='story-item'><img src='{avatar}' width='60' alt='avatar'/><br>{username}</div>"
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
@@ -175,17 +174,22 @@ def _render_post(post: Post) -> None:
         avatar = sanitize_text(post.user.avatar)
         username = sanitize_text(post.user.username)
         st.markdown(
-            f"<div class='post-header'><img src='{avatar}'/>"
+            f"<div class='post-header'><img src='{avatar}' alt='avatar'/>"
             f"<strong>{username}</strong> "
             f"<span>{' '.join(post.user.badges)}</span>"
             f"<span style='margin-left:auto;font-size:0.75rem;'>{post.timestamp:%H:%M}</span>"
             "</div>",
             unsafe_allow_html=True,
         )
-        # Media
-        st.image(post.media, use_container_width=True, output_format="JPEG")
-        # Caption
+        # Media with alt text
         caption = sanitize_text(post.caption)
+        st.image(
+            post.media,
+            use_container_width=True,
+            output_format="JPEG",
+            alt=caption,
+        )
+        # Caption
         st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
 
         # Reactions & comments
@@ -196,7 +200,7 @@ def _render_post(post: Post) -> None:
             if cols[idx].button(str(count), key=btn_key):
                 reactions[emoji] += 1
                 st.session_state["reactions"][post.id] = reactions
-                st.experimental_rerun()
+                st.rerun()
             cols[idx].markdown(
                 f"""
                 <script>
@@ -222,7 +226,7 @@ def _render_post(post: Post) -> None:
                     comments.append({"user": "you", "text": sanitize_text(new)})
                     st.session_state["comments"][post.id] = comments
 
-                    st.experimental_rerun()
+                    st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -266,7 +270,7 @@ def _load_more_posts() -> None:
 # Page entrypoints
 # ──────────────────────────────────────────────────────────────────────────────
 
-inject_light_theme()
+apply_theme("light")
 inject_modern_styles()
 
 
@@ -314,7 +318,7 @@ def _page_body() -> None:
         if offset >= len(posts):
             posts.extend(_generate_posts(3, start=len(posts)))
         st.session_state["post_offset"] += 3
-        st.experimental_rerun()
+        st.rerun()
 
 
 

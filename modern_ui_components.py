@@ -21,12 +21,7 @@ except Exception:  # pragma: no cover – fallback for isolated execution
 
 from uuid import uuid4
 from streamlit_helpers import safe_container
-
-try:
-    from modern_ui import inject_modern_styles
-except Exception:  # pragma: no cover - gracefully handle missing/invalid module
-    def inject_modern_styles(*_a, **_k):
-        return None
+from frontend.theme import inject_modern_styles
 
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import get_pages_dir

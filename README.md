@@ -403,6 +403,7 @@ Full implementations for these pages live in
 `transcendental_resonance_frontend/pages/`. The lightweight files under the
 top-level `pages/` directory simply import and call those modules.
 
+
 ### Starting the Backend
 
 The API must be reachable at [http://localhost:8000](http://localhost:8000). Start it with:

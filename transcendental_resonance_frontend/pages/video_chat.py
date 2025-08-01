@@ -6,14 +6,15 @@ import asyncio
 import json
 
 import streamlit as st
-from frontend.light_theme import inject_light_theme
+from frontend.theme import apply_theme
 from modern_ui import inject_modern_styles
+
 
 from ai_video_chat import create_session
 from video_chat_router import ConnectionManager
 from streamlit_helpers import safe_container, header, theme_toggle
 
-inject_light_theme()
+apply_theme("light")
 inject_modern_styles()
 
 
