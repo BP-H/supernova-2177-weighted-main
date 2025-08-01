@@ -148,6 +148,24 @@ def sanitize_text(text: Any) -> str:
     return html.escape(text, quote=False)
 
 
+def sanitize_emoji(text: str) -> str:
+    """Return ``text`` with emoji code points HTML-encoded or removed."""
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if cp in (0xFE0E, 0xFE0F, 0x200D):
+            continue  # strip variation selectors and joiners
+        if cp > 0xFFFF:
+            out.append(f"&#x{cp:X};")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def _safe_element(tag: str, content: str):
     """Render ``ui.element`` safely across backends."""
     try:
