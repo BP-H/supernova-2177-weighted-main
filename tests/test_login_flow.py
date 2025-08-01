@@ -1,5 +1,12 @@
 import os
+import sys
 import importlib
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+if str(root) not in sys.path:
+    sys.path.insert(0, str(root))
+
 from fastapi.testclient import TestClient
 import superNova_2177 as sn
 import db_models
@@ -17,7 +24,9 @@ def client(tmp_path, monkeypatch):
     importlib.reload(db_models)
     importlib.reload(login_router)
     sn_mod = importlib.reload(sn)
+    sn_mod.create_database()
     sn_mod.create_app()
+    sn_mod.Base.metadata.drop_all(bind=sn_mod.engine)
     sn_mod.Base.metadata.create_all(bind=sn_mod.engine)
     client = TestClient(sn_mod.app)
     with sn_mod.SessionLocal() as db:

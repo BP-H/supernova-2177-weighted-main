@@ -379,6 +379,13 @@ redis_client = None
 _creative_leap_model = None
 
 
+def create_database() -> None:
+    """Initialize database tables using current settings."""
+    settings = get_settings()
+    db_models.init_db(settings.engine_url)
+
+
+
 def get_password_hash(password: str) -> str:
     if hasattr(pwd_context, "hash"):
         return pwd_context.hash(password)
