@@ -8,11 +8,7 @@ from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import safe_container, header, theme_selector
 from status_indicator import render_status_icon
-from chat_ui import (
-    render_chat_interface,
-    render_video_call_controls,
-    render_voice_chat_controls,
-)
+from chat_ui import render_chat_interface
 
 inject_light_theme()
 inject_modern_styles()
@@ -34,10 +30,6 @@ def main(main_container=None) -> None:
         with status_col:
             render_status_icon()
         render_chat_interface()
-        st.divider()
-        render_video_call_controls(key_prefix=f"{page}_")
-        st.divider()
-        render_voice_chat_controls(key_prefix=f"{page}_")
 
 
 def render() -> None:

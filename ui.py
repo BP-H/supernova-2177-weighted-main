@@ -1743,32 +1743,25 @@ def main() -> None:
         # Center content area — dynamic page loading
         with center_col:
             # Main navigation tabs for common sections
-            with ui.tabs(["Validation", "Voting", "Agents"]) as tabs:
-                selected = tabs.active
-                if selected != display_choice:
-                    try:
-                        st.query_params["page"] = selected
-                    except AttributeError:
-                        st.experimental_set_query_params(page=selected)
-                    st.session_state["_main_tabs"] = selected
-                    st.rerun()
+            tab_labels = ["Validation", "Voting", "Agents"]
+            for label, tab in zip(tab_labels, st.tabs(tab_labels)):
+                with tab:
+                    canonical = normalize_choice(label)
+                    page_key = PAGES.get(canonical, canonical.lower())
 
-                label = normalize_choice(selected)
-                page_key = PAGES.get(label, label.lower())
-
-                if page_key:
-                    module_paths = [
-                        f"transcendental_resonance_frontend.pages.{page_key}",
-                        f"pages.{page_key}",
-                    ]
-                    try:
-                        load_page_with_fallback(selected, module_paths)
-                    except Exception:
-                        st.toast(f"Page not found: {selected}", icon="⚠️")
-                        _render_fallback(selected)
-                else:
-                    st.toast("Select a page above to continue.")
-                    _render_fallback(selected)
+                    if page_key:
+                        module_paths = [
+                            f"transcendental_resonance_frontend.pages.{page_key}",
+                            f"pages.{page_key}",
+                        ]
+                        try:
+                            load_page_with_fallback(label, module_paths)
+                        except Exception:
+                            st.toast(f"Page not found: {label}", icon="⚠️")
+                            _render_fallback(label)
+                    else:
+                        st.toast("Select a page above to continue.")
+                        _render_fallback(label)
 
 
             # Run agent logic if triggered
