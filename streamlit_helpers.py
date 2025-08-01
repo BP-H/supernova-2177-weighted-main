@@ -71,8 +71,9 @@ except Exception:  # noqa: BLE001
                 return _DummyElement(st.container())
 
             def image(self, img: str) -> _DummyElement:
-                st.image(img, use_container_width=True, alt="content image")
+                st.image(img, use_container_width=True, alt="UI image")
                 return _DummyElement()
+
 
 
             def badge(self, text: str) -> _DummyElement:
@@ -268,7 +269,11 @@ def render_post_card(post_data: dict[str, Any]) -> None:
     if ui is None:
         if hasattr(st, "image") and hasattr(st, "write"):
             if img:
-                st.image(img, use_container_width=True, alt="post image")
+                st.image(
+                    img,
+                    use_container_width=True,
+                    alt=f"Post by {username}" if username else "post image",
+                )
 
             caption_text = f"**{html.escape(username)}**: {text}" if username else text
             st.write(caption_text)
@@ -319,13 +324,17 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             st.warning(f"Post card failed: {exc}")
         if img:
             if hasattr(st, "image"):
-                st.image(img, use_container_width=True, alt="post image")
-
+                st.image(
+                    img,
+                    use_container_width=True,
+                    alt=f"Post by {username}" if username else "post image",
+                )
             else:
                 getattr(st, "markdown", lambda *a, **k: None)(
-                    f"<img src='{html.escape(img)}' alt='' style='width:100%'>",
+                    f"<img src='{html.escape(img)}' alt='post image' style='width:100%'>",
                     unsafe_allow_html=True,
                 )
+
         write_fn = getattr(st, "write", getattr(st, "markdown", lambda x: None))
         write_fn(text)
         getattr(st, "caption", write_fn)(f"❤️ {likes}")
