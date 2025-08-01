@@ -15,6 +15,7 @@ import streamlit as st
 from frontend.light_theme import inject_light_theme
 from modern_ui import inject_modern_styles
 from streamlit_helpers import theme_selector, safe_container, sanitize_text
+from modern_ui_components import st_javascript
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -92,6 +93,36 @@ _STORY_CSS = """
 </style>
 """
 
+_STORY_JS = """
+(() => {
+  const strip = document.getElementById('story-strip');
+  if (!strip || window.storyCarouselInit) return;
+  window.storyCarouselInit = true;
+  let idx = 0;
+  const advance = () => {
+    idx = (idx + 1) % strip.children.length;
+    const el = strip.children[idx];
+    strip.scrollTo({left: el.offsetLeft, behavior: 'smooth'});
+  };
+  let interval = setInterval(advance, 3000);
+  let startX = 0;
+  let scrollLeft = 0;
+  strip.addEventListener('touchstart', (e) => {
+    clearInterval(interval);
+    startX = e.touches[0].pageX;
+    scrollLeft = strip.scrollLeft;
+  });
+  strip.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].pageX;
+    const walk = startX - x;
+    strip.scrollLeft = scrollLeft + walk;
+  });
+  strip.addEventListener('touchend', () => {
+    interval = setInterval(advance, 3000);
+  });
+})();
+"""
+
 _REACTION_CSS = """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -112,11 +143,13 @@ if(sentinel){
 </script>
 """
 
+"""
+
 
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip."""
     st.markdown(_STORY_CSS, unsafe_allow_html=True)
-    html = "<div class='story-strip'>"
+    html = "<div class='story-strip' id='story-strip'>"
     for u in users:
         avatar = sanitize_text(u.avatar)
         username = sanitize_text(u.username)
@@ -125,6 +158,7 @@ def _render_stories(users: List[User]) -> None:
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
+    st_javascript(_STORY_JS, key="story_carousel")
 
 
 def _render_post(post: Post) -> None:
@@ -254,20 +288,35 @@ def _page_body() -> None:
     for p in posts[:offset]:
         _render_post(p)
 
-    if st.button("load more", key="load_more", on_click=_load_more_posts):
-        st.experimental_rerun()
-    st.markdown('<div id="load-sentinel"></div>', unsafe_allow_html=True)
-    st.markdown(
+    # ── Infinite scroll sentinel ───────────────────────────────────────
+    st.markdown("<div id='feed-sentinel'></div>", unsafe_allow_html=True)
+    triggered = st_javascript(
         """
-        <script>
-        const _btns=document.querySelectorAll('button[data-testid="widget-button"]');
-        const _btn=_btns[_btns.length-1];
-        if(_btn){_btn.id='load-more-btn';}
-        </script>
+        (() => {
+          const sent = document.getElementById('feed-sentinel');
+          if (!sent || window.feedObserverAttached) return false;
+          window.feedObserverAttached = true;
+          return new Promise(resolve => {
+            const obs = new IntersectionObserver(entries => {
+              if (entries[0].isIntersecting) {
+                obs.disconnect();
+                resolve(true);
+              }
+            });
+            obs.observe(sent);
+          });
+        })();
         """,
-        unsafe_allow_html=True,
+        key="feed_observer",
     )
-    st.markdown(_SCROLL_JS, unsafe_allow_html=True)
+
+    if triggered:
+        # load more posts when sentinel comes into view
+        if offset >= len(posts):
+            posts.extend(_generate_posts(3, start=len(posts)))
+        st.session_state["post_offset"] += 3
+        st.experimental_rerun()
+
 
 
 def main(main_container=None) -> None:
