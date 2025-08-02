@@ -15,6 +15,7 @@ class ColorTheme:
     bg: str
     card: str
     accent: str
+    text: str
     text_muted: str
     radius: str = "1rem"
     transition: str = "0.4s ease"
@@ -25,6 +26,7 @@ class ColorTheme:
             f"--bg: {self.bg};",
             f"--card: {self.card};",
             f"--accent: {self.accent};",
+            f"--text: {self.text};",
             f"--text-muted: {self.text_muted};",
             f"--radius: {self.radius};",
             f"--transition: {self.transition};",
@@ -36,12 +38,14 @@ LIGHT_THEME = ColorTheme(
     bg="#F0F2F6",
     card="#FFFFFF",
     accent="#0077B5",        # LinkedIn-blue accent
+    text="#222222",
     text_muted="#666666",
 )
 DARK_THEME = ColorTheme(
     bg="#0A0F14",
     card="rgba(255,255,255,0.05)",
     accent="#00E5FF",        # Neon cyan
+    text="#FFFFFF",
     text_muted="#AAAAAA",
 )
 
@@ -75,6 +79,7 @@ def get_global_css(theme: bool | str = True) -> str:
 
 body {{
     background: var(--bg) !important;
+    color: var(--text);
     font-family: 'Inter', sans-serif;
     transition: background var(--transition);
 }}
@@ -127,6 +132,8 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     apply_theme(mode)
 
     extra = """
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
     /* Glassmorphic cards */
     .glass-card {

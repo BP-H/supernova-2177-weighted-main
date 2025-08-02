@@ -12,7 +12,7 @@ import random
 import streamlit as st
 
 from frontend.theme import set_theme
-from modern_ui import inject_modern_styles
+from modern_ui import apply_modern_styles
 from streamlit_helpers import theme_toggle, safe_container, sanitize_text
 
 from modern_ui_components import st_javascript
@@ -209,7 +209,7 @@ def _load_more_posts() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 set_theme("light")
-inject_modern_styles()
+apply_modern_styles()
 
 
 def _page_body() -> None:

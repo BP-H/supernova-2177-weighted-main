@@ -25,7 +25,7 @@ except Exception:  # pragma: no cover – fallback for isolated execution
 
 from uuid import uuid4
 from streamlit_helpers import safe_container
-from frontend.theme import inject_modern_styles
+from modern_ui import apply_modern_styles
 
 from frontend import theme
 try:
@@ -153,10 +153,9 @@ def _icon_html(name: str) -> str:
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
-    inject_modern_styles()
+    apply_modern_styles()
     st.markdown(
         """
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
         .glass-card {
             background: rgba(255,255,255,0.3);

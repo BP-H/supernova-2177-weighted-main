@@ -29,7 +29,7 @@ def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "ðŸš
 logger = logging.getLogger("modern_ui")
 
 
-def inject_modern_styles() -> None:
+def apply_modern_styles() -> None:
     """Inject global CSS using theme variables and local assets."""
     from modern_ui_components import SIDEBAR_STYLES
 
@@ -40,14 +40,12 @@ def inject_modern_styles() -> None:
         return
 
     css = """
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="/static/lucide-react.min.js"></script>
     <style>
     body, .stApp {
         background: var(--bg);
-        color: var(--text-muted);
+        color: var(--text);
         font-family: 'Inter', sans-serif;
     }
     .card, .custom-container {
@@ -84,8 +82,8 @@ def inject_modern_styles() -> None:
     st.session_state["_modern_ui_css_injected"] = True
 
 def inject_premium_styles() -> None:
-    """Backward compatible alias for :func:`inject_modern_styles`."""
-    inject_modern_styles()
+    """Backward compatible alias for :func:`apply_modern_styles`."""
+    apply_modern_styles()
 
 
 def render_modern_header() -> None:
@@ -262,7 +260,7 @@ def close_card_container() -> None:
 
 __all__ = [
     "render_lottie_animation",
-    "inject_modern_styles",
+    "apply_modern_styles",
     "inject_premium_styles",
     "render_modern_header",
     "render_validation_card",
