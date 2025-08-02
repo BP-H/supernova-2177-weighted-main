@@ -113,13 +113,7 @@ def safe_element(tag: str, content: str) -> Any:
 # Optional modern-ui styles injector
 # ──────────────────────────────────────────────────────────────────────────────
 
-try:
-    from modern_ui import inject_modern_styles  # type: ignore
-except Exception:  # noqa: BLE001
-
-    def inject_modern_styles(*_a: Any, **_kw: Any) -> None:  # type: ignore
-        """No-op when *modern_ui* is absent."""
-        return None
+from frontend.theme import inject_modern_styles
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -279,7 +273,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             st.write(caption_text)
             getattr(st, "caption", st.write)(f"❤️ {likes}")
             getattr(st, "markdown", lambda *a, **k: None)(
-                "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+                "<div style='color:var(--text);font-size:1.2em;'>❤️ 🔁 💬</div>",
                 unsafe_allow_html=True,
             )
         else:
@@ -291,7 +285,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             if username:
                 html_snippet += f"<div><strong>{html.escape(username)}</strong></div>"
             html_snippet += f"<p>{html.escape(text)}</p>"
-            html_snippet += f"<div style='color:var(--text-color);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
+            html_snippet += f"<div style='color:var(--text);font-size:1.2em;'>❤️ {likes} 🔁 💬</div>"
             html_snippet += "</div>"
             getattr(st, "markdown", lambda *a, **k: None)(html_snippet, unsafe_allow_html=True)
         return
@@ -314,7 +308,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
                 ui.element("div", reaction).classes("text-center text-lg")
             else:
                 getattr(st, "markdown", lambda *a, **k: None)(
-                    f"<div style='color:var(--text-color);font-size:1.2em;'>{reaction}</div>",
+                    f"<div style='color:var(--text);font-size:1.2em;'>{reaction}</div>",
                     unsafe_allow_html=True,
                 )
     except Exception as exc:  # noqa: BLE001
@@ -339,7 +333,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
         write_fn(text)
         getattr(st, "caption", write_fn)(f"❤️ {likes}")
         getattr(st, "markdown", lambda *a, **k: None)(
-            "<div style='color:var(--text-color);font-size:1.2em;'>❤️ 🔁 💬</div>",
+            "<div style='color:var(--text);font-size:1.2em;'>❤️ 🔁 💬</div>",
             unsafe_allow_html=True,
         )
 

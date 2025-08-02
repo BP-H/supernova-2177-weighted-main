@@ -10,6 +10,7 @@ import streamlit as st
 from typing import Optional, Dict
 from contextlib import contextmanager
 from pathlib import Path
+
 try:
     # Prefer the shared path constants if available
     _paths = importlib.import_module("utils.paths")
@@ -17,29 +18,33 @@ try:
     PAGES_DIR = _paths.PAGES_DIR
     get_pages_dir = _paths.get_pages_dir
 except Exception:  # pragma: no cover – fallback for isolated execution
-    ROOT_DIR = Path(__file__).resolve().parents[1]          # repo root
+    ROOT_DIR = Path(__file__).resolve().parents[1]  # repo root
     PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
 
     def get_pages_dir() -> Path:
         return PAGES_DIR
 
-from uuid import uuid4
+
 from streamlit_helpers import safe_container
-from frontend.theme import inject_modern_styles
+from modern_ui import apply_modern_styles
 
 from frontend import theme
+
 try:
     from streamlit_javascript import st_javascript
 except Exception:  # pragma: no cover - optional dependency or missing runtime
+
     def st_javascript(*_args, **_kwargs) -> None:
         """Fallback no-op when ``streamlit_javascript`` is unavailable."""
         return None
+
 
 HAS_LUCIDE = importlib.util.find_spec("lucide-react") is not None
 LUCIDE_LOADED_KEY = "_lucide_js_loaded"
 
 try:
     from streamlit_option_menu import option_menu
+
     USE_OPTION_MENU = True
 except Exception:  # pragma: no cover - optional dependency
     option_menu = None  # type: ignore
@@ -127,7 +132,9 @@ def shadcn_card(title: Optional[str] = None):
     st.markdown(SHADCN_CARD_CSS, unsafe_allow_html=True)
     st.markdown("<div class='shadcn-card'>", unsafe_allow_html=True)
     if title:
-        st.markdown(f"<div class='shadcn-card-title'>{title}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='shadcn-card-title'>{title}</div>", unsafe_allow_html=True
+        )
     with st.container() as container:
         yield container
     st.markdown("</div>", unsafe_allow_html=True)
@@ -150,13 +157,11 @@ def _icon_html(name: str) -> str:
     return name
 
 
-
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
-    inject_modern_styles()
+    apply_modern_styles()
     st.markdown(
         """
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
         .glass-card {
             background: rgba(255,255,255,0.3);
@@ -176,6 +181,7 @@ def render_modern_layout() -> None:
         """,
         unsafe_allow_html=True,
     )
+
 
 
 def render_modern_header(title: str) -> None:
@@ -220,7 +226,6 @@ def render_modern_sidebar(
     missing_pages: list[str] = []
 
     for label, page_ref in pages.items():
-
         slug = str(page_ref).strip("/").split("?")[0].rsplit(".", 1)[-1]
 
         exists = any((d / f"{slug}.py").exists() for d in existing_dirs)
@@ -232,24 +237,20 @@ def render_modern_sidebar(
         valid_pages[label] = page_ref
 
     if missing_pages:
-
         msg = "Unknown pages: " + ", ".join(missing_pages)
 
         if hasattr(st, "warning"):
-
             st.warning(msg, icon="⚠️")
 
         else:  # pragma: no cover - used in tests with SimpleNamespace
-
             print(msg)
 
     if not valid_pages:
-
         st.error("No valid pages available", icon="⚠️")
 
         return ""
 
-    pages = valid_pages    
+    pages = valid_pages
 
     opts = list(pages.keys())
     if not opts:
@@ -283,16 +284,17 @@ def render_modern_sidebar(
             st.session_state[collapsed_key] = not st.session_state[collapsed_key]
     else:
         # fallback in case st.button is unavailable (optional)
-        collapsed = st.session_state.get(collapsed_key, False)
-
+        st.session_state.get(collapsed_key, False)
 
     container_ctx = safe_container(container)
     with container_ctx:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
-        st.markdown(
-            f"<script>var sb=document.querySelector('[data-testid=\"stSidebar\"]'); if(sb) sb.classList.toggle('collapsed', {str(st.session_state.get(collapsed_key, False)).lower()});</script>",
-            unsafe_allow_html=True,
+        script = (
+            "<script>var sb=document.querySelector('[data-testid=\"stSidebar\"]'); "
+            f"if(sb) sb.classList.toggle('collapsed', {str(st.session_state.get(collapsed_key, False)).lower()});"  # noqa: E501
+            "</script>"
         )
+        st.markdown(script, unsafe_allow_html=True)
         st.markdown(
             f"<div class='glass-card sidebar-nav {orientation_cls}'>",
             unsafe_allow_html=True,
@@ -306,7 +308,9 @@ def render_modern_sidebar(
                     icons=[icon_map.get(o, "dot") for o in opts],
                     orientation="horizontal" if horizontal else "vertical",
                     key=widget_key,
-                    default_index=opts.index(st.session_state.get(session_key, opts[0])),
+                    default_index=opts.index(
+                        st.session_state.get(session_key, opts[0])
+                    ),
                 )
             elif horizontal:
                 # Render as horizontal buttons
@@ -325,7 +329,9 @@ def render_modern_sidebar(
                     index=opts.index(st.session_state.get(session_key, opts[0])),
                 )
                 choice = opts[
-                    [f"{_icon_html(icon_map.get(o, ''))} {o}".strip() for o in opts].index(choice_disp)
+                    [
+                        f"{_icon_html(icon_map.get(o, ''))} {o}".strip() for o in opts
+                    ].index(choice_disp)
                 ]
 
         except Exception:
@@ -343,7 +349,9 @@ def render_modern_sidebar(
                     unsafe_allow_html=True,
                 )
                 st.session_state[LUCIDE_LOADED_KEY] = True
-            st.markdown("<script>lucide.createIcons();</script>", unsafe_allow_html=True)
+            st.markdown(
+                "<script>lucide.createIcons();</script>", unsafe_allow_html=True
+            )
         return choice
 
 
@@ -374,7 +382,7 @@ def render_post_card(entry: dict) -> None:
             f"<br>Score: {score}" if score is not None else ""
         )
     st.markdown(
-        f"<div class='sn-card' style='background:white;padding:1rem;margin-bottom:1rem;'>{content}</div>",
+        f"<div class='sn-card' style='background:white;padding:1rem;margin-bottom:1rem;'>{content}</div>",  # noqa: E501
         unsafe_allow_html=True,
     )
 

@@ -156,6 +156,17 @@ This project depends on libraries such as `fastapi`, `pydantic-settings`, `struc
 6. On first launch the application seeds `harmonizers.db` with an `admin`,
    `guest`, and `demo_user` account so the UI has sample profiles ready.
 
+### Module Search Path
+
+Add the repository root to your `PYTHONPATH` or install the project in editable
+mode so imports like `from utils.api import api_call` resolve correctly:
+
+```bash
+pip install -e .
+# or
+export PYTHONPATH="${PWD}"
+```
+
 ### Extras
 
 The NiceGUI-based frontend under `transcendental_resonance_frontend/` is

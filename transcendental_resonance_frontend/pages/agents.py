@@ -4,7 +4,8 @@
 
 import streamlit as st
 from frontend.theme import set_theme
-from modern_ui import inject_modern_styles
+from modern_ui import apply_modern_styles
+
 
 from agent_ui import render_agent_insights_tab
 from streamlit_helpers import theme_toggle
@@ -12,7 +13,8 @@ from streamlit_helpers import theme_toggle
 __all__ = ["main", "render"]
 
 set_theme("light")
-inject_modern_styles()
+apply_modern_styles()
+
 
 
 def main(main_container=None) -> None:
@@ -21,6 +23,9 @@ def main(main_container=None) -> None:
 
     If no main_container is provided, uses Streamlit root context.
     """
+    apply_theme("light")
+    inject_modern_styles()
+
     container = main_container if main_container is not None else st
     theme_toggle("Dark Mode", key_suffix="agents")
 
