@@ -189,7 +189,11 @@ def set_theme(name: str) -> None:
 
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
-    return get_theme(st.session_state.get("_theme", "light")).accent
+    try:
+        mode = st.session_state.get("_theme", "light")
+    except Exception:
+        mode = "light"
+    return get_theme(mode).accent
 
 
 __all__ = [
