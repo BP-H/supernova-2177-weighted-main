@@ -7,33 +7,31 @@ import os
 import sys
 from pathlib import Path
 import streamlit as st
-import logging
 
 # --- Setup Project Path ---
-# This ensures that imports like 'frontend' and 'pages' work correctly.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-logging.basicConfig(level=logging.INFO)
 
 # --- Safe Imports with Fallbacks ---
 try:
     from streamlit_helpers import (
-        alert,
-        header,
-        theme_selector,
+        alert, header, theme_selector, safe_container,
+        get_active_user, ensure_active_user
     )
     from frontend.theme import initialize_theme
-    from modern_ui import apply_modern_styles, render_stats_section, render_modern_header
+    from modern_ui import apply_modern_styles, render_stats_section
     from status_indicator import render_status_icon
 except ImportError as e:
     st.error(f"A critical component failed to import: {e}. The app may not function correctly.")
-    # Define dummy functions so the rest of the app doesn't crash
+    # Dummy functions
     def alert(msg, type="info"): st.warning(msg)
     def header(txt): st.header(txt)
     def theme_selector(): pass
+    def safe_container(): return st.container()
+    def get_active_user(): return "guest"
+    def ensure_active_user(): pass
     def initialize_theme(theme="light"): pass
     def apply_modern_styles(): pass
     def render_stats_section(stats={}): pass
-    def render_modern_header(): st.title("superNova_2177")
     def render_status_icon(): pass
 
 # --- Page Loading Logic ---
@@ -43,18 +41,15 @@ def load_page(page_name: str):
     """Dynamically imports and runs a page module."""
     try:
         if not page_name or not page_name.replace("_", "").isalnum():
-             st.error(f"Invalid page name: {page_name}")
-             return
-        
+            st.error(f"Invalid page name: {page_name}")
+            return
         module = __import__(f"pages.{page_name}", fromlist=["main"])
-        
         if hasattr(module, 'main'):
             module.main()
         elif hasattr(module, 'render'):
             module.render()
         else:
             st.warning(f"Page '{page_name}' has no main() or render() function.")
-
     except ImportError:
         st.error(f"Could not find page: {page_name}.py")
     except Exception as e:
@@ -67,19 +62,15 @@ def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
         layout="wide",
-        initial_sidebar_state="collapsed",   # Hides Streamlit’s built-in nav
+        initial_sidebar_state="collapsed",  # Hides default nav, per research
     )
-    
     st.session_state.setdefault("theme", "light")
-
-    # Initialize theme once at the start
-    initialize_theme(st.session_state.theme)
+    initialize_theme(st.session_state["theme"])
     apply_modern_styles()
-    
-    # --- Sidebar Rendering ---
+
+    # --- Sidebar Rendering (custom only) ---
     with st.sidebar:
         st.title("🌌 superNova")
-        
         PAGES = {
             "Feed": "feed",
             "Chat": "chat",
@@ -89,17 +80,13 @@ def main() -> None:
             "Profile": "profile",
             "Music": "resonance_music",
         }
-        
         page_selection = st.radio("Navigation", list(PAGES.keys()))
-        
         st.divider()
         header("Settings")
         theme_selector()
         render_status_icon()
 
     # --- Main Content Area ---
-    render_modern_header()
-    
     page_to_load = PAGES.get(page_selection)
     if page_to_load:
         load_page(page_to_load)
