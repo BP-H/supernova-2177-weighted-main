@@ -9,15 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import streamlit as st
-from frontend.theme import set_theme
-from modern_ui import apply_modern_styles
-from streamlit_helpers import safe_container, theme_toggle
+from frontend.theme import apply_theme
+from streamlit_helpers import safe_container, theme_toggle, inject_global_styles
 from status_indicator import render_status_icon
 from transcendental_resonance_frontend.src.utils import api
 
 # ─── Apply global styles ────────────────────────────────────────────────────────
-set_theme("light")
-apply_modern_styles()
+apply_theme("light")
+inject_global_styles()
 
 # ─── Dummy data ────────────────────────────────────────────────────────────────
 DUMMY_CONVERSATIONS: dict[str, list[dict[str, str]]] = {
@@ -43,9 +42,7 @@ async def _post_message(target: str, text: str) -> None:
 def send_message(target: str, text: str) -> None:
     """Append locally or POST remotely, then flip a little toggle to refresh."""
     if api.OFFLINE_MODE:
-        st.session_state["conversations"][target].append(
-            {"user": "You", "text": text}
-        )
+        st.session_state["conversations"][target].append({"user": "You", "text": text})
     else:
         try:
             asyncio.run(_post_message(target, text))
@@ -57,9 +54,6 @@ def send_message(target: str, text: str) -> None:
 
 # ─── Page Entrypoint ───────────────────────────────────────────────────────────
 def main(container: st.DeltaGenerator | None = None) -> None:
-    apply_theme("light")
-    inject_modern_styles()
-
     if container is None:
         container = st
 
@@ -85,8 +79,10 @@ def main(container: st.DeltaGenerator | None = None) -> None:
             st.subheader(f"Chat with {selected.capitalize()}")
             # Render past messages
             for msg in thread:
-                role = "assistant" if msg["user"] != "You" else "user"
-                avatar = msg.get("avatar", f"https://robohash.org/{msg['user']}.png?size=40x40")
+                "assistant" if msg["user"] != "You" else "user"
+                avatar = msg.get(
+                    "avatar", f"https://robohash.org/{msg['user']}.png?size=40x40"
+                )
                 with st.chat_message(msg["user"], avatar=avatar):
                     if img := msg.get("image"):
                         st.image(
@@ -104,7 +100,9 @@ def main(container: st.DeltaGenerator | None = None) -> None:
 
         # ── Refresh Button (in case offline) ───────────────────────────
         if st.button("🔄 Refresh"):
-            st.session_state["_refresh_chat"] = not st.session_state.get("_refresh_chat", False)
+            st.session_state["_refresh_chat"] = not st.session_state.get(
+                "_refresh_chat", False
+            )
 
 
 def render() -> None:

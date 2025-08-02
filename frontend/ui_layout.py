@@ -459,14 +459,38 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
     position : str
         CSS ``position`` value for the tab bar (e.g., ``"fixed"`` or ``"static"``).
     """
+    # Resolve theme accent safely
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        # Fallback to a sensible default if theme access fails
+        try:
+            accent = theme.LIGHT_THEME.accent  # type: ignore[attr-defined]
+        except Exception:
+            accent = "#6C63FF"
 
-    accent = theme.get_accent_color()
-    active = st.session_state.get("active_page", "home")
-    css_position = st.session_state.get("tab_bar_position", position)
-    st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=css_position),
-        unsafe_allow_html=True,
-    )
+    # Resolve active tab & CSS position with safe fallbacks
+    try:
+        active = st.session_state.get("active_page", "home")
+    except Exception:
+        active = "home"
+
+    try:
+        css_position = st.session_state.get("tab_bar_position", position)
+    except Exception:
+        css_position = position
+
+    # Render, but never crash the UI if formatting fails
+    try:
+        st.markdown(
+            BOTTOM_TAB_TEMPLATE.format(
+                accent=accent, active=active, position=css_position
+            ),
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        return
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

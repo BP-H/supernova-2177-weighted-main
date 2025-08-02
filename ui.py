@@ -324,8 +324,7 @@ from streamlit_helpers import (
     render_instagram_grid,
 )
 
-from frontend.theme import set_theme
-from frontend.theme import apply_theme, inject_modern_styles
+from frontend.theme import initialize_theme
 
 
 
@@ -490,13 +489,6 @@ def render_landing_page():
             if st.button("Run Validation", key="landing_run_validation"):
                 run_analysis([], layout="force")
         st.markdown("</div></div>", unsafe_allow_html=True)
-
-
-# Backward compatibility alias
-def inject_dark_theme() -> None:
-    """Legacy alias for inject_modern_styles()."""
-    inject_modern_styles()
-
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
     """Load a page via ``st.switch_page`` or fall back to importing the module with graceful handling."""
@@ -1481,12 +1473,6 @@ def main() -> None:
         # Older Streamlit builds (or re-runs) may raise – that’s OK.
         pass
 
-    # Simple light theme fallback
-    try:
-        set_theme("light")
-    except Exception:  # pragma: no cover
-        pass
-
     # Global CSS for cards / clean background
     st.markdown(
         """<style>
@@ -1534,8 +1520,6 @@ def main() -> None:
         return
 
     try:
-        set_theme("light")
-
 
         # Inject keyboard shortcuts for quick navigation
         st.markdown(
@@ -1558,11 +1542,6 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
-        try:
-            inject_modern_styles()
-        except Exception as exc:
-            logger.warning("CSS load failed: %s", exc)
-
         # Initialize session state
         defaults = {
             "session_start_ts": datetime.now(timezone.utc).isoformat(
@@ -1590,10 +1569,7 @@ def main() -> None:
                 st.rerun()
             return
 
-        try:
-            set_theme(st.session_state.get("theme", "light"))
-        except Exception as exc:
-            st.warning(f"Theme load failed: {exc}")
+        initialize_theme(st.session_state.get("theme", "light"))
 
         st.markdown(
             f"""
