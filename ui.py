@@ -6,34 +6,45 @@
 import sys
 from pathlib import Path
 import streamlit as st
+import importlib.util
 
-# Path setup for Cloud mount
+# Path setup for Cloud
 sys.path.insert(0, str(Path("/mount/src").resolve() if 'mount' in str(Path(__file__)) else Path(__file__).parent))
 
-# Imports (same as before)
-# ... (keep your existing imports and dummies)
+# Safe imports
+try:
+    from streamlit_helpers import alert, header, theme_selector, safe_container
+    from frontend.theme import initialize_theme
+except ImportError as e:
+    st.error(f"Critical import failed: {e}. App cannot continue.")
+    st.stop()
+    # Dummies if needed (add yours if any)
 
-# Loader (fixed for Cloud /mount/src/pages/)
 def load_page(page_name: str):
+    base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
+    module_path = None
+    for base in base_paths:
+        candidate = base / f"{page_name}.py"
+        if candidate.exists():
+            module_path = candidate
+            break
+    if not module_path:
+        st.error(f"Page missing: {page_name}.py not found.")
+        return
     try:
-        base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
-        for base in base_paths:
-            module_path = base / f"{page_name}.py"
-            if module_path.exists():
-                import importlib.util
-                spec = importlib.util.spec_from_file_location(page_name, module_path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                if hasattr(module, 'main'):
-                    module.main()
-                elif hasattr(module, 'render'):
-                    module.render()
-                return
-        st.error(f"Page file missing for {page_name}. Check /pages/ folder.")
+        spec = importlib.util.spec_from_file_location(page_name, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if hasattr(module, 'main'):
+            module.main()
+        elif hasattr(module, 'render'):
+            module.render()
+        else:
+            st.warning(f"No main/render in {page_name}.py")
     except Exception as e:
-        st.error(f"Error loading {page_name}: {e}")
+        st.error(f"Load error for {page_name}: {e}")
+        st.exception(e)
 
-# Main (collapsed sidebar confirmed)
 def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
@@ -44,7 +55,7 @@ def main() -> None:
     initialize_theme(st.session_state["theme"])
 
     with st.sidebar:
-        st.title("🌌 superNova")
+        st.title("🌌 superNova")  # Your favorite sidebar restored
         PAGES = {
             "Feed": "feed",
             "Chat": "chat",
@@ -55,7 +66,8 @@ def main() -> None:
             "Music": "music",
         }
         page_selection = st.radio("Navigation", list(PAGES.keys()))
-        theme_selector()
+        st.divider()
+        theme_selector()  # Theme in sidebar
 
     page_to_load = PAGES.get(page_selection)
     if page_to_load:
