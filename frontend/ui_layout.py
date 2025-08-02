@@ -73,7 +73,7 @@ DRAWER_CSS = """
 
 BOTTOM_TAB_TEMPLATE = """
 <style>
-.sn-bottom-tabs{position:fixed;bottom:0;left:0;right:0;display:none;background:var(--card);border-top:1px solid rgba(255,255,255,0.1);z-index:1001;}
+.sn-bottom-tabs{position:{position};bottom:0;left:0;right:0;display:none;background:var(--card);border-top:1px solid rgba(255,255,255,0.1);z-index:1001;}
 .sn-bottom-tabs a{flex:1;text-align:center;padding:.4rem 0;color:var(--text-muted);text-decoration:none;}
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
@@ -409,12 +409,12 @@ def show_preview_badge(text: str = "Preview") -> None:
     )
 
 
-def render_bottom_tab_bar() -> None:
+def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
     st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active),
+        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
         unsafe_allow_html=True,
     )
 
