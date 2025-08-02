@@ -71,7 +71,9 @@ def get_global_css(theme: bool | str = True) -> str:
     # resolve the theme into “light” or “dark”
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<style>
+    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
 :root {{
     {theme_obj.css_vars()}
 }}

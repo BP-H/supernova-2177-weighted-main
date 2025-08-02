@@ -1,6 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+# ruff: noqa
 """Central UI-layout helpers.
 
 Key helpers
@@ -88,6 +89,7 @@ BOTTOM_TAB_TEMPLATE = """
   color: var(--text-muted);
   text-decoration: none;
 }
+
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
 @media(max-width:768px){
@@ -445,8 +447,9 @@ def render_bottom_tab_bar() -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
+    position = st.session_state.get("tab_bar_position", "bottom")
     st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active),
+        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
         unsafe_allow_html=True,
     )
 
