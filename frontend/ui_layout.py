@@ -456,7 +456,8 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
     try:
         accent = theme.get_accent_color()
     except Exception:
-        accent = "#0077B5"
+        # Fallback to the default accent color from LIGHT_THEME
+        accent = theme.LIGHT_THEME.accent
 
     try:
         active = st.session_state.get("active_page", "home")
@@ -464,14 +465,21 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
         active = "home"
 
     try:
-        position = st.session_state.get("tab_bar_position", "bottom")
+        tab_position = st.session_state.get("tab_bar_position", position)
     except Exception:
-        position = "bottom"
+        tab_position = position
 
-    st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
-        unsafe_allow_html=True,
-    )
+    try:
+        st.markdown(
+            BOTTOM_TAB_TEMPLATE.format(
+                accent=accent, active=active, position=tab_position
+            ),
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        # Silently fail in rendering rather than crash the UI
+        return
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
