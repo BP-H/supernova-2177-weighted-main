@@ -3,7 +3,7 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 """Unified Streamlit UI helper utilities."""
-from __future__ import annotations
+from __future__ from annotations
 
 import html
 from contextlib import contextmanager
@@ -11,26 +11,6 @@ from typing import Any, Literal, Dict, List
 
 import streamlit as st
 from frontend.theme import set_theme, inject_global_styles
-
-
-# Fallback UI
-class _DummyElement:
-    def __init__(self, cm=None): self._cm = cm or contextmanager(lambda: (yield None))()
-    def __enter__(self): return self._cm.__enter__()
-    def __exit__(self, *a): self._cm.__exit__(*a)
-    def classes(self, *_a, **_k): return self
-    def style(self, *_a, **_k): return self
-
-class _DummyUI:
-    def image(self, *_a, **_k): return _DummyElement()
-    def element(self, *_a, **_k): return _DummyElement()
-    def card(self, *_a, **_k): return _DummyElement()
-    def badge(self, *_a, **_k): return _DummyElement()
-
-try:
-    import streamlit_shadcn_ui as ui
-except ImportError:
-    ui = _DummyUI()
 
 
 # Utilities
@@ -72,7 +52,7 @@ def theme_selector(label: str = "Theme", key_suffix: str = "legacy") -> str:
     return mapping[choice]
 
 
-# Legacy Stubs
+# Legacy
 def get_active_user() -> str | None:
     return st.session_state.get("active_user")
 
@@ -92,7 +72,7 @@ def render_instagram_grid(*args, **kwargs):
     st.info("Instagram grid placeholder.")
 
 
-# State Normalization
+# State Fix (for Messages)
 def _normalise_conversations_state():
     convs = st.session_state.get("conversations")
     if isinstance(convs, list):
@@ -106,10 +86,10 @@ def _normalise_conversations_state():
         st.session_state["conversations"] = upgraded
 
 _normalise_conversations_state()
-inject_global_styles()  # Early call
+inject_global_styles()  # Early
 
 __all__ = [
-    "ui", "sanitize_text", "safe_container", "alert", "header",
+    "sanitize_text", "safe_container", "alert", "header",
     "theme_toggle", "theme_selector", "get_active_user",
     "centered_container", "render_post_card", "render_instagram_grid",
     "ensure_active_user",
