@@ -29,9 +29,12 @@ def initialize_theme(name: str = "light") -> None:
     set_theme(name)
     inject_global_styles(force=True)
 
+# Aliases for compat
 def apply_theme(name: str = "light") -> None:
-    initialize_theme(name)  # Alias
+    initialize_theme(name)
+
+def inject_modern_styles(force: bool = False) -> None:
+    inject_global_styles(force)
 
 def get_accent_color() -> str:
-    """Returns accent color (fixes import error in chat_ui.py/modern_ui.py)."""
-    return "#4f8bf9"  # Your app's accent color from logs
+    return "#4f8bf9"  # Fixed missing function from log
