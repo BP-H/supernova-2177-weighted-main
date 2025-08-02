@@ -23,33 +23,32 @@ class ColorTheme:
 
     def css_vars(self) -> str:
         """Return CSS variable declarations for this theme."""
-        return "\n    ".join([
-            f"--bg: {self.bg};",
-            f"--card: {self.card};",
-            f"--accent: {self.accent};",
-            f"--text: {self.text};",
-            f"--text-muted: {self.text_muted};",
-            f"--radius: {self.radius};",
-            f"--transition: {self.transition};",
-        ])
-
+        return "\n    ".join(
+            [
+                f"--bg: {self.bg};",
+                f"--card: {self.card};",
+                f"--accent: {self.accent};",
+                f"--text: {self.text};",
+                f"--text-muted: {self.text_muted};",
+                f"--radius: {self.radius};",
+                f"--transition: {self.transition};",
+            ]
+        )
 
 
 # Modern “light” and “dark” palettes
 LIGHT_THEME = ColorTheme(
     bg="#F0F2F6",
     card="#FFFFFF",
-    accent="#0077B5",        # LinkedIn-blue accent
+    accent="#0077B5",  # LinkedIn-blue accent
     text="#222222",
-
     text_muted="#666666",
 )
 DARK_THEME = ColorTheme(
     bg="#0A0F14",
     card="rgba(255,255,255,0.05)",
-    accent="#00E5FF",        # Neon cyan
+    accent="#00E5FF",  # Neon cyan
     text="#FFFFFF",
-
     text_muted="#AAAAAA",
 )
 
@@ -73,12 +72,9 @@ def get_global_css(theme: bool | str = True) -> str:
     Return a `<style>` block setting :root CSS variables
     for the selected theme.
     """
-    # resolve the theme into “light” or “dark”
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<style>
+    return f"""<style>
 :root {{
     {theme_obj.css_vars()}
 }}
@@ -128,18 +124,20 @@ def apply_theme(name: bool | str = True) -> None:
     st.session_state["_theme"] = mode
 
 
-def inject_modern_styles(theme: bool | str = True) -> None:
-    """Inject base CSS variables and modern extras once per session."""
+def initialize_theme(theme: bool | str = True) -> None:
+    """Initialize theme once and update root variables on subsequent calls."""
     mode = _resolve_mode(theme)
-    if st.session_state.get("_styles_injected"):
-        apply_theme(mode)
-        return
 
+    # Always update root variables
     apply_theme(mode)
+
+    if st.session_state.get("_theme_initialized"):
+        return
 
     extra = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+          rel="stylesheet">
     <style>
     /* Glassmorphic cards */
     .glass-card {
@@ -176,15 +174,19 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     """
 
     st.markdown(extra, unsafe_allow_html=True)
-    st.session_state["_styles_injected"] = True
+    st.session_state["_theme_initialized"] = True
+
+
+def inject_modern_styles(theme: bool | str = True) -> None:
+    """Backward compatible wrapper for :func:`initialize_theme`."""
+    initialize_theme(theme)
 
 
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
     st.session_state["_theme"] = mode
-    inject_modern_styles(mode)
-
+    initialize_theme(mode)
 
 
 def get_accent_color() -> str:
@@ -195,6 +197,7 @@ def get_accent_color() -> str:
 __all__ = [
     "apply_theme",
     "set_theme",
+    "initialize_theme",
     "inject_modern_styles",
     "get_accent_color",
 ]

@@ -10,7 +10,8 @@ root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
-import frontend.theme as theme
+import frontend.theme as theme  # noqa: E402
+
 
 def test_theme_application_and_idempotent_styles(monkeypatch):
     calls = []
@@ -29,8 +30,8 @@ def test_theme_application_and_idempotent_styles(monkeypatch):
     assert dummy_st.session_state["_theme"] == "dark"
     assert theme.get_accent_color() == theme.DARK_THEME.accent
 
-    theme.inject_modern_styles()
-    theme.inject_modern_styles()
+    theme.initialize_theme()
+    theme.initialize_theme()
 
     extra_css_calls = [c for c in calls if "Glassmorphic" in c]
     assert len(extra_css_calls) == 1
