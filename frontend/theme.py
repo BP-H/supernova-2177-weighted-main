@@ -180,19 +180,11 @@ def inject_modern_styles(theme: bool | str = True) -> None:
 
 
 def set_theme(name: str) -> None:
-    """Store ``name`` in session state and apply CSS once."""
+    """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
-    if st.session_state.get("_theme") == mode and st.session_state.get(
-        "_styles_injected"
-    ):
-        return
-
     st.session_state["_theme"] = mode
+    inject_modern_styles(mode)
 
-    if st.session_state.get("_styles_injected"):
-        apply_theme(mode)
-    else:
-        inject_modern_styles(mode)
 
 
 def get_accent_color() -> str:
