@@ -1,69 +1,76 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Theme helpers and safe CSS injection for Streamlit pages."""
+"""Streamlit UI helper utilities."""
 
 from __future__ import annotations
-from typing import Literal
+import html
+from contextlib import contextmanager, nullcontext
+from typing import Any, ContextManager, Literal
 import streamlit as st
-from datetime import timezone
+from frontend.theme import set_theme, inject_global_styles
 
-LIGHT_THEME = {
-    "bg": "#FFFFFF",
-    "text": "#000000",
-    "text-muted": "#555555",
-    "card": "#F0F2F6",
-    "accent": "#0077B5",
-}
-DARK_THEME = {
-    "bg": "#0E1117",
-    "text": "#FFFFFF",
-    "text-muted": "#AAAAAA",
-    "card": "#161B22",
-    "accent": "#3498DB",
-}
-THEMES = {"light": LIGHT_THEME, "dark": DARK_THEME}
+# Fallback UI for when advanced components are not available
+class _DummyElement:
+    def __init__(self, cm: ContextManager | None = None) -> None:
+        self._cm = cm or nullcontext()
+    def __enter__(self) -> Any:
+        return self._cm.__enter__()
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._cm.__exit__(exc_type, exc, tb)
+    def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
+    def style(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
 
-def _get_active_theme() -> dict[str, str]:
-    name = st.session_state.get("_theme_name", "light")
-    return THEMES.get(name, LIGHT_THEME)
+class _DummyUI:
+    def image(self, img: str) -> _DummyElement:
+        st.image(img, use_container_width=True)
+        return _DummyElement()
+    def element(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def card(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def badge(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
 
-def set_theme(name: Literal["light", "dark"] | str) -> None:
-    if name not in THEMES:
-        name = "light"
-    st.session_state["_theme_name"] = name
+try:
+    import streamlit_shadcn_ui as ui
+except ImportError:
+    ui = _DummyUI()
 
-def apply_theme(name: Literal["light", "dark"] | str = "light") -> None:
-    set_theme(name)
-    inject_global_styles(once=False) # Re-inject on change
+def sanitize_text(text: Any) -> str:
+    """Return `text` as a safe string."""
+    return html.escape(str(text), quote=False) if text else ""
 
-def get_accent_color() -> str:
-    return _get_active_theme().get("accent", "#0077B5")
+@contextmanager
+def safe_container(container=None):
+    """A context manager for safely using Streamlit containers."""
+    if container is None:
+        container = st
+    yield container
 
-def inject_global_styles(*, once: bool = True) -> None:
-    if once and st.session_state.get("_theme_css_injected"):
-        return
+def header(title: str, *, layout: str = "centered") -> None:
+    """Render a standard page header."""
+    st.markdown(f"<h1>{sanitize_text(title)}</h1>", unsafe_allow_html=True)
 
-    theme_colors = _get_active_theme()
+def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
+    """Switch between light and dark themes using a toggle widget."""
+    key = f"theme_toggle_{key_suffix or 'default'}"
+    current_theme = st.session_state.get("theme", "light")
+    
+    is_dark = st.toggle(label, value=(current_theme == "dark"), key=key)
+    chosen_theme = "dark" if is_dark else "light"
+    if chosen_theme != current_theme:
+        st.session_state["theme"] = chosen_theme
+        set_theme(chosen_theme)
+        st.rerun()
+        
+    return chosen_theme
 
-    css = f"""
-    <style>
-        :root {{
-            --bg: {theme_colors['bg']};
-            --text: {theme_colors['text']};
-            --text-muted: {theme_colors['text-muted']};
-            --card: {theme_colors['card']};
-            --accent: {theme_colors['accent']};
-            --transition: 0.4s ease; /* Fixed: safe in string */
-        }}
-
-        .stButton > button {{
-            transition: background var(--transition);
-        }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
-    st.session_state["_theme_css_injected"] = True
-
-def inject_modern_styles() -> None:
-    inject_global_styles(once=True)
+def alert(message: str, type: Literal["info", "error"] = "info") -> None:
+    """Display an alert box."""
+    if type == "info":
+        st.info(message)
+    elif type == "error":
+        st.error(message)
