@@ -98,7 +98,7 @@ BOTTOM_TAB_TEMPLATE = """
 }
 @media(min-width:768px){.sn-bottom-tabs{display:none!important;}}
 </style>
-<div class='sn-bottom-tabs'>
+<div class='sn-bottom-tabs {position}'>
   <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
   <a href='#' data-tag='video'><i class='fa-solid fa-video'></i></a>
   <a href='#' data-tag='network'><i class='fa-solid fa-user-group'></i></a>
