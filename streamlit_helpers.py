@@ -14,7 +14,7 @@ import streamlit as st
 # Import directly from the source to prevent circular dependencies
 from frontend.theme import set_theme, inject_global_styles
 
-# --- Fallback UI Elements (for when streamlit_shadcn_ui is not installed) ---
+# --- Fallback UI Elements ---
 class _DummyElement:
     """A fallback UI element that does nothing but allows chaining."""
     def __init__(self, cm: ContextManager | None = None) -> None: self._cm = cm or nullcontext()
@@ -24,7 +24,7 @@ class _DummyElement:
     def style(self, *_a: Any, **_k: Any) -> "_DummyElement": return self
 
 class _DummyUI:
-    """A complete fallback UI to prevent AttributeError for missing components."""
+    """A complete fallback UI to prevent AttributeError when a component is not installed."""
     def image(self, *_a, **_k) -> _DummyElement: return _DummyElement()
     def element(self, *_a, **_k) -> _DummyElement: return _DummyElement()
     def card(self, *_a, **_k) -> _DummyElement: return _DummyElement()
@@ -66,7 +66,7 @@ def theme_toggle(label: str = "Dark mode", *, key_suffix: str = "default") -> st
         st.rerun()
     return new
 
-# --- Legacy & Compatibility Wrappers ---
+# --- Legacy Page Shims and Helpers (for backward compatibility) ---
 def theme_selector(label: str = "Theme", *, key_suffix: str = "legacy") -> str:
     """LEGACY wrapper for older pages that use a selectbox for the theme."""
     mapping = {"Light": "light", "Dark": "dark"}
@@ -83,10 +83,6 @@ def get_active_user() -> str | None:
     """Return the username the profile/social pages treat as 'me'."""
     return st.session_state.get("active_user")
 
-def ensure_active_user():
-    """Ensure an active user is set in the session state."""
-    st.session_state.setdefault("active_user", "guest")
-
 @contextmanager
 def centered_container(**st_container_kwargs):
     """Streamlit container whose internal columns are centred."""
@@ -97,19 +93,17 @@ def centered_container(**st_container_kwargs):
         )
         yield c
 
-def render_post_card(*args, **kwargs):
-    """Shim to prevent import errors. The real function is likely in a page module."""
-    st.warning("`render_post_card` is a placeholder.")
-
-def render_instagram_grid(*args, **kwargs):
-    """Shim to prevent import errors."""
-    st.info("Instagram grid placeholder.")
+def render_mock_feed(container=None):
+    """Shim to let other pages embed the feed without a circular import."""
+    import feed  # Local import to prevent circular dependency at startup
+    feed.main(main_container=container)
 
 # --- Global State Normalization (runs once on import) ---
 def _normalise_conversations_state():
     """
-    This function intelligently fixes the chat data structure on the fly
-    to prevent crashes on the messages page.
+    This function intelligently fixes the chat data structure on the fly.
+    It checks if the data is in the old (list) or new (dict) format and converts it
+    to the new format, preventing the TypeError on the messages page.
     """
     convs = st.session_state.get("conversations")
     if isinstance(convs, list):
@@ -131,6 +125,5 @@ inject_global_styles()
 __all__: Iterable[str] = (
     "ui", "sanitize_text", "safe_container", "alert", "header",
     "theme_toggle", "theme_selector", "get_active_user",
-    "centered_container", "render_post_card", "render_instagram_grid",
-    "ensure_active_user",
+    "centered_container", "render_mock_feed",
 )
