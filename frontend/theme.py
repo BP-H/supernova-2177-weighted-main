@@ -30,5 +30,7 @@ def initialize_theme(name: str = "light") -> None:
     inject_global_styles(force=True)
 
 def apply_theme(name: str = "light") -> None:
-    """Alias for initialize_theme - fixes import errors in pages."""
-    initialize_theme(name)  # Backward compat
+    initialize_theme(name)  # Alias for compat
+
+def inject_modern_styles(force: bool = False) -> None:
+    inject_global_styles(force)  # Alias to fix log error
