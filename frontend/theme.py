@@ -72,9 +72,9 @@ def get_global_css(theme: bool | str = True) -> str:
     Return a `<style>` block setting :root CSS variables
     for the selected theme.
     """
-    # resolve the theme into “light” or “dark”
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
+
     return f"""<style>
 :root {{
     {theme_obj.css_vars()}
@@ -110,6 +110,7 @@ button, .stButton>button {{
 </style>"""
 
 
+
 def _resolve_mode(name: bool | str) -> str:
     """Normalize ``name`` to ``light`` or ``dark``."""
     if isinstance(name, str):
@@ -125,16 +126,22 @@ def apply_theme(name: bool | str = True) -> None:
     st.session_state["_theme"] = mode
 
 
-def inject_modern_styles(theme: bool | str = True) -> None:
-    """Inject base CSS variables and modern extras once per session."""
+def initialize_theme(theme: bool | str = True) -> None:
+    """Initialize theme once and update root variables on subsequent calls."""
     mode = _resolve_mode(theme)
-    if st.session_state.get("_styles_injected"):
-        apply_theme(mode)
-        return
 
+    # Always update root variables
     apply_theme(mode)
 
+    if st.session_state.get("_theme_initialized"):
+        return
+
     extra = """
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+
     <style>
     /* Glassmorphic cards */
     .glass-card {
@@ -171,7 +178,12 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     """
 
     st.markdown(extra, unsafe_allow_html=True)
-    st.session_state["_styles_injected"] = True
+    st.session_state["_theme_initialized"] = True
+
+
+def inject_modern_styles(theme: bool | str = True) -> None:
+    """Backward compatible wrapper for :func:`initialize_theme`."""
+    initialize_theme(theme)
 
 
 def inject_global_styles(theme: bool | str | None = None) -> None:
@@ -196,18 +208,32 @@ def set_theme(name: str) -> None:
     """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
     st.session_state["_theme"] = mode
-    inject_modern_styles(mode)
+    initialize_theme(mode)
 
+def initialize_theme(name: bool | str = True) -> None:
+    """Initialize theme and styles in a single call."""
+    set_theme(name if isinstance(name, (str, bool)) else "light")
+
+
+def initialize_theme(mode: bool | str = True) -> None:
+    """Initialize the app theme and inject all global styles."""
+    inject_global_styles(mode)
 
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
-    return get_theme(st.session_state.get("_theme", "light")).accent
+    try:
+        mode = st.session_state.get("_theme", "light")
+    except Exception:
+        mode = "light"
+    return get_theme(mode).accent
 
 
 __all__ = [
     "apply_theme",
     "set_theme",
+    "initialize_theme",
     "inject_modern_styles",
     "inject_global_styles",
     "get_accent_color",
+    "initialize_theme",
 ]
