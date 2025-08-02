@@ -91,17 +91,17 @@ def render_modern_header() -> None:
     st.markdown(
         """
         <div style="
-            background: linear-gradient(135deg, rgba(24, 24, 24, 0.95), rgba(36, 36, 36, 0.95));
+            background: var(--card);
             backdrop-filter: blur(20px);
             padding: 1.5rem 2rem;
             margin: -2rem -3rem 3rem -3rem;
-            border-bottom: 1px solid rgba(74, 144, 226, 0.2);
+            border-bottom: 1px solid var(--accent);
             border-radius: 0 0 16px 16px;
         ">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div style="
-                        background: linear-gradient(135deg, #4a90e2, #5ba0f2);
+                        background: var(--accent);
                         border-radius: 12px;
                         padding: 0.75rem;
                         display: flex;
@@ -111,19 +111,19 @@ def render_modern_header() -> None:
                         <span style="font-size: 1.5rem;">🚀</span>
                     </div>
                     <div>
-                        <h1 style="margin: 0; color: #ffffff; font-size: 1.75rem; font-weight: 700;">
+                        <h1 style="margin: 0; color: var(--text-muted); font-size: 1.75rem; font-weight: 700;">
                             superNova_2177
                         </h1>
-                        <p style="margin: 0; color: #888; font-size: 0.9rem;">Validation Analyzer</p>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Validation Analyzer</p>
                     </div>
                 </div>
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <div style="
-                        background: rgba(74, 144, 226, 0.1);
-                        border: 1px solid rgba(74, 144, 226, 0.3);
+                        background: var(--bg);
+                        border: 1px solid var(--accent);
                         border-radius: 8px;
                         padding: 0.5rem 1rem;
-                        color: #4a90e2;
+                        color: var(--accent);
                         font-size: 0.85rem;
                         font-weight: 500;
                     ">
@@ -142,9 +142,9 @@ def render_validation_card() -> None:
     st.markdown(
         """
         <div style="
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--card);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card);
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
@@ -172,9 +172,9 @@ def render_stats_section(stats: dict | None = None) -> None:
         .stats-card {{
             flex: 1 1 calc(25% - 1rem);
             min-width: 120px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--card);
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card);
             border-radius: 12px;
             padding: 1.5rem;
             text-align: center;
@@ -190,7 +190,7 @@ def render_stats_section(stats: dict | None = None) -> None:
             margin-bottom: 0.25rem;
         }}
         .stats-label {{
-            color: #888;
+            color: var(--text-muted);
             font-size: calc(0.8rem + 0.2vw);
             font-weight: 500;
         }}

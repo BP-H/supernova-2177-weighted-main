@@ -46,7 +46,7 @@ _EMOJI_FALLBACK = "🔖"
 # Slide-in drawer & mobile bottom tabs
 DRAWER_CSS = """
 <style>
-[data-testid='stSidebar']{
+[data-testid='stSidebar'] {
   background: var(--card);
   border-right: 1px solid rgba(255,255,255,0.1);
   transition: transform 0.3s ease;
@@ -55,20 +55,27 @@ DRAWER_CSS = """
 [data-testid='stSidebar'].collapsed {
   transform: translateX(-100%);
 }
-@media(min-width:768px){
-  [data-testid='stSidebar']{transform:none!important;}
+@media(min-width:768px) {
+  [data-testid='stSidebar'] {
+    transform: none !important;
+  }
 }
-#drawer_btn{
+#drawer_btn {
   display: none;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--accent);
   font-size: 1.3rem;
   cursor: pointer;
 }
-@media(max-width:768px){#drawer_btn{display:block;}}
+@media(max-width:768px) {
+  #drawer_btn {
+    display: block;
+  }
+}
 </style>
 """
+
 
 BOTTOM_TAB_TEMPLATE = """
 <style>
@@ -214,21 +221,21 @@ def render_top_bar() -> None:
   position:sticky;top:0;inset-inline:0;z-index:1001;
   display:flex;align-items:center;gap:.75rem;
   padding:.6rem 1rem;backdrop-filter:blur(10px);
-  background:rgba(18,18,18,.65);
+  background:var(--card);
 }
 @media(max-width:600px){.sn-topbar{flex-wrap:wrap}}
 .sn-topbar input[type='text']{
   flex:1;padding:.45rem .7rem;border-radius:8px;
-  border:1px solid rgba(255,255,255,.25);min-width:140px;
-  background:rgba(255,255,255,.90);font-size:.9rem;
+  border:1px solid var(--card);min-width:140px;
+  background:var(--bg);font-size:.9rem;
 }
-#drawer_btn{background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:none}
+#drawer_btn{background:none;border:none;color:var(--accent);font-size:1.3rem;cursor:pointer;display:none}
 @media(max-width:768px){#drawer_btn{display:block}}
-.sn-bell{position:relative;background:none;border:none;font-size:1.3rem;color:#fff;cursor:pointer}
+.sn-bell{position:relative;background:none;border:none;font-size:1.3rem;color:var(--accent);cursor:pointer}
 .sn-bell::before{font-family:"Font Awesome 6 Free";font-weight:900;content:"\\f0f3"}
 .sn-bell[data-count]::after{
   content:attr(data-count);position:absolute;top:-.35rem;right:-.45rem;
-  background:#ff4757;color:#fff;border-radius:999px;padding:0 .33rem;
+  background:var(--accent);color:var(--bg);border-radius:999px;padding:0 .33rem;
   font-size:.62rem;line-height:1;
 }
 </style>
@@ -437,7 +444,7 @@ def show_preview_badge(text: str = "Preview") -> None:
     """Floating badge in the top-right corner."""
     st.markdown(
         f"<div style='position:fixed;top:1.1rem;right:1.1rem;"
-        f"background:#ffc107;color:#000;padding:.28rem .6rem;border-radius:6px;"
+        f"background:var(--accent);color:var(--bg);padding:.28rem .6rem;border-radius:6px;"
         f"box-shadow:0 2px 6px rgba(0,0,0,.15);z-index:999'>"
         f"<i class='fa-solid fa-triangle-exclamation'></i>&nbsp;{text}</div>",
         unsafe_allow_html=True,

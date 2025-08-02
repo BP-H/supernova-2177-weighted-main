@@ -15,8 +15,8 @@ _CSS = """
 .pc-wrapper{
   display:flex;flex-direction:column;align-items:center;
   width:100%;max-width:360px;margin-inline:auto;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.12);
+  background:var(--card);
+  border:1px solid var(--card);
   backdrop-filter:blur(14px) saturate(160%);
   border-radius:1.2rem;overflow:hidden;padding-bottom:1rem;
   animation:fade-in .35s ease forwards;
@@ -24,10 +24,10 @@ _CSS = """
 @keyframes fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
 .pc-banner{width:100%;height:84px;
-  background:linear-gradient(120deg,#0a84ff 0%,#00f0ff 100%);}
+  background:var(--accent);}
 .pc-avatar{width:88px;height:88px;border-radius:50%;
-  object-fit:cover;background:#eee;margin-top:-46px;
-  border:4px solid var(--card,#001E26);}
+  object-fit:cover;background:var(--bg);margin-top:-46px;
+  border:4px solid var(--card);}
 .pc-name{font-size:1.15rem;font-weight:600;margin:.45rem 0 .1rem}
 .pc-tag{font-size:.85rem;color:var(--text-muted,#7e9aaa);
   text-align:center;margin:0 .75rem .65rem}
@@ -37,10 +37,10 @@ _CSS = """
   text-align:center}
 .pc-actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
 .pc-btn{flex:1 1 120px;padding:.45rem .8rem;border:none;
-  border-radius:.65rem;background:rgba(255,255,255,.09);
-  color:#fff;font-size:.85rem;cursor:pointer;
+  border-radius:.65rem;background:var(--accent);
+  color:var(--bg);font-size:.85rem;cursor:pointer;
   transition:background .2s ease}
-.pc-btn:hover{background:rgba(255,255,255,.18)}
+.pc-btn:hover{background:var(--accent)}
 @media(max-width:400px){.pc-wrapper{max-width:100%}}
 </style>
 """

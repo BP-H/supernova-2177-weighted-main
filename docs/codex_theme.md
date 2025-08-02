@@ -24,7 +24,7 @@ primaryColor = "#00F0FF"
 backgroundColor = "#001E26"
 secondaryBackgroundColor = "#002B36"
 textColor = "#E0FFFF"
-font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+font = "'Inter', sans-serif"
 ```
 
 ### CSS Classes
