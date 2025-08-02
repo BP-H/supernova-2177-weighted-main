@@ -1,5 +1,7 @@
-"""
-Streamlit entry point for the validation dashboard.
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""Streamlit entry point for the validation dashboard.
 
 Example:
     $ streamlit run ui.py
@@ -30,11 +32,7 @@ from streamlit.errors import StreamlitAPIException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from typing import Optional
-from pathlib import Path
-import logging
-
-logger = logging.getLogger(__name__)
-logger.propagate = False
+from frontend import ui_layout
 
 try:
     from modern_ui_components import (
@@ -75,6 +73,12 @@ def render_sidebar_nav(*args, **kwargs):
 render_modern_sidebar = render_sidebar_nav
 
 # Utility path handling
+from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
+
 try:
     from transcendental_resonance_frontend.src.utils.page_registry import ensure_pages
 except Exception as import_err:  # pragma: no cover - fallback if absolute import fails
@@ -97,7 +101,6 @@ except Exception:  # pragma: no cover - fallback when utils.paths is missing
 
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
-
 # Register fallback watcher for environments that can't use inotify
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 
@@ -106,6 +109,7 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
+# ``ROOT_DIR`` and ``PAGES_DIR`` may come from ``utils.paths``
 PAGES_DIR = get_pages_dir()
 
 def build_pages(pages_dir: Path) -> dict[str, str]:
@@ -130,6 +134,10 @@ def normalize_choice(choice: str) -> str:
     """Return the canonical label for ``choice`` ignoring case."""
     return _PAGE_LABELS.get(choice.lower(), choice)
 
+# Icons used in the navigation bar. Accepts Font Awesome classes or
+# valid Bootstrap icon codes prefixed with ``"bi bi-"``.
+# Agents, Chat, Messages, Profile, Resonance Music, Social, Validation,
+# Video Chat, Voting
 NAV_ICONS = [
     "fa-solid fa-robot",
     "fa-solid fa-comments",
@@ -142,8 +150,10 @@ NAV_ICONS = [
     "fa-solid fa-chart-bar",
 ]
 
+# Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
+# Tracks slugs of fallback pages rendered in this session.
 _fallback_rendered: set[str] = set()
 
 class _StreamlitTabs:
@@ -176,37 +186,39 @@ class _StreamlitTabs:
         st.session_state[self.key] = self.active
         return False
 
-# If `ui` not already defined, create it
+class _UIWrapper:
+    """Namespace providing a ``tabs`` helper compatible with NiceGUI style."""
+    def __init__(self, backend: object | None = None) -> None:
+        self._backend = backend
+
+    def tabs(self, labels: list[str]) -> _StreamlitTabs:
+        if self._backend and hasattr(self._backend, "tabs"):
+            try:
+                return self._backend.tabs(labels)  # type: ignore[return-value]
+            except Exception:  # pragma: no cover - fallback
+                pass
+        return _StreamlitTabs(labels)
+
+    def __getattr__(self, name: str):
+        if self._backend is not None:
+            return getattr(self._backend, name)
+        raise AttributeError(name)
+
+# If `ui` not already defined from streamlit_helpers, create it
 try:
-    from streamlit_helpers import ui
+    from streamlit_helpers import ui  # type: ignore
 except ImportError:
     try:
         import streamlit_shadcn_ui as _shadcn_ui  # type: ignore
     except Exception:
         _shadcn_ui = None
-    class _UIWrapper:
-        def __init__(self, backend: object | None = None) -> None:
-            self._backend = backend
-
-        def tabs(self, labels: list[str]) -> _StreamlitTabs:
-            if self._backend and hasattr(self._backend, "tabs"):
-                try:
-                    return self._backend.tabs(labels)  # type: ignore[return-value]
-                except Exception:
-                    pass
-            return _StreamlitTabs(labels)
-
-        def __getattr__(self, name: str):
-            if self._backend is not None:
-                return getattr(self._backend, name)
-            raise AttributeError(name)
-
     ui = _UIWrapper(_shadcn_ui)
 
-# Ensure `ui.tabs` is present
+# Ensure `ui.tabs` is present—even if streamlit_helpers imported an incomplete ui
 if not hasattr(ui, "tabs"):
     ui.tabs = _UIWrapper().tabs  # type: ignore[attr-defined]
 
+# Alias used by older code paths
 ui_wrapper = ui
 
 def log(msg: str) -> None:
@@ -215,6 +227,7 @@ def log(msg: str) -> None:
 
 # Global exception handler for Streamlit UI
 def global_exception_handler(exc_type, exc_value, exc_traceback) -> None:
+    """Handle all uncaught exceptions."""
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
@@ -224,6 +237,7 @@ def global_exception_handler(exc_type, exc_value, exc_traceback) -> None:
         st.session_state.clear()
         st.rerun()
 
+# Install global handler
 sys.excepthook = global_exception_handler
 
 if UI_DEBUG:
@@ -253,7 +267,8 @@ except ImportError:  # optional dependency fallback
         st.warning("⚠️ overlay_badge is unavailable.")
         return None
 
-# Optional modules with fallbacks
+# Optional modules used throughout the UI. Provide simple fallbacks
+# when the associated packages are not available.
 try:
     from protocols import AGENT_REGISTRY
 except ImportError:  # pragma: no cover - optional dependency
@@ -296,6 +311,7 @@ except ImportError:  # pragma: no cover - optional dependency
         return lambda x: {"response": "dummy backend"}
 
 def render_landing_page():
+    """Render fallback landing page when pages directory is missing."""
     st.title("🚀 superNova_2177")
     st.markdown(
         """
