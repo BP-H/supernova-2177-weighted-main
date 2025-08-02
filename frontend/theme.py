@@ -74,12 +74,8 @@ def get_global_css(theme: bool | str = True) -> str:
     """
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
-<link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-    rel="stylesheet">
-<style>
 
+    return f"""<style>
 :root {{
     {theme_obj.css_vars()}
 }}
@@ -112,6 +108,7 @@ button, .stButton>button {{
     to   {{ opacity: 1; }}
 }}
 </style>"""
+
 
 
 def _resolve_mode(name: bool | str) -> str:
@@ -189,6 +186,24 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     initialize_theme(theme)
 
 
+def inject_global_styles(theme: bool | str | None = None) -> None:
+    """Inject modern styles and global fonts/icons once per session."""
+    mode = theme if theme is not None else st.session_state.get("_theme", "light")
+    inject_modern_styles(mode)
+    if not st.session_state.get("_global_styles_loaded"):
+        st.markdown(
+            (
+                '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&'
+                'display=swap" rel="stylesheet">\n'
+                '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/'
+                'css/all.min.css">\n'
+            ),
+            unsafe_allow_html=True,
+        )
+        st.session_state["_global_styles_loaded"] = True
+
+
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
@@ -201,9 +216,8 @@ def initialize_theme(name: bool | str = True) -> None:
 
 
 def initialize_theme(mode: bool | str = True) -> None:
-    """Initialize the app theme and inject styles once."""
-    inject_modern_styles(mode)
-
+    """Initialize the app theme and inject all global styles."""
+    inject_global_styles(mode)
 
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
@@ -219,6 +233,7 @@ __all__ = [
     "set_theme",
     "initialize_theme",
     "inject_modern_styles",
+    "inject_global_styles",
     "get_accent_color",
     "initialize_theme",
 ]
