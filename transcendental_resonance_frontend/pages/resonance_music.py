@@ -13,8 +13,7 @@ from pathlib import Path
 
 import requests
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles, apply_theme
-from modern_ui import apply_modern_styles
+from frontend.theme import apply_theme
 
 from streamlit_helpers import (
     alert,
@@ -22,30 +21,31 @@ from streamlit_helpers import (
     safe_container,
     header,
     theme_toggle,
+    inject_global_styles,
 )
 from streamlit_autorefresh import st_autorefresh
 from status_indicator import (
     render_status_icon,
     check_backend,
-)  # Ensure check_backend is imported
+)
 from transcendental_resonance_frontend.src.utils.api import (
     get_resonance_summary,
     dispatch_route,
-)  # Import get_resonance_summary and dispatch_route from utils.api
+)
 
+# Initialize theme & global styles once
+apply_theme("light")
+inject_global_styles()
 
-set_theme("light")
-apply_modern_styles()
-
-
-# BACKEND_URL is defined in utils.api, but we keep it here for direct requests calls if needed  # noqa: E501
+# BACKEND_URL is defined in utils.api, but we keep it here for direct requests calls if needed
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 AMBIENT_URL = os.getenv(
     "AMBIENT_MP3_URL",
     "https://raw.githubusercontent.com/anars/blank-audio/master/10-minutes-of-silence.mp3",
 )
-
-DEFAULT_AMBIENT_URL = "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3"
+DEFAULT_AMBIENT_URL = (
+    "https://raw.githubusercontent.com/anars/blank-audio/master/10-seconds-of-silence.mp3"
+)
 
 
 def _load_ambient_audio() -> Optional[bytes]:
@@ -79,10 +79,6 @@ def _run_async(coro):
 
 def main(main_container=None, status_container=None) -> None:
     """Render music generation and summary widgets."""
-
-    apply_theme("light")
-    inject_global_styles()
-
     if main_container is None:
         main_container = st
     if status_container is None:
@@ -98,10 +94,10 @@ def main(main_container=None, status_container=None) -> None:
         render_status_icon(endpoint="/healthz")
 
     # Display alert if backend is not reachable (check once per rerun)
-    backend_ok = check_backend(endpoint="/healthz")  # Use the modular check_backend
+    backend_ok = check_backend(endpoint="/healthz")
     if not backend_ok:
         alert(
-            f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",  # noqa: E501
+            f"Backend service unreachable. Please ensure it is running at {BACKEND_URL}.",
             "error",
         )
 
@@ -137,14 +133,14 @@ def render_resonance_music_page(
                 encoded = base64.b64encode(audio_bytes).decode()
                 st.markdown(
                     f"<audio id='ambient-audio' autoplay loop style='display:none'>"
-                    f"<source src='data:audio/mp3;base64,{encoded}' type='audio/mp3'></audio>",  # noqa: E501
+                    f"<source src='data:audio/mp3;base64,{encoded}' type='audio/mp3'></audio>",
                     unsafe_allow_html=True,
                 )
             else:
                 st.error("Failed to load ambient music. Please try again later.")
         else:
             st.markdown(
-                "<script>var a=document.getElementById('ambient-audio');if(a){a.pause();a.remove();}</script>",  # noqa: E501
+                "<script>var a=document.getElementById('ambient-audio');if(a){a.pause();a.remove();}</script>",
                 unsafe_allow_html=True,
             )
 
@@ -166,7 +162,7 @@ def render_resonance_music_page(
         if st.button("Generate music", key="generate_music_btn"):
             if not backend_ok:
                 alert(
-                    f"Cannot generate music: Backend service unreachable at {BACKEND_URL}.",  # noqa: E501
+                    f"Cannot generate music: Backend service unreachable at {BACKEND_URL}.",
                     "error",
                 )
                 return
@@ -188,7 +184,8 @@ def render_resonance_music_page(
                         alert("No MIDI data returned from generation.", "warning")
                 except Exception as exc:
                     alert(
-                        f"Music generation failed: {exc}. Ensure backend is running and 'generate_midi' route is available.",  # noqa: E501
+                        "Music generation failed: "
+                        f"{exc}. Ensure backend is running and 'generate_midi' route is available.",
                         "error",
                     )
 
@@ -196,7 +193,7 @@ def render_resonance_music_page(
         if st.button("Fetch resonance summary", key="fetch_summary_btn"):
             if not backend_ok:
                 alert(
-                    f"Cannot fetch summary: Backend service unreachable at {BACKEND_URL}.",  # noqa: E501
+                    f"Cannot fetch summary: Backend service unreachable at {BACKEND_URL}.",
                     "error",
                 )
                 return
@@ -206,7 +203,8 @@ def render_resonance_music_page(
                     data = _run_async(get_resonance_summary(choice))
                 except Exception as exc:
                     alert(
-                        f"Failed to load summary: {exc}. Ensure backend is running and 'resonance-summary' route is available.",  # noqa: E501
+                        "Failed to load summary: "
+                        f"{exc}. Ensure backend is running and 'resonance-summary' route is available.",
                         "error",
                     )
                 else:
@@ -246,4 +244,8 @@ def render_resonance_music_page(
 
 def render() -> None:
     """Wrapper to keep page loading consistent."""
+    main()
+
+
+if __name__ == "__main__":
     main()

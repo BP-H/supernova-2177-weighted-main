@@ -9,15 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles, apply_theme
-from modern_ui import apply_modern_styles
-from streamlit_helpers import safe_container, theme_toggle
+from frontend.theme import apply_theme
+from streamlit_helpers import safe_container, theme_toggle, inject_global_styles
 from status_indicator import render_status_icon
 from transcendental_resonance_frontend.src.utils import api
 
 # ─── Apply global styles ────────────────────────────────────────────────────────
-set_theme("light")
-apply_modern_styles()
+apply_theme("light")
+inject_global_styles()
 
 # ─── Dummy data ────────────────────────────────────────────────────────────────
 DUMMY_CONVERSATIONS: dict[str, list[dict[str, str]]] = {
@@ -55,9 +54,6 @@ def send_message(target: str, text: str) -> None:
 
 # ─── Page Entrypoint ───────────────────────────────────────────────────────────
 def main(container: st.DeltaGenerator | None = None) -> None:
-    apply_theme("light")
-    inject_global_styles()
-
     if container is None:
         container = st
 

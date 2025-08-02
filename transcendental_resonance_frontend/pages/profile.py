@@ -3,15 +3,16 @@
 # Legal & Ethical Safeguards
 """User identity hub with profile and activity overview."""
 
+import asyncio
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles, apply_theme
-from modern_ui import apply_modern_styles
+from frontend.theme import apply_theme
 from streamlit_helpers import (
     safe_container,
     header,
     theme_toggle,
     get_active_user,
     ensure_active_user,
+    inject_global_styles,
 )
 from api_key_input import render_api_key_ui
 from transcendental_resonance_frontend.ui.profile_card import (
@@ -20,17 +21,11 @@ from transcendental_resonance_frontend.ui.profile_card import (
 )
 from status_indicator import render_status_icon
 
-
 try:
     from social_tabs import _load_profile
     from frontend_bridge import dispatch_route
 except Exception:  # pragma: no cover - optional dependencies
     _load_profile = None  # type: ignore
-    dispatch_route = None  # type: ignore
-
-try:  # Optional social features
-    from frontend_bridge import dispatch_route
-except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None  # type: ignore
 
 try:  # Optional DB access for follow/unfollow
@@ -49,9 +44,6 @@ except Exception:  # pragma: no cover - optional dependency
 
     def seed_default_users() -> None:  # type: ignore
         pass
-
-
-import asyncio
 
 
 def _run_async(coro):
@@ -80,8 +72,9 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
     return followers or {}, following or {}
 
 
-set_theme("light")
-apply_modern_styles()
+# Initialize theme & global styles once, then ensure a user is set
+apply_theme("light")
+inject_global_styles()
 ensure_active_user()
 
 
@@ -114,9 +107,6 @@ def _render_profile(username: str) -> None:
 
 
 def main(main_container=None) -> None:
-    apply_theme("light")
-    inject_global_styles()
-
     if main_container is None:
         main_container = st
     init_db()

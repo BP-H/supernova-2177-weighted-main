@@ -4,22 +4,18 @@
 """Chat page with text, video, and voice features."""
 
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles, apply_theme
-from modern_ui import apply_modern_styles
+from frontend.theme import apply_theme
 
-from streamlit_helpers import safe_container, header, theme_toggle
+from streamlit_helpers import safe_container, header, theme_toggle, inject_global_styles
 from status_indicator import render_status_icon
 from chat_ui import render_chat_interface
 
-set_theme("light")
-apply_modern_styles()
+apply_theme("light")
+inject_global_styles()
 
 
 def main(main_container=None) -> None:
     """Render the chat page."""
-    apply_theme("light")
-    inject_global_styles()
-
     if main_container is None:
         main_container = st
     page = "chat"
