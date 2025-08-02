@@ -158,7 +158,10 @@ def render_validation_card() -> None:
 def render_stats_section(stats: dict | None = None) -> None:
     """Display quick stats using a responsive flexbox layout."""
 
-    accent = theme.get_accent_color()
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        accent = "#0077B5"
 
     st.markdown(
         f"""
