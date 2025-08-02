@@ -1,6 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+# ruff: noqa
 """Central UI-layout helpers.
 
 Key helpers
@@ -26,11 +27,14 @@ import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
 from frontend import theme
+
 try:
     from streamlit_javascript import st_javascript
 except Exception:  # pragma: no cover - optional dependency
+
     def st_javascript(*_a, **_kw):
         return None
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS & GLOBAL CSS
@@ -74,6 +78,7 @@ DRAWER_CSS = """
 BOTTOM_TAB_TEMPLATE = """
 <style>
 .sn-bottom-tabs{position:{position};bottom:0;left:0;right:0;display:none;background:var(--card);border-top:1px solid rgba(255,255,255,0.1);z-index:1001;}
+
 .sn-bottom-tabs a{flex:1;text-align:center;padding:.4rem 0;color:var(--text-muted);text-decoration:none;}
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
@@ -105,9 +110,11 @@ except Exception:  # pragma: no cover
 # optional pretty-sidebar package
 try:
     from streamlit_option_menu import option_menu
+
     USE_OPTION_MENU = True
 except ImportError:  # pragma: no cover
     USE_OPTION_MENU = False
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BASIC CONTAINERS
@@ -239,19 +246,23 @@ def render_top_bar() -> None:
         unsafe_allow_html=True,
     )
 
-    logo_col.markdown('<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True)
+    logo_col.markdown(
+        '<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True
+    )
 
     # search box with suggestions
     pid = st.session_state.get("active_page", "global")
     q_key = f"{pid}_search"
-    q = search_col.text_input("Search", placeholder="Search…", key=q_key, label_visibility="hidden")
+    q = search_col.text_input(
+        "Search", placeholder="Search…", key=q_key, label_visibility="hidden"
+    )
     if q:
         recent = st.session_state.setdefault("_recent_q", [])
         if q not in recent:
             recent.append(q)
             st.session_state["_recent_q"] = recent[-6:]
 
-    if (sugs := st.session_state.get("_recent_q")):
+    if sugs := st.session_state.get("_recent_q"):
         options = "".join(f"<option value='{s}'></option>" for s in sugs)
         search_col.markdown(
             f"<datalist id='recent-sugs'>{options}</datalist>"
@@ -281,7 +292,9 @@ def render_top_bar() -> None:
         pass
 
     # avatar placeholder
-    avatar_col.markdown('<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True)
+    avatar_col.markdown(
+        '<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True
+    )
 
     # close .sn-topbar
     st.markdown("</div>", unsafe_allow_html=True)
@@ -302,7 +315,8 @@ def _render_sidebar_nav(
 ) -> str:
     """Vertical sidebar nav; returns the *label* of the chosen page."""
     raw_pairs = (
-        list(page_links.items()) if isinstance(page_links, dict)
+        list(page_links.items())
+        if isinstance(page_links, dict)
         else [(None, p) for p in page_links]
     )
     icons = list(icons or [None] * len(raw_pairs))
@@ -365,8 +379,11 @@ def _render_sidebar_nav(
                 f"{icon_map.get(lbl) or ''} {lbl}".strip() for lbl, _ in choices
             ]
             picked = st.radio(
-                "Navigation", radio_labels,
-                index=default_idx, key=key, label_visibility="collapsed"
+                "Navigation",
+                radio_labels,
+                index=default_idx,
+                key=key,
+                label_visibility="collapsed",
             )
             chosen = choices[radio_labels.index(picked)][0]
 
@@ -385,6 +402,7 @@ def render_sidebar_nav(*a, **kw):
 
 
 render_modern_sidebar = render_sidebar_nav  # legacy alias
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TITLE & BADGE
@@ -413,10 +431,12 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
+    position = st.session_state.get("tab_bar_position", "bottom")
     st.markdown(
         BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
         unsafe_allow_html=True,
     )
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 __all__ = [
