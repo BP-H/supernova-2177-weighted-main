@@ -74,7 +74,12 @@ def get_global_css(theme: bool | str = True) -> str:
     """
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<style>
+    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    rel="stylesheet">
+<style>
+
 :root {{
     {theme_obj.css_vars()}
 }}
@@ -136,8 +141,10 @@ def initialize_theme(theme: bool | str = True) -> None:
 
     extra = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-          rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+
     <style>
     /* Glassmorphic cards */
     .glass-card {
@@ -192,6 +199,10 @@ def initialize_theme(name: bool | str = True) -> None:
     """Initialize theme and styles in a single call."""
     set_theme(name if isinstance(name, (str, bool)) else "light")
 
+
+def initialize_theme(mode: bool | str = True) -> None:
+    """Initialize the app theme and inject styles once."""
+    inject_modern_styles(mode)
 
 
 def get_accent_color() -> str:
