@@ -1,129 +1,70 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-# ruff: noqa: E501
+"""Streamlit UI helper utilities."""
 
 from __future__ import annotations
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import List, Dict
-import random
+import html
+from contextlib import contextmanager, nullcontext
+from typing import Any, ContextManager, Literal
 import streamlit as st
-from frontend.theme import apply_theme
-from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles
-# Removed broken import: from modern_ui_components import st_javascript
-# Removed unused assets: from frontend.assets import story_css, story_js, reaction_css
+from frontend.theme import set_theme, inject_global_styles
 
-apply_theme("light")
-inject_global_styles()
+# Fallback UI for when advanced components are not available
+class _DummyElement:
+    def __init__(self, cm: ContextManager | None = None) -> None:
+        self._cm = cm or nullcontext()
+    def __enter__(self) -> Any:
+        return self._cm.__enter__()
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._cm.__exit__(exc_type, exc, tb)
+    def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
+    def style(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
 
-@dataclass
-class User:
-    username: str
-    avatar: str
-    bio: str
-    badges: List[str] = field(default_factory=list)
+class _DummyUI:
+    def image(self, img: str) -> _DummyElement:
+        st.image(img, use_container_width=True)
+        return _DummyElement()
+    def element(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def card(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def badge(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
 
-@dataclass
-class Post:
-    id: int
-    user: User
-    media: str
-    caption: str
-    timestamp: datetime
-    reactions: Dict[str, int] = field(default_factory=lambda: {"❤️": 0, "🔥": 0, "👍": 0})
-    comments: List[Dict[str, str]] = field(default_factory=list)
+try:
+    import streamlit_shadcn_ui as ui
+except ImportError:
+    ui = _DummyUI()
 
-def _sample_users() -> List[User]:
-    """Return three hard-coded demo users."""
-    return [
-        User("alice", "https://placehold.co/48x48?text=A", "Explorer", ["🌟 super"]),
-        User("bob", "https://placehold.co/48x48?text=B", "Creator", ["🥇 pro"]),
-        User("carol", "https://placehold.co/48x48?text=C", "Hacker", ["💯 elite"]),
-    ]
+def sanitize_text(text: Any) -> str:
+    """Return `text` as a safe string."""
+    return html.escape(str(text), quote=False) if text else ""
 
-def _generate_posts(count: int, start: int = 0) -> List[Post]:
-    """Generate `count` pseudo-random demo posts."""
-    users = _sample_users()
-    now = datetime.utcnow()
-    return [
-        Post(
-            id=start + i,
-            user=random.choice(users),
-            media=f"https://placehold.co/600x400?text=Post+{start+i+1}",
-            caption=f"Demo caption for post {start+i+1}",
-            timestamp=now - timedelta(minutes=5 * i),
-        )
-        for i in range(count)
-    ]
+@contextmanager
+def safe_container(container=None):
+    """A context manager for safely using Streamlit containers."""
+    if container is None:
+        container = st
+    yield container
 
-def _render_stories(users: List[User]) -> None:
-    """Render the horizontal story-strip using st.columns as a robust alternative."""
-    if not users:
-        st.write("No stories to display.")
-        return
-    cols = st.columns(len(users))
-    for i, u in enumerate(users):
-        with cols[i]:
-            st.image(u.avatar, width=60)
-            st.caption(u.username)
+def header(title: str, *, layout: str = "centered") -> None:
+    """Render a standard page header."""
+    st.markdown(f"<h1>{sanitize_text(title)}</h1>", unsafe_allow_html=True)
 
-def _render_post(post: Post) -> None:
-    """Render an individual post card."""
-    reactions = st.session_state.setdefault("reactions", {}).setdefault(post.id, post.reactions.copy())
-    comments = st.session_state.setdefault("comments", {}).setdefault(post.id, post.comments.copy())
-
-    with st.container():
-        header_cols = st.columns([1, 8, 2])
-        with header_cols[0]:
-            st.image(post.user.avatar, width=48)
-        with header_cols[1]:
-            st.markdown(f"**{sanitize_text(post.user.username)}** {' '.join(post.user.badges)}")
-        with header_cols[2]:
-            st.caption(f"{post.timestamp:%H:%M}")
+def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
+    """Switch between light and dark themes using a toggle widget."""
+    key = f"theme_toggle_{key_suffix or 'default'}"
+    current_theme = st.session_state.get("theme", "light")
+    
+    is_dark = st.toggle(label, value=(current_theme == "dark"), key=key)
+    chosen_theme = "dark" if is_dark else "light"
+    
+    if chosen_theme != current_theme:
+        st.session_state["theme"] = chosen_theme
+        set_theme(chosen_theme)
+        st.rerun()
         
-        # FIX: Replaced unsupported `alt` parameter with `caption`
-        st.image(
-            post.media,
-            caption=sanitize_text(post.caption),
-            use_container_width=True,
-            # Dropped output_format="JPEG" - let Streamlit handle it automatically
-        )
-        
-        # Reactions and comments can be simplified or kept as is
-        # For simplicity, let's just show a comment box
-        with st.expander("💬 Comments"):
-            for c in comments:
-                st.write(f"**{sanitize_text(c['user'])}**: {sanitize_text(c['text'])}")
-            new_comment = st.text_input("Add a comment", key=f"c_{post.id}")
-            if st.button("Post", key=f"cbtn_{post.id}") and new_comment:
-                comments.append({"user": "you", "text": new_comment})
-                st.session_state["comments"][post.id] = comments
-                st.rerun()
-
-def _init_state() -> None:
-    """Initialize the session state for the feed."""
-    if "posts" not in st.session_state:
-        st.session_state["posts"] = _generate_posts(6)
-    st.session_state.setdefault("post_offset", 3)
-    st.session_state.setdefault("reactions", {})
-    st.session_state.setdefault("comments", {})
-
-def main(main_container=None) -> None:
-    """Render the feed page."""
-    container = main_container or st
-    with safe_container(container):
-        _init_state()
-        theme_toggle("Dark Mode", key_suffix="feed")
-        
-        posts = st.session_state["posts"]
-        users = _sample_users()
-        
-        _render_stories(users)
-        
-        for p in posts:
-            _render_post(p)
-            st.divider()
-
-if __name__ == "__main__":
-    main()
+    return chosen_theme
