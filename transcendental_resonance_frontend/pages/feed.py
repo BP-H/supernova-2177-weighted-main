@@ -1,22 +1,22 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+# ruff: noqa: E501
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict
 
 import random
 import streamlit as st
 
 from frontend.theme import apply_theme
-
 from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles
 
 from modern_ui_components import st_javascript
-from frontend.assets import story_css, story_js, reaction_css, scroll_js
+from frontend.assets import story_css, story_js, reaction_css
 
 apply_theme("light")
 inject_global_styles()
@@ -41,9 +41,7 @@ class Post:
     media: str
     caption: str
     timestamp: datetime
-    reactions: Dict[str, int] = field(
-        default_factory=lambda: {"❤️": 0, "🔥": 0, "👍": 0}
-    )
+    reactions: Dict[str, int] = field(default_factory=lambda: {"❤️": 0, "🔥": 0, "👍": 0})
     comments: List[Dict[str, str]] = field(default_factory=list)
 
 
@@ -92,9 +90,7 @@ def _render_stories(users: List[User]) -> None:
     for u in users:
         avatar = sanitize_text(u.avatar)
         username = sanitize_text(u.username)
-        html += (
-            f"<div class='story-item'><img src='{avatar}' width='60' alt='avatar'/><br>{username}</div>"
-        )
+        html += f"<div class='story-item'><img src='{avatar}' width='60' alt='avatar'/><br>{username}</div>"
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
     st_javascript(story_js(), key="story_carousel")
@@ -131,7 +127,9 @@ def _render_post(post: Post) -> None:
             alt=caption,
         )
         # Caption
-        st.markdown(f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='post-caption'>{caption}</div>", unsafe_allow_html=True
+        )
 
         # Reactions & comments
         cols = st.columns(len(reactions) + 1)
@@ -159,8 +157,8 @@ def _render_post(post: Post) -> None:
             with st.popover("💬"):
                 st.markdown("### comments")
                 for c in comments:
-                    user = sanitize_text(c['user'])
-                    text = sanitize_text(c['text'])
+                    user = sanitize_text(c["user"])
+                    text = sanitize_text(c["text"])
                     st.write(f"**{user}**: {text}")
                 new = st.text_input("Add a comment", key=f"c_{post.id}")
                 if st.button("post", key=f"cbtn_{post.id}") and new:
@@ -258,7 +256,6 @@ def _page_body() -> None:
         st.rerun()
 
 
-
 def main(main_container=None) -> None:
     """Render the feed inside ``main_container`` (or root Streamlit)."""
     container = main_container or st
@@ -273,4 +270,3 @@ def render() -> None:
 
 if __name__ == "__main__":
     render()
-

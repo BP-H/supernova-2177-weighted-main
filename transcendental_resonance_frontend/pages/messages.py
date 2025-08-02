@@ -16,7 +16,6 @@ inject_global_styles()
 
 def main(main_container=None) -> None:
     """Render the chat interface inside the given container (or the page itself)."""
-
     theme_toggle("Dark Mode", key_suffix="messages")
     render_chat_ui(main_container)
 

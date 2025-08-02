@@ -6,14 +6,18 @@
 import streamlit as st
 from frontend.theme import apply_theme
 
-
 from social_tabs import render_social_tab
-from streamlit_helpers import safe_container, render_mock_feed, theme_toggle, inject_global_styles
+from streamlit_helpers import (
+    safe_container,
+    render_mock_feed,
+    theme_toggle,
+    inject_global_styles,
+)
 from feed_renderer import render_feed
 
+# Initialize theme & global styles once
 apply_theme("light")
 inject_global_styles()
-
 
 
 def main(main_container=None) -> None:
@@ -32,4 +36,8 @@ def main(main_container=None) -> None:
 
 def render() -> None:
     """Wrapper to keep page loading consistent."""
+    main()
+
+
+if __name__ == "__main__":
     main()

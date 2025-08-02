@@ -5,20 +5,19 @@
 
 import streamlit as st
 from frontend.theme import apply_theme
-
-
 from voting_ui import render_voting_tab
 from streamlit_helpers import safe_container, theme_toggle, inject_global_styles
 
+# Initialize theme & global styles once
 apply_theme("light")
 inject_global_styles()
 
 
 def main(main_container=None) -> None:
     """Render the Governance and Voting page inside ``main_container``."""
-
     if main_container is None:
         main_container = st
+
     theme_toggle("Dark Mode", key_suffix="voting")
 
     container_ctx = safe_container(main_container)
@@ -28,4 +27,8 @@ def main(main_container=None) -> None:
 
 def render() -> None:
     """Wrapper to keep page loading consistent."""
+    main()
+
+
+if __name__ == "__main__":
     main()
