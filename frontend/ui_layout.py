@@ -453,13 +453,33 @@ def show_preview_badge(text: str = "Preview") -> None:
 
 def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
-    accent = theme.get_accent_color()
-    active = st.session_state.get("active_page", "home")
-    position = st.session_state.get("tab_bar_position", "bottom")
-    st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
-        unsafe_allow_html=True,
-    )
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        # Fallback to the default accent color from LIGHT_THEME
+        accent = theme.LIGHT_THEME.accent
+
+    try:
+        active = st.session_state.get("active_page", "home")
+    except Exception:
+        active = "home"
+
+    try:
+        tab_position = st.session_state.get("tab_bar_position", position)
+    except Exception:
+        tab_position = position
+
+    try:
+        st.markdown(
+            BOTTOM_TAB_TEMPLATE.format(
+                accent=accent, active=active, position=tab_position
+            ),
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        # Silently fail in rendering rather than crash the UI
+        return
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
