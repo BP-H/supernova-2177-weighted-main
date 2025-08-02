@@ -97,7 +97,7 @@ SIDEBAR_STYLES = """
 }
 .sidebar-nav .nav-item.active {
     background: var(--accent);
-    color: #fff;
+    color: var(--bg);
 }
 </style>
 """
@@ -414,7 +414,7 @@ def render_stats_section(stats: dict) -> None:
             margin-bottom: 0.25rem;
         }}
         .stats-label {{
-            color: #888;
+            color: var(--text-muted);
             font-size: calc(0.8rem + 0.2vw);
             font-weight: 500;
         }}
