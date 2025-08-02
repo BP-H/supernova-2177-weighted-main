@@ -12,6 +12,7 @@ import streamlit as st
 @dataclass(frozen=True)
 class ColorTheme:
     """Container for theme colors and common tokens."""
+
     bg: str
     card: str
     accent: str
@@ -33,12 +34,14 @@ class ColorTheme:
         ])
 
 
+
 # Modern “light” and “dark” palettes
 LIGHT_THEME = ColorTheme(
     bg="#F0F2F6",
     card="#FFFFFF",
     accent="#0077B5",        # LinkedIn-blue accent
     text="#222222",
+
     text_muted="#666666",
 )
 DARK_THEME = ColorTheme(
@@ -46,6 +49,7 @@ DARK_THEME = ColorTheme(
     card="rgba(255,255,255,0.05)",
     accent="#00E5FF",        # Neon cyan
     text="#FFFFFF",
+
     text_muted="#AAAAAA",
 )
 
@@ -72,7 +76,9 @@ def get_global_css(theme: bool | str = True) -> str:
     # resolve the theme into “light” or “dark”
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<style>
+    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
 :root {{
     {theme_obj.css_vars()}
 }}
@@ -168,6 +174,7 @@ def inject_modern_styles(theme: bool | str = True) -> None:
 
     </style>
     """
+
     st.markdown(extra, unsafe_allow_html=True)
     st.session_state["_styles_injected"] = True
 
@@ -175,7 +182,9 @@ def inject_modern_styles(theme: bool | str = True) -> None:
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and apply CSS once."""
     mode = _resolve_mode(name)
-    if st.session_state.get("_theme") == mode and st.session_state.get("_styles_injected"):
+    if st.session_state.get("_theme") == mode and st.session_state.get(
+        "_styles_injected"
+    ):
         return
 
     st.session_state["_theme"] = mode

@@ -57,6 +57,9 @@ def send_message(target: str, text: str) -> None:
 
 # ─── Page Entrypoint ───────────────────────────────────────────────────────────
 def main(container: st.DeltaGenerator | None = None) -> None:
+    apply_theme("light")
+    inject_modern_styles()
+
     if container is None:
         container = st
 

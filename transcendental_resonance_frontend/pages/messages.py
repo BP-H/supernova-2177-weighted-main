@@ -17,6 +17,9 @@ apply_modern_styles()
 
 def main(main_container=None) -> None:
     """Render the chat interface inside the given container (or the page itself)."""
+    apply_theme("light")
+    inject_modern_styles()
+
     theme_toggle("Dark Mode", key_suffix="messages")
     render_chat_ui(main_container)
 
