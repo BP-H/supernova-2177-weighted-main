@@ -12,6 +12,7 @@ import streamlit as st
 @dataclass(frozen=True)
 class ColorTheme:
     """Container for theme colors and common tokens."""
+
     bg: str
     card: str
     accent: str
@@ -21,27 +22,29 @@ class ColorTheme:
 
     def css_vars(self) -> str:
         """Return CSS variable declarations for this theme."""
-        return "\n    ".join([
-            f"--bg: {self.bg};",
-            f"--card: {self.card};",
-            f"--accent: {self.accent};",
-            f"--text-muted: {self.text_muted};",
-            f"--radius: {self.radius};",
-            f"--transition: {self.transition};",
-        ])
+        return "\n    ".join(
+            [
+                f"--bg: {self.bg};",
+                f"--card: {self.card};",
+                f"--accent: {self.accent};",
+                f"--text-muted: {self.text_muted};",
+                f"--radius: {self.radius};",
+                f"--transition: {self.transition};",
+            ]
+        )
 
 
 # Modern “light” and “dark” palettes
 LIGHT_THEME = ColorTheme(
     bg="#F0F2F6",
     card="#FFFFFF",
-    accent="#0077B5",        # LinkedIn-blue accent
+    accent="#0077B5",  # LinkedIn-blue accent
     text_muted="#666666",
 )
 DARK_THEME = ColorTheme(
     bg="#0A0F14",
     card="rgba(255,255,255,0.05)",
-    accent="#00E5FF",        # Neon cyan
+    accent="#00E5FF",  # Neon cyan
     text_muted="#AAAAAA",
 )
 
@@ -126,41 +129,44 @@ def inject_modern_styles(theme: bool | str = True) -> None:
 
     apply_theme(mode)
 
-    extra = """
-    <style>
-    /* Glassmorphic cards */
-    .glass-card {
-        background: var(--card);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: var(--radius);
-        padding: 1rem;
-        animation: fade-in var(--transition) forwards;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-
-    /* Accent gradient buttons */
-    .insta-btn, .linkedin-btn {
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: var(--radius);
-        color: white !important;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-    .insta-btn {
-        background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF);
-    }
-    .linkedin-btn {
-        background: var(--accent);
-    }
-    .insta-btn:active, .linkedin-btn:active {
-        transform: scale(0.97);
-    }
-
-    </style>
-    """
+    extra = (
+        "<link rel='preconnect' href='https://fonts.googleapis.com'>\n"
+        "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600&"
+        "display=swap' rel='stylesheet'>\n"
+        "<style>\n"
+        "/* Glassmorphic cards */\n"
+        ".glass-card {\n"
+        "    background: var(--card);\n"
+        "    backdrop-filter: blur(10px);\n"
+        "    border: 1px solid rgba(255,255,255,0.2);\n"
+        "    border-radius: var(--radius);\n"
+        "    padding: 1rem;\n"
+        "    animation: fade-in var(--transition) forwards;\n"
+        "    box-shadow: 0 8px 20px rgba(0,0,0,0.1);\n"
+        "}\n"
+        "\n"
+        "/* Accent gradient buttons */\n"
+        ".insta-btn, .linkedin-btn {\n"
+        "    padding: 0.6rem 1.2rem;\n"
+        "    border: none;\n"
+        "    border-radius: var(--radius);\n"
+        "    color: white !important;\n"
+        "    font-weight: 600;\n"
+        "    cursor: pointer;\n"
+        "    transition: transform 0.2s ease;\n"
+        "}\n"
+        ".insta-btn {\n"
+        "    background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF);\n"
+        "}\n"
+        ".linkedin-btn {\n"
+        "    background: var(--accent);\n"
+        "}\n"
+        ".insta-btn:active, .linkedin-btn:active {\n"
+        "    transform: scale(0.97);\n"
+        "}\n"
+        "\n"
+        "</style>\n"
+    )
     st.markdown(extra, unsafe_allow_html=True)
     st.session_state["_styles_injected"] = True
 
@@ -168,7 +174,9 @@ def inject_modern_styles(theme: bool | str = True) -> None:
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and apply CSS once."""
     mode = _resolve_mode(name)
-    if st.session_state.get("_theme") == mode and st.session_state.get("_styles_injected"):
+    if st.session_state.get("_theme") == mode and st.session_state.get(
+        "_styles_injected"
+    ):
         return
 
     st.session_state["_theme"] = mode
