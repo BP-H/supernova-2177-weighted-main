@@ -10,7 +10,7 @@ from typing import List, Dict
 import random
 import streamlit as st
 from frontend.theme import apply_theme
-from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles
+from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles, alert
 # Removed broken import: from modern_ui_components import st_javascript
 # Removed unused assets: from frontend.assets import story_css, story_js, reaction_css
 
@@ -60,7 +60,7 @@ def _generate_posts(count: int, start: int = 0) -> List[Post]:
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip using st.columns as a robust alternative."""
     if not users:
-        st.info("No stories available.")
+        alert("No stories available.", type="info")
         return
     cols = st.columns(len(users))
     for i, u in enumerate(users):
