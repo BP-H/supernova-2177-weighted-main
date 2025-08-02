@@ -14,7 +14,7 @@ import streamlit as st
 # Import directly from the source to prevent circular dependencies
 from frontend.theme import set_theme, inject_global_styles
 
-# --- Fallback UI Elements ---
+# --- Fallback UI Elements (for when streamlit_shadcn_ui is not installed) ---
 class _DummyElement:
     """A fallback UI element that does nothing but allows chaining."""
     def __init__(self, cm: ContextManager | None = None) -> None: self._cm = cm or nullcontext()
@@ -24,7 +24,7 @@ class _DummyElement:
     def style(self, *_a: Any, **_k: Any) -> "_DummyElement": return self
 
 class _DummyUI:
-    """A complete fallback UI to prevent AttributeError when a component is not installed."""
+    """A complete fallback UI to prevent AttributeError for missing components."""
     def image(self, *_a, **_k) -> _DummyElement: return _DummyElement()
     def element(self, *_a, **_k) -> _DummyElement: return _DummyElement()
     def card(self, *_a, **_k) -> _DummyElement: return _DummyElement()
