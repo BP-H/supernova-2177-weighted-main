@@ -5,7 +5,7 @@
 
 import importlib
 import streamlit as st
-from frontend.theme import set_theme
+from frontend.theme import set_theme, apply_theme, inject_modern_styles
 from modern_ui import apply_modern_styles
 
 
