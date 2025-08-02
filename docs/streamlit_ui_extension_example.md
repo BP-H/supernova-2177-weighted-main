@@ -8,9 +8,9 @@ HTML injection.
 ```python
 import streamlit as st
 from streamlit_helpers import header, theme_selector, centered_container
-from modern_ui import inject_modern_styles
+from modern_ui import apply_modern_styles
 
-inject_modern_styles()
+apply_modern_styles()
 header("Custom Page", layout="wide")
 with centered_container():
     theme_selector("Theme")

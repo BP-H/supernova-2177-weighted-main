@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import asyncio
 import streamlit as st
-from frontend.theme import apply_theme, inject_modern_styles
+from frontend.theme import set_theme
+from modern_ui import apply_modern_styles
 from streamlit_helpers import safe_container, theme_toggle
 from status_indicator import render_status_icon
 from transcendental_resonance_frontend.src.utils import api
 
 # ─── Apply global styles ────────────────────────────────────────────────────────
+set_theme("light")
+apply_modern_styles()
 
 # ─── Dummy data ────────────────────────────────────────────────────────────────
 DUMMY_CONVERSATIONS: dict[str, list[dict[str, str]]] = {

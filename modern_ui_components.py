@@ -26,7 +26,7 @@ except Exception:  # pragma: no cover – fallback for isolated execution
 
 
 from streamlit_helpers import safe_container
-from frontend.theme import inject_modern_styles
+from modern_ui import apply_modern_styles
 
 from frontend import theme
 
@@ -159,7 +159,29 @@ def _icon_html(name: str) -> str:
 
 def render_modern_layout() -> None:
     """Apply global styles and base glassmorphism containers."""
-    inject_modern_styles()
+    apply_modern_styles()
+    st.markdown(
+        """
+        <style>
+        .glass-card {
+            background: rgba(255,255,255,0.3);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 
 def render_modern_header(title: str) -> None:
