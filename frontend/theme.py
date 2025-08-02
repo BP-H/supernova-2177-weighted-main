@@ -186,6 +186,11 @@ def set_theme(name: str) -> None:
     inject_modern_styles(mode)
 
 
+def initialize_theme(name: bool | str = True) -> None:
+    """Initialize theme and styles in a single call."""
+    set_theme(name if isinstance(name, (str, bool)) else "light")
+
+
 
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
@@ -197,4 +202,5 @@ __all__ = [
     "set_theme",
     "inject_modern_styles",
     "get_accent_color",
+    "initialize_theme",
 ]
