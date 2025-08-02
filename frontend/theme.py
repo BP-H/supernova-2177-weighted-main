@@ -30,7 +30,7 @@ def initialize_theme(name: str = "light") -> None:
     inject_global_styles(force=True)
 
 def apply_theme(name: str = "light") -> None:
-    initialize_theme(name)  # Alias for compat
+    initialize_theme(name)  # Alias
 
 def inject_modern_styles(force: bool = False) -> None:
-    inject_global_styles(force)  # Alias to fix log error
+    inject_global_styles(force)  # Alias for modern_ui.py
