@@ -22,17 +22,20 @@ def test_theme_application_and_idempotent_styles(monkeypatch):
     dummy_st = types.SimpleNamespace(markdown=dummy_markdown, session_state={})
     monkeypatch.setattr(theme, "st", dummy_st)
 
-    theme.initialize_theme("light")
+    theme.inject_modern_styles("light")
     assert dummy_st.session_state["_theme"] == "light"
     assert theme.get_accent_color() == theme.LIGHT_THEME.accent
 
-    theme.initialize_theme("dark")
+    # Second call switches theme but should not inject global styles again
+    theme.inject_modern_styles("dark")
     assert dummy_st.session_state["_theme"] == "dark"
     assert theme.get_accent_color() == theme.DARK_THEME.accent
 
-    theme.initialize_theme()
-    theme.initialize_theme()
+    # Global styles should only be injected once
+    fa_calls = [c for c in calls if "font-awesome" in c.lower()]
+    assert len(fa_calls) == 1
 
+    # Modern styles (e.g. Glassmorphic) should also only be injected once
+    glass_calls = [c for c in calls if "Glassmorphic" in c]
+    assert len(glass_calls) == 1
 
-    extra_css_calls = [c for c in calls if "Glassmorphic" in c]
-    assert len(extra_css_calls) == 1

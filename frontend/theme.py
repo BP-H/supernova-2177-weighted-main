@@ -66,51 +66,6 @@ def get_theme(name: bool | str = True) -> ColorTheme:
         return THEMES.get(name.lower(), LIGHT_THEME)
     return DARK_THEME if name else LIGHT_THEME
 
-
-def get_global_css(theme: bool | str = True) -> str:
-    """
-    Return a `<style>` block setting :root CSS variables
-    for the selected theme.
-    """
-    resolved = "dark" if theme is True else theme or "light"
-    theme_obj = get_theme(resolved)
-
-    return f"""<style>
-:root {{
-    {theme_obj.css_vars()}
-}}
-
-body {{
-    background: var(--bg) !important;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    transition: background var(--transition);
-}}
-
-.card {{
-    background: var(--card);
-}}
-
-a {{
-    color: var(--accent);
-}}
-
-.text-muted {{
-    color: var(--text-muted);
-}}
-
-button, .stButton>button {{
-    border-radius: var(--radius);
-}}
-
-@keyframes fade-in {{
-    from {{ opacity: 0; }}
-    to   {{ opacity: 1; }}
-}}
-</style>"""
-
-
-
 def _resolve_mode(name: bool | str) -> str:
     """Normalize ``name`` to ``light`` or ``dark``."""
     if isinstance(name, str):
@@ -119,46 +74,118 @@ def _resolve_mode(name: bool | str) -> str:
     return "dark" if name else "light"
 
 
-def apply_theme(name: bool | str = True) -> None:
-    """Inject the base CSS variables for ``name`` and remember it."""
-    mode = _resolve_mode(name)
-    st.markdown(get_global_css(mode), unsafe_allow_html=True)
+def inject_global_styles(theme: bool | str = True) -> None:
+    """Inject global CSS variables, fonts, and base styles.
+
+    This loads the Inter font and FontAwesome icons, sets root CSS
+    variables (``--bg``, ``--card``, ``--accent``, ``--text``, etc.)
+    and adds foundational styling. It runs only once per session.
+    """
+    mode = _resolve_mode(theme)
     st.session_state["_theme"] = mode
 
-
-def initialize_theme(theme: bool | str = True) -> None:
-    """Initialize theme once and update root variables on subsequent calls."""
-    mode = _resolve_mode(theme)
-
-    # Always update root variables
-    apply_theme(mode)
-
-    if st.session_state.get("_theme_initialized"):
+    if st.session_state.get("_global_styles_injected"):
         return
 
-    extra = """
+    th = get_theme(mode)
+    html = f"""
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+    :root {{
+        --bg: {th.bg};
+        --card: {th.card};
+        --accent: {th.accent};
+        --text: {th.text};
+        --text-muted: {th.text_muted};
+        --radius: {th.radius};
+        --transition: {th.transition};
+        --font: 'Inter', sans-serif;
+    }}
+
+    body {{
+        background: var(--bg) !important;
+        color: var(--text);
+        font-family: var(--font);
+        transition: background var(--transition);
+    }}
+
+    .card {{
+        background: var(--card);
+    }}
+
+    a {{
+        color: var(--accent);
+    }}
+
+    .text-muted {{
+        color: var(--text-muted);
+    }}
+
+    button, .stButton > button {{
+        border-radius: var(--radius);
+    }}
+
+    @keyframes fade-in {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
+    }}
+    </style>
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
+    st.session_state["_global_styles_injected"] = True
 
     <style>
-    /* Glassmorphic cards */
-    .glass-card {
+    :root {{
+        --bg: {th.bg};
+        --card: {th.card};
+        --accent: {th.accent};
+        --text: {th.text};
+        --font: 'Inter', sans-serif;
+    }}
+    body {{
+        background: var(--bg) !important;
+        color: var(--text);
+        font-family: var(--font);
+        transition: background var(--transition, 0.4s ease);
+    }}
+    /* Glassmorphic card styles */
+    .glass-card {{
         background: var(--card);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.2);
-        border-radius: var(--radius);
+        border-radius: var(--radius, 1rem);
         padding: 1rem;
-        animation: fade-in var(--transition) forwards;
         box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
+    }}
+    </style>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+    st.session_state["_global_styles_injected"] = True
 
+
+def apply_theme(name: bool | str = True) -> None:
+    """Legacy alias for :func:`inject_global_styles`."""
+    inject_global_styles(name)
+
+
+def inject_modern_styles(theme: bool | str = True) -> None:
+    """Inject modern extras, ensuring global styles are present."""
+    mode = _resolve_mode(theme)
+    inject_global_styles(mode)
+    if st.session_state.get("_styles_injected"):
+        return
+
+    extra = """
+    <style>
     /* Accent gradient buttons */
     .insta-btn, .linkedin-btn {
         padding: 0.6rem 1.2rem;
         border: none;
-        border-radius: var(--radius);
+        border-radius: var(--radius, 1rem);
         color: white !important;
         font-weight: 600;
         cursor: pointer;
@@ -173,10 +200,8 @@ def initialize_theme(theme: bool | str = True) -> None:
     .insta-btn:active, .linkedin-btn:active {
         transform: scale(0.97);
     }
-
     </style>
     """
-
     st.markdown(extra, unsafe_allow_html=True)
     st.session_state["_theme_initialized"] = True
 
@@ -216,7 +241,11 @@ def initialize_theme(name: bool | str = True) -> None:
 
 
 def initialize_theme(mode: bool | str = True) -> None:
-    """Initialize the app theme and inject all global styles."""
+    """Initialize the app theme and inject all global styles.
+
+    This is a thin wrapper around `inject_global_styles` to preserve
+    compatibility with older code or usages that expect this function name.
+    """
     inject_global_styles(mode)
 
 def get_accent_color() -> str:
