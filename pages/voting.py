@@ -120,3 +120,11 @@ def render_proposals_tab(main_container=None) -> None:
                     alert(f"Proposal {res.get('id')} created!", "info")
                 except Exception as exc:
                     alert(f"Failed to create proposal: {exc}", "error")
+
+
+
+def main():
+    st.write("Voting content (placeholder - add your code).")  # Low numbers as placeholder
+
+if __name__ == "__main__":
+    main()
