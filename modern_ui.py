@@ -2,6 +2,7 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 """Modern UI helpers for Streamlit pages."""
+# ruff: noqa: E501
 
 import streamlit as st
 import logging
@@ -12,18 +13,24 @@ logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from streamlit_lottie import st_lottie
+
     HAS_LOTTIE = True
 except Exception:  # pragma: no cover - graceful fallback
     st_lottie = None  # type: ignore
     HAS_LOTTIE = False
 
 
-def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "🚀") -> None:
+def render_lottie_animation(
+    url: str, *, height: int = 200, fallback: str = "🚀"
+) -> None:
     """Display a Lottie animation if available, otherwise show a fallback icon."""
     if HAS_LOTTIE and st_lottie is not None:
         st_lottie(url, height=height)
     else:
-        st.markdown(f"<div style='font-size:{height // 4}px'>{fallback}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='font-size:{height // 4}px'>{fallback}</div>",
+            unsafe_allow_html=True,
+        )
 
 
 logger = logging.getLogger("modern_ui")
@@ -33,14 +40,13 @@ def apply_modern_styles() -> None:
     """Inject global CSS using theme variables and local assets."""
     from modern_ui_components import SIDEBAR_STYLES
 
-    theme.inject_modern_styles()
+    theme.inject_global_styles()
 
     if st.session_state.get("_modern_ui_css_injected"):
         logger.debug("Modern UI CSS already injected; skipping extra assets")
         return
 
     css = """
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="/static/lucide-react.min.js"></script>
     <style>
     body, .stApp {
@@ -80,6 +86,7 @@ def apply_modern_styles() -> None:
     st.markdown(css, unsafe_allow_html=True)
     st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
     st.session_state["_modern_ui_css_injected"] = True
+
 
 def inject_premium_styles() -> None:
     """Backward compatible alias for :func:`apply_modern_styles`."""
@@ -155,10 +162,13 @@ def render_validation_card() -> None:
         unsafe_allow_html=True,
     )
 
+
 def render_stats_section(stats: dict | None = None) -> None:
     """Display quick stats using a responsive flexbox layout."""
-
-    accent = theme.get_accent_color()
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        accent = theme.LIGHT_THEME.accent  # Safe fallback to known theme value
 
     st.markdown(
         f"""
@@ -199,15 +209,53 @@ def render_stats_section(stats: dict | None = None) -> None:
                 flex: 1 1 calc(50% - 1rem);
             }}
         }}
-        @media (max-width: 480px) {{
-            .stats-card {{
-                flex: 1 1 100%;
-            }}
-        }}
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+            }}
+            .stats-card {{
+                flex: 1 1 calc(25% - 1rem);
+                min-width: 120px;
+                background: var(--card);
+                backdrop-filter: blur(15px);
+                border: 1px solid var(--card);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                transition: transform 0.3s ease;
+            }}
+            .stats-card:hover {{
+                transform: scale(1.02);
+            }}
+            .stats-value {{
+                color: {accent};
+                font-size: calc(1.5rem + 0.3vw);
+                font-weight: 700;
+                margin-bottom: 0.25rem;
+            }}
+            .stats-label {{
+                color: var(--text-muted);
+                font-size: calc(0.8rem + 0.2vw);
+                font-weight: 500;
+            }}
+            @media (max-width: 768px) {{
+                .stats-card {{
+                    flex: 1 1 calc(50% - 1rem);
+                }}
+            }}
+            @media (max-width: 480px) {{
+                .stats-card {{
+                    flex: 1 1 100%;
+                }}
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        return
 
     default_stats = {
         "runs": "0",
@@ -233,19 +281,22 @@ def render_stats_section(stats: dict | None = None) -> None:
         ("🎯", "Accuracy", data["accuracy"]),
     ]
 
-    st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
-    for icon, label, value in entries:
-        st.markdown(
-            f"""
-            <div class='stats-card'>
-                <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
-                <div class='stats-value'>{value}</div>
-                <div class='stats-label'>{label}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
+    try:
+        st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
+        for icon, label, value in entries:
+            st.markdown(
+                f"""
+                <div class='stats-card'>
+                    <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
+                    <div class='stats-value'>{value}</div>
+                    <div class='stats-label'>{label}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+    except Exception:
+        return
 
 
 def open_card_container() -> None:

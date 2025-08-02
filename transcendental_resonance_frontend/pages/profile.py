@@ -4,7 +4,7 @@
 """User identity hub with profile and activity overview."""
 
 import streamlit as st
-from frontend.theme import set_theme
+from frontend.theme import set_theme, inject_global_styles, apply_theme
 from modern_ui import apply_modern_styles
 from streamlit_helpers import (
     safe_container,
@@ -14,13 +14,11 @@ from streamlit_helpers import (
     ensure_active_user,
 )
 from api_key_input import render_api_key_ui
-from social_tabs import _load_profile
 from transcendental_resonance_frontend.ui.profile_card import (
     DEFAULT_USER,
     render_profile_card,
 )
 from status_indicator import render_status_icon
-from feed_renderer import render_mock_feed, DEMO_POSTS
 
 
 try:
@@ -52,6 +50,7 @@ except Exception:  # pragma: no cover - optional dependency
     def seed_default_users() -> None:  # type: ignore
         pass
 
+
 import asyncio
 
 
@@ -79,6 +78,7 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
             dispatch_route("get_following", {"username": username}, db=db)
         )
     return followers or {}, following or {}
+
 
 set_theme("light")
 apply_modern_styles()
@@ -115,7 +115,7 @@ def _render_profile(username: str) -> None:
 
 def main(main_container=None) -> None:
     apply_theme("light")
-    inject_modern_styles()
+    inject_global_styles()
 
     if main_container is None:
         main_container = st
@@ -170,8 +170,6 @@ def main(main_container=None) -> None:
             {**DEFAULT_USER, "username": username},
         )
         render_profile_card(data)
-
-
 
 
 def render() -> None:

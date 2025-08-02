@@ -31,5 +31,11 @@ def test_theme_application_and_idempotent_styles(monkeypatch):
     assert dummy_st.session_state["_theme"] == "dark"
     assert theme.get_accent_color() == theme.DARK_THEME.accent
 
+    # Global styles should only be injected once
     fa_calls = [c for c in calls if "font-awesome" in c.lower()]
     assert len(fa_calls) == 1
+
+    # Modern styles (e.g. Glassmorphic) should also only be injected once
+    glass_calls = [c for c in calls if "Glassmorphic" in c]
+    assert len(glass_calls) == 1
+

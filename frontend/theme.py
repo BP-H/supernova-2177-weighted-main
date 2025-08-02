@@ -66,7 +66,6 @@ def get_theme(name: bool | str = True) -> ColorTheme:
         return THEMES.get(name.lower(), LIGHT_THEME)
     return DARK_THEME if name else LIGHT_THEME
 
-
 def _resolve_mode(name: bool | str) -> str:
     """Normalize ``name`` to ``light`` or ``dark``."""
     if isinstance(name, str):
@@ -76,15 +75,15 @@ def _resolve_mode(name: bool | str) -> str:
 
 
 def inject_global_styles(theme: bool | str = True) -> None:
-    """Inject global CSS variables, fonts and base styles.
+    """Inject global CSS variables, fonts, and base styles.
 
     This loads the Inter font and FontAwesome icons, sets root CSS
-    variables (``--bg``, ``--card``, ``--accent``, ``--text`` and
-    ``--font``) and adds glassmorphic card styling.  It runs at most once
-    per session as guarded by ``st.session_state``.
+    variables (``--bg``, ``--card``, ``--accent``, ``--text``, etc.)
+    and adds foundational styling. It runs only once per session.
     """
     mode = _resolve_mode(theme)
     st.session_state["_theme"] = mode
+
     if st.session_state.get("_global_styles_injected"):
         return
 
@@ -92,10 +91,53 @@ def inject_global_styles(theme: bool | str = True) -> None:
     html = f"""
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+    :root {{
+        --bg: {th.bg};
+        --card: {th.card};
+        --accent: {th.accent};
+        --text: {th.text};
+        --text-muted: {th.text_muted};
+        --radius: {th.radius};
+        --transition: {th.transition};
+        --font: 'Inter', sans-serif;
+    }}
+
+    body {{
+        background: var(--bg) !important;
+        color: var(--text);
+        font-family: var(--font);
+        transition: background var(--transition);
+    }}
+
+    .card {{
+        background: var(--card);
+    }}
+
+    a {{
+        color: var(--accent);
+    }}
+
+    .text-muted {{
+        color: var(--text-muted);
+    }}
+
+    button, .stButton > button {{
+        border-radius: var(--radius);
+    }}
+
+    @keyframes fade-in {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
+    }}
+    </style>
+    """
+
+    st.markdown(html, unsafe_allow_html=True)
+    st.session_state["_global_styles_injected"] = True
+
     <style>
     :root {{
         --bg: {th.bg};
@@ -161,25 +203,66 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     </style>
     """
     st.markdown(extra, unsafe_allow_html=True)
-    st.session_state["_styles_injected"] = True
+    st.session_state["_theme_initialized"] = True
+
+
+def inject_modern_styles(theme: bool | str = True) -> None:
+    """Backward compatible wrapper for :func:`initialize_theme`."""
+    initialize_theme(theme)
+
+
+def inject_global_styles(theme: bool | str | None = None) -> None:
+    """Inject modern styles and global fonts/icons once per session."""
+    mode = theme if theme is not None else st.session_state.get("_theme", "light")
+    inject_modern_styles(mode)
+    if not st.session_state.get("_global_styles_loaded"):
+        st.markdown(
+            (
+                '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&'
+                'display=swap" rel="stylesheet">\n'
+                '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/'
+                'css/all.min.css">\n'
+            ),
+            unsafe_allow_html=True,
+        )
+        st.session_state["_global_styles_loaded"] = True
 
 
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
     st.session_state["_theme"] = mode
-    inject_modern_styles(mode)
+    initialize_theme(mode)
 
+def initialize_theme(name: bool | str = True) -> None:
+    """Initialize theme and styles in a single call."""
+    set_theme(name if isinstance(name, (str, bool)) else "light")
+
+
+def initialize_theme(mode: bool | str = True) -> None:
+    """Initialize the app theme and inject all global styles.
+
+    This is a thin wrapper around `inject_global_styles` to preserve
+    compatibility with older code or usages that expect this function name.
+    """
+    inject_global_styles(mode)
 
 def get_accent_color() -> str:
     """Return the accent color for the current theme."""
-    return get_theme(st.session_state.get("_theme", "light")).accent
+    try:
+        mode = st.session_state.get("_theme", "light")
+    except Exception:
+        mode = "light"
+    return get_theme(mode).accent
 
 
 __all__ = [
     "apply_theme",
     "set_theme",
+    "initialize_theme",
     "inject_modern_styles",
     "inject_global_styles",
     "get_accent_color",
+    "initialize_theme",
 ]

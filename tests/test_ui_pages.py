@@ -99,8 +99,7 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     monkeypatch.setattr(st, "query_params", {})
 
     for helper in [
-        "set_theme",
-        "inject_modern_styles",
+        "initialize_theme",
         "render_status_icon",
         "render_simulation_stubs",
         "render_stats_section",
@@ -182,8 +181,7 @@ def test_main_defaults_to_validation(monkeypatch):
     monkeypatch.setattr(st, "query_params", params)
 
     for helper in [
-        "set_theme",
-        "inject_modern_styles",
+        "initialize_theme",
         "render_status_icon",
         "render_simulation_stubs",
         "render_stats_section",
