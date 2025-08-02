@@ -1,10 +1,8 @@
 # ui.py
-
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 """Main Streamlit UI entry point for superNova_2177."""
-
 import os
 import sys
 from pathlib import Path
@@ -12,27 +10,30 @@ import streamlit as st
 import logging
 
 # --- Setup Project Path ---
+# This ensures that imports like 'frontend' and 'pages' work correctly.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 logging.basicConfig(level=logging.INFO)
 
 # --- Safe Imports with Fallbacks ---
 try:
     from streamlit_helpers import (
-        alert, header, theme_selector, safe_container
+        alert,
+        header,
+        theme_selector,
     )
-    from frontend.theme import apply_theme
-    from modern_ui import apply_modern_styles, render_modern_header, render_stats_section
+    from frontend.theme import initialize_theme
+    from modern_ui import apply_modern_styles, render_stats_section, render_modern_header
     from status_indicator import render_status_icon
 except ImportError as e:
     st.error(f"A critical component failed to import: {e}. The app may not function correctly.")
+    # Define dummy functions so the rest of the app doesn't crash
     def alert(msg, type="info"): st.warning(msg)
     def header(txt): st.header(txt)
     def theme_selector(): pass
-    def safe_container(): return st.container()
-    def apply_theme(theme="light"): pass
+    def initialize_theme(theme="light"): pass
     def apply_modern_styles(): pass
-    def render_modern_header(): st.title("superNova_2177")
     def render_stats_section(stats={}): pass
+    def render_modern_header(): st.title("superNova_2177")
     def render_status_icon(): pass
 
 # --- Page Loading Logic ---
@@ -66,15 +67,15 @@ def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="collapsed",   # Hides Streamlit’s built-in nav
     )
     
     st.session_state.setdefault("theme", "light")
-    apply_theme(st.session_state.theme)
+
+    # Initialize theme once at the start
+    initialize_theme(st.session_state.theme)
     apply_modern_styles()
     
-    render_modern_header()
-
     # --- Sidebar Rendering ---
     with st.sidebar:
         st.title("🌌 superNova")
@@ -97,6 +98,8 @@ def main() -> None:
         render_status_icon()
 
     # --- Main Content Area ---
+    render_modern_header()
+    
     page_to_load = PAGES.get(page_selection)
     if page_to_load:
         load_page(page_to_load)
