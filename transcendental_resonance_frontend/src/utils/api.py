@@ -25,12 +25,10 @@ except ImportError:  # pragma: no cover - optional dependency
 
 
 # Honor offline mode for development/testing
-OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
+OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "0") == "1"
 
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
-# When running in offline mode, network calls should be skipped
-OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "0") == "1"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -45,14 +43,6 @@ _ws_status_listeners: List[Callable[[str], Any]] = []
 _start_listeners: List[Callable[[], Any]] = []
 _end_listeners: List[Callable[[], Any]] = []
 
-# utils/api.py
-def get_resonance_summary():
-    # Implementation
-    pass
-
-def dispatch_route():
-    # Implementation
-    pass
 
 def on_request_start(func: Callable[[], Any]) -> None:
     """Register a callback fired before each API request."""

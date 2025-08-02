@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 
 import streamlit as st
-from frontend.theme import set_theme
+from frontend.theme import set_theme, inject_global_styles, apply_theme
 from modern_ui import apply_modern_styles
-
 
 
 from ai_video_chat import create_session
@@ -37,7 +35,7 @@ manager = ConnectionManager()
 def main(main_container=None) -> None:
     """Render the simple video chat demo."""
     apply_theme("light")
-    inject_modern_styles()
+    inject_global_styles()
 
     container = main_container if main_container is not None else st
     theme_toggle("Dark Mode", key_suffix="video_chat")
@@ -84,4 +82,3 @@ def render() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -11,7 +11,7 @@ from streamlit_helpers import (
     inject_global_styles,
     theme_selector,
     safe_container,
-    BOX_CSS,
+    BOX_CSS,  # ✅ use imported version
     header,
 )
 from voting_ui import (
@@ -21,6 +21,7 @@ from voting_ui import (
     render_logs_tab,
 )
 from ui_utils import load_rfc_entries, summarize_text
+
 
 
 def render_agent_insights_tab(main_container=None) -> None:
