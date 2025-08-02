@@ -390,77 +390,83 @@ def render_post_card(entry: dict) -> None:
 def render_stats_section(stats: dict) -> None:
     """Display quick stats using a responsive flexbox layout."""
 
-    accent = theme.get_accent_color()
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        accent = theme.LIGHT_THEME.accent
 
-    st.markdown(
-        f"""
-        <style>
-        .stats-container {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-        }}
-        .stats-card {{
-            flex: 1 1 calc(25% - 1rem);
-            min-width: 120px;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }}
-        .stats-card:hover {{
-            transform: scale(1.02);
-        }}
-        .stats-value {{
-            color: {accent};
-            font-size: calc(1.5rem + 0.3vw);
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }}
-        .stats-label {{
-            color: var(--text-muted);
-            font-size: calc(0.8rem + 0.2vw);
-            font-weight: 500;
-        }}
-        @media (max-width: 768px) {{
-            .stats-card {{
-                flex: 1 1 calc(50% - 1rem);
-            }}
-        }}
-        @media (max-width: 480px) {{
-            .stats-card {{
-                flex: 1 1 100%;
-            }}
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    entries = [
-        ("🏃‍♂️", "Runs", stats.get("runs", 0)),
-        ("📝", "Proposals", stats.get("proposals", "N/A")),
-        ("⚡", "Success Rate", stats.get("success_rate", "N/A")),
-        ("🎯", "Accuracy", stats.get("accuracy", "N/A")),
-    ]
-
-    st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
-    for icon, label, value in entries:
+    try:
         st.markdown(
             f"""
-            <div class='stats-card'>
-                <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
-                <div class='stats-value'>{value}</div>
-                <div class='stats-label'>{label}</div>
-            </div>
+            <style>
+            .stats-container {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                justify-content: space-between;
+            }}
+            .stats-card {{
+                flex: 1 1 calc(25% - 1rem);
+                min-width: 120px;
+                background: rgba(255, 255, 255, 0.03);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                transition: transform 0.3s ease;
+            }}
+            .stats-card:hover {{
+                transform: scale(1.02);
+            }}
+            .stats-value {{
+                color: {accent};
+                font-size: calc(1.5rem + 0.3vw);
+                font-weight: 700;
+                margin-bottom: 0.25rem;
+            }}
+            .stats-label {{
+                color: var(--text-muted);
+                font-size: calc(0.8rem + 0.2vw);
+                font-weight: 500;
+            }}
+            @media (max-width: 768px) {{
+                .stats-card {{
+                    flex: 1 1 calc(50% - 1rem);
+                }}
+            }}
+            @media (max-width: 480px) {{
+                .stats-card {{
+                    flex: 1 1 100%;
+                }}
+            }}
+            </style>
             """,
             unsafe_allow_html=True,
         )
-    st.markdown("</div>", unsafe_allow_html=True)
+
+        entries = [
+            ("🏃‍♂️", "Runs", stats.get("runs", 0)),
+            ("📝", "Proposals", stats.get("proposals", "N/A")),
+            ("⚡", "Success Rate", stats.get("success_rate", "N/A")),
+            ("🎯", "Accuracy", stats.get("accuracy", "N/A")),
+        ]
+
+        st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
+        for icon, label, value in entries:
+            st.markdown(
+                f"""
+                <div class='stats-card'>
+                    <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
+                    <div class='stats-value'>{value}</div>
+                    <div class='stats-label'>{label}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+    except Exception:
+        return
 
 
 __all__ = [

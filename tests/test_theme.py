@@ -30,5 +30,9 @@ def test_theme_application_and_idempotent_styles(monkeypatch):
     assert dummy_st.session_state["_theme"] == "dark"
     assert theme.get_accent_color() == theme.DARK_THEME.accent
 
+    theme.initialize_theme()
+    theme.initialize_theme()
+
+
     extra_css_calls = [c for c in calls if "Glassmorphic" in c]
     assert len(extra_css_calls) == 1

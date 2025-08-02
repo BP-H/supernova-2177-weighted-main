@@ -157,57 +157,62 @@ def render_validation_card() -> None:
 
 def render_stats_section(stats: dict | None = None) -> None:
     """Display quick stats using a responsive flexbox layout."""
+    try:
+        accent = theme.get_accent_color()
+    except Exception:
+        accent = theme.LIGHT_THEME.accent
 
-    accent = theme.get_accent_color()
-
-    st.markdown(
-        f"""
-        <style>
-        .stats-container {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-        }}
-        .stats-card {{
-            flex: 1 1 calc(25% - 1rem);
-            min-width: 120px;
-            background: var(--card);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }}
-        .stats-card:hover {{
-            transform: scale(1.02);
-        }}
-        .stats-value {{
-            color: {accent};
-            font-size: calc(1.5rem + 0.3vw);
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }}
-        .stats-label {{
-            color: var(--text-muted);
-            font-size: calc(0.8rem + 0.2vw);
-            font-weight: 500;
-        }}
-        @media (max-width: 768px) {{
-            .stats-card {{
-                flex: 1 1 calc(50% - 1rem);
+    try:
+        st.markdown(
+            f"""
+            <style>
+            .stats-container {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                justify-content: space-between;
             }}
-        }}
-        @media (max-width: 480px) {{
             .stats-card {{
-                flex: 1 1 100%;
+                flex: 1 1 calc(25% - 1rem);
+                min-width: 120px;
+                background: var(--card);
+                backdrop-filter: blur(15px);
+                border: 1px solid var(--card);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                transition: transform 0.3s ease;
             }}
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+            .stats-card:hover {{
+                transform: scale(1.02);
+            }}
+            .stats-value {{
+                color: {accent};
+                font-size: calc(1.5rem + 0.3vw);
+                font-weight: 700;
+                margin-bottom: 0.25rem;
+            }}
+            .stats-label {{
+                color: var(--text-muted);
+                font-size: calc(0.8rem + 0.2vw);
+                font-weight: 500;
+            }}
+            @media (max-width: 768px) {{
+                .stats-card {{
+                    flex: 1 1 calc(50% - 1rem);
+                }}
+            }}
+            @media (max-width: 480px) {{
+                .stats-card {{
+                    flex: 1 1 100%;
+                }}
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        return
 
     default_stats = {
         "runs": "0",
@@ -233,19 +238,22 @@ def render_stats_section(stats: dict | None = None) -> None:
         ("🎯", "Accuracy", data["accuracy"]),
     ]
 
-    st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
-    for icon, label, value in entries:
-        st.markdown(
-            f"""
-            <div class='stats-card'>
-                <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
-                <div class='stats-value'>{value}</div>
-                <div class='stats-label'>{label}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
+    try:
+        st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
+        for icon, label, value in entries:
+            st.markdown(
+                f"""
+                <div class='stats-card'>
+                    <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
+                    <div class='stats-value'>{value}</div>
+                    <div class='stats-label'>{label}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+    except Exception:
+        return
 
 
 def open_card_container() -> None:
