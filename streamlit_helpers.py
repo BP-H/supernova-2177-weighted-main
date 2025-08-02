@@ -16,7 +16,7 @@ class _DummyElement:
         self._cm = cm or nullcontext()
     def __enter__(self) -> Any:
         return self._cm.__enter__()
-    def __exit__(exc_type: Any, exc: Any, tb: Any) -> None:
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         self._cm.__exit__(exc_type, exc, tb)
     def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
         return self
@@ -74,3 +74,5 @@ def alert(message: str, type: Literal["info", "error"] = "info") -> None:
         st.info(message)
     elif type == "error":
         st.error(message)
+    else:
+        st.warning(message)
