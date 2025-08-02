@@ -11,13 +11,15 @@ from typing import List, Dict, Any
 import random
 import streamlit as st
 
-from frontend.theme import set_theme
-from modern_ui import apply_modern_styles
+from frontend.theme import apply_theme
 
-from streamlit_helpers import theme_toggle, safe_container, sanitize_text
+from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles
 
 from modern_ui_components import st_javascript
 from frontend.assets import story_css, story_js, reaction_css, scroll_js
+
+apply_theme("light")
+inject_global_styles()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Sample data models
@@ -209,10 +211,6 @@ def _load_more_posts() -> None:
 # Page entrypoints
 # ──────────────────────────────────────────────────────────────────────────────
 
-set_theme("light")
-apply_modern_styles()
-
-
 def _page_body() -> None:
     """Render the main feed inside the current container."""
     _init_state()
@@ -263,9 +261,6 @@ def _page_body() -> None:
 
 def main(main_container=None) -> None:
     """Render the feed inside ``main_container`` (or root Streamlit)."""
-    apply_theme("light")
-    inject_modern_styles()
-
     container = main_container or st
     with safe_container(container):
         _page_body()

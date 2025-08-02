@@ -4,14 +4,14 @@
 """User identity hub with profile and activity overview."""
 
 import streamlit as st
-from frontend.theme import set_theme
-from modern_ui import apply_modern_styles
+from frontend.theme import apply_theme
 from streamlit_helpers import (
     safe_container,
     header,
     theme_toggle,
     get_active_user,
     ensure_active_user,
+    inject_global_styles,
 )
 from api_key_input import render_api_key_ui
 from social_tabs import _load_profile
@@ -80,8 +80,8 @@ def _fetch_social(username: str) -> tuple[dict, dict]:
         )
     return followers or {}, following or {}
 
-set_theme("light")
-apply_modern_styles()
+apply_theme("light")
+inject_global_styles()
 ensure_active_user()
 
 
@@ -114,8 +114,6 @@ def _render_profile(username: str) -> None:
 
 
 def main(main_container=None) -> None:
-    apply_theme("light")
-    inject_modern_styles()
 
     if main_container is None:
         main_container = st
