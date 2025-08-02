@@ -1,5 +1,3 @@
-# streamlit_helpers.py
-
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
@@ -8,109 +6,71 @@
 from __future__ import annotations
 import html
 from contextlib import contextmanager, nullcontext
-from typing import Any, ContextManager, Iterable, Literal
+from typing import Any, ContextManager, Literal
 import streamlit as st
 from frontend.theme import set_theme, inject_global_styles
 
-# --- Fallback UI Elements ---
+# Fallback UI for when advanced components are not available
 class _DummyElement:
-    """A fallback UI element that does nothing but allows chaining."""
-    def __init__(self, cm: ContextManager | None = None) -> None: self._cm = cm or nullcontext()
-    def __enter__(self) -> Any: return self._cm.__enter__()
-    def __exit__(self, *a: Any) -> None: self._cm.__exit__(*a)
-    def classes(self, *_a: Any, **_k: Any) -> "_DummyElement": return self
-    def style(self, *_a: Any, **_k: Any) -> "_DummyElement": return self
+    def __init__(self, cm: ContextManager | None = None) -> None:
+        self._cm = cm or nullcontext()
+    def __enter__(self) -> Any:
+        return self._cm.__enter__()
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self._cm.__exit__(exc_type, exc, tb)
+    def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
+    def style(self, *_a: Any, **_k: Any) -> "_DummyElement":
+        return self
 
 class _DummyUI:
-    """A complete fallback UI to prevent AttributeError when a component is not installed."""
-    def image(self, *_a, **_k) -> _DummyElement: return _DummyElement()
-    def element(self, *_a, **_k) -> _DummyElement: return _DummyElement()
-    def card(self, *_a, **_k) -> _DummyElement: return _DummyElement()
-    def badge(self, *_a, **_k) -> _DummyElement: return _DummyElement()
+    def image(self, img: str) -> _DummyElement:
+        st.image(img, use_container_width=True)
+        return _DummyElement()
+    def element(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def card(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
+    def badge(self, *_a: Any, **_k: Any) -> _DummyElement:
+        return _DummyElement()
 
 try:
     import streamlit_shadcn_ui as ui
 except ImportError:
     ui = _DummyUI()
 
-# --- Tiny Utility Helpers ---
 def sanitize_text(text: Any) -> str:
+    """Return `text` as a safe string."""
     return html.escape(str(text), quote=False) if text else ""
 
 @contextmanager
 def safe_container(container=None):
-    yield container or st
+    """A context manager for safely using Streamlit containers."""
+    if container is None:
+        container = st
+    yield container
 
-def alert(msg: str, type: Literal["info", "warning", "error"] = "info"):
-    getattr(st, type, st.info)(msg)
+def header(title: str, *, layout: str = "centered") -> None:
+    """Render a standard page header."""
+    st.markdown(f"<h1>{sanitize_text(title)}</h1>", unsafe_allow_html=True)
 
-# --- Theme Controls ---
-def theme_toggle(label: str = "Dark mode", *, key_suffix: str = "default") -> str:
-    key = f"theme_toggle_{key_suffix}"
-    cur = st.session_state.get("theme", "light")
-    is_dark = st.toggle(label, value=(cur == "dark"), key=key)
-    new = "dark" if is_dark else "light"
-    if new != cur:
-        st.session_state["theme"] = new
-        set_theme(new)
+def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
+    """Switch between light and dark themes using a toggle widget."""
+    key = f"theme_toggle_{key_suffix or 'default'}"
+    current_theme = st.session_state.get("theme", "light")
+    
+    is_dark = st.toggle(label, value=(current_theme == "dark"), key=key)
+    chosen_theme = "dark" if is_dark else "light"
+    if chosen_theme != current_theme:
+        st.session_state["theme"] = chosen_theme
+        set_theme(chosen_theme)
         st.rerun()
-    return new
+        
+    return chosen_theme
 
-def theme_selector(label: str = "Theme", *, key_suffix: str = "legacy") -> str:
-    """LEGACY wrapper for older pages."""
-    mapping = {"Light": "light", "Dark": "dark"}
-    rev = {v: k for k, v in mapping.items()}
-    cur = rev.get(st.session_state.get("theme", "light"), "Light")
-    choice = st.selectbox(label, list(mapping), index=list(mapping).index(cur), key=f"theme_sel_{key_suffix}")
-    if mapping[choice] != st.session_state.get("theme", "light"):
-        st.session_state["theme"] = mapping[choice]
-        set_theme(mapping[choice])
-        st.rerun()
-    return mapping[choice]
-
-# --- Legacy Page Shims and Helpers ---
-def get_active_user() -> str | None:
-    """Return the username the profile/social pages treat as 'me'."""
-    return st.session_state.get("active_user")
-
-@contextmanager
-def centered_container(**st_container_kwargs):
-    """Streamlit container whose internal columns are centred."""
-    with st.container(**st_container_kwargs) as c:
-        st.markdown(
-            "<style>[data-testid='column']{margin-left:auto!important;margin-right:auto!important;}</style>",
-            unsafe_allow_html=True,
-        )
-        yield c
-
-def render_mock_feed(container=None):
-    """Shim to let social_tabs.py embed the feed without a circular import."""
-    import feed
-    feed.main(main_container=container)
-
-# --- Global State Normalization ---
-def _normalise_conversations_state():
-    """
-    This function intelligently fixes the chat data structure on the fly.
-    It checks if the data is in the old (list) or new (dict) format and converts it
-    to the new format, preventing the TypeError on the messages page.
-    """
-    convs = st.session_state.get("conversations")
-    if isinstance(convs, list):
-        upgraded: dict[str, dict[str, Any]] = {}
-        for c in convs:
-            if isinstance(c, dict):
-                user = c.get("user", "unknown")
-                msgs: list[dict[str, str]] = c.get("messages", [])
-                preview = msgs[-1]["content"] if msgs else ""
-                upgraded[user] = {"messages": msgs, "preview": preview}
-        st.session_state["conversations"] = upgraded
-
-_normalise_conversations_state()
-inject_global_styles()
-
-__all__: Iterable[str] = (
-    "ui", "sanitize_text", "safe_container", "alert", "header",
-    "theme_toggle", "theme_selector", "get_active_user",
-    "centered_container", "render_mock_feed",
-)
+def alert(message: str, type: Literal["info", "error"] = "info") -> None:
+    """Display an alert box."""
+    if type == "info":
+        st.info(message)
+    elif type == "error":
+        st.error(message)
