@@ -5,16 +5,14 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 import random
 import streamlit as st
 from frontend.theme import apply_theme
 from streamlit_helpers import theme_toggle, safe_container, sanitize_text, inject_global_styles, alert
-# Removed broken import: from modern_ui_components import st_javascript
-# Removed unused assets: from frontend.assets import story_css, story_js, reaction_css
 
-apply_theme("light")
+apply_theme(st.session_state.get("theme", "light"))
 inject_global_styles()
 
 @dataclass
@@ -45,7 +43,7 @@ def _sample_users() -> List[User]:
 def _generate_posts(count: int, start: int = 0) -> List[Post]:
     """Generate `count` pseudo-random demo posts."""
     users = _sample_users()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return [
         Post(
             id=start + i,
