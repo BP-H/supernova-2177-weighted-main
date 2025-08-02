@@ -30,7 +30,7 @@ def load_page(page_name: str):
             break
     if not module_path:
         st.error(f"Page missing: {page_name}.py not found.")
-        st.write(f"Placeholder for {page_name.capitalize()}.")
+        st.write(f"Placeholder for {page_name.capitalize()} (add content to {page_name}.py).")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -42,12 +42,12 @@ def load_page(page_name: str):
             module.render()
         else:
             st.warning(f"No main/render in {page_name}.py.")
-            st.write(f"Placeholder for {page_name.capitalize()}.")
+            st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
 
-# Main - Exact LinkedIn structure/colors
+# Main - Exact LinkedIn structure, modern buttons (small, rounded, blue accents)
 def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
@@ -58,7 +58,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     initialize_theme(st.session_state["theme"])
 
-    # CSS for LinkedIn dark gray scheme (#1a1a1a background, white text, blue accents #4f8bf9)
+    # CSS for LinkedIn dark scheme (gray #1a1a1a background, white text, blue #4f8bf9 accents/hover)
     st.markdown("""
         <style>
             [data-testid="stSidebar"] {
@@ -71,49 +71,40 @@ def main() -> None:
             }
             .stSidebar > div {text-align: center;}  # Center profile
             .stSidebar hr {border-color: #333;}
-            .stSidebar button {background-color: #4f8bf9; color: white; border-radius: 5px; padding: 8px; margin: 5px 0; width: 100%; cursor: pointer;}
-            .stSidebar button:hover {background-color: #3a6bb9;}
+            .stSidebar button {background-color: #282828; color: white; border-radius: 5px; padding: 8px; margin: 5px 0; width: 100%; cursor: pointer; border: none;}
+            .stSidebar button:hover {background-color: #4f8bf9; color: white;}  # Blue hover
             .bottom-nav {position: fixed; bottom: 0; width: 100%; background-color: #1a1a1a; padding: 10px; display: flex; justify-content: space-around; z-index: 100;}
             .bottom-nav button {background: none; border: none; color: white; cursor: pointer; font-size: 20px; padding: 10px;}
-            .bottom-nav button:hover {color: #4f8bf9;}
-            .stApp {background-color: #0E1117; color: white;}  # Main area dark
+            .bottom-nav button:hover {color: #4f8bf9;}  # Blue hover
+            .stApp {background-color: #0E1117; color: white;}  # Main dark
         </style>
     """, unsafe_allow_html=True)
 
-    # Green sidebar - Exact structure, clickable buttons
+    # Green sidebar - Exact structure, small rounded buttons with blue hover
     with st.sidebar:
-        # Profile pic as toggle button (click to open/close sidebar - Streamlit toggle via JS)
-        st.markdown("""
-            <script>
-                let sidebar = document.querySelector('[data-testid="stSidebar"]');
-                let toggleBtn = document.querySelector('.profile-pic-button');
-                toggleBtn.addEventListener('click', () => {
-                    sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
-                });
-            </script>
-        """, unsafe_allow_html=True)
-        st.image("https://via.placeholder.com/100", width=100, use_column_width=True)  # Placeholder pic - replace URL
-        st.button("Taha Gungor", key="profile_toggle", help="Toggle sidebar")  # Toggle button
+        # Profile top
+        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, use_column_width=True)  # Placeholder - replace URL
+        st.write("Taha Gungor")
         st.write("CEO / AccessAI.Tech")
         st.write("Artist / 0111 ≡ ...")
         st.write("New York, New York, United States")
         st.write("AccessAI.Tech")
         st.divider()
-        st.write("2,103 profile viewers")
-        st.write("1,450 post impressions")
+        st.write("103 profile viewers (placeholder)")  # Lower random
+        st.write("450 post impressions (placeholder)")
         st.divider()
-        # Manage pages - clickable buttons
+        # Manage pages - small clickable buttons
         st.write("Manage pages")
         if st.button("AccessAI.Tech"):
-            load_page("accessai")  # Replace slug if exists
+            load_page("accessai")  # Replace with slug if exists
         if st.button("supernova_2177"):
             load_page("supernova")
         if st.button("GLOBALRUNWAY"):
             load_page("globalrunway")
         if st.button("Show all >"):
-            st.write("All pages placeholder.")  # Link to all
+            st.write("All pages placeholder (list here).")
         st.divider()
-        # Navigation buttons - clickable to load pages
+        # Navigation - small buttons, clickable
         if st.button("Feed"):
             load_page("feed")
         if st.button("Chat"):
@@ -129,25 +120,25 @@ def main() -> None:
         if st.button("Music"):
             load_page("music")
         st.divider()
-        theme_selector()  # Theme at bottom
+        theme_selector()  # Theme bottom
 
-    # Main content - Load selected page (from buttons)
+    # Main content
     st.write("Main Content Area - Select from sidebar.")
 
-    # Orange bottom nav - Clickable icons, mapped to pages
+    # Orange bottom nav - Icons clickable, mapped to pages
     bottom_cols = st.columns(4)
     with bottom_cols[0]:
         if st.button("🏠 Home"):
             load_page("feed")
     with bottom_cols[1]:
         if st.button("📹 Video"):
-            load_page("video_chat")  # If exists, else placeholder
+            load_page("video_chat")
     with bottom_cols[2]:
         if st.button("👥 My Network"):
             load_page("social")
     with bottom_cols[3]:
         if st.button("🔔 Notifications"):
-            st.write("Notifications placeholder.")
+            load_page("messages")
 
 if __name__ == "__main__":
     main()
