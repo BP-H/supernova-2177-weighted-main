@@ -1,89 +1,52 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Streamlit UI helper utilities."""
+"""Renders the chat interface for the Streamlit app."""
 
-from __future__ import annotations
-import html
-from contextlib import contextmanager, nullcontext
-from typing import Any, ContextManager, Literal
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles
+from modern_ui import apply_modern_styles
+from streamlit_helpers import safe_container, header
 
-# Fallback UI for when advanced components are not available
-class _DummyElement:
-    def __init__(self, cm: ContextManager | None = None) -> None:
-        self._cm = cm or nullcontext()
-    def __enter__(self) -> Any:
-        return self._cm.__enter__()
-    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        self._cm.__exit__(exc_type, exc, tb)
-    def classes(self, *_a: Any, **_k: Any) -> "_DummyElement":
-        return self
-    def style(self, *_a: Any, **_k: Any) -> "_DummyElement":
-        return self
+DUMMY_CONVOS = [
+    {"user": "alice", "messages": [{"role": "user", "content": "Hey!"}, {"role": "assistant", "content": "How are you?"}]},
+    {"user": "bob", "messages": [{"role": "user", "content": "I'm good, thanks!"}]},
+]
 
-class _DummyUI:
-    def image(self, img: str) -> _DummyElement:
-        st.image(img, use_container_width=True)
-        return _DummyElement()
-    def element(self, *_a: Any, **_k: Any) -> _DummyElement:
-        return _DummyElement()
-    def card(self, *_a: Any, **_k: Any) -> _DummyElement:
-        return _DummyElement()
-    def badge(self, *_a: Any, **_k: Any) -> _DummyElement:
-        return _DummyElement()
+def init_chat_state():
+    """Initializes session state variables for the chat."""
+    st.session_state.setdefault("conversations", DUMMY_CONVOS)
+    
+    convos = st.session_state.get("conversations", [])
+    if isinstance(convos, list):
+        st.session_state.setdefault("messages", {c["user"]: c.get("messages", []) for c in convos if isinstance(c, dict)})
+    else:
+        st.session_state.setdefault("messages", {})
 
-try:
-    import streamlit_shadcn_ui as ui
-except ImportError:
-    ui = _DummyUI()
+    if "active_chat" not in st.session_state:
+        st.session_state["active_chat"] = DUMMY_CONVOS[0]["user"] if DUMMY_CONVOS else None
 
-def sanitize_text(text: Any) -> str:
-    """Return `text` as a safe string."""
-    return html.escape(str(text), quote=False) if text else ""
+def render_chat_interface(container=None):
+    """Renders the main chat UI components."""
+    apply_modern_styles()
+    init_chat_state()
 
-@contextmanager
-def safe_container(container=None):
-    """A context manager for safely using Streamlit containers."""
     if container is None:
-        container = st
-    yield container
+        container = st.container()
 
-def header(title: str, *, layout: str = "centered") -> None:
-    """Render a standard page header."""
-    st.markdown(f"<h1>{sanitize_text(title)}</h1>", unsafe_allow_html=True)
+    with safe_container(container):
+        active_user = st.selectbox("Select Conversation", options=st.session_state.messages.keys())
+        st.session_state["active_chat"] = active_user
 
-def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
-    """Switch between light and dark themes using a toggle widget."""
-    key = f"theme_toggle_{key_suffix or 'default'}"
-    current_theme = st.session_state.get("theme", "light")
-    
-    is_dark = st.toggle(label, value=(current_theme == "dark"), key=key)
-    chosen_theme = "dark" if is_dark else "light"
-    
-    if chosen_theme != current_theme:
-        st.session_state["theme"] = chosen_theme
-        set_theme(chosen_theme)
-        st.rerun()
-        
-    return chosen_theme
+        if active_user:
+            header(f"Chat with {active_user}")
+            # Display messages
+            for message in st.session_state.messages.get(active_user, []):
+                with st.chat_message(message["role"]):
+                    st.write(message["content"])
 
-def alert(message: str, type: Literal["info", "error"] = "info") -> None:
-    """Display an alert box."""
-    if type == "info":
-        st.info(message)
-    elif type == "error":
-        st.error(message)
-
-def get_active_user() -> str:
-    """Stub for get_active_user if needed in pages."""
-    return st.session_state.get("active_user", "guest")
-
-def centered_container() -> st.container:
-    """Centered container stub."""
-    return st.container()
-
-def render_mock_feed() -> None:
-    """Mock feed stub if needed."""
-    st.write("Mock feed rendered")
+            # Chat input
+            if prompt := st.chat_input("Say something"):
+                st.session_state.messages[active_user].append({"role": "user", "content": prompt})
+                # Simple echo for demonstration
+                st.session_state.messages[active_user].append({"role": "assistant", "content": f"Echo: {prompt}"})
+                st.rerun()
