@@ -80,7 +80,7 @@ DRAWER_CSS = """
 BOTTOM_TAB_TEMPLATE = """
 <style>
 .sn-bottom-tabs{
-  position: fixed;
+  position: {position};
   bottom: 0;
   left: 0;
   right: 0;
@@ -105,7 +105,7 @@ BOTTOM_TAB_TEMPLATE = """
 }
 @media(min-width:768px){.sn-bottom-tabs{display:none!important;}}
 </style>
-<div class='sn-bottom-tabs {position}'>
+<div class='sn-bottom-tabs'>
   <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
   <a href='#' data-tag='video'><i class='fa-solid fa-video'></i></a>
   <a href='#' data-tag='network'><i class='fa-solid fa-user-group'></i></a>
@@ -452,32 +452,43 @@ def show_preview_badge(text: str = "Preview") -> None:
 
 
 def render_bottom_tab_bar(position: str = "fixed") -> None:
-    """Bottom navigation bar for mobile screens."""
+    """Bottom navigation bar for mobile screens.
+
+    Parameters
+    ----------
+    position : str
+        CSS ``position`` value for the tab bar (e.g., ``"fixed"`` or ``"static"``).
+    """
+    # Resolve theme accent safely
     try:
         accent = theme.get_accent_color()
     except Exception:
-        # Fallback to the default accent color from LIGHT_THEME
-        accent = theme.LIGHT_THEME.accent
+        # Fallback to a sensible default if theme access fails
+        try:
+            accent = theme.LIGHT_THEME.accent  # type: ignore[attr-defined]
+        except Exception:
+            accent = "#6C63FF"
 
+    # Resolve active tab & CSS position with safe fallbacks
     try:
         active = st.session_state.get("active_page", "home")
     except Exception:
         active = "home"
 
     try:
-        tab_position = st.session_state.get("tab_bar_position", position)
+        css_position = st.session_state.get("tab_bar_position", position)
     except Exception:
-        tab_position = position
+        css_position = position
 
+    # Render, but never crash the UI if formatting fails
     try:
         st.markdown(
             BOTTOM_TAB_TEMPLATE.format(
-                accent=accent, active=active, position=tab_position
+                accent=accent, active=active, position=css_position
             ),
             unsafe_allow_html=True,
         )
     except Exception:
-        # Silently fail in rendering rather than crash the UI
         return
 
 
