@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 import streamlit as st
 import importlib.util
+import numpy as np  # For random low stats
 
 # Path for Cloud/local
 sys.path.insert(0, str(Path("/mount/src") if 'mount' in str(Path(__file__)) else Path(__file__).parent))
@@ -29,8 +30,8 @@ def load_page(page_name: str):
             module_path = candidate
             break
     if not module_path:
-        st.error(f"Page missing: {page_name}.py not found.")
-        st.write(f"Placeholder for {page_name.capitalize()} (add content to {page_name}.py).")
+        st.error(f"Page missing: {page_name}.py not found - add it to pages/.")
+        st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -41,13 +42,13 @@ def load_page(page_name: str):
         elif hasattr(module, 'render'):
             module.render()
         else:
-            st.warning(f"No main/render in {page_name}.py.")
+            st.warning(f"No main/render in {page_name}.py - showing placeholder.")
             st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
 
-# Main - Exact LinkedIn structure, modern buttons (small, rounded, blue accents)
+# Main - Green sidebar exact + orange bottom, modern buttons (small, rounded, blue hover)
 def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
@@ -58,11 +59,11 @@ def main() -> None:
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     initialize_theme(st.session_state["theme"])
 
-    # CSS for LinkedIn dark scheme (gray #1a1a1a background, white text, blue #4f8bf9 accents/hover)
+    # CSS for dark gray (#1a1a1a background, white text, blue #4f8bf9 accents/hover)
     st.markdown("""
         <style>
             [data-testid="stSidebar"] {
-                background-color: #1a1a1a;  # Gray dark
+                background-color: #1a1a1a;  # Dark gray
                 color: white;
                 border-radius: 10px;  # Square curve
                 padding: 20px;
@@ -71,7 +72,7 @@ def main() -> None:
             }
             .stSidebar > div {text-align: center;}  # Center profile
             .stSidebar hr {border-color: #333;}
-            .stSidebar button {background-color: #282828; color: white; border-radius: 5px; padding: 8px; margin: 5px 0; width: 100%; cursor: pointer; border: none;}
+            .stSidebar button {background-color: #282828; color: white; border-radius: 5px; padding: 8px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 14px;}  # Small modern
             .stSidebar button:hover {background-color: #4f8bf9; color: white;}  # Blue hover
             .bottom-nav {position: fixed; bottom: 0; width: 100%; background-color: #1a1a1a; padding: 10px; display: flex; justify-content: space-around; z-index: 100;}
             .bottom-nav button {background: none; border: none; color: white; cursor: pointer; font-size: 20px; padding: 10px;}
@@ -80,29 +81,29 @@ def main() -> None:
         </style>
     """, unsafe_allow_html=True)
 
-    # Green sidebar - Exact structure, small rounded buttons with blue hover
+    # Green sidebar - Exact, small buttons clickable, low random stats
     with st.sidebar:
-        # Profile top
-        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, use_column_width=True)  # Placeholder - replace URL
+        # Profile top - use_container_width for deprecation fix
+        st.image("https://via.placeholder.com/100?text=Profile+Pic", use_container_width=True)  # Placeholder
         st.write("Taha Gungor")
         st.write("CEO / AccessAI.Tech")
         st.write("Artist / 0111 ≡ ...")
         st.write("New York, New York, United States")
         st.write("AccessAI.Tech")
         st.divider()
-        st.write("103 profile viewers (placeholder)")  # Lower random
-        st.write("450 post impressions (placeholder)")
+        st.write(f"{np.random.randint(100, 200)} profile viewers (placeholder)")
+        st.write(f"{np.random.randint(400, 600)} post impressions (placeholder)")
         st.divider()
         # Manage pages - small clickable buttons
         st.write("Manage pages")
         if st.button("AccessAI.Tech"):
-            load_page("accessai")  # Replace with slug if exists
+            load_page("accessai")
         if st.button("supernova_2177"):
-            load_page("supernova")
+            load_page("supernova_2177")
         if st.button("GLOBALRUNWAY"):
             load_page("globalrunway")
         if st.button("Show all >"):
-            st.write("All pages placeholder (list here).")
+            st.write("All pages (placeholder list).")
         st.divider()
         # Navigation - small buttons, clickable
         if st.button("Feed"):
@@ -122,10 +123,10 @@ def main() -> None:
         st.divider()
         theme_selector()  # Theme bottom
 
-    # Main content
+    # Main content - Load selected page (from buttons)
     st.write("Main Content Area - Select from sidebar.")
 
-    # Orange bottom nav - Icons clickable, mapped to pages
+    # Orange bottom nav - Icons clickable, mapped to pages (no jobs, 4 buttons)
     bottom_cols = st.columns(4)
     with bottom_cols[0]:
         if st.button("🏠 Home"):
