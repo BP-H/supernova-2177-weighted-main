@@ -6,17 +6,18 @@
 from __future__ import annotations
 
 import streamlit as st
-from frontend.theme import set_theme
-from modern_ui import inject_modern_styles
+from frontend.theme import apply_theme, inject_modern_styles
 from streamlit_helpers import theme_toggle
 from transcendental_resonance_frontend.ui.chat_ui import render_chat_ui
 
-set_theme("light")
-inject_modern_styles()
+
 
 
 def main(main_container=None) -> None:
     """Render the chat interface inside the given container (or the page itself)."""
+    apply_theme("light")
+    inject_modern_styles()
+
     theme_toggle("Dark Mode", key_suffix="messages")
     render_chat_ui(main_container)
 
