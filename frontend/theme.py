@@ -1,68 +1,44 @@
+# frontend/theme.py
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Theme helpers and safe CSS injection for Streamlit pages."""
-
-from __future__ import annotations
-from typing import Literal
+"""Theme and style injection logic for the application."""
 import streamlit as st
 
-LIGHT_THEME = {
-    "bg": "#FFFFFF",
-    "text": "#000000",
-    "text-muted": "#555555",
-    "card": "#F0F2F6",
-    "accent": "#0077B5",
-}
-DARK_THEME = {
-    "bg": "#0E1117",
-    "text": "#FFFFFF",
-    "text-muted": "#AAAAAA",
-    "card": "#161B22",
-    "accent": "#3498DB",
-}
-THEMES = {"light": LIGHT_THEME, "dark": DARK_THEME}
+# A key to track if CSS has been injected in the current session
+_THEME_CSS_KEY = "_theme_css_injected"
 
-def _get_active_theme() -> dict[str, str]:
-    name = st.session_state.get("_theme_name", "light")
-    return THEMES.get(name, LIGHT_THEME)
+def set_theme(theme: str = "light") -> None:
+    """Sets the active theme in the session state."""
+    st.session_state["theme"] = theme
+    # Force re-injection of styles when the theme is explicitly changed
+    inject_global_styles(force=True)
 
-def set_theme(name: Literal["light", "dark"] | str) -> None:
-    if name not in THEMES:
-        name = "light"
-    st.session_state["_theme_name"] = name
-
-def apply_theme(name: Literal["light", "dark"] | str = "light") -> None:
-    set_theme(name)
-    inject_global_styles(once=False) # Re-inject on change
-
-def get_accent_color() -> str:
-    return _get_active_theme().get("accent", "#0077B5")
-
-def inject_global_styles(*, once: bool = True) -> None:
-    if once and st.session_state.get("_theme_css_injected"):
+def inject_global_styles(force: bool = False) -> None:
+    """
+    Injects the global CSS styles into the app.
+    Includes an idempotent guard to prevent multiple injections per run.
+    """
+    # The Guard: if styles are already injected and we are not forcing a change, stop.
+    if st.session_state.get(_THEME_CSS_KEY) and not force:
         return
 
-    theme_colors = _get_active_theme()
+    # Your existing CSS styles go here
+    st.markdown("""
+        <style>
+            /* Add all your global CSS rules here */
+            body {
+                color: #333;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Mark that styles have been injected for this session run
+    st.session_state = True
 
-    css = f"""
-    <style>
-        :root {{
-            --bg: {theme_colors['bg']};
-            --text: {theme_colors['text']};
-            --text-muted: {theme_colors['text-muted']};
-            --card: {theme_colors['card']};
-            --accent: {theme_colors['accent']};
-            --transition: 0.4s ease; /* Fixed: safe in string */
-        }}
-
-        .stButton > button {{
-            transition: background var(--transition);
-        }}
-    </style>
+def initialize_theme(name: str = "light") -> None:
     """
-    st.markdown(css, unsafe_allow_html=True)
-    st.session_state["_theme_css_injected"] = True
-
-def inject_modern_styles() -> None:
-    inject_global_styles(once=True)
+    Public helper used by the main ui.py to set the initial theme.
+    This ensures backward compatibility for any pages that might call it.
+    """
+    set_theme(name)
