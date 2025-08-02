@@ -4,14 +4,13 @@
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Any, cast
+from typing import cast
 
 import streamlit as st
 from streamlit_helpers import (
     inject_global_styles,
     theme_selector,
     safe_container,
-    BOX_CSS,
     header,
 )
 from voting_ui import (
@@ -20,6 +19,8 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
+from ui_utils import load_rfc_entries, summarize_text
+
 # Define BOX_CSS at the top of agent_ui.py or within the function if needed
 BOX_CSS = """
 <style>
@@ -37,6 +38,7 @@ BOX_CSS = """
 }
 </style>
 """
+
 
 def render_agent_insights_tab(main_container=None) -> None:
     """Display diary, RFC summaries and internal notes."""
@@ -71,8 +73,11 @@ def render_agent_insights_tab(main_container=None) -> None:
             "Export Diary as Markdown",
             "\n".join(
                 [
-                    f"* {e['timestamp']}: {e.get('note', '')}" + (
-                        f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else ""
+                    f"* {e['timestamp']}: {e.get('note', '')}"
+                    + (
+                        f" (RFCs: {', '.join(e['rfc_ids'])})"
+                        if e.get("rfc_ids")
+                        else ""
                     )
                     for e in st.session_state.get("diary", [])
                 ]
@@ -95,7 +100,9 @@ def render_agent_insights_tab(main_container=None) -> None:
 
             rfc_entries, rfc_index = load_rfc_entries(rfc_dir)
 
-            diary_mentions: dict[str, list[int]] = {str(e["id"]): [] for e in rfc_entries}
+            diary_mentions: dict[str, list[int]] = {
+                str(e["id"]): [] for e in rfc_entries
+            }
             for i, entry in enumerate(st.session_state.get("diary", [])):
                 note_lower = entry.get("note", "").lower()
                 ids = {e.strip().lower() for e in entry.get("rfc_ids", []) if e}
@@ -155,12 +162,14 @@ def render_agent_insights_tab(main_container=None) -> None:
                 st.markdown(notes_content)
 
         if st.session_state.get("governance_view"):
-            tabs = st.tabs([
-                "Proposal Hub",
-                "Governance",
-                "Agent Ops",
-                "Logs",
-            ])
+            tabs = st.tabs(
+                [
+                    "Proposal Hub",
+                    "Governance",
+                    "Agent Ops",
+                    "Logs",
+                ]
+            )
             render_proposals_tab(main_container=tabs[0])
             render_governance_tab(main_container=tabs[1])
             render_agent_ops_tab(main_container=tabs[2])
