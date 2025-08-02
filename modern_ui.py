@@ -165,157 +165,89 @@ def render_validation_card() -> None:
 
 def render_stats_section(stats: dict | None = None) -> None:
     """Display quick stats using a responsive flexbox layout."""
+    # Resolve accent safely
     try:
         accent = theme.get_accent_color()
     except Exception:
-        accent = theme.LIGHT_THEME.accent  # Safe fallback to known theme value
+        # Safe fallback if theme isn’t ready
+        accent = getattr(getattr(theme, "LIGHT_THEME", object()), "accent", "#0077B5")
 
-    st.markdown(
-        f"""
-        <style>
-        .stats-container {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-        }}
+    # Inject CSS once
+    css = f"""
+    <style>
+      .stats-container {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: space-between;
+      }}
+      .stats-card {{
+        flex: 1 1 calc(25% - 1rem);
+        min-width: 120px;
+        background: var(--card);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s ease;
+      }}
+      .stats-card:hover {{
+        transform: scale(1.02);
+      }}
+      .stats-value {{
+        color: {accent};
+        font-size: calc(1.5rem + 0.3vw);
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }}
+      .stats-label {{
+        color: var(--text-muted);
+        font-size: calc(0.8rem + 0.2vw);
+        font-weight: 500;
+      }}
+      @media (max-width: 768px) {{
         .stats-card {{
-            flex: 1 1 calc(25% - 1rem);
-            min-width: 120px;
-            background: var(--card);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s ease;
+          flex: 1 1 calc(50% - 1rem);
         }}
-        .stats-card:hover {{
-            transform: scale(1.02);
+      }}
+      @media (max-width: 480px) {{
+        .stats-card {{
+          flex: 1 1 100%;
         }}
-        .stats-value {{
-            color: {accent};
-            font-size: calc(1.5rem + 0.3vw);
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }}
-        .stats-label {{
-            color: var(--text-muted);
-            font-size: calc(0.8rem + 0.2vw);
-            font-weight: 500;
-        }}
-        @media (max-width: 768px) {{
-            .stats-card {{
-                flex: 1 1 calc(50% - 1rem);
-            }}
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+      }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
-            }}
-            .stats-card {{
-                flex: 1 1 calc(25% - 1rem);
-                min-width: 120px;
-                background: var(--card);
-                backdrop-filter: blur(15px);
-                border: 1px solid var(--card);
-                border-radius: 12px;
-                padding: 1.5rem;
-                text-align: center;
-                transition: transform 0.3s ease;
-            }}
-            .stats-card:hover {{
-                transform: scale(1.02);
-            }}
-            .stats-value {{
-                color: {accent};
-                font-size: calc(1.5rem + 0.3vw);
-                font-weight: 700;
-                margin-bottom: 0.25rem;
-            }}
-            .stats-label {{
-                color: var(--text-muted);
-                font-size: calc(0.8rem + 0.2vw);
-                font-weight: 500;
-            }}
-            @media (max-width: 768px) {{
-                .stats-card {{
-                    flex: 1 1 calc(50% - 1rem);
-                }}
-            }}
-            @media (max-width: 480px) {{
-                .stats-card {{
-                    flex: 1 1 100%;
-                }}
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-    except Exception:
-        return
-
+    # Defaults + merge (non-destructive)
     default_stats = {
         "runs": "0",
         "proposals": "12",
         "success_rate": "94%",
         "accuracy": "98.2%",
     }
-    default_stats = {
-        "runs": "0",
-        "proposals": "12",
-        "success_rate": "94%",
-        "accuracy": "98.2%",
-    }
-    # Merge user-provided stats on top of defaults without mutating them
-    data = default_stats.copy()
-    if stats:
-        data.update(stats)
+    data = {**default_stats, **(stats or {})}
 
+    # Build cards in one HTML block (fewer Streamlit elements, fewer layout glitches)
     entries = [
         ("🏃‍♂️", "Runs", data["runs"]),
         ("📝", "Proposals", data["proposals"]),
         ("⚡", "Success Rate", data["success_rate"]),
         ("🎯", "Accuracy", data["accuracy"]),
     ]
-
-    try:
-        st.markdown("<div class='stats-container'>", unsafe_allow_html=True)
-        for icon, label, value in entries:
-            st.markdown(
-                f"""
-                <div class='stats-card'>
-                    <div style='font-size:2rem;margin-bottom:0.5rem;'>{icon}</div>
-                    <div class='stats-value'>{value}</div>
-                    <div class='stats-label'>{label}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-    except Exception:
-        return
-
-
-def open_card_container() -> None:
-    """Start a card container for custom content."""
-    render_validation_card()
-
-
-def close_card_container() -> None:
-    """Close the validation card container div."""
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-__all__ = [
-    "render_lottie_animation",
-    "apply_modern_styles",
-    "inject_premium_styles",
-    "render_modern_header",
-    "render_validation_card",
-    "render_stats_section",
-    "open_card_container",
-    "close_card_container",
-]
+    cards_html = []
+    for icon, label, value in entries:
+        cards_html.append(
+            f"""
+            <div class="stats-card">
+              <div style="font-size:2rem;margin-bottom:0.5rem;">{icon}</div>
+              <div class="stats-value">{value}</div>
+              <div class="stats-label">{label}</div>
+            </div>
+            """
+        )
+    st.markdown(
+        f"<div class='stats-container'>{''.join(cards_html)}</div>",
+        unsafe_allow_html=True,
+    )
