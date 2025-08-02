@@ -8,21 +8,16 @@ import streamlit as st
 import logging
 from frontend import theme
 
-
 logger = logging.getLogger(__name__)
 
-try:  # pragma: no cover - optional dependency
+try:
     from streamlit_lottie import st_lottie
-
     HAS_LOTTIE = True
-except Exception:  # pragma: no cover - graceful fallback
-    st_lottie = None  # type: ignore
+except ImportError:
+    st_lottie = None
     HAS_LOTTIE = False
 
-
-def render_lottie_animation(
-    url: str, *, height: int = 200, fallback: str = "🚀"
-) -> None:
+def render_lottie_animation(url: str, *, height: int = 200, fallback: str = "🚀") -> None:
     """Display a Lottie animation if available, otherwise show a fallback icon."""
     if HAS_LOTTIE and st_lottie is not None:
         st_lottie(url, height=height)
@@ -31,10 +26,6 @@ def render_lottie_animation(
             f"<div style='font-size:{height // 4}px'>{fallback}</div>",
             unsafe_allow_html=True,
         )
-
-
-logger = logging.getLogger("modern_ui")
-
 
 def apply_modern_styles() -> None:
     """Inject global CSS using theme variables and local assets."""
@@ -87,11 +78,9 @@ def apply_modern_styles() -> None:
     st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
     st.session_state["_modern_ui_css_injected"] = True
 
-
 def inject_premium_styles() -> None:
     """Backward compatible alias for :func:`apply_modern_styles`."""
     apply_modern_styles()
-
 
 def render_modern_header() -> None:
     """Render the premium glassy header."""
@@ -143,7 +132,6 @@ def render_modern_header() -> None:
         unsafe_allow_html=True,
     )
 
-
 def render_validation_card() -> None:
     """Render the main validation card container."""
     st.markdown(
@@ -162,17 +150,13 @@ def render_validation_card() -> None:
         unsafe_allow_html=True,
     )
 
-
 def render_stats_section(stats: dict | None = None) -> None:
     """Display quick stats using a responsive flexbox layout."""
-    # Resolve accent safely
     try:
         accent = theme.get_accent_color()
     except Exception:
-        # Safe fallback if theme isn’t ready
         accent = getattr(getattr(theme, "LIGHT_THEME", object()), "accent", "#0077B5")
 
-    # Inject CSS once
     css = f"""
     <style>
       .stats-container {{
@@ -220,7 +204,6 @@ def render_stats_section(stats: dict | None = None) -> None:
     """
     st.markdown(css, unsafe_allow_html=True)
 
-    # Defaults + merge (non-destructive)
     default_stats = {
         "runs": "0",
         "proposals": "12",
@@ -229,7 +212,6 @@ def render_stats_section(stats: dict | None = None) -> None:
     }
     data = {**default_stats, **(stats or {})}
 
-    # Build cards in one HTML block (fewer Streamlit elements, fewer layout glitches)
     entries = [
         ("🏃‍♂️", "Runs", data["runs"]),
         ("📝", "Proposals", data["proposals"]),
@@ -241,7 +223,7 @@ def render_stats_section(stats: dict | None = None) -> None:
         cards_html.append(
             f"""
             <div class="stats-card">
-              <div style="font-size:2rem;margin-bottom:0.5rem;">{icon}</div>
+              <div style="font-size:2rem; margin-bottom:0.5rem;">{icon}</div>
               <div class="stats-value">{value}</div>
               <div class="stats-label">{label}</div>
             </div>
