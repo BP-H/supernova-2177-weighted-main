@@ -80,7 +80,7 @@ BOTTOM_TAB_TEMPLATE = """
 @media(max-width:768px){.sn-bottom-tabs{display:flex;align-items:center;justify-content:space-around;}}
 @media(min-width:768px){.sn-bottom-tabs{display:none!important;}}
 </style>
-<div class='sn-bottom-tabs'>
+<div class='sn-bottom-tabs {position}'>
   <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
   <a href='#' data-tag='video'><i class='fa-solid fa-video'></i></a>
   <a href='#' data-tag='network'><i class='fa-solid fa-user-group'></i></a>
@@ -409,12 +409,12 @@ def show_preview_badge(text: str = "Preview") -> None:
     )
 
 
-def render_bottom_tab_bar() -> None:
+def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
     st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active),
+        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
         unsafe_allow_html=True,
     )
 
