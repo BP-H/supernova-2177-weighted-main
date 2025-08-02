@@ -389,11 +389,11 @@ def render_post_card(entry: dict) -> None:
 
 def render_stats_section(stats: dict) -> None:
     """Display quick stats using a responsive flexbox layout."""
-
     try:
         accent = theme.get_accent_color()
     except Exception:
-        accent = theme.LIGHT_THEME.accent
+        accent = theme.LIGHT_THEME.accent  # Safe fallback to known value
+
 
     try:
         st.markdown(

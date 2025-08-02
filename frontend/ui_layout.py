@@ -456,6 +456,7 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
     try:
         accent = theme.get_accent_color()
     except Exception:
+        # Fallback to the default accent color from LIGHT_THEME
         accent = theme.LIGHT_THEME.accent
 
     try:
@@ -476,7 +477,9 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
             unsafe_allow_html=True,
         )
     except Exception:
+        # Silently fail in rendering rather than crash the UI
         return
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
