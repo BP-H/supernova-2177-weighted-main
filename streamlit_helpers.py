@@ -2,7 +2,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Unified Streamlit UI helper utilities for the entire application."""
+"""Unified Streamlit UI helper utilities."""
 from __future__ import annotations
 
 import html
@@ -10,12 +10,12 @@ from contextlib import contextmanager
 from typing import Any, Literal, Dict, List
 
 import streamlit as st
-from frontend.theme import set_theme, inject_global_styles  # Direct import to avoid cycles
+from frontend.theme import set_theme, inject_global_styles
 
 
-# --- Fallback UI Elements ---
+# Fallback UI
 class _DummyElement:
-    def __init__(self, cm=None) -> None: self._cm = cm or contextmanager(lambda: (yield None))()
+    def __init__(self, cm=None): self._cm = cm or contextmanager(lambda: (yield None))()
     def __enter__(self): return self._cm.__enter__()
     def __exit__(self, *a): self._cm.__exit__(*a)
     def classes(self, *_a, **_k): return self
@@ -33,7 +33,7 @@ except ImportError:
     ui = _DummyUI()
 
 
-# --- Core Utilities ---
+# Utilities
 def sanitize_text(x: Any) -> str:
     return html.escape(str(x), quote=False) if x is not None else ""
 
@@ -48,7 +48,7 @@ def alert(msg: str, type: Literal["info", "warning", "error"] = "info"):
     getattr(st, type, st.info)(msg)
 
 
-# --- Theme Controls ---
+# Theme
 def theme_toggle(label: str = "Dark mode", key_suffix: str = "default") -> str:
     key = f"theme_toggle_{key_suffix}"
     cur = st.session_state.get("theme", "light")
@@ -72,7 +72,7 @@ def theme_selector(label: str = "Theme", key_suffix: str = "legacy") -> str:
     return mapping[choice]
 
 
-# --- Legacy Stubs ---
+# Legacy Stubs
 def get_active_user() -> str | None:
     return st.session_state.get("active_user")
 
@@ -92,7 +92,7 @@ def render_instagram_grid(*args, **kwargs):
     st.info("Instagram grid placeholder.")
 
 
-# --- State Normalization (Fixes Messages Crash) ---
+# State Normalization
 def _normalise_conversations_state():
     convs = st.session_state.get("conversations")
     if isinstance(convs, list):
@@ -106,7 +106,7 @@ def _normalise_conversations_state():
         st.session_state["conversations"] = upgraded
 
 _normalise_conversations_state()
-inject_global_styles()  # Early injection
+inject_global_styles()  # Early call
 
 __all__ = [
     "ui", "sanitize_text", "safe_container", "alert", "header",
