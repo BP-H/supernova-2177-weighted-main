@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     ui = None  # type: ignore
     import streamlit as st
 
-from transcendental_resonance_frontend.src.utils.api import TOKEN, api_call
+from utils.api import TOKEN, api_call
 from utils.layout import page_container
 from utils.styles import get_theme
 from utils.features import quick_post_button, skeleton_loader, swipeable_glow_card
