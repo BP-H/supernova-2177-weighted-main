@@ -23,33 +23,32 @@ class ColorTheme:
 
     def css_vars(self) -> str:
         """Return CSS variable declarations for this theme."""
-        return "\n    ".join([
-            f"--bg: {self.bg};",
-            f"--card: {self.card};",
-            f"--accent: {self.accent};",
-            f"--text: {self.text};",
-            f"--text-muted: {self.text_muted};",
-            f"--radius: {self.radius};",
-            f"--transition: {self.transition};",
-        ])
-
+        return "\n    ".join(
+            [
+                f"--bg: {self.bg};",
+                f"--card: {self.card};",
+                f"--accent: {self.accent};",
+                f"--text: {self.text};",
+                f"--text-muted: {self.text_muted};",
+                f"--radius: {self.radius};",
+                f"--transition: {self.transition};",
+            ]
+        )
 
 
 # Modern “light” and “dark” palettes
 LIGHT_THEME = ColorTheme(
     bg="#F0F2F6",
     card="#FFFFFF",
-    accent="#0077B5",        # LinkedIn-blue accent
+    accent="#0077B5",  # LinkedIn-blue accent
     text="#222222",
-
     text_muted="#666666",
 )
 DARK_THEME = ColorTheme(
     bg="#0A0F14",
     card="rgba(255,255,255,0.05)",
-    accent="#00E5FF",        # Neon cyan
+    accent="#00E5FF",  # Neon cyan
     text="#FFFFFF",
-
     text_muted="#AAAAAA",
 )
 
@@ -76,9 +75,7 @@ def get_global_css(theme: bool | str = True) -> str:
     # resolve the theme into “light” or “dark”
     resolved = "dark" if theme is True else theme or "light"
     theme_obj = get_theme(resolved)
-    return f"""<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<style>
+    return f"""<style>
 :root {{
     {theme_obj.css_vars()}
 }}
@@ -138,8 +135,6 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     apply_theme(mode)
 
     extra = """
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
     /* Glassmorphic cards */
     .glass-card {
@@ -179,12 +174,29 @@ def inject_modern_styles(theme: bool | str = True) -> None:
     st.session_state["_styles_injected"] = True
 
 
+def inject_global_styles(theme: bool | str | None = None) -> None:
+    """Inject modern styles and global fonts/icons once per session."""
+    mode = theme if theme is not None else st.session_state.get("_theme", "light")
+    inject_modern_styles(mode)
+    if not st.session_state.get("_global_styles_loaded"):
+        st.markdown(
+            (
+                '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&'
+                'display=swap" rel="stylesheet">\n'
+                '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/'
+                'css/all.min.css">\n'
+            ),
+            unsafe_allow_html=True,
+        )
+        st.session_state["_global_styles_loaded"] = True
+
+
 def set_theme(name: str) -> None:
     """Store ``name`` in session state and inject styles."""
     mode = _resolve_mode(name)
     st.session_state["_theme"] = mode
     inject_modern_styles(mode)
-
 
 
 def get_accent_color() -> str:
@@ -196,5 +208,6 @@ __all__ = [
     "apply_theme",
     "set_theme",
     "inject_modern_styles",
+    "inject_global_styles",
     "get_accent_color",
 ]
