@@ -30,8 +30,8 @@ def load_page(page_name: str):
             module_path = candidate
             break
     if not module_path:
-        st.error(f"Page missing: {page_name}.py not found - add it to pages/.")
-        st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
+        st.error(f"Page missing: {page_name}.py not found.")
+        st.write(f"Placeholder for {page_name.capitalize()}.")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -43,7 +43,7 @@ def load_page(page_name: str):
             module.render()
         else:
             st.warning(f"No main/render in {page_name}.py - showing placeholder.")
-            st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
+            st.write(f"Placeholder for {page_name.capitalize()}.")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
@@ -83,7 +83,7 @@ def main() -> None:
 
     # Green sidebar - Exact, small buttons clickable, low random stats
     with st.sidebar:
-        # Profile top - use_container_width for deprecation fix
+        # Profile top
         st.image("https://via.placeholder.com/100?text=Profile+Pic", use_container_width=True)  # Placeholder
         st.write("Taha Gungor")
         st.write("CEO / AccessAI.Tech")
@@ -126,7 +126,7 @@ def main() -> None:
     # Main content - Load selected page (from buttons)
     st.write("Main Content Area - Select from sidebar.")
 
-    # Orange bottom nav - Icons clickable, mapped to pages (no jobs, 4 buttons)
+    # Orange bottom nav - Icons clickable, mapped to pages (4 buttons, no jobs)
     bottom_cols = st.columns(4)
     with bottom_cols[0]:
         if st.button("🏠 Home"):
