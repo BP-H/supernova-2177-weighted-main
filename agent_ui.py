@@ -11,15 +11,17 @@ from streamlit_helpers import (
     inject_global_styles,
     theme_selector,
     safe_container,
-    BOX_CSS,  # ✅ use imported version
+    BOX_CSS,  # ✅ Use imported version
     header,
 )
+from ui_utils import load_rfc_entries, summarize_text
 from voting_ui import (
     render_proposals_tab,
     render_governance_tab,
     render_agent_ops_tab,
     render_logs_tab,
 )
+
 from ui_utils import load_rfc_entries, summarize_text
 
 
