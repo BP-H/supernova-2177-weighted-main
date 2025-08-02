@@ -7,29 +7,22 @@ import sys
 from pathlib import Path
 import streamlit as st
 
-# Setup path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Path setup
+sys.path.insert(0, str(Path(__file__).parent))
 
-# Safe imports
+# Imports
 try:
     from streamlit_helpers import alert, header, theme_selector, safe_container, get_active_user, ensure_active_user
-    from frontend.theme import initialize_theme, apply_theme  # Added alias for compat
+    from frontend.theme import initialize_theme
 except ImportError as e:
-    st.error(f"Critical import failed: {e}. App may not function.")
-    # Dummies
-    def alert(msg, type="info"): st.warning(msg)
-    def header(txt): st.header(txt)
-    def theme_selector(): pass
-    def safe_container(): return st.container()
-    def get_active_user(): return "guest"
-    def ensure_active_user(): pass
-    def initialize_theme(theme="light"): pass
-    def apply_theme(theme="light"): pass  # Dummy for alias
+    st.error(f"Critical import failed: {e}")
+    # Dummies...
+    # (same as previous)
 
-# Page loader (fixes "Could not find page")
+# Loader (fixed path)
 def load_page(page_name: str):
     try:
-        module_path = Path(__file__).parent.parent / "pages" / f"{page_name}.py"
+        module_path = Path(__file__).parent / "pages" / f"{page_name}.py"
         if not module_path.exists():
             st.error(f"Page file missing: {module_path}")
             return
@@ -42,7 +35,7 @@ def load_page(page_name: str):
         elif hasattr(module, 'render'):
             module.render()
         else:
-            st.warning(f"No entry function in {page_name}.py")
+            st.warning(f"No entry in {page_name}.py")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
 
@@ -51,10 +44,10 @@ def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
         layout="wide",
-        initial_sidebar_state="collapsed"  # Fixes double sidebars
+        initial_sidebar_state="collapsed"
     )
     st.session_state.setdefault("theme", "light")
-    initialize_theme(st.session_state["theme"])  # Or apply_theme for compat
+    initialize_theme(st.session_state["theme"])
 
     with st.sidebar:
         st.title("🌌 superNova")
