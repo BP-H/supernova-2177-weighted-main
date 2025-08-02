@@ -54,7 +54,7 @@ def header(title: str, *, layout: str = "centered") -> None:
     """Render a standard page header."""
     st.markdown(f"<h1>{sanitize_text(title)}</h1>", unsafe_allow_html=True)
 
-def theme_toggle(label: str = "Dark Mode", *, key_suffix: str = None) -> str:
+def theme_toggle(label: str = "Dark Mode", *, key_suffix: str | None = None) -> str:
     """Switch between light and dark themes using a toggle widget."""
     key = f"theme_toggle_{key_suffix or 'default'}"
     current_theme = st.session_state.get("theme", "light")
@@ -74,5 +74,3 @@ def alert(message: str, type: Literal["info", "error"] = "info") -> None:
         st.info(message)
     elif type == "error":
         st.error(message)
-    else:
-        st.warning(message)
