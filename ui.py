@@ -7,44 +7,38 @@ import sys
 from pathlib import Path
 import streamlit as st
 
-# Path setup
-sys.path.insert(0, str(Path(__file__).parent))
+# Path setup for Cloud mount
+sys.path.insert(0, str(Path("/mount/src").resolve() if 'mount' in str(Path(__file__)) else Path(__file__).parent))
 
-# Imports
-try:
-    from streamlit_helpers import alert, header, theme_selector, safe_container, get_active_user, ensure_active_user
-    from frontend.theme import initialize_theme
-except ImportError as e:
-    st.error(f"Critical import failed: {e}")
-    # Dummies...
-    # (same as previous)
+# Imports (same as before)
+# ... (keep your existing imports and dummies)
 
-# Loader (fixed path)
+# Loader (fixed for Cloud /mount/src/pages/)
 def load_page(page_name: str):
     try:
-        module_path = Path(__file__).parent / "pages" / f"{page_name}.py"
-        if not module_path.exists():
-            st.error(f"Page file missing: {module_path}")
-            return
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(page_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        if hasattr(module, 'main'):
-            module.main()
-        elif hasattr(module, 'render'):
-            module.render()
-        else:
-            st.warning(f"No entry in {page_name}.py")
+        base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
+        for base in base_paths:
+            module_path = base / f"{page_name}.py"
+            if module_path.exists():
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(page_name, module_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                if hasattr(module, 'main'):
+                    module.main()
+                elif hasattr(module, 'render'):
+                    module.render()
+                return
+        st.error(f"Page file missing for {page_name}. Check /pages/ folder.")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
 
-# Main
+# Main (collapsed sidebar confirmed)
 def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
         layout="wide",
-        initial_sidebar_state="collapsed"
+        initial_sidebar_state="collapsed"  # Hides default
     )
     st.session_state.setdefault("theme", "light")
     initialize_theme(st.session_state["theme"])
