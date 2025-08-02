@@ -1,5 +1,3 @@
-# chat_ui.py
-
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
@@ -9,7 +7,6 @@ import streamlit as st
 from modern_ui import apply_modern_styles
 from streamlit_helpers import safe_container, header
 
-# FIX: Dummy data now includes the 'role' key required by st.chat_message
 DUMMY_CONVOS = [
     {"user": "alice", "messages": [{"role": "user", "content": "Hey!"}, {"role": "assistant", "content": "How are you?"}]},
     {"user": "bob", "messages": [{"role": "user", "content": "I'm good, thanks!"}]},
