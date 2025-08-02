@@ -90,6 +90,7 @@ BOTTOM_TAB_TEMPLATE = """
   text-decoration: none;
 }
 
+
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
 @media(max-width:768px){
@@ -443,7 +444,7 @@ def show_preview_badge(text: str = "Preview") -> None:
     )
 
 
-def render_bottom_tab_bar() -> None:
+def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
