@@ -1,14 +1,17 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+# ruff: noqa
 """Central UI-layout helpers.
 
 Key helpers
 -----------
 main_container()            – main page container
 sidebar_container()         – Streamlit sidebar wrapper
-render_top_bar()            – sticky translucent navbar (logo · search · bell · beta · avatar)
-render_sidebar_nav(...)     – vertical nav (option-menu or radio fallback)
+render_top_bar()            – sticky translucent navbar
+                             (logo · search · bell · beta · avatar)
+render_sidebar_nav(...)     – vertical nav
+                             (option-menu or radio fallback)
 render_title_bar(icon,txt)  – page H1 with emoji / icon
 show_preview_badge(text)    – floating “Preview” badge
 render_profile_card(user)   – proxy around profile_card.render_profile_card
@@ -26,61 +29,83 @@ import streamlit as st
 from modern_ui_components import SIDEBAR_STYLES
 from profile_card import render_profile_card as _render_profile_card
 from frontend import theme
+
 try:
     from streamlit_javascript import st_javascript
 except Exception:  # pragma: no cover - optional dependency
+
     def st_javascript(*_a, **_kw):
         return None
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS & GLOBAL CSS
 # ═══════════════════════════════════════════════════════════════════════════════
 _EMOJI_FALLBACK = "🔖"
-LAYOUT_CSS = """
-<style>
-.glass-card{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  backdrop-filter:blur(14px);
-  border-radius:1rem;
-  padding:1rem;
-}
-.insta-card{
-  display:flex;flex-direction:column;
-  background:var(--card);
-  border-radius:1rem;
-  overflow:hidden;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-  transition:transform .25s ease,box-shadow .25s ease;
-}
-.insta-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 8px 22px rgba(0,0,0,.18);
-}
-</style>
-"""
 
 # Slide-in drawer & mobile bottom tabs
 DRAWER_CSS = """
 <style>
-[data-testid='stSidebar']{background:var(--card);border-right:1px solid rgba(255,255,255,0.1);transition:transform 0.3s ease;z-index:1002;}
-[data-testid='stSidebar'].collapsed{transform:translateX(-100%);}
-@media(min-width:768px){[data-testid='stSidebar']{transform:none!important;}}
-#drawer_btn{display:none;background:none;border:none;color:var(--accent);font-size:1.3rem;cursor:pointer;}
-@media(max-width:768px){#drawer_btn{display:block;}}
+[data-testid='stSidebar'] {
+  background: var(--card);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.3s ease;
+  z-index: 1002;
+}
+[data-testid='stSidebar'].collapsed {
+  transform: translateX(-100%);
+}
+@media(min-width:768px) {
+  [data-testid='stSidebar'] {
+    transform: none !important;
+  }
+}
+#drawer_btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+@media(max-width:768px) {
+  #drawer_btn {
+    display: block;
+  }
+}
 </style>
 """
 
+
 BOTTOM_TAB_TEMPLATE = """
 <style>
-.sn-bottom-tabs{position:fixed;bottom:0;left:0;right:0;display:none;background:var(--card);border-top:1px solid rgba(255,255,255,0.1);z-index:1001;}
-.sn-bottom-tabs a{flex:1;text-align:center;padding:.4rem 0;color:var(--text-muted);text-decoration:none;}
+.sn-bottom-tabs{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  background: var(--card);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  z-index: 1001;
+}
+.sn-bottom-tabs a{
+  flex: 1;
+  text-align: center;
+  padding: .4rem 0;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+
 .sn-bottom-tabs a i{font-size:1.2rem;}
 .sn-bottom-tabs a.active{color:{accent};}
-@media(max-width:768px){.sn-bottom-tabs{display:flex;align-items:center;justify-content:space-around;}}
+@media(max-width:768px){
+  .sn-bottom-tabs{display:flex;align-items:center;justify-content:space-around;}
+}
 @media(min-width:768px){.sn-bottom-tabs{display:none!important;}}
 </style>
-<div class='sn-bottom-tabs'>
+<div class='sn-bottom-tabs {position}'>
   <a href='#' data-tag='home'><i class='fa-solid fa-house'></i></a>
   <a href='#' data-tag='video'><i class='fa-solid fa-video'></i></a>
   <a href='#' data-tag='network'><i class='fa-solid fa-user-group'></i></a>
@@ -89,7 +114,9 @@ BOTTOM_TAB_TEMPLATE = """
 </div>
 <script>
   var active='{active}';
-  document.querySelectorAll('.sn-bottom-tabs a').forEach(a=>{if(a.dataset.tag===active){a.classList.add('active');}});
+  document.querySelectorAll('.sn-bottom-tabs a').forEach(a=>{
+    if(a.dataset.tag===active){a.classList.add('active');}
+  });
 </script>
 """
 
@@ -105,18 +132,18 @@ except Exception:  # pragma: no cover
 # optional pretty-sidebar package
 try:
     from streamlit_option_menu import option_menu
+
     USE_OPTION_MENU = True
 except ImportError:  # pragma: no cover
     USE_OPTION_MENU = False
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BASIC CONTAINERS
 # ═══════════════════════════════════════════════════════════════════════════════
 def main_container() -> st.delta_generator.DeltaGenerator:
     """Main content container (injects base CSS once)."""
-    if "_layout_css_injected" not in st.session_state:
-        st.markdown(LAYOUT_CSS, unsafe_allow_html=True)
-        st.session_state["_layout_css_injected"] = True
+    theme.inject_modern_styles()
     return st.container()
 
 
@@ -224,47 +251,55 @@ def render_top_bar() -> None:
         return
     menu_col, logo_col, search_col, bell_col, beta_col, avatar_col = cols
 
-    menu_col.markdown(
-        f"""
-        <input type='checkbox' id='drawer_toggle' {'checked' if st.session_state.get('_drawer_open', True) else ''} hidden>
+    checked = "checked" if st.session_state.get("_drawer_open", True) else ""
+    drawer_html = f"""
+        <input type='checkbox' id='drawer_toggle' {checked} hidden>
         <label for='drawer_toggle' id='drawer_btn'>☰</label>
         <script>
-        const dt=document.getElementById('drawer_toggle');
-        const saved = localStorage.getItem('drawer_open');
-        if(dt && saved !== null) dt.checked = saved === 'true';
-        function storeDrawer(){{ if(dt) localStorage.setItem('drawer_open', dt.checked); }}
-        dt?.addEventListener('change', storeDrawer);
+          const dt=document.getElementById('drawer_toggle');
+          const saved = localStorage.getItem('drawer_open');
+          if(dt && saved !== null) dt.checked = saved === 'true';
+          function storeDrawer(){{
+            if(dt) localStorage.setItem('drawer_open', dt.checked);
+          }}
+          dt?.addEventListener('change', storeDrawer);
         </script>
-        """,
-        unsafe_allow_html=True,
-    )
+    """
+    menu_col.markdown(drawer_html, unsafe_allow_html=True)
 
-    logo_col.markdown('<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True)
+    logo_col.markdown(
+        '<i class="fa-solid fa-rocket fa-lg"></i>', unsafe_allow_html=True
+    )
 
     # search box with suggestions
     pid = st.session_state.get("active_page", "global")
     q_key = f"{pid}_search"
-    q = search_col.text_input("Search", placeholder="Search…", key=q_key, label_visibility="hidden")
+    q = search_col.text_input(
+        "Search", placeholder="Search…", key=q_key, label_visibility="hidden"
+    )
     if q:
         recent = st.session_state.setdefault("_recent_q", [])
         if q not in recent:
             recent.append(q)
             st.session_state["_recent_q"] = recent[-6:]
 
-    if (sugs := st.session_state.get("_recent_q")):
+    if sugs := st.session_state.get("_recent_q"):
         options = "".join(f"<option value='{s}'></option>" for s in sugs)
-        search_col.markdown(
-            f"<datalist id='recent-sugs'>{options}</datalist>"
-            "<script>window.parent.document.querySelector('.sn-topbar input[type=text]')?.setAttribute('list','recent-sugs');</script>",
-            unsafe_allow_html=True,
+        data_list = f"<datalist id='recent-sugs'>{options}</datalist>"
+        script = (
+            "<script>window.parent.document.querySelector("
+            "'.sn-topbar input[type=text]')?.setAttribute('list','recent-sugs');"
+            "</script>"
         )
+        search_col.markdown(data_list + script, unsafe_allow_html=True)
 
     # notifications bell
     n_notes = len(st.session_state.get("notifications", []))
-    bell_col.markdown(
-        f'<button class="sn-bell" data-count="{n_notes or ""}" aria-label="Notifications"></button>',
-        unsafe_allow_html=True,
+    bell_html = (
+        f'<button class="sn-bell" data-count="{n_notes or ""}" '
+        'aria-label="Notifications"></button>'
     )
+    bell_col.markdown(bell_html, unsafe_allow_html=True)
     with bell_col.popover("Notifications"):
         if n_notes:
             for note in st.session_state["notifications"]:
@@ -281,7 +316,9 @@ def render_top_bar() -> None:
         pass
 
     # avatar placeholder
-    avatar_col.markdown('<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True)
+    avatar_col.markdown(
+        '<i class="fa-regular fa-circle-user fa-lg"></i>', unsafe_allow_html=True
+    )
 
     # close .sn-topbar
     st.markdown("</div>", unsafe_allow_html=True)
@@ -302,7 +339,8 @@ def _render_sidebar_nav(
 ) -> str:
     """Vertical sidebar nav; returns the *label* of the chosen page."""
     raw_pairs = (
-        list(page_links.items()) if isinstance(page_links, dict)
+        list(page_links.items())
+        if isinstance(page_links, dict)
         else [(None, p) for p in page_links]
     )
     icons = list(icons or [None] * len(raw_pairs))
@@ -333,9 +371,9 @@ def _render_sidebar_nav(
 
     default_lbl = default or choices[0][0]
     active_lbl = st.session_state.get(session_key, default_lbl)
-    if active_lbl not in [l for l, _ in choices]:
+    if active_lbl not in [label for label, _ in choices]:
         active_lbl = default_lbl
-    default_idx = [l for l, _ in choices].index(active_lbl)
+    default_idx = [label for label, _ in choices].index(active_lbl)
 
     with st.sidebar:
         st.markdown(SIDEBAR_STYLES, unsafe_allow_html=True)
@@ -352,8 +390,8 @@ def _render_sidebar_nav(
         elif USE_OPTION_MENU:
             chosen = option_menu(
                 menu_title="",
-                options=[l for l, _ in choices],
-                icons=[icon_map.get(l) or "dot" for l, _ in choices],
+                options=[label for label, _ in choices],
+                icons=[icon_map.get(label) or "dot" for label, _ in choices],
                 orientation="vertical",
                 key=key,
                 default_index=default_idx,
@@ -365,8 +403,11 @@ def _render_sidebar_nav(
                 f"{icon_map.get(lbl) or ''} {lbl}".strip() for lbl, _ in choices
             ]
             picked = st.radio(
-                "Navigation", radio_labels,
-                index=default_idx, key=key, label_visibility="collapsed"
+                "Navigation",
+                radio_labels,
+                index=default_idx,
+                key=key,
+                label_visibility="collapsed",
             )
             chosen = choices[radio_labels.index(picked)][0]
 
@@ -385,6 +426,7 @@ def render_sidebar_nav(*a, **kw):
 
 
 render_modern_sidebar = render_sidebar_nav  # legacy alias
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TITLE & BADGE
@@ -409,14 +451,16 @@ def show_preview_badge(text: str = "Preview") -> None:
     )
 
 
-def render_bottom_tab_bar() -> None:
+def render_bottom_tab_bar(position: str = "fixed") -> None:
     """Bottom navigation bar for mobile screens."""
     accent = theme.get_accent_color()
     active = st.session_state.get("active_page", "home")
+    position = st.session_state.get("tab_bar_position", "bottom")
     st.markdown(
-        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active),
+        BOTTOM_TAB_TEMPLATE.format(accent=accent, active=active, position=position),
         unsafe_allow_html=True,
     )
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 __all__ = [

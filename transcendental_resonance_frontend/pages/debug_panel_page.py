@@ -12,10 +12,10 @@ except Exception:  # pragma: no cover - fallback to Streamlit
     ui = None  # type: ignore
     import streamlit as st
 
-from transcendental_resonance_frontend.src.utils.api import TOKEN
+from utils.api import TOKEN
 from utils.styles import get_theme
 from utils.layout import page_container
-from transcendental_resonance_frontend.src.utils.api import TOKEN, OFFLINE_MODE
+from utils.api import TOKEN, OFFLINE_MODE
 from frontend_bridge import ROUTES, dispatch_route
 
 # Minimal example payloads for some routes

@@ -20,7 +20,7 @@ import contextlib
 from components.emoji_toolbar import emoji_toolbar
 from components.media_renderer import render_media_block
 
-from transcendental_resonance_frontend.src.utils.api import TOKEN, api_call, listen_ws
+from utils.api import TOKEN, api_call, listen_ws
 from utils.features import skeleton_loader
 from utils.layout import page_container
 from utils.safe_markdown import safe_markdown

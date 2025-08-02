@@ -113,13 +113,7 @@ def safe_element(tag: str, content: str) -> Any:
 # Optional modern-ui styles injector
 # ──────────────────────────────────────────────────────────────────────────────
 
-try:
-    from modern_ui import inject_modern_styles  # type: ignore
-except Exception:  # noqa: BLE001
-
-    def inject_modern_styles(*_a: Any, **_kw: Any) -> None:  # type: ignore
-        """No-op when *modern_ui* is absent."""
-        return None
+from frontend.theme import inject_modern_styles
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -280,6 +274,7 @@ def render_post_card(post_data: dict[str, Any]) -> None:
             getattr(st, "caption", st.write)(f"❤️ {likes}")
             getattr(st, "markdown", lambda *a, **k: None)(
                 "<div style='color:var(--text-muted);font-size:1.2em;'>❤️ 🔁 💬</div>",
+
                 unsafe_allow_html=True,
             )
         else:

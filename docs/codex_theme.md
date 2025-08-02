@@ -8,10 +8,10 @@ It is available through `streamlit_helpers.theme_selector()` and sets the
 
 ```python
 from streamlit_helpers import theme_selector
-from modern_ui import inject_modern_styles
+from modern_ui import apply_modern_styles
 
 # Apply premium styles and add a radio selector to switch themes
-inject_modern_styles()
+apply_modern_styles()
 theme_selector("Theme")
 ```
 
@@ -29,7 +29,7 @@ font = "'Inter', sans-serif"
 
 ### CSS Classes
 
-The `inject_modern_styles()` helper exposes a few utility classes:
+The `apply_modern_styles()` helper exposes a few utility classes:
 
 | Class | Purpose |
 |-------|---------|
