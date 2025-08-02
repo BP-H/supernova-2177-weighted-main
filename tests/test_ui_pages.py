@@ -9,9 +9,10 @@ from pathlib import Path
 import sys
 
 import pytest
+
 pytest.importorskip("streamlit")
 pytestmark = pytest.mark.requires_streamlit
-import streamlit as st
+import streamlit as st  # noqa: E402
 
 # Ensure repository root is importable
 root = Path(__file__).resolve().parents[1]
@@ -21,6 +22,7 @@ if str(root) not in sys.path:
 # Provide a minimal stub for ``modern_ui`` to avoid syntax errors during import.
 stub_modern_ui = types.ModuleType("modern_ui")
 stub_modern_ui.inject_modern_styles = lambda *a, **k: None
+stub_modern_ui.apply_modern_styles = lambda *a, **k: None
 stub_modern_ui.render_stats_section = lambda *a, **k: None
 sys.modules.setdefault("modern_ui", stub_modern_ui)
 importlib.import_module("utils.paths")  # ensures namespace package is created
@@ -28,9 +30,8 @@ stub_page_registry = types.ModuleType("utils.page_registry")
 stub_page_registry.ensure_pages = lambda *a, **k: None
 sys.modules.setdefault("utils.page_registry", stub_page_registry)
 
-import frontend.ui_layout as ui_layout
-import modern_ui_components as mui
-import ui
+import modern_ui_components as mui  # noqa: E402
+import ui  # noqa: E402
 
 
 def test_unknown_page_triggers_fallback(monkeypatch):
@@ -38,8 +39,14 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     importlib.reload(ui)
 
     fallback_called = {}
-    monkeypatch.setattr(ui, "_render_fallback", lambda choice: fallback_called.setdefault("choice", choice))
-    monkeypatch.setattr(ui, "load_page_with_fallback", lambda choice, paths: ui._render_fallback(choice))
+    monkeypatch.setattr(
+        ui,
+        "_render_fallback",
+        lambda choice: fallback_called.setdefault("choice", choice),
+    )
+    monkeypatch.setattr(
+        ui, "load_page_with_fallback", lambda choice, paths: ui._render_fallback(choice)
+    )
     monkeypatch.setattr(ui, "get_st_secrets", lambda: {})
     monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: "Ghost")
     monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: "Ghost")
@@ -47,12 +54,16 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     class Dummy(contextlib.AbstractContextManager):
         def __enter__(self):
             return self
+
         def __exit__(self, *exc):
             return False
+
         def container(self):
             return Dummy()
+
         def expander(self, *a, **k):
             return Dummy()
+
         def tabs(self, labels):
             tab_calls.append(labels)
             return [Dummy() for _ in labels]
@@ -62,7 +73,9 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     monkeypatch.setattr(st, "expander", lambda *a, **k: Dummy())
     monkeypatch.setattr(st, "container", lambda: Dummy())
     monkeypatch.setattr(st, "columns", lambda *a, **k: [Dummy(), Dummy(), Dummy()])
-    monkeypatch.setattr(st, "tabs", lambda labels: tab_calls.append(labels) or [Dummy() for _ in labels])
+    monkeypatch.setattr(
+        st, "tabs", lambda labels: tab_calls.append(labels) or [Dummy() for _ in labels]
+    )
     for fn in [
         "markdown",
         "info",
@@ -94,7 +107,9 @@ def test_unknown_page_triggers_fallback(monkeypatch):
     ]:
         monkeypatch.setattr(ui, helper, lambda *a, **k: None)
 
-    monkeypatch.setattr(ui, "render_api_key_ui", lambda *a, **k: {"model": "dummy", "api_key": ""})
+    monkeypatch.setattr(
+        ui, "render_api_key_ui", lambda *a, **k: {"model": "dummy", "api_key": ""}
+    )
 
     ui.main()
 
@@ -112,19 +127,28 @@ def test_main_defaults_to_validation(monkeypatch):
         lambda choice, paths: loaded.setdefault("choice", choice),
     )
     monkeypatch.setattr(ui, "get_st_secrets", lambda: {})
-    monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
-    monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page"))
-
+    monkeypatch.setattr(
+        mui,
+        "render_modern_sidebar",
+        lambda *a, **k: st.session_state.get("active_page"),
+    )
+    monkeypatch.setattr(
+        ui, "render_modern_sidebar", lambda *a, **k: st.session_state.get("active_page")
+    )
 
     class Dummy(contextlib.AbstractContextManager):
         def __enter__(self):
             return self
+
         def __exit__(self, *exc):
             return False
+
         def container(self):
             return Dummy()
+
         def expander(self, *a, **k):
             return Dummy()
+
         def tabs(self, labels):
             return [Dummy() for _ in labels]
 
@@ -157,7 +181,6 @@ def test_main_defaults_to_validation(monkeypatch):
     params = {"page": "Unknown"}
     monkeypatch.setattr(st, "query_params", params)
 
-
     for helper in [
         "set_theme",
         "inject_modern_styles",
@@ -167,9 +190,15 @@ def test_main_defaults_to_validation(monkeypatch):
     ]:
         monkeypatch.setattr(ui, helper, lambda *a, **k: None)
 
-    monkeypatch.setattr(ui, "render_api_key_ui", lambda *a, **k: {"model": "dummy", "api_key": ""})
-    monkeypatch.setattr(mui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav"))
-    monkeypatch.setattr(ui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav"))
+    monkeypatch.setattr(
+        ui, "render_api_key_ui", lambda *a, **k: {"model": "dummy", "api_key": ""}
+    )
+    monkeypatch.setattr(
+        mui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav")
+    )
+    monkeypatch.setattr(
+        ui, "render_modern_sidebar", lambda *a, **k: session.get("sidebar_nav")
+    )
 
     ui.main()
 
@@ -201,13 +230,12 @@ def test_fallback_rendered_once(monkeypatch):
     assert called["count"] == 1
     assert "validation" in ui._fallback_rendered  # Use normalized slug form
 
+
 def test_render_stats_section_uses_flexbox(monkeypatch):
     """render_stats_section should output flexbox-based layout."""
     outputs = []
 
-    dummy_st = types.SimpleNamespace(
-        markdown=lambda html, **k: outputs.append(html)
-    )
+    dummy_st = types.SimpleNamespace(markdown=lambda html, **k: outputs.append(html))
 
     monkeypatch.setattr(mui, "st", dummy_st)
 
@@ -217,4 +245,3 @@ def test_render_stats_section_uses_flexbox(monkeypatch):
     combined = "\n".join(outputs)
     assert "stats-container" in combined
     assert "stats-card" in combined
-
