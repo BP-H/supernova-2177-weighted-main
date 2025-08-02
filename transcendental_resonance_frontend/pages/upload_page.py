@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover - fallback to Streamlit
 import asyncio
 import contextlib
 
-from transcendental_resonance_frontend.src.utils.api import api_call, TOKEN
+from utils.api import api_call, TOKEN
 from utils.styles import get_theme
 from utils.layout import page_container
 from .login_page import login_page

@@ -8,7 +8,7 @@ try:
 except Exception:  # pragma: no cover - fallback to Streamlit
     ui = None  # type: ignore
     import streamlit as st
-from transcendental_resonance_frontend.src.utils.api import TOKEN, api_call, listen_ws
+from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container
 from utils.styles import get_theme
 
