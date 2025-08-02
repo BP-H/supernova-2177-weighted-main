@@ -68,7 +68,7 @@ def inject_global_styles(*, once: bool = True) -> None:
             --transition: 0.4s ease; /* The line that caused the error is now safe */
         }}
 
-        .stButton>button {{
+        .stButton > button {{
             transition: background var(--transition);
         }}
     </style>
