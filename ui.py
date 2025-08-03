@@ -112,8 +112,8 @@ def main() -> None:
             width: 100% !important;
             height: 40px !important; /* Fixed height for uniformity */
             border: none !important;
-            border-radius: 4px !important;
-            font-size: 13px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
             display: flex !important;
             justify-content: flex-start !important;
             align-items: center !important;
@@ -121,10 +121,26 @@ def main() -> None:
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        [data-testid="stSidebar"] button:hover {
-            background-color: #2a2a2e !important; /* Mid between bg (#18181b) and white (#fff) */
+        
+        /* Apply style on hover AND on focus, and remove the default focus outline */
+        [data-testid="stSidebar"] button:hover,
+        [data-testid="stSidebar"] button:focus {
+            background-color: #2a2a2e !important;
             box-shadow: 0 0 5px rgba(255, 20, 147, 0.3) !important;
-            outline: none !important; /* This is the key change */
+            outline: none !important;
+        }
+        
+        /* Special style for the logo button to make it look like a header */
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
+            font-size: 28px !important;
+            font-weight: bold !important;
+            justify-content: center !important;
+            padding: 15px 0px !important;
+            margin-bottom: 15px !important;
+            height: auto !important;
+        }
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
+            box-shadow: none !important; /* Remove glow from logo hover */
         }
         
         /* 🔥 MAIN CONTENT AREA */
@@ -151,17 +167,8 @@ def main() -> None:
         }
         
         /* Metrics text visible */
-        [data-testid="stMetricLabel"] {
-            color: white !important;
-        }
-        [data-testid="stMetricValue"] {
-            color: white !important;
-        }
-        
-        /* Feed buttons text visible */
-        .feed-button-container button {
-            color: white !important; /* Ensure button text is white */
-        }
+        [data-testid="stMetricLabel"] { color: white !important; }
+        [data-testid="stMetricValue"] { color: white !important; }
         
         /* Profile pic circular */
         [data-testid="stSidebar"] img {
@@ -170,13 +177,16 @@ def main() -> None:
             display: block !important;
         }
         
-        /* Search bar styling */
-        [data-testid="stTextInput"] {
+        /* Modern Search bar styling */
+        [data-testid="stTextInput"] > div {
             background-color: #28282b !important;
             border-radius: 20px !important;
-            border: 1px solid #28282b !important;
-            padding: 8px !important;
+            border: none !important;
+        }
+        [data-testid="stTextInput"] input {
+            background-color: transparent !important;
             color: white !important;
+            padding-left: 10px;
         }
         
         /* Mobile responsiveness */
@@ -191,19 +201,23 @@ def main() -> None:
 
     # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
-        # Search bar at the very top
-        st.text_input("Search", key="search_bar", placeholder="Search posts, people, companies...")
+        # Modern search bar
+        st.text_input(
+            "Search",
+            key="search_bar",
+            placeholder="🔍 Search posts, people...",
+            label_visibility="collapsed"
+        )
 
-        # Logo
-        st.markdown(f"""
-            <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="50" fill="#0a0a0a"/>
-                <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova</text>
-            </svg>
-            """, unsafe_allow_html=True)
+        # Clickable Logo - navigates to feed
+        if st.button("✨ supernNova", use_container_width=True):
+            # Clear search when clicking logo to return home
+            st.session_state.search_bar = ""
+            st.session_state.current_page = "feed"
+            st.rerun()
         
         # Profile pic (circular via CSS)
-        st.image("assets/profile_pic.png", width=100) 
+        st.image("assets/profile_pic.png", width=100)
         
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
@@ -253,50 +267,30 @@ def main() -> None:
         if st.button("📬 Messages", key="nav_messages"):
             st.session_state.current_page = "messages"
             st.rerun()
-        if st.button("🤖 Agents", key="nav_agents"):
-            st.session_state.current_page = "agents"
-            st.rerun()
-        if st.button("🗳️ Voting", key="nav_voting"):
-            st.session_state.current_page = "voting"
-            st.rerun()
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
-        if st.button("🎶 Music", key="nav_music"):
-            st.session_state.current_page = "music"
-            st.rerun()
-        if st.button("✨ AI assist", key="nav_ai_assist"):
-            st.session_state.current_page = "ai_assist"
-            st.rerun()
-        if st.button("🌀 Animate Gaussian", key="nav_animate_gaussian"):
-            st.session_state.current_page = "animate_gaussian"
-            st.rerun()
-        if st.button("🚪 Login", key="nav_login"):
-            st.session_state.current_page = "login"
-            st.rerun()
+        # Add other navigation buttons as needed...
         
-        # Notifications and quick nav in sidebar
-        st.divider()
-        st.subheader("Quick Nav")
-        if st.button("🏠 Home", key="quick_home"):
-            st.session_state.current_page = "feed"
-            st.rerun()
-        if st.button("📹 Video", key="quick_video"):
-            st.session_state.current_page = "video_chat"
-            st.rerun()
-        if st.button("👥 My Network", key="quick_network"):
-            st.session_state.current_page = "social"
-            st.rerun()
-        if st.button("🔔 Notifications (8)", key="quick_notifications"):
-            st.session_state.current_page = "messages"
-            st.rerun()
-        if st.button("💼 Jobs", key="quick_jobs"):
-            st.session_state.current_page = "jobs"
-            st.rerun()
-
-    # Main content area - Load selected page
+    # Main content area - Load selected page or show search results
     with st.container():
-        load_page(st.session_state.current_page)
+        # Prioritize search results over page navigation
+        if st.session_state.search_bar:
+            st.header(f"Searching for: \"{st.session_state.search_bar}\"")
+            st.info("This is where your database search results would appear. Connect this to your backend.")
+            # Placeholder for search results display
+            st.write("---")
+            st.subheader("Example Post Result")
+            st.write("**User:** taha_gungor")
+            st.write("This is a sample post that matches the search query. #streamlit #search")
+            st.write("---")
+            st.subheader("Example Profile Result")
+            st.write("**Profile:** artist_dev")
+            st.write("Software developer and digital artist.")
+
+        else:
+            # Load the selected page if there is no active search
+            load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
     main()
