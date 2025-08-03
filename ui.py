@@ -89,7 +89,7 @@ def main() -> None:
             background-color: #18181b !important;
             color: white !important;
             border-radius: 10px;
-            padding: 20px;
+            padding: 5px;
             margin: 0px;
             width: 300px;
             z-index: 98;
@@ -186,7 +186,7 @@ def main() -> None:
         [data-testid="stTextInput"] input {
             background-color: transparent !important;
             color: white !important;
-            padding-left: 3px;
+            padding-left: 10px;
         }
         
         /* Mobile responsiveness */
