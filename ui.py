@@ -57,7 +57,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
-    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav with horizontal alignment
+    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), sticky bottom nav with horizontal alignment
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
@@ -78,16 +78,28 @@ def main() -> None:
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                background-color: #0a0a0a; /* Dark black */
+                background-color: #ff4500; /* Orange for universal below */
                 padding: 10px;
                 display: flex;
-                justify-content: space-between; /* Align horizontally with space */
-                z-index: 100;
+                justify-content: space-between; /* Evenly spaced horizontally */
+                z-index: 1000; /* Ensure it stays on top */
                 box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
                 border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
             }
-            .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 16px; padding: 5px; display: flex; flex-direction: column; align-items: center; flex: 1;} /* Equal width, horizontal */
-            .bottom-nav button:hover {color: #ff1493;} /* Pink hover */
+            .bottom-nav button {
+                background: none;
+                border: none;
+                color: #a0a0a0;
+                cursor: pointer;
+                font-size: 16px;
+                padding: 5px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex: 1; /* Equal width for each button */
+                margin: 0 2px; /* Small spacing between buttons */
+            }
+            .bottom-nav button:hover {color: #ffffff;} /* White hover for contrast */
             .bottom-nav .badge {background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;} /* Pink badge */
             .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
             /* Add padding to main content to avoid overlap with bottom nav */
@@ -171,7 +183,7 @@ def main() -> None:
     # Main content - Add search bar on top, then load page
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
-    # Bottom nav - Curved dark with labels, pink badge on Notifications, horizontal alignment in line
+    # Bottom nav - Sticky, orange, with labels in a single line
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
     with bottom_cols[0]:
