@@ -92,7 +92,7 @@ def main() -> None:
             padding: 0px;
             margin: 0px;
             width: 190px;
-            z-index: 98;
+            z-index: 0;
         }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
