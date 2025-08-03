@@ -20,7 +20,7 @@ try:
 except ImportError as e:
     st.error(f"Critical import failed: {e}")
     st.stop()
-# Loader
+# Loader with better fallback for missing pages
 def load_page(page_name: str):
     base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
     module_path = None
@@ -30,8 +30,7 @@ def load_page(page_name: str):
             module_path = candidate
             break
     if not module_path:
-        st.error(f"Page missing: {page_name}.py not found - add it to pages/.")
-        st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
+        st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -47,7 +46,7 @@ def load_page(page_name: str):
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
-# Main - Dark theme like LinkedIn, modern buttons (small, rounded, blue hover)
+# Main - Dark theme like LinkedIn, modern buttons with opacity shading
 def main() -> None:
     st.set_page_config(
         page_title="superNova_2177",
@@ -58,7 +57,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
-    # CSS for LinkedIn-like dark theme (dark gray sidebar, black bottom, blue accents/hover), hide old sidebar
+    # CSS updates: Uniform small buttons with 5% opacity shading, blue hover glow, curved bottom nav
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
@@ -72,8 +71,8 @@ def main() -> None:
             }
             .stSidebar > div {text-align: left;} /* Align left for professional look */
             .stSidebar hr {border-color: #333;}
-            .stSidebar button {background-color: #282828; color: white; border-radius: 20px; padding: 8px 16px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 14px;} /* Pill-shaped modern */
-            .stSidebar button:hover {background-color: #0a66c2; color: white;} /* LinkedIn blue hover */
+            .stSidebar button {background-color: rgba(255,255,255,0.05); /* 5% opacity shading */ color: white; border-radius: 20px; padding: 6px 12px; /* Smaller size */ margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px;} /* Modern non-90s */
+            .stSidebar button:hover {background-color: rgba(10,102,194,0.2); color: white; box-shadow: 0 0 5px #0a66c2;} /* Blue glow hover */
             .bottom-nav {
                 position: fixed;
                 bottom: 0;
@@ -85,9 +84,11 @@ def main() -> None:
                 justify-content: space-around;
                 z-index: 100;
                 box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+                border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
             }
             .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 16px; padding: 5px; display: flex; flex-direction: column; align-items: center;}
-            .bottom-nav button:hover {color: #0a66c2;} /* Blue hover */
+            .bottom-nav button:hover {color: #0a66c2;}
+            .bottom-nav .badge {background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;}
             .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
             /* Add padding to main content to avoid overlap with bottom nav */
             .block-container {padding-bottom: 80px;}
@@ -97,7 +98,7 @@ def main() -> None:
             .action-button:hover {background-color: #0a66c2;}
         </style>
     """, unsafe_allow_html=True)
-    # Sidebar - LinkedIn-like, with icons, added sections, no placeholders
+    # Sidebar - LinkedIn-like, with better logos, new sections clickable
     with st.sidebar:
         # Profile top with avatar
         st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
@@ -110,26 +111,33 @@ def main() -> None:
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
-        # Manage pages with icons/logos
+        # Manage pages with logical logos
         st.subheader("Manage pages")
-        if st.button("🔹 AccessAI.Tech", key="manage_accessai"):
+        if st.button("🔬 AccessAI.Tech", key="manage_accessai"):
             st.session_state.current_page = "accessai"
             st.rerun()
-        if st.button("🌟 supernova_2177", key="manage_supernova"):
+        if st.button("🌌 supernova_2177", key="manage_supernova"):
             st.session_state.current_page = "supernova_2177"
             st.rerun()
-        if st.button("🌍 GLOBALRUNWAY", key="manage_globalrunway"):
+        if st.button("✈️ GLOBALRUNWAY", key="manage_globalrunway"):
             st.session_state.current_page = "globalrunway"
             st.rerun()
         if st.button("📂 Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
         st.divider()
-        # Added sections like LinkedIn
-        st.subheader("Puzzle Games")
+        # Replaced Puzzle Games with Enter Metaverse (clickable)
+        if st.button("🔮 Enter Metaverse", key="nav_metaverse"):
+            st.session_state.current_page = "enter_metaverse"
+            st.rerun()
+        st.caption("Mathematically sucked into a supernova void – stay tuned for 3D immersion!")
         st.subheader("Premium features")
-        st.subheader("Settings")
+        # Settings clickable with theme nearby
+        if st.button("⚙️ Settings", key="nav_settings"):
+            st.session_state.current_page = "settings"
+            st.rerun()
+        theme_selector()  # Theme near settings
         st.divider()
-        # Navigation - pill buttons, clickable
+        # Navigation - small shaded buttons
         if st.button("Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
             st.rerun()
@@ -151,11 +159,10 @@ def main() -> None:
         if st.button("Music", key="nav_music"):
             st.session_state.current_page = "music"
             st.rerun()
-        st.divider()
-        theme_selector() # Theme bottom
-    # Main content - Load selected page
+    # Main content - Add search bar on top, then load page
+    st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
-    # Dark bottom nav like LinkedIn - Icons with labels, added Jobs
+    # Bottom nav - Curved dark with labels, red badge on Notifications
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
     with bottom_cols[0]:
@@ -171,12 +178,13 @@ def main() -> None:
             st.session_state.current_page = "social"
             st.rerun()
     with bottom_cols[3]:
+        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)  # Red badge
         if st.button("🔔\nNotifications", key="bottom_notifications"):
             st.session_state.current_page = "messages"
             st.rerun()
     with bottom_cols[4]:
         if st.button("💼\nJobs", key="bottom_jobs"):
-            st.session_state.current_page = "jobs"  # Add jobs.py if needed
+            st.session_state.current_page = "jobs"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 if __name__ == "__main__":
