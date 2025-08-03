@@ -251,7 +251,7 @@ def main() -> None:
 
 
     # Change this single value to set your sidebar width (px)
-    SIDEBAR_WIDTH = 100  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
+    SIDEBAR_WIDTH = 200  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
 
     st.markdown(f"""
     <style>
