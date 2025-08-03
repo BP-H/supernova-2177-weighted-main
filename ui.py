@@ -255,9 +255,9 @@ def main() -> None:
             st.session_state.current_page = "messages"
             st.rerun()
         if st.button("🗳 Voting", key="nav_voting"):
-            st.session_state.current_page = "messages"
+            st.session_state.current_page = "voting"
             st.rerun()
-        if st.button("👤 Profile", key="nav_voting"):
+        if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
             
