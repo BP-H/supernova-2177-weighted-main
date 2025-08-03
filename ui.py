@@ -73,11 +73,6 @@ def main() -> None:
     )
 
 
-    st.session_state.setdefault("theme", "dark")
-    st.session_state.setdefault("conversations", {})  # Fix NoneType
-    st.session_state.setdefault("current_page", "feed")  # Default page
-    initialize_theme(st.session_state["theme"])
-
     # Make Cloud think we're embedded (no reload) – harmless if unsupported
     try:
         st.query_params["embed"] = "true"   # Streamlit >= 1.32
@@ -88,11 +83,32 @@ def main() -> None:
             pass
 
     # CSS — keep header (for the arrow), hide toolbar items & footer, blend bg
+    st.markdown("""
+    <style>
+        /* Hide Streamlit's built-in sidebar page nav */
+        [data-testid="stSidebarNav"] { display: none !important; }
 
+        /* Hide app menu/footer if present */
+        #MainMenu { visibility: hidden !important; }
+        footer { visibility: hidden !important; }
 
+        /* Blend header so there's no grey strip */
+        header[data-testid="stHeader"],
+        header[data-testid="stHeader"] > div {
+            background: #0a0a0a !important;  /* match app bg */
+            box-shadow: none !important;
+            border: none !important;
+        }
 
-    
-    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
+        /* Keep the left sidebar toggle arrow visible/clickable */
+        header button[aria-label*="sidebar" i],
+        [data-testid="collapsedControl"] button {
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 1001 !important;
+        }
     st.markdown("""
     <style>
         /* Hide Streamlit's top navigation tabs */
