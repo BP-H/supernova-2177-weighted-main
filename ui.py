@@ -60,35 +60,45 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")
     initialize_theme(st.session_state["theme"])
 
-    # Enhanced CSS: Sticky sidebar/header, fixed bottom nav with padding, better alignment with flex/grid, pink accents
+    # CSS: Left-aligned text, ellipsis for long text, modern spacing/shadows, sticky sidebar with no overflow issues
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;}
-            [data-testid="stSidebar"] { position: sticky; top: 0; height: 100vh; overflow-y: auto; background-color: #18181b; color: white; border-radius: 10px; padding: 20px; margin: 10px; width: 300px; }
-            .stSidebar > div { display: flex; flex-direction: column; align-items: center; text-align: center; }
-            .stSidebar hr { border-color: #333; width: 80%; }
-            .stSidebar button { background-color: rgba(255,255,255,0.05); color: white; border-radius: 20px; padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; }
-            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); box-shadow: 0 0 5px #ff1493; }
+            [data-testid="stSidebar"] {
+                position: sticky; top: 0; height: 100vh; overflow-y: auto; background-color: #18181b; color: white; 
+                border-radius: 10px; padding: 20px; margin: 10px; width: 300px; 
+            }
+            .stSidebar > div { display: flex; flex-direction: column; align-items: flex-start; text-align: left !important; }
+            .stSidebar subheader, .stSidebar caption, .stSidebar button { text-align: left !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+            .stSidebar button { background-color: rgba(255,255,255,0.05); color: white; border-radius: 20px; padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); box-shadow: 0 0 5px #ff1493, 0 4px 8px rgba(0,0,0,0.3); }
             .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #0a0a0a; padding: 5px 0; display: flex; justify-content: space-around; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); border-top-left-radius: 20px; border-top-right-radius: 20px; }
-            .bottom-nav .stButton > button { font-size: 12px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; }
+            .bottom-nav .stButton > button { font-size: 12px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .bottom-nav button:hover { color: #ff1493; }
             .bottom-nav .badge { background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px; }
             .stApp { background-color: #0a0a0a; color: white; }
-            .block-container { padding-bottom: 80px !important; } /* Prevent overlap with bottom nav */
-            .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s; display: grid; grid-template-columns: 0.15fr 0.85fr; align-items: start; }
+            .block-container { padding-bottom: 80px !important; padding-left: 20px; padding-right: 20px; }
+            .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s; display: flex; flex-direction: column; align-items: flex-start; }
             .content-card:hover { border: 1px solid #ff1493; }
-            [data-testid="stTextInput"] { background-color: #282828; border-radius: 20px; padding: 8px; }
-            @media (max-width: 768px) { .bottom-nav { padding: 2px 0; } .bottom-nav .stButton > button { font-size: 10px; padding: 1px 2px; } .content-card { grid-template-columns: 1fr; } }
+            [data-testid="stTextInput"] { background-color: #282828; border-radius: 20px; padding: 8px; width: 100%; }
+            @media (max-width: 768px) { 
+                .stSidebar { width: 100%; margin: 0; border-radius: 0; }
+                .content-card { flex-direction: column; align-items: center; text-align: center; }
+                .bottom-nav { padding: 2px 0; } 
+                .bottom-nav .stButton > button { font-size: 10px; padding: 1px 2px; }
+            }
         </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar: Supernova block at very top, then profile pic, details aligned center, nav in columns
+    # Sidebar: Supernova at top left-aligned, profile pic below, all text left-aligned, ellipsis for long text
     with st.sidebar:
         st.markdown("""
-            <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="50" fill="#FF00FF"/>
-                <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
-            </svg>
+            <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 10px;">
+                <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; overflow: hidden;">
+                    <rect width="200" height="50" fill="#FF00FF"/>
+                    <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
+                </svg>
+            </div>
         """, unsafe_allow_html=True)
         st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100)
         st.subheader("taha gungor")
@@ -170,7 +180,7 @@ def main() -> None:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # JS for better sticky/scroll handling (optional, if CSS insufficient)
+    # JS for enhanced sticky and alignment
     st.components.v1.html("""
         <script>
             const sidebar = parent.document.querySelector('[data-testid="stSidebar"]');
@@ -179,15 +189,27 @@ def main() -> None:
                 sidebar.style.top = '0';
                 sidebar.style.height = '100vh';
                 sidebar.style.overflowY = 'auto';
+                const elements = sidebar.querySelectorAll('p, caption, button, subheader');
+                elements.forEach(el => {
+                    el.style.textAlign = 'left';
+                    el.style.whiteSpace = 'nowrap';
+                    el.style.overflow = 'hidden';
+                    el.style.textOverflow = 'ellipsis';
+                    el.style.maxWidth = '100%';
+                });
             }
             const bottomNav = parent.document.querySelector('.bottom-nav');
             if (bottomNav) {
-                bottomNav.style.position = 'fixed';
-                bottomNav.style.bottom = '0';
+                bottomNav.style.display = 'flex';
+                bottomNav.style.flexDirection = 'row';
+                bottomNav.style.justifyContent = 'space-around';
             }
             const mainContent = parent.document.querySelector('.block-container');
             if (mainContent) {
                 mainContent.style.paddingBottom = '80px';
+                mainContent.style.display = 'flex';
+                mainContent.style.flexDirection = 'column';
+                mainContent.style.alignItems = 'flex-start';
             }
         </script>
     """, height=0)
