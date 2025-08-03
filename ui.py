@@ -57,7 +57,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
-    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav
+    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav aligned like LinkedIn
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
@@ -79,14 +79,15 @@ def main() -> None:
                 left: 0;
                 width: 100%;
                 background-color: #0a0a0a; /* Dark black */
-                padding: 10px;
+                padding: 8px 0; /* Smaller padding for alignment */
                 display: flex;
                 justify-content: space-around;
                 z-index: 100;
                 box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
                 border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
             }
-            .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 16px; padding: 5px; display: flex; flex-direction: column; align-items: center;}
+            .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 12px; /* Smaller labels */ padding: 2px 0; display: flex; flex-direction: column; align-items: center; min-width: 60px;} /* Even spacing like LinkedIn */
+            .bottom-nav button .stButton > button {font-size: 20px; /* Icons size */ margin-bottom: 2px;} /* Icon above label */
             .bottom-nav button:hover {color: #ff1493;} /* Pink hover */
             .bottom-nav .badge {background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;} /* Pink badge */
             .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
@@ -103,13 +104,7 @@ def main() -> None:
     """, unsafe_allow_html=True)
     # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
     with st.sidebar:
-        # Profile top with avatar and SVG logo
-        st.markdown("""
-            <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="50" fill="#FF00FF"/>
-                <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
-            </svg>
-        """, unsafe_allow_html=True)
+        # Profile top with avatar
         st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
         st.subheader("taha gungor")
         st.caption("ceo / accessAI_tech")
@@ -171,7 +166,7 @@ def main() -> None:
     # Main content - Add search bar on top, then load page
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
-    # Bottom nav - Curved dark with labels, pink badge on Notifications
+    # Bottom nav - Curved dark with labels aligned down like LinkedIn, pink badge on Notifications
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
     with bottom_cols[0]:
