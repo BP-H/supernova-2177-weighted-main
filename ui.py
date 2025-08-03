@@ -203,7 +203,7 @@ def main() -> None:
             """, unsafe_allow_html=True)
         
         # Profile pic (circular via CSS)
-        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100)
+        st.image("assets/profile_pic.png", width=100) 
         
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
