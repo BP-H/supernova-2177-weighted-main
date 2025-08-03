@@ -30,8 +30,8 @@ def load_page(page_name: str):
             module_path = candidate
             break
     if not module_path:
-        st.error(f"Page missing: {page_name}.py not found.")
-        st.write(f"Placeholder for {page_name.capitalize()}.")
+        st.error(f"Page missing: {page_name}.py not found - add it to pages/.")
+        st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -43,7 +43,7 @@ def load_page(page_name: str):
             module.render()
         else:
             st.warning(f"No main/render in {page_name}.py - showing placeholder.")
-            st.write(f"Placeholder for {page_name.capitalize()}.")
+            st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
@@ -59,9 +59,10 @@ def main() -> None:
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     initialize_theme(st.session_state["theme"])
 
-    # CSS for dark gray (#1a1a1a background, white text, blue #4f8bf9 accents/hover)
+    # CSS for dark gray (#1a1a1a background, white text, blue #4f8bf9 accents/hover), hide old sidebar
     st.markdown("""
         <style>
+            [data-testid="stSidebarNav"] {display: none !important;}  # Hide old default sidebar
             [data-testid="stSidebar"] {
                 background-color: #1a1a1a;  # Dark gray
                 color: white;
