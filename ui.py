@@ -186,7 +186,7 @@ def main() -> None:
         [data-testid="stTextInput"] input {
             background-color: transparent !important;
             color: white !important;
-            padding-left: 10px;
+            padding-left: 3px;
         }
         
         /* Mobile responsiveness */
@@ -210,7 +210,7 @@ def main() -> None:
         )
 
         # Clickable Logo - navigates to feed
-        if st.button("💫supernNova_2177💫", use_container_width=True):
+        if st.button("💫 sN_2177 💫", use_container_width=True):
             # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
