@@ -210,7 +210,7 @@ def main() -> None:
         )
 
         # Clickable Logo - navigates to feed
-        if st.button("✨ supernNova", use_container_width=True):
+        if st.button("💫supernNova_2177💫", use_container_width=True):
             # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
@@ -252,14 +252,10 @@ def main() -> None:
             st.session_state.current_page = "enter_metaverse"
             st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
-
-        
-        # Settings clickable with theme nearby
-        if st.button("⚙️ Settings", key="nav_settings"):
-            st.session_state.current_page = "settings"
-            st.rerun()
-        theme_selector()
         st.divider()
+        
+
+
         
         # Navigation - small shaded buttons
         if st.button("📰 Feed", key="nav_feed"):
@@ -274,7 +270,12 @@ def main() -> None:
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
-        # Add other navigation buttons as needed...
+            
+        st.divider()
+        if st.button("⚙️ Settings", key="nav_settings"):
+            st.session_state.current_page = "settings"
+            st.rerun()
+        theme_selector()
         
     # Main content area - Load selected page or show search results
     with st.container():
