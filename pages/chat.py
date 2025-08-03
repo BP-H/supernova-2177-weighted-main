@@ -1,24 +1,21 @@
-# Universal template for all page files in the 'pages/' directory.
-# Example filename: pages/feed.py
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""Thin wrapper for the Profile page."""
 
-import streamlit as st
-from pathlib import Path
+from __future__ import annotations
 
-def main():
-    """
-    Main function for this page.
-    """
-    # Automatically display the page title from the filename.
-    # e.g., 'video_chat.py' becomes 'Video Chat'
-    page_title = Path(__file__).stem.replace('_', ' ').title()
-    st.header(page_title)
-    
-    # --- ADD YOUR PAGE-SPECIFIC UI AND LOGIC BELOW ---
-    # This is where you will build the actual content for each page.
-    
-    st.write(f"Build out the {page_title} page here.")
+from transcendental_resonance_frontend.pages import chat as real_page
 
 
-# This ensures the main function is called when the page is loaded.
+def main() -> None:
+    real_page.main()
+
+
+def render() -> None:
+    real_page.main()
+
+
+
 if __name__ == "__main__":
     main()
