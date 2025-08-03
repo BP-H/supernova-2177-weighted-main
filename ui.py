@@ -74,20 +74,20 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
+    # Fixed CSS - keep header (for sidebar arrow), hide only cloud/tool bits
     st.markdown("""
     <style>
-        /* ===== remove the Streamlit/cloud top header only ===== */
-        header[data-testid="stHeader"] { display: none !important; }   /* Streamlit header */
-        div[data-testid="stToolbar"] { display: none !important; }     /* Share/star/pencil/GitHub bar (cloud) */
-        div[data-testid="stDecoration"] { display: none !important; }  /* thin color strip on very top */
+        /* ===== keep header so the sidebar toggle arrow remains ===== */
+        /* hide only the cloud toolbar + badges + menus */
+        div[data-testid="stToolbar"] { display: none !important; }     /* share/star/pencil/GitHub bar */
+        div[data-testid="stDecoration"] { display: none !important; }  /* thin top strip */
         #MainMenu { visibility: hidden !important; }                   /* hamburger menu */
         footer { visibility: hidden !important; }                      /* default footer */
-        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; } /* Manage app badge */
+        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; } /* manage app badge */
 
-        /* Hide Streamlit's sidebar nav */
+        /* Hide Streamlit's default sidebar page nav (you use a custom sidebar) */
         [data-testid="stSidebarNav"] { display: none !important; }
-        
+
         /* STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
@@ -102,7 +102,7 @@ def main() -> None:
             width: 190px;
             z-index: 98;
         }
-        
+
         /* LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
         [data-testid="stSidebar"] .stButton,
@@ -110,35 +110,35 @@ def main() -> None:
         [data-testid="stSidebar"] > div {
             text-align: left !important;
         }
-        
-        /* SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
+
+        /* SIDEBAR BUTTONS */
         [data-testid="stSidebar"] button {
-            background-color: #18181b !important; /* Match sidebar bg for invisibility */
+            background-color: #18181b !important;
             color: white !important;
-            padding: 2px 5px !important;  /* 8-12 */
+            padding: 2px 5px !important;
             margin: 3px 0 !important;
             width: 100% !important;
-            height: 30px !important; /* Fixed height for uniformity */
+            height: 30px !important;
             border: none !important;
             border-radius: 8px !important;
             font-size: 14px !important;
             display: flex !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            white-space: nowrap !important; /* Prevent text wrapping */
+            white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        
-        /* Apply style on hover AND on focus, and remove the default focus outline */
+
+        /* Hover/focus */
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   /* 255,20,147,0.3 */
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
             outline: none !important;
         }
-        
-        /* Special style for the logo button to make it look like a header */
+
+        /* Logo-style sidebar button */
         [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
             font-size: 28px !important;
             font-weight: bold !important;
@@ -148,9 +148,9 @@ def main() -> None:
             height: auto !important;
         }
         [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
-            box-shadow: none !important; /* Remove glow from logo hover */
+            box-shadow: none !important;
         }
-        
+
         /* MAIN CONTENT AREA */
         .stApp {
             background-color: #0a0a0a !important;
@@ -160,7 +160,7 @@ def main() -> None:
             padding-top: 20px !important;
             padding-bottom: 90px !important;
         }
-        
+
         /* Content cards */
         .content-card {
             border: 1px solid #333;
@@ -168,23 +168,23 @@ def main() -> None:
             padding: 16px;
             margin-bottom: 16px;
             transition: border 0.2s;
-            color: white !important; /* Ensure text visible */
+            color: white !important;
         }
         .content-card:hover {
             border: 1px solid #ff1493;
         }
-        
+
         /* Metrics text visible */
         [data-testid="stMetricLabel"] { color: white !important; }
         [data-testid="stMetricValue"] { color: white !important; }
-        
+
         /* Profile pic circular */
         [data-testid="stSidebar"] img {
             border-radius: 50% !important;
             margin: 0 auto !important;
             display: block !important;
         }
-        
+
         /* Modern Search bar styling */
         [data-testid="stTextInput"] > div {
             background-color: #28282b !important;
@@ -196,7 +196,7 @@ def main() -> None:
             color: white !important;
             padding-left: 10px;
         }
-        
+
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             [data-testid="stSidebar"] button {
@@ -223,10 +223,10 @@ def main() -> None:
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
             st.rerun()
-        
+
         # Profile pic (circular via CSS)
         st.image("assets/profile_pic.png", width=100)
-        
+
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / will = ...")
@@ -236,7 +236,7 @@ def main() -> None:
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
-        
+
         # Manage pages with logical logos
         if st.button("🏠 Test Tech", key="manage_test_tech"):
             st.session_state.current_page = "test_tech"
@@ -249,6 +249,7 @@ def main() -> None:
             st.rerun()
         if st.button("🖼️ Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
+
         st.divider()
 
         # Navigation - small shaded buttons
@@ -267,9 +268,9 @@ def main() -> None:
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
-            
+
         st.divider()
-        
+
         # Enter Metaverse (clickable)
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
@@ -288,7 +289,7 @@ def main() -> None:
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
-        
+
     # Main content area - Load selected page or show search results
     with st.container():
         # Prioritize search results over page navigation
