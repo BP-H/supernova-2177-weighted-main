@@ -77,10 +77,18 @@ def main() -> None:
     # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
-        /* Hide Streamlit's top navigation tabs */
+        /* ===== remove the Streamlit/cloud top header only ===== */
+        header[data-testid="stHeader"] { display: none !important; }   /* Streamlit header */
+        div[data-testid="stToolbar"] { display: none !important; }     /* Share/star/pencil/GitHub bar (cloud) */
+        div[data-testid="stDecoration"] { display: none !important; }  /* thin color strip on very top */
+        #MainMenu { visibility: hidden !important; }                   /* hamburger menu */
+        footer { visibility: hidden !important; }                      /* default footer */
+        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; } /* Manage app badge */
+
+        /* Hide Streamlit's sidebar nav */
         [data-testid="stSidebarNav"] { display: none !important; }
         
-        /* 🔥 STICKY SIDEBAR */
+        /* STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
             top: 0 !important;
@@ -95,7 +103,7 @@ def main() -> None:
             z-index: 98;
         }
         
-        /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
+        /* LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
         [data-testid="stSidebar"] .stButton,
         [data-testid="stSidebar"] .stSelectbox,
@@ -103,11 +111,11 @@ def main() -> None:
             text-align: left !important;
         }
         
-        /* 🔥 SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
+        /* SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 2px 5px !important;  #8-12
+            padding: 2px 5px !important;  /* 8-12 */
             margin: 3px 0 !important;
             width: 100% !important;
             height: 30px !important; /* Fixed height for uniformity */
@@ -126,7 +134,7 @@ def main() -> None:
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   /* 255,20,147,0.3 */
             outline: none !important;
         }
         
@@ -143,7 +151,7 @@ def main() -> None:
             box-shadow: none !important; /* Remove glow from logo hover */
         }
         
-        /* 🔥 MAIN CONTENT AREA */
+        /* MAIN CONTENT AREA */
         .stApp {
             background-color: #0a0a0a !important;
             color: white !important;
@@ -243,7 +251,6 @@ def main() -> None:
             st.write("All pages (placeholder list).")
         st.divider()
 
-
         # Navigation - small shaded buttons
         if st.button("📰 Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
@@ -263,7 +270,6 @@ def main() -> None:
             
         st.divider()
         
-        
         # Enter Metaverse (clickable)
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
@@ -277,10 +283,6 @@ def main() -> None:
             st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
         st.divider()
-        
-
-
-        
 
         if st.button("⚙️ Settings", key="nav_settings"):
             st.session_state.current_page = "settings"
@@ -302,7 +304,6 @@ def main() -> None:
             st.subheader("Example Profile Result")
             st.write("**Profile:** artist_dev")
             st.write("Software developer and digital artist.")
-
         else:
             # Load the selected page if there is no active search
             load_page(st.session_state.current_page)
