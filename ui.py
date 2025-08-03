@@ -234,47 +234,6 @@ def main() -> None:
 
 
 
-    # JS safety net: hide Cloud toolbar & badges (without touching the arrow)
-    components.html("""
-    <script>
-    (function(){
-      function keepArrow(){
-        const t = document.querySelector('[data-testid="collapsedControl"] button')
-              || document.querySelector('header button[aria-label*="sidebar" i]');
-        if (t){
-          t.style.display='inline-flex';
-          t.style.visibility='visible';
-          t.style.opacity='1';
-          t.style.pointerEvents='auto';
-          t.style.zIndex='1001';
-        }
-      }
-      function hideTop(){
-        const sels = [
-          /* Cloud/toolbar bits commonly injected */
-          '[data-testid="stToolbar"]',
-          '[data-testid="stStatusWidget"]',
-          'header [data-testid*="Toolbar"]',
-          'header [title*="Share" i]',
-          'header [aria-label*="Share" i]',
-          'header [aria-label*="Deploy" i]',
-          'header [aria-label*="GitHub" i]',
-          'header [aria-label*="Record" i]'
-        ];
-        sels.forEach(sel => document.querySelectorAll(sel).forEach(el => el.style.display='none'));
-        // Blend header background
-        const hdr = document.querySelector('header[data-testid="stHeader"]');
-        if (hdr){ hdr.style.background='#0a0a0a'; }
-        const hdrDiv = document.querySelector('header[data-testid="stHeader"] > div');
-        if (hdrDiv){ hdrDiv.style.background='#0a0a0a'; hdrDiv.style.boxShadow='none'; }
-        keepArrow();
-      }
-      new MutationObserver(hideTop).observe(document.body,{subtree:true,childList:true,attributes:true});
-      hideTop();
-    })();
-    </script>
-    """, height=0)
-
 
 
     
