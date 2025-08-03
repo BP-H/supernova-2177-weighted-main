@@ -103,7 +103,13 @@ def main() -> None:
     """, unsafe_allow_html=True)
     # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
     with st.sidebar:
-        # Profile top with avatar
+        # Profile top with avatar and SVG logo
+        st.markdown("""
+            <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="50" fill="#FF00FF"/>
+                <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
+            </svg>
+        """, unsafe_allow_html=True)
         st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
         st.subheader("taha gungor")
         st.caption("ceo / accessAI_tech")
