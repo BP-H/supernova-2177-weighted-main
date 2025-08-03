@@ -317,9 +317,17 @@ def main() -> None:
         if st.button("AI_assist", key="nav_ai_assist"):
             st.session_state.current_page = "ai_assist"
             st.rerun()
-        if st.button("Login", key="login"):
+        if st.button("Animate_Gaussion", key="nav_animate_gaussion"):
+            st.session_state.current_page = "animate_gaussion"
+            st.rerun()
+        if st.button("Login", key="nav_login"):
             st.session_state.current_page = "login"
             st.rerun()
+
+
+
+
+    transcendental_resonance_frontend/pages/animate_gaussion.py
 
 
     # 🔥 STICKY SEARCH BAR - Wrapped in custom container
