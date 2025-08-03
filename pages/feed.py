@@ -27,7 +27,7 @@ def generate_post_data(num_posts=5):
         })
     return posts
 
-# UI Rendering for a single post (with uniform button sizes/spacing)
+# UI Rendering for a single post (with uniform button sizes/spacing, pink/black theme integration)
 def render_post(post):
     """Renders a single post card."""
     st.markdown('<div class="content-card">', unsafe_allow_html=True)
