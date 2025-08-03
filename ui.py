@@ -88,8 +88,8 @@ def main() -> None:
             .main { position: relative; }
             .sticky-search { position: fixed; top: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; }
             .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; border-top-left-radius: 20px; border-top-right-radius: 20px; }
-            .stSidebar button { background-color: transparent; color: #fff; /* White text */ border-radius: 8px; /* More filleted corners */ padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; transition: background-color 0.3s; } /* Colorless, left-aligned text */
-            .stSidebar button:hover { background-color: rgba(200,200,200,0.2); /* Softer brighter grey on hover, no border */ color: #fff; }
+            .stSidebar button { background-color: transparent; color: #fff; /* White text */ border-radius: 12px; /* More filleted corners */ padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; transition: background-color 0.3s; } /* Colorless, left-aligned text */
+            .stSidebar button:hover { background-color: rgba(200,200,200,0.3); /* Softer brighter grey on hover, no border */ color: #fff; }
             [data-testid="stSidebar"] { background-color: #18181b; color: #fff; }
             .stApp { background-color: #0a0a0a; color: #fff; }
             .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
@@ -203,3 +203,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+```
