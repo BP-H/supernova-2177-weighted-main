@@ -5,7 +5,7 @@ def main():
     st.markdown("### Enter Metaverse")
     st.write("Mathematically sucked into a supernNova_2177 void – stay tuned for 3D immersion!")
 
-    # Embed epilepsy warning and crazy Three.js 3D simulation
+    # Embed epilepsy warning and crazier Three.js 3D simulation (level 33: ultra fast, epileptic flashing, wild colors, wormholes)
     three_js_code = """
     <div id="warning" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; text-align: center; z-index: 2;">
         <p>WARNING: This simulation contains flashing lights and rapid movements that may trigger epilepsy or seizures.</p>
@@ -38,86 +38,99 @@ def main():
             container.appendChild(renderer.domElement);
             scene.background = new THREE.Color(0x000000); // Black void
 
-            // Crazy colorful particles (dots symbolizing people, varying sizes/colors)
-            const particles = 10000;  // More for craziness
+            // Crazier colorful particles (more, varying sizes/colors, wormhole pulls)
+            const particles = 20000;  // Doubled for intensity
             const geometry = new THREE.BufferGeometry();
             const positions = new Float32Array(particles * 3);
             const colors = new Float32Array(particles * 3);
             const sizes = new Float32Array(particles);  // Varying sizes
 
             for (let i = 0; i < particles * 3; i += 3) {
-                positions[i] = (Math.random() - 0.5) * 2000;
-                positions[i+1] = (Math.random() - 0.5) * 2000;
-                positions[i+2] = (Math.random() - 0.5) * 2000;
+                positions[i] = (Math.random() - 0.5) * 3000;
+                positions[i+1] = (Math.random() - 0.5) * 3000;
+                positions[i+2] = (Math.random() - 0.5) * 3000;
 
-                // Random vibrant colors
+                // Wild random colors
                 colors[i] = Math.random();
                 colors[i + 1] = Math.random();
                 colors[i + 2] = Math.random();
 
-                // Varying sizes (people dots)
-                sizes[i / 3] = Math.random() * 5 + 1;  // Sizes from 1 to 6
+                // Varying sizes (bigger range)
+                sizes[i / 3] = Math.random() * 10 + 1;  // Sizes from 1 to 11
             }
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
             geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
             const material = new THREE.PointsMaterial({
-                size: 2,  // Base size
+                size: 3,  // Larger base
                 vertexColors: true,
                 sizeAttenuation: true,
                 transparent: true,
-                blending: THREE.AdditiveBlending  // For glowing effect
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending  // Glowing
             });
 
             const stars = new THREE.Points(geometry, material);
             scene.add(stars);
 
-            // Central black hole/wormhole (glowing sphere pulling particles)
-            const blackHoleGeometry = new THREE.SphereGeometry(5, 32, 32);
-            const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
-            scene.add(blackHole);
+            // Multiple wormholes/black holes (randomly placed, pulling particles chaotically)
+            const wormholes = [];
+            for (let j = 0; j < 5; j++) {  // 5 wormholes for chaos
+                const whGeometry = new THREE.SphereGeometry(10, 32, 32);
+                const whMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                const wormhole = new THREE.Mesh(whGeometry, whMaterial);
+                wormhole.position.set((Math.random() - 0.5) * 1000, (Math.random() - 0.5) * 1000, (Math.random() - 0.5) * 1000);
+                scene.add(wormhole);
+                wormholes.push(wormhole);
+            }
 
             camera.position.z = 500;
 
-            let time = 0;  // For epileptic flashing/pulsing
+            let time = 0;  // For ultra-fast pulsing
 
             function animate() {
                 requestAnimationFrame(animate);
-                time += 0.05;  // Faster time step for craziness
+                time += 0.1;  // Faster time step for level 33 craziness
 
-                // Update positions: Suck towards center (wormhole effect), fast
+                // Update positions: Multi-wormhole pulls (chaotic sucking), ultra fast
                 const positions = stars.geometry.attributes.position.array;
+                const colors = stars.geometry.attributes.color.array;
                 const sizes = stars.geometry.attributes.size.array;
                 for (let i = 0; i < particles * 3; i += 3) {
-                    const dx = positions[i];
-                    const dy = positions[i + 1];
-                    const dz = positions[i + 2];
+                    let dx = positions[i];
+                    let dy = positions[i + 1];
+                    let dz = positions[i + 2];
+
+                    // Pull to random wormhole
+                    const wh = wormholes[Math.floor(Math.random() * wormholes.length)];
+                    dx -= wh.position.x;
+                    dy -= wh.position.y;
+                    dz -= wh.position.z;
                     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                    if (dist > 10) {  // Pull if not too close
-                        positions[i] -= dx / dist * 0.1;  // Faster pull
-                        positions[i + 1] -= dy / dist * 0.1;
-                        positions[i + 2] -= dz / dist * 0.1;
+                    if (dist > 20) {  // Fast pull
+                        positions[i] -= dx / dist * 0.2;  // Faster
+                        positions[i + 1] -= dy / dist * 0.2;
+                        positions[i + 2] -= dz / dist * 0.2;
                     } else {  // Respawn if sucked in
-                        positions[i] = (Math.random() - 0.5) * 2000;
-                        positions[i + 1] = (Math.random() - 0.5) * 2000;
-                        positions[i + 2] = (Math.random() - 0.5) * 2000;
+                        positions[i] = (Math.random() - 0.5) * 3000;
+                        positions[i + 1] = (Math.random() - 0.5) * 3000;
+                        positions[i + 2] = (Math.random() - 0.5) * 3000;
                     }
 
-                    // Epileptic flashing: Random color changes and size pulsing
-                    colors[i] = Math.sin(time + i) * 0.5 + 0.5;
-                    colors[i + 1] = Math.cos(time + i * 0.5) * 0.5 + 0.5;
-                    colors[i + 2] = Math.sin(time + i * 0.3) * 0.5 + 0.5;
-                    sizes[i / 3] = Math.abs(Math.sin(time + i / 3)) * 5 + 1;  // Pulsing sizes
+                    // Epileptic flashing: Wild color shifts and size pulsing
+                    colors[i] = Math.sin(time * 2 + i) * 0.5 + 0.5;  // Faster sin
+                    colors[i + 1] = Math.cos(time * 3 + i * 0.5) * 0.5 + 0.5;
+                    colors[i + 2] = Math.sin(time * 4 + i * 0.3) * 0.5 + 0.5;
+                    sizes[i / 3] = Math.abs(Math.sin(time * 5 + i / 3)) * 10 + 1;  // Wilder pulsing
                 }
                 stars.geometry.attributes.position.needsUpdate = true;
                 stars.geometry.attributes.color.needsUpdate = true;
                 stars.geometry.attributes.size.needsUpdate = true;
 
-                // Fast rotation for chaos
-                stars.rotation.y += 0.01;  // Faster
+                // Ultra fast rotation/chaos
+                stars.rotation.y += 0.02;  // Faster
 
                 renderer.render(scene, camera);
             }
@@ -127,9 +140,13 @@ def main():
     """
     st.components.v1.html(three_js_code, height=500)
 
-    # VR SBS button (placeholder)
-    if st.button("VR SBS Mode", key="vr_sbs", help="Enter Side-by-Side VR mode (coming soon)"):
-        st.write("VR SBS activated – Imagine split-screen immersion into the supernNova_2177 void! (Placeholder)")
+    # VR SBS button (polished, bottom right)
+    st.markdown("""
+        <style>
+            .vr-button {position: fixed; bottom: 80px; right: 20px; z-index: 101;}
+        </style>
+    """, unsafe_allow_html=True)
+    st.button("VR SBS Mode", key="vr_sbs", help="Enter Side-by-Side VR mode (coming soon)")
 
 if __name__ == "__main__":
     main()
