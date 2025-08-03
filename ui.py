@@ -122,7 +122,7 @@ def main() -> None:
             text-overflow: ellipsis !important;
         }
         [data-testid="stSidebar"] button:hover {
-            background-color: #2a2a2e !important; /* Mid between bg (#18181b) and white (#fff) */
+            background-color: #F700FF !important; /* Mid between bg (#18181b) and white (#fff) */
             box-shadow: 0 0 5px rgba(255, 20, 147, 0.3) !important;
         }
         
