@@ -71,36 +71,27 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded"
     )
-    # --- Ensure Cloud top bar is gone: force first load with ?embed=true ---
-    try:
-        qp = st.query_params  # >= 1.32
-        ev = qp.get("embed")
-        is_embed = (ev == "true") or (isinstance(ev, list) and "true" in ev)
-    except Exception:
-        ev = st.experimental_get_query_params().get("embed", [])
-        is_embed = "true" in ev
-    if not is_embed:
-        components.html("""
-        <script>
-          (function(){
-            try{
-              const u = new URL(window.location);
-              if (u.searchParams.get('embed') !== 'true') {
-                u.searchParams.set('embed','true');
-                window.location.replace(u.toString());
-              }
-            }catch(e){}
-          })();
-        </script>
-        """, height=0)
-        st.stop()
-    # ----------------------------------------------------------------------
+
 
     st.session_state.setdefault("theme", "dark")
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
+    # Make Cloud think we're embedded (no reload) – harmless if unsupported
+    try:
+        st.query_params["embed"] = "true"   # Streamlit >= 1.32
+    except Exception:
+        try:
+            st.experimental_set_query_params(embed="true")  # older fallback
+        except Exception:
+            pass
+
+    # CSS — keep header (for the arrow), hide toolbar items & footer, blend bg
+
+
+
+    
     # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
