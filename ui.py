@@ -57,7 +57,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
-    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), sticky bottom nav with horizontal alignment
+    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav with horizontal alignment
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
@@ -78,28 +78,35 @@ def main() -> None:
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                background-color: #ff4500; /* Orange for universal below */
-                padding: 10px;
+                background-color: #0a0a0a; /* Dark black */
+                padding: 5px 0; /* Reduced padding for tighter look */
                 display: flex;
-                justify-content: space-between; /* Evenly spaced horizontally */
-                z-index: 1000; /* Ensure it stays on top */
+                flex-direction: row; /* Force horizontal */
+                justify-content: space-around;
+                z-index: 100;
                 box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
                 border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
             }
-            .bottom-nav button {
-                background: none;
-                border: none;
-                color: #a0a0a0;
-                cursor: pointer;
-                font-size: 16px;
-                padding: 5px;
+            .bottom-nav > div {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .bottom-nav .stButton {
+                flex: 1;
+                text-align: center;
+                min-width: 50px;
+            }
+            .bottom-nav .stButton > button {
+                width: 100%;
+                font-size: 12px;
+                padding: 2px 4px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                flex: 1; /* Equal width for each button */
-                margin: 0 2px; /* Small spacing between buttons */
             }
-            .bottom-nav button:hover {color: #ffffff;} /* White hover for contrast */
+            .bottom-nav button:hover {color: #ff1493;} /* Pink hover */
             .bottom-nav .badge {background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;} /* Pink badge */
             .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
             /* Add padding to main content to avoid overlap with bottom nav */
@@ -111,6 +118,16 @@ def main() -> None:
             .action-button:hover {background-color: #ff1493;}
             /* Search bar polish */
             [data-testid="stTextInput"] {background-color: #282828; border-radius: 20px; padding: 8px;}
+            /* Force horizontal on small screens */
+            @media (max-width: 768px) {
+                .bottom-nav {
+                    padding: 2px 0;
+                }
+                .bottom-nav .stButton > button {
+                    font-size: 10px;
+                    padding: 1px 2px;
+                }
+            }
         </style>
     """, unsafe_allow_html=True)
     # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
@@ -183,7 +200,7 @@ def main() -> None:
     # Main content - Add search bar on top, then load page
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
-    # Bottom nav - Sticky, orange, with labels in a single line
+    # Bottom nav - Curved dark with labels, pink badge on Notifications, horizontal alignment in line
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
     with bottom_cols[0]:
@@ -209,4 +226,4 @@ def main() -> None:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 if __name__ == "__main__":
-    main() 
+    main()
