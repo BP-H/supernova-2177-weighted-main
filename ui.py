@@ -247,6 +247,9 @@ def main() -> None:
         if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
             st.session_state.current_page = "enter_metaverse"
             st.rerun()
+        if st.button("🤖 Agents", key="nav_agents"):
+            st.session_state.current_page = "agents"
+            st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
         st.subheader("Premium features")
         
