@@ -2,7 +2,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Main Streamlit UI entry point for superNova_2177."""
+"""Main Streamlit UI entry point for supernNova_2177."""
 import sys
 from pathlib import Path
 import streamlit as st
@@ -46,10 +46,10 @@ def load_page(page_name: str):
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
-# Main - Dark theme like LinkedIn, modern buttons with opacity shading
+# Main - Dark theme with subtle pink polish (accents on hover/logos), modern buttons with opacity shading
 def main() -> None:
     st.set_page_config(
-        page_title="superNova_2177",
+        page_title="supernNova_2177",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -57,7 +57,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
-    # CSS updates: Uniform small buttons with 5% opacity shading, blue hover glow, curved bottom nav
+    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
@@ -72,7 +72,7 @@ def main() -> None:
             .stSidebar > div {text-align: left;} /* Align left for professional look */
             .stSidebar hr {border-color: #333;}
             .stSidebar button {background-color: rgba(255,255,255,0.05); /* 5% opacity shading */ color: white; border-radius: 20px; padding: 6px 12px; /* Smaller size */ margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px;} /* Modern non-90s */
-            .stSidebar button:hover {background-color: rgba(10,102,194,0.2); color: white; box-shadow: 0 0 5px #0a66c2;} /* Blue glow hover */
+            .stSidebar button:hover {background-color: rgba(255,20,147,0.2); color: white; box-shadow: 0 0 5px #ff1493;} /* Modern pink glow hover */
             .bottom-nav {
                 position: fixed;
                 bottom: 0;
@@ -87,36 +87,39 @@ def main() -> None:
                 border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
             }
             .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 16px; padding: 5px; display: flex; flex-direction: column; align-items: center;}
-            .bottom-nav button:hover {color: #0a66c2;}
-            .bottom-nav .badge {background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;}
+            .bottom-nav button:hover {color: #ff1493;} /* Pink hover */
+            .bottom-nav .badge {background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;} /* Pink badge */
             .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
             /* Add padding to main content to avoid overlap with bottom nav */
             .block-container {padding-bottom: 80px;}
-            /* Content card style for feed */
-            .content-card {background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px;}
+            /* Content card style for feed with subtle pink borders on hover */
+            .content-card {background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s;}
+            .content-card:hover {border: 1px solid #ff1493;}
             .action-button {background-color: #282828; color: white; border-radius: 20px; padding: 8px 16px; border: none; font-weight: bold;}
-            .action-button:hover {background-color: #0a66c2;}
+            .action-button:hover {background-color: #ff1493;}
+            /* Search bar polish */
+            [data-testid="stTextInput"] {background-color: #282828; border-radius: 20px; padding: 8px;}
         </style>
     """, unsafe_allow_html=True)
-    # Sidebar - LinkedIn-like, with better logos, new sections clickable
+    # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
     with st.sidebar:
         # Profile top with avatar
         st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
-        st.subheader("Taha Gungor")
-        st.caption("CEO / AccessAI.Tech")
-        st.caption("Artist / 0111 ≡ ...")
+        st.subheader("taha gungor")
+        st.caption("ceo / accessAI_tech")
+        st.caption("artist / 0111 ≡ ...")
         st.caption("New York, New York, United States")
-        st.caption("AccessAI.Tech")
+        st.caption("accessAI_tech")
         st.divider()
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
         # Manage pages with logical logos
         st.subheader("Manage pages")
-        if st.button("🔬 AccessAI.Tech", key="manage_accessai"):
+        if st.button("🔬 accessAI_tech", key="manage_accessai"):
             st.session_state.current_page = "accessai"
             st.rerun()
-        if st.button("🌌 supernova_2177", key="manage_supernova"):
+        if st.button("🌌 supernNova_2177", key="manage_supernova"):
             st.session_state.current_page = "supernova_2177"
             st.rerun()
         if st.button("✈️ GLOBALRUNWAY", key="manage_globalrunway"):
@@ -125,11 +128,11 @@ def main() -> None:
         if st.button("📂 Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
         st.divider()
-        # Replaced Puzzle Games with Enter Metaverse (clickable)
+        # Enter Metaverse (clickable)
         if st.button("🔮 Enter Metaverse", key="nav_metaverse"):
             st.session_state.current_page = "enter_metaverse"
             st.rerun()
-        st.caption("Mathematically sucked into a supernova void – stay tuned for 3D immersion!")
+        st.caption("Mathematically sucked into a supernNova_2177 void – stay tuned for 3D immersion!")
         st.subheader("Premium features")
         # Settings clickable with theme nearby
         if st.button("⚙️ Settings", key="nav_settings"):
@@ -162,7 +165,7 @@ def main() -> None:
     # Main content - Add search bar on top, then load page
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
-    # Bottom nav - Curved dark with labels, red badge on Notifications
+    # Bottom nav - Curved dark with labels, pink badge on Notifications
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
     with bottom_cols[0]:
@@ -178,7 +181,7 @@ def main() -> None:
             st.session_state.current_page = "social"
             st.rerun()
     with bottom_cols[3]:
-        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)  # Red badge
+        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)  # Pink badge
         if st.button("🔔\nNotifications", key="bottom_notifications"):
             st.session_state.current_page = "messages"
             st.rerun()
