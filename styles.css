@@ -1,0 +1,103 @@
+/* --- Base and Font Styles --- */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* --- Remove Streamlit's default padding on the main block --- */
+.st-emotion-cache-1y4p8pa {
+    padding: 0;
+}
+
+/* --- Main App Container --- */
+/* This targets the primary container Streamlit uses for the page content */
+[data-testid="stAppViewContainer"] > .main > div:first-child {
+    padding: 0; /* Remove default padding */
+}
+
+/* --- STICKY HEADER --- */
+div.main-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 2rem;
+    position: fixed;
+    top: 0;
+    left: 21rem; /* Adjust to be to the right of the sidebar */
+    right: 0;
+    z-index: 99;
+    height: 5rem;
+    display: flex;
+    align-items: center;
+}
+
+/* --- STICKY SIDEBAR --- */
+/* Targets Streamlit's main sidebar */
+[data-testid="stSidebar"] {
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    padding: 1rem;
+}
+
+/* --- MAIN CONTENT AREA --- */
+/* This is our custom container for the scrollable feed */
+div.main-content {
+    padding: 6rem 2rem 6rem 2rem; /* Top padding to not be hidden by header, bottom for footer */
+    margin-left: 21rem; /* Aligns content to the right of the sidebar */
+    width: calc(100% - 21rem); /* Ensures content doesn't go under the sidebar */
+}
+
+/* --- STICKY FOOTER / BOTTOM NAV --- */
+div.bottom-nav {
+    background-color: #212121;
+    border-top: 1px solid #333333;
+    padding: 5px 1rem;
+    position: fixed;
+    bottom: 0;
+    left: 21rem; /* Adjust to be to the right of the sidebar */
+    right: 0;
+    z-index: 99;
+    height: 4rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+}
+
+.bottom-nav .stButton > button {
+    background-color: transparent;
+    color: #ffffff;
+    border: none;
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+}
+
+.bottom-nav .stButton > button:hover {
+    color: #f06292; /* Pink hover effect */
+}
+
+/* --- FEED POST CARD STYLING --- */
+.content-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* --- NOTIFICATION BADGE --- */
+.badge-container {
+    position: relative;
+    display: inline-block;
+}
+
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    background: #e91e63; /* Pink badge */
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
