@@ -78,23 +78,6 @@ def main() -> None:
 
     # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
-    <style>
-        /* Hide Streamlit's built-in sidebar page nav and menu/footer */
-        [data-testid="stSidebarNav"] { display: none !important; }
-        #MainMenu { visibility: hidden !important; }
-        footer { visibility: hidden !important; }
-
-        /* If any cloud toolbar container is injected, hide it but keep the sidebar toggle visible */
-        header [data-testid*="Toolbar"],
-        header :is(div,nav,section)[class*="cloud"] { display: none !important; }
-        header button[aria-label*="sidebar" i],
-        [data-testid="collapsedControl"] button {
-            display: inline-flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 999 !important;
-        }
         
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
