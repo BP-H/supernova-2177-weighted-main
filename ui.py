@@ -65,6 +65,7 @@ def load_page(page_name: str):
         st.exception(e)
 
 # Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
+# Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
     st.set_page_config(
         page_title="supernNova_2177",
@@ -76,16 +77,7 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Make Cloud think we're embedded (no reload) – harmless if unsupported
-    try:
-        st.query_params["embed"] = "true"   # Streamlit >= 1.32
-    except Exception:
-        try:
-            st.experimental_set_query_params(embed="true")  # older fallback
-        except Exception:
-            pass
-
-    # CSS — keep header (for the arrow), hide toolbar items & footer, blend bg
+    # CSS — keep your layout; skin the arrow as avatar; hide Cloud toolbar; blend header
     st.markdown("""
     <style>
         /* Hide Streamlit's built-in sidebar page nav */
@@ -103,15 +95,41 @@ def main() -> None:
             border: none !important;
         }
 
-        /* Keep the left sidebar toggle arrow visible/clickable */
-        header button[aria-label*="sidebar" i],
-        [data-testid="collapsedControl"] button {
+        /* Keep the left sidebar toggle visible and turn it into a circular avatar */
+        [data-testid="collapsedControl"] button,
+        header button[aria-label*="sidebar" i]{
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            background-image: url('assets/profile_pic.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.14) !important;
             display: inline-flex !important;
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
             z-index: 1001 !important;
         }
+        /* Hide default chevrons inside the button */
+        [data-testid="collapsedControl"] button svg,
+        header button[aria-label*="sidebar" i] svg{
+            display: none !important;
+        }
+        /* Hover/focus ring for the avatar button */
+        [data-testid="collapsedControl"] button:hover,
+        [data-testid="collapsedControl"] button:focus,
+        header button[aria-label*="sidebar" i]:hover,
+        header button[aria-label*="sidebar" i]:focus{
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.35) !important;
+            outline: none !important;
+            transform: scale(1.02);
+        }
+
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
