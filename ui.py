@@ -65,7 +65,6 @@ def load_page(page_name: str):
         st.exception(e)
 
 # Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
-# Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
     st.set_page_config(
         page_title="supernNova_2177",
@@ -251,7 +250,29 @@ def main() -> None:
 
 
 
+    # Change this single value to set your sidebar width (px)
+    SIDEBAR_WIDTH = 100  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    st.markdown(f"""
+    <style>
+    /* Force the wider sidebar (outer container + inner wrapper) */
+    @media (min-width: 768px){{
+      [data-testid="stSidebar"]{{
+        min-width: {SIDEBAR_WIDTH}px !important;
+        max-width: {SIDEBAR_WIDTH}px !important;
+        width: {SIDEBAR_WIDTH}px !important;    /* overrides the earlier 200px */
+      }}
+      [data-testid="stSidebar"] > div {{
+        width: {SIDEBAR_WIDTH}px !important;     /* ensure inner container matches */
+      }}
+    }}
+
+    /* Optional: slight padding bump so buttons feel balanced on wider bars */
+    [data-testid="stSidebar"] button {{
+      padding: 4px 8px !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 
     
