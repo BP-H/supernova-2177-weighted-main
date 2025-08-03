@@ -314,6 +314,13 @@ def main() -> None:
         if st.button("Music", key="nav_music"):
             st.session_state.current_page = "music"
             st.rerun()
+        if st.button("AI_assist", key="nav_ai_assist"):
+            st.session_state.current_page = "ai_assist"
+            st.rerun()
+        if st.button("Login", key="login"):
+            st.session_state.current_page = "login"
+            st.rerun()
+
 
     # 🔥 STICKY SEARCH BAR - Wrapped in custom container
     st.markdown('<div class="search-container">', unsafe_allow_html=True)
