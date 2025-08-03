@@ -1,196 +1,200 @@
 # ui.py
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""Main Streamlit UI entry point for supernNova_2177."""
+import sys
+from pathlib import Path
 import streamlit as st
-import numpy as np
-
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="supernNova_2177",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# --- CSS for the full sticky layout ---
-# This single block of CSS creates the fixed sidebar, sticky top search bar, and fixed bottom navigation.
-st.markdown("""
-<style>
-    /* 1. HIDE STREAMLIT DEFAULTS */
-    /* Hide the hamburger menu and the top-right toolbar */
-    [data-testid="stToolbar"], [data-testid="stHeader"] {
-        display: none !important;
-    }
-    /* Hide the multi-page navigation that Streamlit tries to add */
-    [data-testid="stSidebarNav"] {
-        display: none !important;
-    }
-
-    /* 2. STICKY/FIXED ELEMENTS */
-    /* Make the sidebar truly fixed to the viewport */
-    [data-testid="stSidebar"] {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: 21rem; /* Set a fixed width */
-        background-color: #18181b;
-        border-right: 1px solid #333;
-        padding: 1rem;
-    }
-
-    /* Make the bottom nav truly fixed to the viewport */
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0; /* Align with the full page width */
-        right: 0;
-        background-color: #18181b;
-        border-top: 1px solid #333;
-        padding: 0.5rem;
-        display: flex;
-        justify-content: space-around;
-        z-index: 99;
-    }
-    
-    /* Make the search bar sticky to the top of the main content area */
-    .search-container {
-        position: sticky;
-        top: 0;
-        background-color: #0e1117; /* Match app background */
-        padding: 1rem 0;
-        z-index: 98;
-        border-bottom: 1px solid #333;
-    }
-
-    /* 3. LAYOUT ADJUSTMENTS */
-    /* Push the main content to the right to avoid the fixed sidebar */
-    .main .block-container {
-        margin-left: 21rem;
-        padding-top: 0 !important;
-        padding-bottom: 5rem !important; /* Add space to not be hidden by the bottom nav */
-    }
-    
-    /* 4. SIDEBAR & BUTTON STYLING */
-    [data-testid="stSidebar"] .stButton button {
-        background-color: rgba(255,255,255,0.05);
-        color: white;
-        border: none;
-        text-align: left;
-    }
-    [data-testid="stSidebar"] .stButton button:hover {
-        background-color: rgba(255,20,147,0.2);
-        color: #ff1493;
-    }
-
-    /* Center the sidebar logo and image */
-    [data-testid="stSidebar"] [data-testid="stImage"],
-    .sidebar-logo {
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-    }
-    .sidebar-logo {
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.5rem;
-        color: #ff1493;
-        margin-bottom: 1rem;
-    }
-
-    /* 5. MOBILE RESPONSIVENESS */
-    @media (max-width: 768px) {
-        /* On mobile, hide the sidebar and let main content take full width */
-        [data-testid="stSidebar"] {
-            display: none;
-        }
-        .main .block-container {
-            margin-left: 0rem;
-        }
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# --- Reusable Page Components ---
-# Instead of a complex loader, we use simple functions for each "page".
-def render_feed():
-    """Renders the main content feed."""
-    st.title("Feed")
-    
-    # --- Sticky Search Bar ---
-    with st.container():
-        st.markdown('<div class="search-container">', unsafe_allow_html=True)
-        st.text_input("Search", placeholder="Search posts, users...", label_visibility="collapsed")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # --- Post Loop ---
-    for i in range(5): # Create 5 dummy posts
-        st.subheader(f"User {i+1}")
-        st.write("Cost performance entire set. Democrat throw along individual stay. Performance table able become or mean too on.")
-        st.image("https://via.placeholder.com/600x300.png?text=Post+Image", use_column_width=True)
-        cols = st.columns(4)
-        cols[0].button("Like 👍", key=f"like_{i}", use_container_width=True)
-        cols[1].button("Comment 💬", key=f"comment_{i}", use_container_width=True)
-        cols[2].button("Repost 🔁", key=f"repost_{i}", use_container_width=True)
-        cols[3].button("Send ✉️", key=f"send_{i}", use_container_width=True)
+import importlib.util
+import numpy as np # For random low stats
+import warnings
+# Suppress potential deprecation warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+# Path for Cloud/local
+sys.path.insert(0, str(Path("/mount/src") if 'mount' in str(Path(__file__)) else Path(__file__).parent))
+# Imports
+try:
+    from streamlit_helpers import alert, header, theme_selector, safe_container
+    from frontend.theme import initialize_theme
+except ImportError as e:
+    st.error(f"Critical import failed: {e}")
+    st.stop()
+# Loader with better fallback for missing pages
+def load_page(page_name: str):
+    base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
+    module_path = None
+    for base in base_paths:
+        candidate = base / f"{page_name}.py"
+        if candidate.exists():
+            module_path = candidate
+            break
+    if not module_path:
+        st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
+        return
+    try:
+        spec = importlib.util.spec_from_file_location(page_name, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if hasattr(module, 'main'):
+            module.main()
+        elif hasattr(module, 'render'):
+            module.render()
+        else:
+            st.warning(f"No main/render in {page_name}.py - showing placeholder.")
+            st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py).")
+    except Exception as e:
+        st.error(f"Error loading {page_name}: {e}")
+        st.exception(e)
+# Main - Dark theme with subtle pink polish (accents on hover/logos), modern buttons with opacity shading
+def main() -> None:
+    st.set_page_config(
+        page_title="supernNova_2177",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    st.session_state.setdefault("theme", "dark")
+    st.session_state.setdefault("conversations", {}) # Fix NoneType
+    st.session_state.setdefault("current_page", "feed") # Default page
+    initialize_theme(st.session_state["theme"])
+    # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav
+    st.markdown("""
+        <style>
+            [data-testid="stSidebarNav"] {display: none !important;} /* Hide old default sidebar */
+            [data-testid="stSidebar"] {
+                background-color: #18181b; /* Dark gray like LinkedIn */
+                color: white;
+                border-radius: 10px; /* Square curve */
+                padding: 20px;
+                margin: 10px;
+                width: 300px; /* Wider */
+            }
+            .stSidebar > div {text-align: left;} /* Align left for professional look */
+            .stSidebar hr {border-color: #333;}
+            .stSidebar button {background-color: rgba(255,255,255,0.05); /* 5% opacity shading */ color: white; border-radius: 20px; padding: 6px 12px; /* Smaller size */ margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px;} /* Modern non-90s */
+            .stSidebar button:hover {background-color: rgba(255,20,147,0.2); color: white; box-shadow: 0 0 5px #ff1493;} /* Modern pink glow hover */
+            .bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background-color: #0a0a0a; /* Dark black */
+                padding: 10px;
+                display: flex;
+                justify-content: space-around;
+                z-index: 100;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+                border-top-left-radius: 20px; border-top-right-radius: 20px; /* Curved */
+            }
+            .bottom-nav button {background: none; border: none; color: #a0a0a0; cursor: pointer; font-size: 16px; padding: 5px; display: flex; flex-direction: column; align-items: center;}
+            .bottom-nav button:hover {color: #ff1493;} /* Pink hover */
+            .bottom-nav .badge {background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px;} /* Pink badge */
+            .stApp {background-color: #0a0a0a; color: white;} /* Main dark */
+            /* Add padding to main content to avoid overlap with bottom nav */
+            .block-container {padding-bottom: 80px;}
+            /* Content card style for feed with subtle pink borders on hover */
+            .content-card {background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s;}
+            .content-card:hover {border: 1px solid #ff1493;}
+            .action-button {background-color: #282828; color: white; border-radius: 20px; padding: 8px 16px; border: none; font-weight: bold;}
+            .action-button:hover {background-color: #ff1493;}
+            /* Search bar polish */
+            [data-testid="stTextInput"] {background-color: #282828; border-radius: 20px; padding: 8px;}
+        </style>
+    """, unsafe_allow_html=True)
+    # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
+    with st.sidebar:
+        # Profile top with avatar and SVG logo
+        st.markdown("""
+            <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="50" fill="#FF00FF"/>
+                <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
+            </svg>
+        """, unsafe_allow_html=True)
+        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
+        st.subheader("taha gungor")
+        st.caption("ceo / test_tech")
+        st.caption("artist / 0111 ≡ ...")
+        st.caption("New York, New York, United States")
+        st.caption("test_tech")
         st.divider()
-
-def render_placeholder_page(title):
-    """A placeholder for pages that are not yet built."""
-    st.title(title)
-    st.info(f"The '{title}' page is coming soon!")
-    st.image("https://via.placeholder.com/600x300.png?text=Under+Construction", use_column_width=True)
-
-
-# --- App State Initialization ---
-if "page" not in st.session_state:
-    st.session_state.page = "Feed"
-
-# --- Sidebar Definition ---
-with st.sidebar:
-    st.markdown('<div class="sidebar-logo">supernNova_2177</div>', unsafe_allow_html=True)
-    st.image("https://via.placeholder.com/100?text=Profile", width=100)
-    st.subheader("taha gungor")
-    st.caption("ceo / test_tech")
-    st.divider()
-    
-    c1, c2 = st.columns(2)
-    c1.metric("Profile viewers", f"{np.random.randint(2000, 2500)}")
-    c2.metric("Post impressions", f"{np.random.randint(1400, 1600)}")
-    st.divider()
-
-    st.subheader("Navigation")
-    # This is a much simpler way to handle navigation without st.rerun()
-    if st.button("Feed", use_container_width=True):
-        st.session_state.page = "Feed"
-    if st.button("Chat", use_container_width=True):
-        st.session_state.page = "Chat"
-    if st.button("Messages", use_container_width=True):
-        st.session_state.page = "Messages"
-
-
-# --- Main Content Area ---
-# This simple logic displays the correct "page" based on the session state.
-if st.session_state.page == "Feed":
-    render_feed()
-elif st.session_state.page == "Chat":
-    render_placeholder_page("Chat")
-elif st.session_state.page == "Messages":
-    render_placeholder_page("Messages")
-else:
-    render_feed() # Default to the feed
-
-
-# --- Bottom Navigation Bar ---
-# This is a simple container with buttons. The CSS makes it fixed to the bottom.
-st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
-cols = st.columns(5)
-with cols[0]:
-    if st.button("🏠", key="bottom_home"): st.session_state.page = "Feed"
-with cols[1]:
-    if st.button("👥", key="bottom_network"): st.session_state.page = "Network"
-with cols[2]:
-    if st.button("➕", key="bottom_post"): st.session_state.page = "Post"
-with cols[3]:
-    if st.button("🔔", key="bottom_notifs"): st.session_state.page = "Notifications"
-with cols[4]:
-    if st.button("💼", key="bottom_jobs"): st.session_state.page = "Jobs"
-st.markdown('</div>', unsafe_allow_html=True)
+        st.metric("Profile viewers", np.random.randint(2000, 2500))
+        st.metric("Post impressions", np.random.randint(1400, 1600))
+        st.divider()
+        # Manage pages with logical logos
+        st.subheader("Manage pages")
+        if st.button("🔬 test_tech", key="manage_test_tech"):
+            st.session_state.current_page = "test_tech"
+            st.rerun()
+        if st.button("🌌 supernNova_2177", key="manage_supernova"):
+            st.session_state.current_page = "supernova_2177"
+            st.rerun()
+        if st.button("✈️ GLOBALRUNWAY", key="manage_globalrunway"):
+            st.session_state.current_page = "globalrunway"
+            st.rerun()
+        if st.button("📂 Show all >", key="manage_showall"):
+            st.write("All pages (placeholder list).")
+        st.divider()
+        # Enter Metaverse (clickable)
+        if st.button("🔮 Enter Metaverse", key="nav_metaverse"):
+            st.session_state.current_page = "enter_metaverse"
+            st.rerun()
+        st.caption("Mathematically sucked into a supernNova_2177 void – stay tuned for 3D immersion!")
+        st.subheader("Premium features")
+        # Settings clickable with theme nearby
+        if st.button("⚙️ Settings", key="nav_settings"):
+            st.session_state.current_page = "settings"
+            st.rerun()
+        theme_selector()  # Theme near settings
+        st.divider()
+        # Navigation - small shaded buttons
+        if st.button("Feed", key="nav_feed"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+        if st.button("Chat", key="nav_chat"):
+            st.session_state.current_page = "chat"
+            st.rerun()
+        if st.button("Messages", key="nav_messages"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("Agents", key="nav_agents"):
+            st.session_state.current_page = "agents"
+            st.rerun()
+        if st.button("Voting", key="nav_voting"):
+            st.session_state.current_page = "voting"
+            st.rerun()
+        if st.button("Profile", key="nav_profile"):
+            st.session_state.current_page = "profile"
+            st.rerun()
+        if st.button("Music", key="nav_music"):
+            st.session_state.current_page = "music"
+            st.rerun()
+    # Main content - Add search bar on top, then load page
+    st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
+    load_page(st.session_state.current_page)
+    # Bottom nav - Curved dark with labels, pink badge on Notifications, horizontal alignment in line
+    st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
+    bottom_cols = st.columns(5)
+    with bottom_cols[0]:
+        if st.button("🏠\nHome", key="bottom_home"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+    with bottom_cols[1]:
+        if st.button("📹\nVideo", key="bottom_video"):
+            st.session_state.current_page = "video_chat"
+            st.rerun()
+    with bottom_cols[2]:
+        if st.button("👥\nMy Network", key="bottom_network"):
+            st.session_state.current_page = "social"
+            st.rerun()
+    with bottom_cols[3]:
+        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)  # Pink badge
+        if st.button("🔔\nNotifications", key="bottom_notifications"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+    with bottom_cols[4]:
+        if st.button("💼\nJobs", key="bottom_jobs"):
+            st.session_state.current_page = "jobs"
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+if __name__ == "__main__":
+    main()
