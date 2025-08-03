@@ -287,7 +287,7 @@ def main() -> None:
         )
 
         # Clickable Logo - navigates to feed
-        if st.button("💫 superNova_2177 💫", use_container_width=True):
+        if st.button("💫superNova_2177💫", use_container_width=True):
             # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
