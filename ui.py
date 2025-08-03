@@ -92,7 +92,7 @@ def main() -> None:
             padding: 0px;
             margin: 0px;
             width: 190px;
-            z-index: 0;
+            z-index: 98;
         }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
@@ -149,7 +149,7 @@ def main() -> None:
             color: white !important;
         }
         .main .block-container {
-            padding-top: 20px !important;
+            padding-top: 0px !important;
             padding-bottom: 90px !important;
         }
         
