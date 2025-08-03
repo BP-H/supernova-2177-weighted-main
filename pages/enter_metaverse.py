@@ -20,10 +20,9 @@ def main():
     # Custom CSS for a fully immersive, clean look
     st.markdown("""
         <style>
-            /* Reset Streamlit's default styling for a true full-screen experience */
             body { background-color: #000; }
             .stApp {
-                background: #000;
+                background-color: #000;
                 overflow: hidden; /* Prevent scrollbars */
             }
             .main > div {
@@ -34,7 +33,6 @@ def main():
                 padding-bottom: 2rem !important;
                 max-width: 100% !important;
             }
-            /* Hide Streamlit's default header, menu, and footer */
             header, #MainMenu, footer {
                 display: none !important;
             }
@@ -75,17 +73,15 @@ def main():
         with col2:
             st.markdown("<h3 style='text-align: center; color: #00ffff;'>🎛️ PRE-FLIGHT CHECK</h3>", unsafe_allow_html=True)
             
-            # Store settings in session state to pass to the HTML component
+            # Store settings in session state
             st.session_state.settings = {
-                'speed': st.slider("⚡ Player Speed", 1, 20, 8),
-                'volume': st.slider("🔊 Music Volume", 0, 100, 50),
-                'fx_intensity': st.slider("✨ FX Intensity", 0, 100, 85),
-                'game_mode': st.selectbox("🕹️ Game Mode", ["Arcade Rush", "Zen Journey", "Boss Battle"])
+                'speed': st.slider("⚡ Player Speed", 1, 20, 10),
+                'volume': st.slider("🔊 Music Volume", 0, 100, 40),
+                'fx_intensity': st.slider("✨ FX Intensity", 0, 100, 90),
+                'game_mode': st.selectbox("🕹️ Game Mode", ["Arcade Rush", "Zen Journey"])
             }
 
             st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
-            
-            # Centered launch button
             st.markdown('<div style="display: flex; justify-content: center;">', unsafe_allow_html=True)
             st.button("🚀 LAUNCH METAVERSE 🚀", on_click=launch_metaverse, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -94,8 +90,6 @@ def main():
     else:
         settings = st.session_state.settings
         
-        # NOTE: All curly braces `{` and `}` in the CSS/JS below are DOUBLED `{{` and `}}`
-        # to escape them for Python's f-string formatting.
         three_js_code = f"""
         <!DOCTYPE html>
         <html>
@@ -103,17 +97,13 @@ def main():
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
             <style>
-                body {{
-                    margin: 0; padding: 0; overflow: hidden;
-                    font-family: 'Courier New', monospace; background: #000;
-                    touch-action: none; -webkit-user-select: none; user-select: none;
-                }}
+                body {{ margin: 0; overflow: hidden; background: #000; }}
                 #canvas-container {{ width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }}
                 #loading-screen {{
                     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: #000;
-                    display: flex; flex-direction: column; justify-content: center; align-items: center;
-                    z-index: 1000; transition: opacity 1.5s ease;
+                    background: #000; display: flex; flex-direction: column;
+                    justify-content: center; align-items: center; z-index: 1000;
+                    transition: opacity 1.5s ease;
                 }}
                 .loader {{
                     width: 100px; height: 100px; border: 4px solid transparent;
@@ -123,151 +113,157 @@ def main():
                 @keyframes spin {{ 100% {{ transform: rotate(360deg); }} }}
                 #loading-text {{
                     color: #fff; margin-top: 25px; font-size: 1.1em;
-                    text-transform: uppercase; letter-spacing: 4px;
-                    animation: glow 2s ease-in-out infinite;
+                    font-family: 'Courier New', monospace; text-transform: uppercase;
+                    letter-spacing: 4px; animation: glow 2s ease-in-out infinite;
                 }}
                 @keyframes glow {{
                     0%, 100% {{ text-shadow: 0 0 10px #ff00ff; }}
                     50% {{ text-shadow: 0 0 20px #00ffff; }}
                 }}
-                #hud {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; color: #fff; }}
-                .hud-element {{
-                    position: absolute; text-shadow: 0 0 8px #000;
+                #hud {{
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    pointer-events: none; z-index: 10; color: #fff;
+                    font-family: 'Courier New', monospace;
                 }}
+                .hud-element {{ position: absolute; text-shadow: 0 0 8px #000; }}
                 #score {{ top: 20px; left: 20px; font-size: 24px; color: #ffff00; }}
-                #health-bar {{ top: 20px; right: 20px; width: 200px; height: 20px; border: 2px solid #ff00ff; background: rgba(0,0,0,0.5); }}
-                #health-fill {{ height: 100%; background: linear-gradient(90deg, #ff0066, #ff00ff); transition: width 0.3s ease; }}
                 #quit-button {{ 
-                    bottom: 20px; left: 20px; font-size: 16px; color: #fff; 
-                    pointer-events: auto; cursor: pointer; text-decoration: underline;
+                    bottom: 20px; left: 20px; font-size: 16px; color: #aaa;
+                    pointer-events: auto; cursor: pointer; text-decoration: none;
                 }}
+                #quit-button:hover {{ color: #fff; text-decoration: underline; }}
             </style>
         </head>
         <body>
-            <div id="loading-screen">
-                <div class="loader"></div>
-                <div id="loading-text">INITIALIZING...</div>
-            </div>
+            <div id="loading-screen"><div class="loader"></div><div id="loading-text">CONNECTING...</div></div>
             <div id="canvas-container"></div>
             <div id="hud">
                 <div id="score" class="hud-element">SCORE: 0</div>
-                <div id="health-bar" class="hud-element">
-                    <div id="health-fill" style="width: 100%;"></div>
-                </div>
-                <div id="quit-button" class="hud-element" onclick="window.location.reload();">QUIT</div>
+                <div id="quit-button" class="hud-element" onclick="window.location.reload();">QUIT TO LOBBY</div>
             </div>
 
             <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
             
             <script>
-                // Use a try-catch block to prevent the entire page from freezing on an error
                 try {{
-                    // --- Config & State ---
                     const CONFIG = {{
                         speed: {settings['speed']},
                         volume: {settings['volume']} / 100,
                         fxIntensity: {settings['fx_intensity']} / 100,
                         gameMode: '{settings['game_mode']}'
                     }};
-                    const state = {{ score: 0, health: 100 }};
-                    let scene, camera, renderer, clock, player, audioSystem;
-                    const enemies = [];
+
+                    let scene, camera, renderer, clock, player, world;
+                    const keyMap = {{}};
                     const playerVelocity = new THREE.Vector3();
                     let onGround = false;
 
-                    // --- Scene Initialization ---
                     function init() {{
                         scene = new THREE.Scene();
                         scene.fog = new THREE.FogExp2(0x0a001a, 0.005 * (2.0 - CONFIG.fxIntensity));
+                        
                         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                        
                         renderer = new THREE.WebGLRenderer({{ antialias: true }});
                         renderer.setSize(window.innerWidth, window.innerHeight);
                         document.getElementById('canvas-container').appendChild(renderer.domElement);
+                        
                         clock = new THREE.Clock();
 
                         // --- Audio ---
-                        audioSystem = new Howl({{
-                            src: ['data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgyLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1B0AAABJAAAAHkAAAGwDRUREVFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//uR4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'],
+                        const audio = new Howl({{
+                            src: ['data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgyLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1B0AAABJAAAAHkAAAGwDRUREVFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//uR4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'],
                             loop: true, volume: CONFIG.volume, html5: true
                         }});
 
-                        // --- World Creation ---
-                        const gridMaterial = new THREE.MeshBasicMaterial({{ color: 0x00ffff, wireframe: true }});
-                        const grid = new THREE.Mesh(new THREE.PlaneGeometry(500, 500, 50, 50), gridMaterial);
-                        grid.rotation.x = -Math.PI / 2;
-                        scene.add(grid);
+                        // --- World ---
+                        const gridMaterial = new THREE.ShaderMaterial({{
+                            uniforms: {{ time: {{ value: 0 }}, resolution: {{ value: new THREE.Vector2(window.innerWidth, window.innerHeight) }} }},
+                            vertexShader: `void main() {{ gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }}`,
+                            fragmentShader: `
+                                uniform float time;
+                                uniform vec2 resolution;
+                                void main() {{
+                                    vec2 uv = gl_FragCoord.xy / resolution.xy;
+                                    float grid = max(step(0.99, fract(uv.x * 50.0)), step(0.99, fract(uv.y * 50.0)));
+                                    vec3 color = mix(vec3(1.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), uv.x + sin(time) * 0.1);
+                                    float pulse = sin(length(uv - 0.5) * 15.0 - time * 4.0) * 0.5 + 0.5;
+                                    gl_FragColor = vec4(color * (0.5 + pulse * 0.5) * grid, grid * 0.8);
+                                }}`,
+                            transparent: true
+                        }});
+                        const grid = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), gridMaterial);
+                        grid.rotation.x = -Math.PI / 2; scene.add(grid);
+                        world = {{ grid, gridMaterial }};
 
-                        // --- Player ---
+                        // --- Player (Using CylinderGeometry) ---
                         player = new THREE.Mesh(
-                            new THREE.CapsuleGeometry(0.5, 1, 4, 10),
-                            new THREE.MeshBasicMaterial({{ color: 0xff00ff }})
+                            new THREE.CylinderGeometry(0.5, 0.5, 2, 16), // Replaced Capsule with Cylinder
+                            new THREE.MeshStandardMaterial({{ color: 0xffffff, emissive: 0xcccccc, roughness: 0.2, metalness: 0.8 }})
                         );
-                        player.position.y = 0.5;
+                        player.position.y = 1; // Adjust position for cylinder's center origin
                         scene.add(player);
 
                         // --- Lighting ---
-                        scene.add(new THREE.AmbientLight(0x404040, 1.5));
-                        
-                        // --- Controls ---
-                        setupControls();
+                        scene.add(new THREE.AmbientLight(0x400080, 0.8));
+                        const playerLight = new THREE.PointLight(0x00ffff, 1.5, 20);
+                        player.add(playerLight); // Attach light to player
 
-                        // --- Hide loading screen and start ---
+                        // --- Controls ---
+                        document.addEventListener('keydown', (e) => keyMap[e.code] = true);
+                        document.addEventListener('keyup', (e) => keyMap[e.code] = false);
+
+                        // --- Finalize ---
                         const loadingScreen = document.getElementById('loading-screen');
                         loadingScreen.style.opacity = '0';
                         setTimeout(() => {{
                             loadingScreen.style.display = 'none';
-                            audioSystem.play();
+                            audio.play();
                             animate();
                         }}, 1500);
                     }}
                     
-                    // --- Controls Setup ---
-                    const keyMap = {{}};
-                    function setupControls() {{
-                        document.addEventListener('keydown', (e) => keyMap[e.code] = true);
-                        document.addEventListener('keyup', (e) => keyMap[e.code] = false);
-                    }}
-
-                    // --- Game Loop ---
                     function animate() {{
                         requestAnimationFrame(animate);
-                        const delta = Math.min(clock.getDelta(), 0.1); // Cap delta to prevent physics bugs
+                        const delta = Math.min(clock.getDelta(), 0.1);
+                        const elapsedTime = clock.getElapsedTime();
 
                         // --- Player Movement ---
+                        const moveSpeed = CONFIG.speed * delta;
                         const moveDirection = new THREE.Vector3(
-                            (keyMap['KeyD'] ? 1 : 0) - (keyMap['KeyA'] ? 1 : 0),
+                            (keyMap['KeyD'] || keyMap['ArrowRight'] ? 1 : 0) - (keyMap['KeyA'] || keyMap['ArrowLeft'] ? 1 : 0),
                             0,
-                            (keyMap['KeyS'] ? 1 : 0) - (keyMap['KeyW'] ? 1 : 0)
+                            (keyMap['KeyS'] || keyMap['ArrowDown'] ? 1 : 0) - (keyMap['KeyW'] || keyMap['ArrowUp'] ? 1 : 0)
                         ).normalize();
                         
-                        playerVelocity.x += moveDirection.x * CONFIG.speed * delta;
-                        playerVelocity.z += moveDirection.z * CONFIG.speed * delta;
+                        playerVelocity.x = moveDirection.x * moveSpeed * 10;
+                        playerVelocity.z = moveDirection.z * moveSpeed * 10;
                         
                         // Gravity & Jump
-                        playerVelocity.y -= 9.8 * delta;
-                        if (keyMap['Space'] && onGround) {{
-                            playerVelocity.y = 5;
+                        playerVelocity.y -= 20 * delta;
+                        if ((keyMap['Space']) && onGround) {{
+                            playerVelocity.y = 8;
                         }}
 
                         player.position.add(playerVelocity.clone().multiplyScalar(delta));
 
                         // Ground Collision
-                        if (player.position.y < 0.5) {{
-                            player.position.y = 0.5;
+                        if (player.position.y < 1) {{
+                            player.position.y = 1;
                             playerVelocity.y = 0;
                             onGround = true;
-                        }} else {{
-                            onGround = false;
-                        }}
+                        }} else {{ onGround = false; }}
 
-                        // Friction
-                        playerVelocity.x *= 0.92;
-                        playerVelocity.z *= 0.92;
-                        
+                        // --- World & Visuals ---
+                        world.gridMaterial.uniforms.time.value = elapsedTime;
+                        const beat = 0.5 + Math.sin(elapsedTime * 5) * 0.5; // Simulated beat
+                        player.children[0].intensity = 1.5 + beat * 2 * CONFIG.fxIntensity; // Pulse player light
+
                         // --- Camera ---
-                        const cameraOffset = new THREE.Vector3(0, 4, 8);
-                        camera.position.lerp(player.position.clone().add(cameraOffset), 0.1);
+                        const cameraOffset = new THREE.Vector3(0, 5, 10);
+                        const targetPosition = player.position.clone().add(cameraOffset);
+                        camera.position.lerp(targetPosition, 0.1);
                         camera.lookAt(player.position);
                         
                         renderer.render(scene, camera);
@@ -276,10 +272,9 @@ def main():
                     init();
 
                 }} catch (e) {{
-                    // Show a friendly error message if something goes wrong
-                    document.getElementById('loading-screen').style.opacity = '1';
-                    document.querySelector('.loader').style.display = 'none';
-                    document.getElementById('loading-text').innerText = 'ERROR: COULD NOT LOAD METAVERSE.\\n' + e.message;
+                    const loadingScreen = document.getElementById('loading-screen');
+                    loadingScreen.style.opacity = '1';
+                    loadingScreen.innerHTML = `<div id="loading-text" style="color: #ff4444;">ERROR: COULD NOT LOAD METAVERSE.<br>${{e.message}}</div>`;
                     console.error(e);
                 }}
             </script>
