@@ -76,9 +76,34 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
+    # CSS — keep header for the arrow / hide badges & footer only
     st.markdown("""
-        
+    <style>
+        /* keep header so the sidebar toggle arrow remains */
+        /* hide viewer/management badges */
+        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; }
+        /* hide hamburger menu + footer */
+        #MainMenu { visibility: hidden !important; }
+        footer { visibility: hidden !important; }
+
+        /* optional: if any residual toolbar container exists, collapse it without touching the toggle */
+        header [data-testid*="Toolbar"],
+        header :is(div,nav,section)[class*="toolbar"],
+        header :is(div,nav,section)[class*="cloud"] { display: none !important; }
+
+        /* ensure the sidebar toggle stays visible/clickable */
+        header button[aria-label*="sidebar" i],
+        [data-testid="collapsedControl"] button {
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 999 !important;
+        }
+
+        /* Hide Streamlit's built-in sidebar page nav (you use a custom one) */
+        [data-testid="stSidebarNav"] { display: none !important; }
+
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
