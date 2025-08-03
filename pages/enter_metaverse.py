@@ -16,6 +16,7 @@ def main():
             .stDeployButton {display: none;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
+            body {overflow: hidden;} /* Prevent scrollbars */
         </style>
     """, unsafe_allow_html=True)
 
@@ -24,7 +25,6 @@ def main():
     obstacle_density = 0.6
 
     # --- Main Three.js Game Component ---
-    # NOTE: All '{' and '}' for CSS/JS have been doubled to '{{' and '}}' to work with Python's f-string.
     three_js_game = f"""
     <!DOCTYPE html>
     <html>
@@ -96,9 +96,9 @@ def main():
 
             let scene, camera, renderer, player, clock;
             let score = 0;
-            let activeObstacles = [], activeCollectibles = [], activePortal = null;
+            let activeTube = null, activeObstacles = [], activeCollectibles = [], activePortal = null;
             const keys = {{ w: false, a: false, s: false, d: false, arrowup: false, arrowleft: false, arrowdown: false, arrowright: false }};
-            const playerTargetPosition = new THREE.Vector2(); // Target for player movement
+            const playerTargetPosition = new THREE.Vector2();
             const moveBounds = {{x: 40, y: 40}};
 
             const VERSE_THEMES = {{
@@ -141,9 +141,9 @@ def main():
             function setupScene() {{
                 const container = document.getElementById('game-container');
                 scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, CONFIG.worldDepth);
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, CONFIG.worldDepth);
                 renderer = new THREE.WebGLRenderer({{ antialias: true }});
-                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
                 scene.fog = new THREE.FogExp2(currentTheme.fogColor, 0.0015);
                 window.addEventListener('resize', () => {{
@@ -173,10 +173,10 @@ def main():
                 );
                 const tubeGeometry = new THREE.TubeGeometry(path, 256, 40, 16, false);
                 const tubeMaterial = new THREE.MeshBasicMaterial({{ color: currentTheme.tubeColor, wireframe: true, side: THREE.DoubleSide }});
-                const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-                tube.position.z = -CONFIG.worldDepth;
-                scene.add(tube);
-                // Obstacles, Collectibles, Portal generation remains the same
+                activeTube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+                activeTube.position.z = -CONFIG.worldDepth;
+                scene.add(activeTube);
+                
                 const obstacleGeometry = new THREE.BoxGeometry(20, 20, 20);
                 for (let i = 0; i < 100 * CONFIG.obstacleDensity; i++) {{
                     const obstacleMaterial = new THREE.MeshBasicMaterial({{ color: currentTheme.obstacleColor, wireframe: true }});
@@ -186,6 +186,7 @@ def main():
                     scene.add(obstacle);
                     activeObstacles.push(obstacle);
                 }}
+                
                 const collectibleGeometry = new THREE.OctahedronGeometry(5, 0);
                  for (let i = 0; i < 75; i++) {{
                     const collectibleMaterial = new THREE.MeshBasicMaterial({{ color: currentTheme.collectibleColor }});
@@ -196,6 +197,7 @@ def main():
                     scene.add(collectible);
                     activeCollectibles.push(collectible);
                 }}
+                
                 const portalGeometry = new THREE.TorusGeometry(30, 8, 16, 100);
                 const portalMaterial = new THREE.MeshBasicMaterial({{ color: 0xffffff, wireframe: true }});
                 activePortal = new THREE.Mesh(portalGeometry, portalMaterial);
@@ -204,7 +206,8 @@ def main():
             }}
 
             function clearVerse() {{
-                [...activeObstacles, ...activeCollectibles, activePortal, scene.children.find(c => c.geometry.type === 'TubeGeometry')].forEach(obj => {{
+                // FIX: Check if each object exists before trying to remove it.
+                [...activeObstacles, ...activeCollectibles, activePortal, activeTube].forEach(obj => {{
                     if (obj) {{
                         scene.remove(obj);
                         obj.geometry.dispose();
@@ -214,6 +217,7 @@ def main():
                 activeObstacles = [];
                 activeCollectibles = [];
                 activePortal = null;
+                activeTube = null;
             }}
 
             function transitionToNextVerse() {{
@@ -228,32 +232,28 @@ def main():
             }}
 
             function setupControls() {{
-                // Keyboard controls for desktop
                 window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
                 window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
-                // Tilt controls for mobile
+                
                 window.addEventListener('deviceorientation', (event) => {{
-                    // event.gamma: left-to-right tilt (-90 to 90)
-                    // event.beta: front-to-back tilt (-180 to 180)
-                    const tiltX = THREE.MathUtils.clamp(event.gamma, -45, 45); // Clamp to prevent extreme movement
+                    if (event.gamma === null) return; // Exit if device orientation is not supported
+                    const tiltX = THREE.MathUtils.clamp(event.gamma, -45, 45);
                     const tiltY = THREE.MathUtils.clamp(event.beta, -45, 45);
-                    // Map tilt to player's target position
                     playerTargetPosition.x = THREE.MathUtils.mapLinear(tiltX, -45, 45, -moveBounds.x, moveBounds.x);
-                    playerTargetPosition.y = THREE.MathUtils.mapLinear(tiltY, -45, 45, moveBounds.y, -moveBounds.y); // Invert Y
+                    playerTargetPosition.y = THREE.MathUtils.mapLinear(tiltY, -45, 45, moveBounds.y, -moveBounds.y);
                 }}, true);
             }}
 
             function updatePlayer(deltaTime) {{
                 const moveSpeed = 200 * deltaTime;
-                // Keyboard input (for desktop)
                 if (keys.w || keys.arrowup) playerTargetPosition.y += moveSpeed;
                 if (keys.s || keys.arrowdown) playerTargetPosition.y -= moveSpeed;
                 if (keys.a || keys.arrowleft) playerTargetPosition.x -= moveSpeed;
                 if (keys.d || keys.arrowright) playerTargetPosition.x += moveSpeed;
-                // Clamp target position to bounds
+
                 playerTargetPosition.x = THREE.MathUtils.clamp(playerTargetPosition.x, -moveBounds.x, moveBounds.x);
                 playerTargetPosition.y = THREE.MathUtils.clamp(playerTargetPosition.y, -moveBounds.y, moveBounds.y);
-                // Smoothly interpolate camera to target position
+
                 camera.position.x += (playerTargetPosition.x - camera.position.x) * 0.1;
                 camera.position.y += (playerTargetPosition.y - camera.position.y) * 0.1;
             }}
@@ -291,10 +291,9 @@ def main():
                 checkCollisions();
                 if (activePortal) activePortal.rotation.z += 0.02;
                 activeCollectibles.forEach(c => c.rotation.y += 0.05);
-                const tube = scene.children.find(c => c.geometry.type === 'TubeGeometry');
-                if (tube) {{
+                if (activeTube) {{
                     const hue = (time * 0.1) % 1;
-                    tube.material.color.setHSL(hue, 1, 0.5);
+                    activeTube.material.color.setHSL(hue, 1, 0.5);
                 }}
                 renderer.render(scene, camera);
             }}
@@ -306,4 +305,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
