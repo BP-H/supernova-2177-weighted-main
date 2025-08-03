@@ -71,7 +71,10 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded"
     )
-
+    st.session_state.setdefault("theme", "dark")
+    st.session_state.setdefault("conversations", {})  # Fix NoneType
+    st.session_state.setdefault("current_page", "feed")  # Default page
+    initialize_theme(st.session_state["theme"])
 
     # Make Cloud think we're embedded (no reload) – harmless if unsupported
     try:
@@ -109,10 +112,6 @@ def main() -> None:
             pointer-events: auto !important;
             z-index: 1001 !important;
         }
-    st.markdown("""
-    <style>
-        /* Hide Streamlit's top navigation tabs */
-        [data-testid="stSidebarNav"] { display: none !important; }
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
