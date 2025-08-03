@@ -1,7 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Thin wrapper for the Messages Center page."""
+"""Thin wrapper for the Profile page."""
 
 from __future__ import annotations
 
