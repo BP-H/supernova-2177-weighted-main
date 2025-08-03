@@ -274,6 +274,49 @@ def main() -> None:
     </style>
     """, unsafe_allow_html=True)
 
+    # ===== 🚧 SIDEBAR SPACING TUNER — AFTER the width-override CSS 🚧
+    SIDEBAR_GAP = 8  # <- tweak this (6–12 works well)
+    
+    st.markdown(f"""
+    <style>
+    /* st.divider() spacing */
+    [data-testid="stSidebar"] hr {{
+      margin: {SIDEBAR_GAP}px 0 !important;
+      opacity: 0.25;
+    }}
+    
+    /* st.metric spacing */
+    [data-testid="stSidebar"] [data-testid="stMetric"] {{
+      margin: {int(SIDEBAR_GAP * 0.75)}px 0 !important;
+    }}
+    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
+      margin-bottom: {int(SIDEBAR_GAP * 0.25)}px !important;
+      line-height: 1.1 !important;
+    }}
+    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
+      line-height: 1.0 !important;
+      margin: 0 !important;
+    }}
+    
+    /* Paragraphs / captions under profile */
+    [data-testid="stSidebar"] .stMarkdown p,
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] .stText {{
+      margin: {int(SIDEBAR_GAP * 0.6)}px 0 !important;
+    }}
+    
+    /* Avatar spacing */
+    [data-testid="stSidebar"] img {{
+      margin: {SIDEBAR_GAP}px auto !important;
+    }}
+    
+    /* Button vertical gap */
+    [data-testid="stSidebar"] button {{
+      margin: {int(SIDEBAR_GAP * 0.5)}px 0 !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+    # ===== 🚧 SIDEBAR SPACING TUNER — END 🚧
 
     
     # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
