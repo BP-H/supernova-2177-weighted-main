@@ -88,16 +88,16 @@ def main() -> None:
             .main { position: relative; }
             .sticky-search { position: fixed; top: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; }
             .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; border-top-left-radius: 20px; border-top-right-radius: 20px; }
-            .stSidebar button { background-color: transparent; color: white; border-radius: 4px; /* Tiny fillet */ padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; transition: background-color 0.3s; } /* Colorless, left-aligned text */
-            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); /* More pronounced pink tint on hover, no border */ color: white; }
-            [data-testid="stSidebar"] { background-color: #18181b; color: white; }
-            .stApp { background-color: #0a0a0a; color: white; }
+            .stSidebar button { background-color: transparent; color: #fff; /* White text */ border-radius: 8px; /* More filleted corners */ padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; transition: background-color 0.3s; } /* Colorless, left-aligned text */
+            .stSidebar button:hover { background-color: rgba(200,200,200,0.2); /* Softer brighter grey on hover, no border */ color: #fff; }
+            [data-testid="stSidebar"] { background-color: #18181b; color: #fff; }
+            .stApp { background-color: #0a0a0a; color: #fff; }
             .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
             .block-container { padding-bottom: 80px; }
         </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar - Search at top, vertical buttons with left-aligned text, integrated bottom nav as additional buttons
+    # Sidebar - Search at top, vertical buttons with left-aligned text, integrated bottom nav as additional buttons in sidebar
     with st.sidebar:
         # Search bar at top of sidebar
         st.text_input("Search", key="search_bar", placeholder="Search posts, people, companies...")
