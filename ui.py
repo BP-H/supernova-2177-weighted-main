@@ -244,14 +244,15 @@ def main() -> None:
         st.divider()
         
         # Enter Metaverse (clickable)
-        if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
-            st.session_state.current_page = "enter_metaverse"
-            st.rerun()
+        st.subheader("Premium features")
         if st.button("🤖 Agents", key="nav_agents"):
             st.session_state.current_page = "agents"
             st.rerun()
+        if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
+            st.session_state.current_page = "enter_metaverse"
+            st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
-        st.subheader("Premium features")
+
         
         # Settings clickable with theme nearby
         if st.button("⚙️ Settings", key="nav_settings"):
