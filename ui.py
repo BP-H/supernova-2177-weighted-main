@@ -31,9 +31,9 @@ except ImportError as e:
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
 # MODIFICATION: Helper function to encode image to Base64
-def image_to_base64(path: str) -> str:
+def image_to_base64(path: Path) -> str:
     """Encodes an image file to a Base64 string."""
-    with open(path, "rb") as img_file:
+    with path.open("rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
 def load_page(page_name: str):
@@ -81,18 +81,20 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")
     initialize_theme(st.session_state["theme"])
 
-    # MODIFICATION: Get the image data first
-    # Make sure your image path is correct!
+    # MODIFICATION: More reliable way to find the image and encode it
+    img_b64 = ""
     try:
-        img_b64 = image_to_base64("assets/profile_pic.png")
+        # Get the absolute path to the image relative to *this file*
+        script_dir = Path(__file__).parent
+        image_path = script_dir / "assets" / "profile_pic.png"
+        img_b64 = image_to_base64(image_path)
     except FileNotFoundError:
-        st.error("Profile picture not found at 'assets/profile_pic.png'. Please check the path.")
-        img_b64 = "" # Set to empty string to avoid breaking CSS
+        # If the image still isn't found, this error will show the exact path it tried.
+        st.error(f"Profile picture not found! Please ensure 'assets/profile_pic.png' exists next to your ui.py file. Full path tried: {image_path.resolve()}")
 
-    # MODIFICATION: Added new CSS for the clickable profile picture button
     st.markdown(f"""
     <style>
-        /* (All your previous CSS is here) */
+        /* (All your other CSS is here) */
         [data-testid="stSidebarNav"] {{ display: none !important; }}
         [data-testid="stSidebar"] {{
             position: sticky !important; top: 0 !important; height: 100vh !important;
@@ -153,18 +155,20 @@ def main() -> None:
         button[data-testid="stButton"][key="profile_pic_button"] > div {{
             display: none;
         }}
-        /* (The rest of your CSS...) */
     </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar
+    # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
+        # Modern search bar
         st.text_input(
             "Search",
             key="search_bar",
             placeholder="🔍 Search posts, people...",
             label_visibility="collapsed"
         )
+
+        # Clickable Logo - navigates to feed
         if st.button("💫supernNova_2177💫", use_container_width=True):
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
@@ -185,7 +189,7 @@ def main() -> None:
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
         
-        # (Rest of your sidebar buttons...)
+        # (The rest of your sidebar is here)
         if st.button("🏠 Test Tech", key="manage_test_tech"):
             st.session_state.current_page = "test_tech"
             st.rerun()
@@ -198,6 +202,7 @@ def main() -> None:
         if st.button("🖼️ Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
         st.divider()
+
         if st.button("📰 Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
             st.rerun()
@@ -213,7 +218,9 @@ def main() -> None:
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
+            
         st.divider()
+        
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
             st.session_state.current_page = "music"
@@ -226,18 +233,30 @@ def main() -> None:
             st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
         st.divider()
+
         if st.button("⚙️ Settings", key="nav_settings"):
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
         
-    # Main content area
+    # Main content area - Load selected page or show search results
     with st.container():
+        # Prioritize search results over page navigation
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
             st.info("This is where your database search results would appear. Connect this to your backend.")
-            # ... (placeholder search results)
+            # Placeholder for search results display
+            st.write("---")
+            st.subheader("Example Post Result")
+            st.write("**User:** taha_gungor")
+            st.write("This is a sample post that matches the search query. #streamlit #search")
+            st.write("---")
+            st.subheader("Example Profile Result")
+            st.write("**Profile:** artist_dev")
+            st.write("Software developer and digital artist.")
+
         else:
+            # Load the selected page if there is no active search
             load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
