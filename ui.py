@@ -2,6 +2,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+
 """Main Streamlit UI entry point for supernNova_2177."""
 
 import sys
@@ -29,7 +30,7 @@ except ImportError as e:
     def initialize_theme(theme): pass
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
-# Loader with better fallback for missing pages
+# Loader with better fallback for missing pages, including fixes for login and animate_gaussian
 def load_page(page_name: str):
     base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
     module_path = None
@@ -39,7 +40,19 @@ def load_page(page_name: str):
             module_path = candidate
             break
     if not module_path:
-        st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
+        if page_name in ["login", "animate_gaussian"]:
+            st.info(f"Page '{page_name}' is under development. Showing placeholder.")
+            if page_name == "login":
+                st.write("Login Placeholder: Enter credentials here.")
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                if st.button("Login"):
+                    st.success("Logged in (placeholder).")
+            elif page_name == "animate_gaussian":
+                st.write("Animate Gaussian Placeholder: Animation would go here.")
+                st.image("https://via.placeholder.com/300x200?text=Gaussian+Animation", caption="Placeholder Animation")
+        else:
+            st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
         return
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
@@ -69,14 +82,14 @@ def main() -> None:
 
     initialize_theme(st.session_state["theme"])
 
-    # 🎯 FIXED CSS - This makes everything sticky and properly aligned
+    # 🎯 FIXED CSS - Rectangle buttons with tiny radius (4px), colorless (transparent), hover tint more pronounced (0.2 opacity pink), text left-aligned, no border
     st.markdown("""
         <style>
             .main { position: relative; }
             .sticky-search { position: fixed; top: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; }
             .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; padding: 10px; z-index: 1000; border-top-left-radius: 20px; border-top-right-radius: 20px; }
-            .stSidebar button { background-color: rgba(255,255,255,0.05); color: white; border-radius: 20px; padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; } /* Vertical alignment with left text for better look */
-            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); color: white; box-shadow: 0 0 5px #ff1493; }
+            .stSidebar button { background-color: transparent; color: white; border-radius: 4px; /* Tiny fillet */ padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; text-align: left; transition: background-color 0.3s; } /* Colorless, left-aligned text */
+            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); /* More pronounced pink tint on hover, no border */ color: white; }
             [data-testid="stSidebar"] { background-color: #18181b; color: white; }
             .stApp { background-color: #0a0a0a; color: white; }
             .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
@@ -84,8 +97,11 @@ def main() -> None:
         </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
+    # Sidebar - Search at top, vertical buttons with left-aligned text, integrated bottom nav as additional buttons
     with st.sidebar:
+        # Search bar at top of sidebar
+        st.text_input("Search", key="search_bar", placeholder="Search posts, people, companies...")
+
         # Profile top with avatar and SVG logo
         st.markdown("""
             <h1>supernNova_2177</h1>
@@ -130,7 +146,7 @@ def main() -> None:
         theme_selector()  # Theme near settings
         st.divider()
 
-        # Navigation - small shaded buttons, vertical with left alignment
+        # Navigation - small shaded buttons
         if st.button("Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
             st.rerun()
@@ -162,25 +178,28 @@ def main() -> None:
             st.session_state.current_page = "login"
             st.rerun()
 
-    # 🔥 STICKY SEARCH BAR - Wrapped in custom container
-    with safe_container():
-        st.markdown('<div class="sticky-search">', unsafe_allow_html=True)
-        st.text_input("Search", key="search_bar", placeholder="Search posts, people, companies...")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Integrated bottom nav as additional vertical buttons in sidebar
+        st.divider()
+        st.subheader("Quick Nav")
+        if st.button("🏠 Home"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+        if st.button("📹 Video"):
+            st.session_state.current_page = "video_chat"
+            st.rerun()
+        if st.button("👥 My Network"):
+            st.session_state.current_page = "social"
+            st.rerun()
+        st.markdown('<div style="background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; display: inline-block; margin-bottom: 5px;">8</div>', unsafe_allow_html=True)
+        if st.button("🔔 Notifications"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("💼 Jobs"):
+            st.session_state.current_page = "jobs"
+            st.rerun()
 
     # Main content - Load the current page
     load_page(st.session_state.current_page)
-
-    # 🔥 STICKY BOTTOM NAV - Curved dark with labels, pink badge on Notifications
-    st.markdown("""
-        <div class="bottom-nav">
-            <button>Home</button>
-            <button>Network</button>
-            <button>Jobs</button>
-            <button>Notifications <span style="background:pink;color:black; border-radius:50%;padding:0 5px;">3</span></button>
-            <button>Me</button>
-        </div>
-    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
