@@ -60,7 +60,7 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")
     initialize_theme(st.session_state["theme"])
 
-    # CSS: Left-aligned text, ellipsis for long text, modern spacing/shadows, sticky sidebar with no overflow issues
+    # CSS: Left-aligned text, handle long text with ellipsis, modern buttons with transitions/shadows
     st.markdown("""
         <style>
             [data-testid="stSidebarNav"] {display: none !important;}
@@ -69,32 +69,33 @@ def main() -> None:
                 border-radius: 10px; padding: 20px; margin: 10px; width: 300px; 
             }
             .stSidebar > div { display: flex; flex-direction: column; align-items: flex-start; text-align: left !important; }
-            .stSidebar subheader, .stSidebar caption, .stSidebar button { text-align: left !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-            .stSidebar button { background-color: rgba(255,255,255,0.05); color: white; border-radius: 20px; padding: 6px 12px; margin: 5px 0; width: 100%; cursor: pointer; border: none; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); box-shadow: 0 0 5px #ff1493, 0 4px 8px rgba(0,0,0,0.3); }
+            .stSidebar subheader, .stSidebar caption, .stSidebar p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; margin: 2px 0; }
+            .stSidebar button { background-color: rgba(255,255,255,0.05); color: white; border-radius: 20px; padding: 8px 16px; margin: 4px 0; width: 100%; cursor: pointer; border: none; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .stSidebar button:hover { background-color: rgba(255,20,147,0.2); box-shadow: 0 4px 8px rgba(255,20,147,0.3); transform: translateY(-2px); }
             .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #0a0a0a; padding: 5px 0; display: flex; justify-content: space-around; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); border-top-left-radius: 20px; border-top-right-radius: 20px; }
-            .bottom-nav .stButton > button { font-size: 12px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .bottom-nav button:hover { color: #ff1493; }
-            .bottom-nav .badge { background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px; }
+            .bottom-nav .stButton > button { font-size: 12px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.3s ease; }
+            .bottom-nav button:hover { color: #ff1493; transform: scale(1.05); }
+            .bottom-nav .badge { background: #ff1493; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-top: -10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
             .stApp { background-color: #0a0a0a; color: white; }
             .block-container { padding-bottom: 80px !important; padding-left: 20px; padding-right: 20px; }
-            .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s; display: flex; flex-direction: column; align-items: flex-start; }
-            .content-card:hover { border: 1px solid #ff1493; }
-            [data-testid="stTextInput"] { background-color: #282828; border-radius: 20px; padding: 8px; width: 100%; }
+            .content-card { background-color: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+            .content-card:hover { border: 1px solid #ff1493; box-shadow: 0 4px 8px rgba(255,20,147,0.3); transform: translateY(-2px); }
+            [data-testid="stTextInput"] { background-color: #282828; border-radius: 20px; padding: 8px; width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
             @media (max-width: 768px) { 
                 .stSidebar { width: 100%; margin: 0; border-radius: 0; }
-                .content-card { flex-direction: column; align-items: center; text-align: center; }
+                .stSidebar button { font-size: 12px; padding: 6px 12px; }
+                .content-card { padding: 12px; margin-bottom: 12px; }
                 .bottom-nav { padding: 2px 0; } 
                 .bottom-nav .stButton > button { font-size: 10px; padding: 1px 2px; }
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar: Supernova at top left-aligned, profile pic below, all text left-aligned, ellipsis for long text
+    # Sidebar: Supernova at top left-aligned, profile pic below, all text left-aligned with ellipsis for long lines
     with st.sidebar:
         st.markdown("""
-            <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 10px;">
-                <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; overflow: hidden;">
+            <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
                     <rect width="200" height="50" fill="#FF00FF"/>
                     <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
                 </svg>
@@ -180,7 +181,7 @@ def main() -> None:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # JS for enhanced sticky and alignment
+    # JS for alignment and ellipsis enforcement
     st.components.v1.html("""
         <script>
             const sidebar = parent.document.querySelector('[data-testid="stSidebar"]');
@@ -189,13 +190,14 @@ def main() -> None:
                 sidebar.style.top = '0';
                 sidebar.style.height = '100vh';
                 sidebar.style.overflowY = 'auto';
-                const elements = sidebar.querySelectorAll('p, caption, button, subheader');
+                const elements = sidebar.querySelectorAll('p, caption, button, [kind="subheader"]');
                 elements.forEach(el => {
                     el.style.textAlign = 'left';
                     el.style.whiteSpace = 'nowrap';
                     el.style.overflow = 'hidden';
                     el.style.textOverflow = 'ellipsis';
                     el.style.maxWidth = '100%';
+                    el.style.transition = 'all 0.3s ease';
                 });
             }
             const bottomNav = parent.document.querySelector('.bottom-nav');
@@ -203,6 +205,7 @@ def main() -> None:
                 bottomNav.style.display = 'flex';
                 bottomNav.style.flexDirection = 'row';
                 bottomNav.style.justifyContent = 'space-around';
+                bottomNav.style.alignItems = 'center';
             }
             const mainContent = parent.document.querySelector('.block-container');
             if (mainContent) {
@@ -210,7 +213,15 @@ def main() -> None:
                 mainContent.style.display = 'flex';
                 mainContent.style.flexDirection = 'column';
                 mainContent.style.alignItems = 'flex-start';
+                mainContent.style.gap = '10px';
             }
+            const buttons = parent.document.querySelectorAll('.stButton > button');
+            buttons.forEach(btn => {
+                btn.style.whiteSpace = 'nowrap';
+                btn.style.overflow = 'hidden';
+                btn.style.textOverflow = 'ellipsis';
+                btn.style.maxWidth = '100%';
+            });
         </script>
     """, height=0)
 
