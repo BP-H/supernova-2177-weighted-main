@@ -3,23 +3,34 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 """Main Streamlit UI entry point for supernNova_2177."""
+
 import sys
 from pathlib import Path
 import streamlit as st
 import importlib.util
-import numpy as np # For random low stats
+import numpy as np
 import warnings
+
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
 # Path for Cloud/local
 sys.path.insert(0, str(Path("/mount/src") if 'mount' in str(Path(__file__)) else Path(__file__).parent))
-# Imports
+
+# Imports with fallback
 try:
     from streamlit_helpers import alert, header, theme_selector, safe_container
     from frontend.theme import initialize_theme
 except ImportError as e:
-    st.error(f"Critical import failed: {e}")
-    st.stop()
+    # Fallback implementations
+    def alert(text): st.info(text)
+    def header(text): st.header(text)
+    def theme_selector(): 
+        return st.selectbox("Theme", ["Dark", "Light"], key="theme_select")
+    def safe_container(): return st.container()
+    def initialize_theme(theme): pass
+    st.warning(f"Some imports failed: {e}, using fallbacks.")
+
 # Loader with better fallback for missing pages
 def load_page(page_name: str):
     base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
@@ -29,9 +40,11 @@ def load_page(page_name: str):
         if candidate.exists():
             module_path = candidate
             break
+    
     if not module_path:
         st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
         return
+    
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
         module = importlib.util.module_from_spec(spec)
@@ -47,197 +60,306 @@ def load_page(page_name: str):
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
 
-# Main function with corrected CSS for sticky layout and alignment
 def main() -> None:
     st.set_page_config(
         page_title="supernNova_2177",
         layout="wide",
         initial_sidebar_state="expanded"
     )
+    
     st.session_state.setdefault("theme", "dark")
     st.session_state.setdefault("conversations", {})
     st.session_state.setdefault("current_page", "feed")
     initialize_theme(st.session_state["theme"])
 
-    # --- CORRECTED CSS ---
-    # This block fixes all the sticky, alignment, and layout issues.
+    # FIXED CSS - Properly implements sticky positioning and alignment
     st.markdown("""
         <style>
-            /* --- Base & Body --- */
+            /* --- Base Styles --- */
             .stApp {
-                background-color: #0a0a0a; /* Main dark background */
+                background-color: #0a0a0a;
+                color: white;
             }
-            /* --- Hide Streamlit's default multi-page app navigation tabs --- */
+            
+            /* --- Hide default Streamlit navigation --- */
             [data-testid="stSidebarNav"] {
                 display: none !important;
             }
-            /* --- STICKY SIDEBAR --- */
+            
+            /* --- STICKY SIDEBAR (Left Panel) --- */
             [data-testid="stSidebar"] {
-                position: sticky;
-                top: 0;
-                height: 100vh; /* Make sidebar full height */
-                background-color: #18181b;
-                border-right: 1px solid #333;
+                position: sticky !important;
+                top: 0 !important;
+                height: 100vh !important;
+                overflow-y: auto !important;
+                background-color: #18181b !important;
+                border-right: 1px solid #333 !important;
+                padding: 20px !important;
+                z-index: 50 !important;
             }
-            /* --- FIX: Left-align all content within the sidebar --- */
+            
+            /* --- LEFT ALIGN all sidebar content --- */
             [data-testid="stSidebarUserContent"] {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start; /* Aligns all items to the left */
-                text-align: left;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;  /* LEFT ALIGN */
+                text-align: left !important;
             }
-            /* FIX: Ensure buttons are left-aligned with emoji on the left */
-            [data-testid="stSidebar"] .stButton button {
-                display: flex;
-                justify-content: flex-start; /* Aligns content (icon + text) to the left */
-                align-items: center;
-                background-color: rgba(255,255,255,0.05);
-                color: white;
-                border-radius: 20px;
-                padding: 8px 12px;
-                margin: 4px 0;
-                width: 100%;
-                border: none;
-                font-size: 14px;
+            
+            /* Ensure all sidebar children are left-aligned */
+            [data-testid="stSidebar"] * {
+                text-align: left !important;
             }
-            [data-testid="stSidebar"] .stButton button:hover {
-                background-color: rgba(255,20,147,0.2);
-                box-shadow: 0 0 5px #ff1493;
+            
+            /* Sidebar buttons with left-aligned content */
+            [data-testid="stSidebar"] .stButton > button {
+                display: flex !important;
+                justify-content: flex-start !important;  /* LEFT ALIGN content */
+                align-items: center !important;
+                text-align: left !important;
+                background-color: rgba(255,255,255,0.05) !important;
+                color: white !important;
+                border-radius: 20px !important;
+                padding: 8px 12px !important;
+                margin: 5px 0 !important;
+                width: 100% !important;
+                border: none !important;
+                font-size: 14px !important;
+                transition: all 0.2s !important;
             }
-            /* --- STICKY HEADER for the main content area --- */
-            .sticky-header {
-                position: sticky;
-                top: 0;
-                background-color: #0a0a0a; /* Match app background */
-                padding: 1rem 0 1rem 0;
-                z-index: 99;
-                border-bottom: 1px solid #333;
+            
+            [data-testid="stSidebar"] .stButton > button:hover {
+                background-color: rgba(255,20,147,0.2) !important;
+                box-shadow: 0 0 8px #ff1493 !important;
             }
-            /* --- FIXED BOTTOM NAV --- */
-            .bottom-nav {
-                position: fixed;
-                bottom: 0;
-                left: 0; /* Aligns to the full page width */
-                width: 100%;
-                background-color: #18181b;
-                padding: 5px 0;
-                display: flex;
-                justify-content: space-around;
-                z-index: 100;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-                border-top: 1px solid #333;
+            
+            /* --- STICKY SEARCH BAR --- */
+            .sticky-search-container {
+                position: sticky !important;
+                top: 0 !important;
+                background-color: #0a0a0a !important;
+                padding: 1rem !important;
+                z-index: 999 !important;
+                border-bottom: 1px solid #333 !important;
+                margin-bottom: 1rem !important;
             }
-            .bottom-nav .stButton > button {
-                font-size: 12px;
-                padding: 4px;
+            
+            /* Style the search input */
+            .sticky-search-container input {
+                background-color: #282828 !important;
+                border-radius: 20px !important;
+                border: 1px solid #333 !important;
+                color: white !important;
+                padding: 8px 16px !important;
             }
-            .bottom-nav button:hover {
-                color: #ff1493;
+            
+            /* --- FIXED BOTTOM NAVIGATION --- */
+            .bottom-nav-container {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                background-color: #18181b !important;
+                border-top: 1px solid #333 !important;
+                padding: 10px 20px !important;
+                z-index: 1000 !important;
+                display: flex !important;
+                justify-content: space-around !important;
+                align-items: center !important;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.5) !important;
             }
-            .bottom-nav .badge {
-                background: #ff1493;
-                color: white;
-                border-radius: 50%;
-                padding: 1px 5px;
-                font-size: 10px;
-                position: absolute; /* Position relative to the button */
-                top: 5px;
-                right: 25px;
+            
+            /* Bottom nav buttons - ensure horizontal layout */
+            .bottom-nav-container .stButton > button {
+                background: transparent !important;
+                border: none !important;
+                color: #a0a0a0 !important;
+                font-size: 12px !important;
+                padding: 5px 10px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                min-width: 60px !important;
+                transition: color 0.2s !important;
             }
-            /* --- CONTENT PADDING --- */
-            /* Add padding to prevent content from being hidden by sticky header/footer */
+            
+            .bottom-nav-container .stButton > button:hover {
+                color: #ff1493 !important;
+            }
+            
+            /* Notification badge */
+            .notification-badge {
+                position: relative !important;
+                display: inline-block !important;
+            }
+            
+            .notification-badge .badge {
+                position: absolute !important;
+                top: -5px !important;
+                right: -5px !important;
+                background: #ff1493 !important;
+                color: white !important;
+                border-radius: 50% !important;
+                padding: 2px 6px !important;
+                font-size: 10px !important;
+                font-weight: bold !important;
+            }
+            
+            /* --- Main content padding to avoid overlap --- */
             .main .block-container {
-                padding-top: 1rem;
-                padding-bottom: 80px; /* Space for bottom nav */
+                padding-top: 0 !important;
+                padding-bottom: 100px !important;  /* Space for bottom nav */
             }
-            /* Content card styling */
+            
+            /* Content cards */
             .content-card {
-                background-color: #1f1f1f;
-                border: 1px solid #333;
-                border-radius: 8px;
-                padding: 16px;
-                margin-bottom: 16px;
+                background-color: #1f1f1f !important;
+                border: 1px solid #333 !important;
+                border-radius: 8px !important;
+                padding: 16px !important;
+                margin-bottom: 16px !important;
+                transition: border-color 0.2s !important;
             }
+            
             .content-card:hover {
-                border: 1px solid #ff1493;
+                border-color: #ff1493 !important;
+            }
+            
+            /* Ensure columns in bottom nav stay horizontal */
+            .bottom-nav-container > div {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-around !important;
+                width: 100% !important;
+            }
+            
+            /* Force horizontal layout for bottom nav columns */
+            .bottom-nav-container [data-testid="column"] {
+                flex: 1 !important;
+                display: flex !important;
+                justify-content: center !important;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- Sidebar --- (Your original Python code)
+    # --- SIDEBAR CONTENT ---
     with st.sidebar:
+        # Logo
         st.markdown("""
             <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="200" height="50" fill="#FF00FF"/>
                 <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
             </svg>
         """, unsafe_allow_html=True)
-        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")
+        
+        # Profile
+        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100)
         st.subheader("taha gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / 0111 ≡ ...")
         st.caption("New York, New York, United States")
         st.caption("test_tech")
         st.divider()
-        st.metric("Profile viewers", np.random.randint(2000, 2500))
-        st.metric("Post impressions", np.random.randint(1400, 1600))
+        
+        # Metrics
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Profile viewers", np.random.randint(2000, 2500))
+        with col2:
+            st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
+        
+        # Manage pages
         st.subheader("Manage pages")
-        if st.button("🔬 test_tech", key="manage_test_tech"):
+        if st.button("🔬 test_tech", key="manage_test_tech", use_container_width=True):
             st.session_state.current_page = "test_tech"
             st.rerun()
-        if st.button("🌌 supernNova_2177", key="manage_supernova"):
+        if st.button("🌌 supernNova_2177", key="manage_supernova", use_container_width=True):
             st.session_state.current_page = "supernova_2177"
             st.rerun()
-        if st.button("✈️ GLOBALRUNWAY", key="manage_globalrunway"):
+        if st.button("✈️ GLOBALRUNWAY", key="manage_globalrunway", use_container_width=True):
             st.session_state.current_page = "globalrunway"
             st.rerun()
-        if st.button("📂 Show all >", key="manage_showall"):
+        if st.button("📂 Show all >", key="manage_showall", use_container_width=True):
             st.write("All pages (placeholder list).")
         st.divider()
-        if st.button("🔮 Enter Metaverse", key="nav_metaverse"):
+        
+        # Special sections
+        if st.button("🔮 Enter Metaverse", key="nav_metaverse", use_container_width=True):
             st.session_state.current_page = "enter_metaverse"
             st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void – stay tuned for 3D immersion!")
+        
         st.subheader("Premium features")
-        if st.button("⚙️ Settings", key="nav_settings"):
+        if st.button("⚙️ Settings", key="nav_settings", use_container_width=True):
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
         st.divider()
+        
+        # Navigation
         st.subheader("Navigation")
-        if st.button("Feed", key="nav_feed"): st.session_state.current_page = "feed"; st.rerun()
-        if st.button("Chat", key="nav_chat"): st.session_state.current_page = "chat"; st.rerun()
-        if st.button("Messages", key="nav_messages"): st.session_state.current_page = "messages"; st.rerun()
-        if st.button("Agents", key="nav_agents"): st.session_state.current_page = "agents"; st.rerun()
-        if st.button("Voting", key="nav_voting"): st.session_state.current_page = "voting"; st.rerun()
-        if st.button("Profile", key="nav_profile"): st.session_state.current_page = "profile"; st.rerun()
-        if st.button("Music", key="nav_music"): st.session_state.current_page = "music"; st.rerun()
+        nav_items = [
+            ("Feed", "feed"),
+            ("Chat", "chat"),
+            ("Messages", "messages"),
+            ("Agents", "agents"),
+            ("Voting", "voting"),
+            ("Profile", "profile"),
+            ("Music", "music")
+        ]
+        
+        for label, page in nav_items:
+            if st.button(label, key=f"nav_{page}", use_container_width=True):
+                st.session_state.current_page = page
+                st.rerun()
 
-    # --- Main content area ---
-    # MODIFICATION: Wrap search bar in a div to make it sticky
-    st.markdown('<div class="sticky-header">', unsafe_allow_html=True)
+    # --- MAIN CONTENT AREA ---
+    
+    # Sticky search bar at top
+    st.markdown('<div class="sticky-search-container">', unsafe_allow_html=True)
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # Load page content (Your original code)
+    
+    # Load page content
     load_page(st.session_state.current_page)
-
-    # --- Bottom nav --- (Your original Python code with a minor badge fix)
-    st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
+    
+    # --- FIXED BOTTOM NAVIGATION ---
+    st.markdown('<div class="bottom-nav-container">', unsafe_allow_html=True)
+    
+    # Create 5 columns for bottom nav items
     bottom_cols = st.columns(5)
+    
     with bottom_cols[0]:
-        if st.button("🏠\nHome", key="bottom_home"): st.session_state.current_page = "feed"; st.rerun()
+        if st.button("🏠\nHome", key="bottom_home"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+    
     with bottom_cols[1]:
-        if st.button("📹\nVideo", key="bottom_video"): st.session_state.current_page = "video_chat"; st.rerun()
+        if st.button("📹\nVideo", key="bottom_video"):
+            st.session_state.current_page = "video_chat"
+            st.rerun()
+    
     with bottom_cols[2]:
-        if st.button("👥\nMy Network", key="bottom_network"): st.session_state.current_page = "social"; st.rerun()
+        if st.button("👥\nMy Network", key="bottom_network"):
+            st.session_state.current_page = "social"
+            st.rerun()
+    
     with bottom_cols[3]:
-        # MODIFICATION: The badge is now part of the button's container for better alignment
-        if st.button("🔔\nNotifications", key="bottom_notifications"): st.session_state.current_page = "messages"; st.rerun()
-        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)
+        # Notifications with badge
+        st.markdown('<div class="notification-badge">', unsafe_allow_html=True)
+        if st.button("🔔\nNotifications", key="bottom_notifications"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        st.markdown('<span class="badge">8</span>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
     with bottom_cols[4]:
-        if st.button("💼\nJobs", key="bottom_jobs"): st.session_state.current_page = "jobs"; st.rerun()
+        if st.button("💼\nJobs", key="bottom_jobs"):
+            st.session_state.current_page = "jobs"
+            st.rerun()
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
