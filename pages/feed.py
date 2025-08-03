@@ -27,7 +27,7 @@ def generate_post_data(num_posts=5):
         })
     return posts
 
-# UI Rendering for a single post (LinkedIn-style card)
+# UI Rendering for a single post (with uniform button sizes/spacing)
 def render_post(post):
     """Renders a single post card."""
     st.markdown('<div class="content-card">', unsafe_allow_html=True)
@@ -45,10 +45,8 @@ def render_post(post):
     edited_text = " • Edited" if post["edited"] else ""
     st.caption(f"{post['likes']} likes • {post['comments']} comments • {post['reposts']} reposts{edited_text}")
     cols_actions = st.columns(4)
-    cols_actions[0].button("👍 Like", key=f"like_{post['id']}", help="Like this post")
-    cols_actions[1].button("💬 Comment", key=f"comment_{post['id']}", help="Add a comment")
-    cols_actions[2].button("🔁 Repost", key=f"repost_{post['id']}", help="Repost this")
-    cols_actions[3].button("➡️ Send", key=f"send_{post['id']}", help="Send to someone")
+    for i, label in enumerate(["👍 Like", "💬 Comment", "🔁 Repost", "➡️ Send"]):
+        cols_actions[i].button(label, key=f"{label.split()[1].lower()}_{post['id']}", help=label)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Main function for page loading
