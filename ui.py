@@ -251,7 +251,7 @@ def main() -> None:
 
 
     # Change this single value to set your sidebar width (px)
-    SIDEBAR_WIDTH = 200  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
+    SIDEBAR_WIDTH = 210  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
 
     st.markdown(f"""
     <style>
@@ -331,7 +331,7 @@ def main() -> None:
         if st.button("📬 Messages", key="nav_messages"):
             st.session_state.current_page = "messages"
             st.rerun()
-        if st.button("🗳 Voting", key="nav_voting"):
+        if st.button("🗳  Voting", key="nav_voting"):
             st.session_state.current_page = "voting"
             st.rerun()
         if st.button("👤 Profile", key="nav_profile"):
