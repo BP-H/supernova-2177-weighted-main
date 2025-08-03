@@ -108,9 +108,9 @@ def main() -> None:
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
             padding: 8px 12px !important;
-            margin: 5px 0 !important;
+            margin: 3px 0 !important;
             width: 100% !important;
-            height: 40px !important; /* Fixed height for uniformity */
+            height: 30px !important; /* Fixed height for uniformity */
             border: none !important;
             border-radius: 8px !important;
             font-size: 14px !important;
