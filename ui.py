@@ -89,10 +89,10 @@ def main() -> None:
             background-color: #18181b !important;
             color: white !important;
             border-radius: 10px;
-            padding: 5px;
+            padding: 0px;
             margin: 0px;
-            width: 300px;
-            z-index: 8;
+            width: 250px;
+            z-index: 98;
         }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
