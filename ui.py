@@ -7,10 +7,10 @@ import sys
 from pathlib import Path
 import streamlit as st
 import importlib.util
-import numpy as np
+import numpy as np  # For random low stats
 import warnings
-import streamlit.components.v1 as components
 
+# Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Path for Cloud/local
@@ -21,6 +21,7 @@ try:
     from streamlit_helpers import alert, header, theme_selector, safe_container
     from frontend.theme import initialize_theme
 except ImportError as e:
+    # Use fallback functions instead of stopping
     def alert(text): st.info(text)
     def header(text): st.header(text)
     def theme_selector(): st.selectbox("Theme", ["dark"], key="theme")
@@ -29,6 +30,7 @@ except ImportError as e:
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
 def load_page(page_name: str):
+    # CORRECTED base_paths to include transcendental_resonance_frontend/pages
     base_paths = [
         Path("mount/src/pages"),
         Path(__file__).parent / "pages",
@@ -60,57 +62,25 @@ def load_page(page_name: str):
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
 
+# Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
     st.set_page_config(
         page_title="supernNova_2177",
         layout="wide",
-        initial_sidebar_state="expanded",
-        menu_items=None  # remove default menu items
+        initial_sidebar_state="expanded"
     )
-
-    # ////// critical: enable embed mode so cloud toolbar disappears but header + sidebar toggle stay
-    try:
-        st.query_params["embed"] = "true"           # Streamlit >= 1.32
-    except Exception:
-        try:
-            st.experimental_set_query_params(embed="true")  # older fallback
-        except Exception:
-            pass
-
     st.session_state.setdefault("theme", "dark")
-    st.session_state.setdefault("conversations", {})
-    st.session_state.setdefault("current_page", "feed")
+    st.session_state.setdefault("conversations", {})  # Fix NoneType
+    st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # CSS — keep header for the arrow / hide badges & footer only
+    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
-        /* keep header so the sidebar toggle arrow remains */
-        /* hide viewer/management badges */
-        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; }
-        /* hide hamburger menu + footer */
-        #MainMenu { visibility: hidden !important; }
-        footer { visibility: hidden !important; }
-
-        /* optional: if any residual toolbar container exists, collapse it without touching the toggle */
-        header [data-testid*="Toolbar"],
-        header :is(div,nav,section)[class*="toolbar"],
-        header :is(div,nav,section)[class*="cloud"] { display: none !important; }
-
-        /* ensure the sidebar toggle stays visible/clickable */
-        header button[aria-label*="sidebar" i],
-        [data-testid="collapsedControl"] button {
-            display: inline-flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 999 !important;
-        }
-
-        /* Hide Streamlit's built-in sidebar page nav (you use a custom one) */
+        /* Hide Streamlit's top navigation tabs */
         [data-testid="stSidebarNav"] { display: none !important; }
-
-        /* STICKY SIDEBAR */
+        
+        /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
             top: 0 !important;
@@ -124,85 +94,131 @@ def main() -> None:
             width: 190px;
             z-index: 98;
         }
-
-        /* LEFT ALIGN SIDEBAR CONTENT */
+        
+        /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
         [data-testid="stSidebar"] .stButton,
         [data-testid="stSidebar"] .stSelectbox,
-        [data-testid="stSidebar"] > div { text-align: left !important; }
-
-        /* SIDEBAR BUTTONS */
+        [data-testid="stSidebar"] > div {
+            text-align: left !important;
+        }
+        
+        /* 🔥 SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
         [data-testid="stSidebar"] button {
-            background-color: #18181b !important;
+            background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 2px 5px !important;
+            padding: 2px 5px !important;  #8-12
             margin: 3px 0 !important;
             width: 100% !important;
-            height: 30px !important;
+            height: 30px !important; /* Fixed height for uniformity */
             border: none !important;
             border-radius: 8px !important;
             font-size: 14px !important;
             display: flex !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            white-space: nowrap !important;
+            white-space: nowrap !important; /* Prevent text wrapping */
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
+        
+        /* Apply style on hover AND on focus, and remove the default focus outline */
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255,255,255,0.3) !important;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
             outline: none !important;
         }
-
-        /* MAIN AREA */
-        .stApp { background-color: #0a0a0a !important; color: white !important; }
-        .main .block-container { padding-top: 20px !important; padding-bottom: 90px !important; }
-
-        /* Cards */
-        .content-card { border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; color: white !important; }
-        .content-card:hover { border: 1px solid #ff1493; }
-
-        /* Metrics */
-        [data-testid="stMetricLabel"], [data-testid="stMetricValue"] { color: white !important; }
-
-        /* Search input */
-        [data-testid="stTextInput"] > div { background-color: #28282b !important; border-radius: 9px !important; border: none !important; }
-        [data-testid="stTextInput"] input { background-color: transparent !important; color: white !important; padding-left: 10px; }
-
-        /* Mobile */
+        
+        /* Special style for the logo button to make it look like a header */
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
+            font-size: 28px !important;
+            font-weight: bold !important;
+            justify-content: center !important;
+            padding: 15px 0px !important;
+            margin-bottom: 15px !important;
+            height: auto !important;
+        }
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
+            box-shadow: none !important; /* Remove glow from logo hover */
+        }
+        
+        /* 🔥 MAIN CONTENT AREA */
+        .stApp {
+            background-color: #0a0a0a !important;
+            color: white !important;
+        }
+        .main .block-container {
+            padding-top: 20px !important;
+            padding-bottom: 90px !important;
+        }
+        
+        /* Content cards */
+        .content-card {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+            color: white !important; /* Ensure text visible */
+        }
+        .content-card:hover {
+            border: 1px solid #ff1493;
+        }
+        
+        /* Metrics text visible */
+        [data-testid="stMetricLabel"] { color: white !important; }
+        [data-testid="stMetricValue"] { color: white !important; }
+        
+        /* Profile pic circular */
+        [data-testid="stSidebar"] img {
+            border-radius: 50% !important;
+            margin: 0 auto !important;
+            display: block !important;
+        }
+        
+        /* Modern Search bar styling */
+        [data-testid="stTextInput"] > div {
+            background-color: #28282b !important;
+            border-radius: 9px !important;
+            border: none !important;
+        }
+        [data-testid="stTextInput"] input {
+            background-color: transparent !important;
+            color: white !important;
+            padding-left: 10px;
+        }
+        
+        /* Mobile responsiveness */
         @media (max-width: 768px) {
-            [data-testid="stSidebar"] button { height: 35px !important; font-size: 12px !important; }
+            [data-testid="stSidebar"] button {
+                height: 35px !important;
+                font-size: 12px !important;
+            }
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # JS safety net: if cloud UI elements appear, nuke them; keep the toggle
-    components.html("""
-    <script>
-      const hideBits = () => {
-        ['a[class*="viewerBadge"]','div[class*="viewerBadge"]','[title*="Share"]','[aria-label="Share"]','[data-testid*="Toolbar"]']
-          .forEach(sel => document.querySelectorAll(sel).forEach(el => el.style.display='none'));
-        const t = document.querySelector('header button[aria-label*="sidebar" i]') ||
-                  document.querySelector('[data-testid="collapsedControl"] button');
-        if (t) { t.style.display='inline-flex'; t.style.visibility='visible'; t.style.opacity='1'; t.style.pointerEvents='auto'; }
-      };
-      const mo = new MutationObserver(hideBits); mo.observe(document.body,{subtree:true,childList:true});
-      hideBits();
-    </script>
-    """, height=0)
-
-    # ==== SIDEBAR ============================================================
+    # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
-        st.text_input("Search", key="search_bar", placeholder="🔍 Search posts, people...", label_visibility="collapsed")
+        # Modern search bar
+        st.text_input(
+            "Search",
+            key="search_bar",
+            placeholder="🔍 Search posts, people...",
+            label_visibility="collapsed"
+        )
 
+        # Clickable Logo - navigates to feed
         if st.button("💫 superNova_2177 💫", use_container_width=True):
+            # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
             st.rerun()
-
+        
+        # Profile pic (circular via CSS)
         st.image("assets/profile_pic.png", width=100)
+        
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / will = ...")
@@ -212,54 +228,83 @@ def main() -> None:
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
-
+        
+        # Manage pages with logical logos
         if st.button("🏠 Test Tech", key="manage_test_tech"):
-            st.session_state.current_page = "test_tech"; st.rerun()
+            st.session_state.current_page = "test_tech"
+            st.rerun()
         if st.button("✨ supernNova_2177", key="manage_supernova"):
-            st.session_state.current_page = "supernova_2177"; st.rerun()
+            st.session_state.current_page = "supernova_2177"
+            st.rerun()
         if st.button("🌍 GLOBALRUNWAY", key="manage_globalrunway"):
-            st.session_state.current_page = "globalrunway"; st.rerun()
+            st.session_state.current_page = "globalrunway"
+            st.rerun()
         if st.button("🖼️ Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
         st.divider()
 
-        if st.button("📰 Feed", key="nav_feed"):
-            st.session_state.current_page = "feed"; st.rerun()
-        if st.button("💬 Chat", key="nav_chat"):
-            st.session_state.current_page = "chat"; st.rerun()
-        if st.button("📬 Messages", key="nav_messages"):
-            st.session_state.current_page = "messages"; st.rerun()
-        if st.button("🗳 Voting", key="nav_voting"):
-            st.session_state.current_page = "voting"; st.rerun()
-        if st.button("👤 Profile", key="nav_profile"):
-            st.session_state.current_page = "profile"; st.rerun()
-        st.divider()
 
+        # Navigation - small shaded buttons
+        if st.button("📰 Feed", key="nav_feed"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+        if st.button("💬 Chat", key="nav_chat"):
+            st.session_state.current_page = "chat"
+            st.rerun()
+        if st.button("📬 Messages", key="nav_messages"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("🗳 Voting", key="nav_voting"):
+            st.session_state.current_page = "voting"
+            st.rerun()
+        if st.button("👤 Profile", key="nav_profile"):
+            st.session_state.current_page = "profile"
+            st.rerun()
+            
+        st.divider()
+        
+        
+        # Enter Metaverse (clickable)
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
-            st.session_state.current_page = "music"; st.rerun()
+            st.session_state.current_page = "music"
+            st.rerun()
         if st.button("🚀 Agents", key="nav_agents"):
-            st.session_state.current_page = "agents"; st.rerun()
+            st.session_state.current_page = "agents"
+            st.rerun()
         if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
-            st.session_state.current_page = "enter_metaverse"; st.rerun()
+            st.session_state.current_page = "enter_metaverse"
+            st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
         st.divider()
+        
+
+
+        
 
         if st.button("⚙️ Settings", key="nav_settings"):
-            st.session_state.current_page = "settings"; st.rerun()
+            st.session_state.current_page = "settings"
+            st.rerun()
         theme_selector()
-
-    # ==== MAIN ==============================================================
+        
+    # Main content area - Load selected page or show search results
     with st.container():
+        # Prioritize search results over page navigation
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
             st.info("This is where your database search results would appear. Connect this to your backend.")
-            st.write("---"); st.subheader("Example Post Result")
+            # Placeholder for search results display
+            st.write("---")
+            st.subheader("Example Post Result")
             st.write("**User:** taha_gungor")
             st.write("This is a sample post that matches the search query. #streamlit #search")
-            st.write("---"); st.subheader("Example Profile Result")
-            st.write("**Profile:** artist_dev"); st.write("Software developer and digital artist.")
+            st.write("---")
+            st.subheader("Example Profile Result")
+            st.write("**Profile:** artist_dev")
+            st.write("Software developer and digital artist.")
+
         else:
+            # Load the selected page if there is no active search
             load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
