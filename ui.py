@@ -245,6 +245,9 @@ def main() -> None:
         
         # Enter Metaverse (clickable)
         st.subheader("Premium features")
+        if st.button("🎶 Music", key="nav_music"):
+            st.session_state.current_page = "music"
+            st.rerun()
         if st.button("🚀 Agents", key="nav_agents"):
             st.session_state.current_page = "agents"
             st.rerun()
