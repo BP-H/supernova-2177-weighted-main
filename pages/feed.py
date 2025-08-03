@@ -13,14 +13,11 @@ def main():
     page_title = Path(__file__).stem.replace('_', ' ').title()
     st.header(page_title)
     
-    st.write(f"Welcome to the {page_title} page.")
-    st.info("This content is a placeholder. You can now build out the specific functionality for this page.")
+    # --- ADD YOUR PAGE-SPECIFIC UI AND LOGIC BELOW ---
+    # This is where you will build the actual content for each page.
     
-    # --- ADD YOUR PAGE-SPECIFIC CODE BELOW ---
-    
-    # Example:
-    if st.button("Click me for a surprise!"):
-        st.balloons()
+    st.write(f"Build out the {page_title} page here.")
+
 
 # This ensures the main function is called when the page is loaded.
 if __name__ == "__main__":
