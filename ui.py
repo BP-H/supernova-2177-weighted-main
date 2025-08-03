@@ -2,17 +2,22 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+
 """Main Streamlit UI entry point for supernNova_2177."""
+
 import sys
 from pathlib import Path
 import streamlit as st
 import importlib.util
 import numpy as np # For random low stats
 import warnings
+
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
 # Path for Cloud/local
 sys.path.insert(0, str(Path("/mount/src") if 'mount' in str(Path(__file__)) else Path(__file__).parent))
+
 # Imports
 try:
     from streamlit_helpers import alert, header, theme_selector, safe_container
@@ -20,6 +25,7 @@ try:
 except ImportError as e:
     st.error(f"Critical import failed: {e}")
     st.stop()
+
 # Loader with better fallback for missing pages
 def load_page(page_name: str):
     base_paths = [Path("/mount/src/pages"), Path(__file__).parent / "pages"]
@@ -46,6 +52,7 @@ def load_page(page_name: str):
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
+
 # Main - Dark theme with subtle pink polish (accents on hover/logos), modern buttons with opacity shading
 def main() -> None:
     st.set_page_config(
@@ -57,6 +64,7 @@ def main() -> None:
     st.session_state.setdefault("conversations", {}) # Fix NoneType
     st.session_state.setdefault("current_page", "feed") # Default page
     initialize_theme(st.session_state["theme"])
+
     # CSS updates: Uniform small buttons with 5% opacity shading, subtle pink accents (hover glow #ff1493), curved bottom nav with horizontal alignment
     st.markdown("""
         <style>
@@ -130,16 +138,18 @@ def main() -> None:
             }
         </style>
     """, unsafe_allow_html=True)
-    # Sidebar - LinkedIn-like, with better logos, new sections clickable, lowercase name
+
+    # Sidebar - Supernova block at top, then profile pic and details
     with st.sidebar:
-        # Profile top with avatar and SVG logo
+        # Supernova block at top
         st.markdown("""
             <svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="200" height="50" fill="#FF00FF"/>
                 <text x="10" y="35" font-family="Arial" font-size="20" font-weight="bold" fill="white">supernNova_2177</text>
             </svg>
         """, unsafe_allow_html=True)
-        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="")  # Replace with real avatar URL
+        # Profile pic and details below
+        st.image("https://via.placeholder.com/100?text=Profile+Pic", width=100, caption="") # Replace with real avatar URL
         st.subheader("taha gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / 0111 ≡ ...")
@@ -173,33 +183,30 @@ def main() -> None:
         if st.button("⚙️ Settings", key="nav_settings"):
             st.session_state.current_page = "settings"
             st.rerun()
-        theme_selector()  # Theme near settings
+        theme_selector() # Theme near settings
         st.divider()
-        # Navigation - small shaded buttons
-        if st.button("Feed", key="nav_feed"):
-            st.session_state.current_page = "feed"
-            st.rerun()
-        if st.button("Chat", key="nav_chat"):
-            st.session_state.current_page = "chat"
-            st.rerun()
-        if st.button("Messages", key="nav_messages"):
-            st.session_state.current_page = "messages"
-            st.rerun()
-        if st.button("Agents", key="nav_agents"):
-            st.session_state.current_page = "agents"
-            st.rerun()
-        if st.button("Voting", key="nav_voting"):
-            st.session_state.current_page = "voting"
-            st.rerun()
-        if st.button("Profile", key="nav_profile"):
-            st.session_state.current_page = "profile"
-            st.rerun()
-        if st.button("Music", key="nav_music"):
-            st.session_state.current_page = "music"
-            st.rerun()
+        # Navigation - small shaded buttons, aligned in two columns for better spacing
+        st.subheader("Navigation")
+        nav_cols = st.columns(2)
+        nav_buttons = [
+            ("Feed", "feed"),
+            ("Chat", "chat"),
+            ("Messages", "messages"),
+            ("Agents", "agents"),
+            ("Voting", "voting"),
+            ("Profile", "profile"),
+            ("Music", "music")
+        ]
+        for i, (label, page) in enumerate(nav_buttons):
+            col = nav_cols[i % 2]
+            if col.button(label, key=f"nav_{page}"):
+                st.session_state.current_page = page
+                st.rerun()
+
     # Main content - Add search bar on top, then load page
     st.text_input("Search", key="search_bar", placeholder="Search posts, people, jobs...")
     load_page(st.session_state.current_page)
+
     # Bottom nav - Curved dark with labels, pink badge on Notifications, horizontal alignment in line
     st.markdown('<div class="bottom-nav">', unsafe_allow_html=True)
     bottom_cols = st.columns(5)
@@ -216,7 +223,7 @@ def main() -> None:
             st.session_state.current_page = "social"
             st.rerun()
     with bottom_cols[3]:
-        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True)  # Pink badge
+        st.markdown('<div class="badge">8</div>', unsafe_allow_html=True) # Pink badge
         if st.button("🔔\nNotifications", key="bottom_notifications"):
             st.session_state.current_page = "messages"
             st.rerun()
@@ -225,5 +232,6 @@ def main() -> None:
             st.session_state.current_page = "jobs"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+
 if __name__ == "__main__":
     main()
