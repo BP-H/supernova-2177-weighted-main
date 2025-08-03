@@ -27,6 +27,7 @@ def main():
     obstacle_density = difficulty_map[difficulty]
 
     # --- Main Three.js Game Component ---
+    # NOTE: All '{' and '}' for CSS/JS have been doubled to '{{' and '}}' to work with Python's f-string.
     three_js_game = f"""
     <!DOCTYPE html>
     <html>
@@ -248,7 +249,7 @@ def main():
             function updatePlayer(deltaTime) {{
                 const moveSpeed = 70 * deltaTime;
                 const strafeSpeed = 70 * deltaTime;
-                const moveBounds = {x: 40, y: 40};
+                const moveBounds = {{x: 40, y: 40}};
 
                 if (keys.w || keys.arrowup) camera.position.y += moveSpeed;
                 if (keys.s || keys.arrowdown) camera.position.y -= moveSpeed;
