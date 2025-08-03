@@ -91,7 +91,7 @@ def main() -> None:
             border-radius: 10px;
             padding: 0px;
             margin: 0px;
-            width: 200px;
+            width: 190px;
             z-index: 98;
         }
         
@@ -126,7 +126,7 @@ def main() -> None:
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 20, 147, 0.3) !important;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
             outline: none !important;
         }
         
