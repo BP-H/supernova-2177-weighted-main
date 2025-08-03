@@ -107,7 +107,7 @@ def main() -> None:
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 0px 12px !important;
+            padding: 8px 12px !important;
             margin: 5px 0 !important;
             width: 100% !important;
             height: 40px !important; /* Fixed height for uniformity */
