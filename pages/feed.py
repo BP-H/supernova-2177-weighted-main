@@ -1,13 +1,11 @@
-# pages/feed.py
 import streamlit as st
 import numpy as np
 from faker import Faker
 import time
 import random
 
-# Data Generation (realistic LinkedIn-like posts)
 @st.cache_data
-def generate_post_data(num_posts=5):
+def generate_post_data(num_posts=15):
     """Generates realistic post data for the feed."""
     fake = Faker()
     posts = []
@@ -15,46 +13,48 @@ def generate_post_data(num_posts=5):
         posts.append({
             "id": f"post_{i}_{int(time.time())}",
             "author_name": fake.name(),
-            "author_title": f"{fake.job()} at {fake.company()} • {random.choice(['1st', '2nd', '3rd'])}",
+            "author_title": f"{fake.job()} at {fake.company()}",
             "author_avatar": f"https://avatar.iran.liara.run/public/{np.random.randint(1, 100)}",
-            "post_text": fake.paragraph(nb_sentences=random.randint(1, 4)),
+            "post_text": fake.paragraph(nb_sentences=random.randint(3, 6)),
             "image_url": random.choice([None, f"https://picsum.photos/800/400?random={np.random.randint(1, 1000)}"]),
-            "edited": random.choice([True, False]),
-            "promoted": random.choice([True, False]),
             "likes": np.random.randint(10, 500),
             "comments": np.random.randint(0, 100),
-            "reposts": np.random.randint(0, 50),
         })
     return posts
 
-# UI Rendering for a single post (with uniform button sizes/spacing, integrated with pink/black theme)
-def render_post(post):
-    """Renders a single post card."""
+def _render_single_post(post):
+    """Renders a single post using the 'content-card' CSS class."""
     st.markdown('<div class="content-card">', unsafe_allow_html=True)
-    col1, col2 = st.columns([0.15, 0.85])
+    col1, col2 = st.columns([0.1, 0.9])
     with col1:
         st.image(post["author_avatar"], width=48)
     with col2:
         st.subheader(post["author_name"])
         st.caption(post["author_title"])
-    if post["promoted"]:
-        st.caption("Promoted")
+
     st.write(post["post_text"])
     if post["image_url"]:
         st.image(post["image_url"], use_container_width=True)
-    edited_text = " • Edited" if post["edited"] else ""
-    st.caption(f"{post['likes']} likes • {post['comments']} comments • {post['reposts']} reposts{edited_text}")
+
+    st.caption(f"{post['likes']} likes • {post['comments']} comments")
+    st.markdown("---")
     cols_actions = st.columns(4)
-    for i, label in enumerate(["👍 Like", "💬 Comment", "🔁 Repost", "➡️ Send"]):
-        cols_actions[i].button(label, key=f"{label.split()[1].lower()}_{post['id']}", help=label)
+    actions = ["👍 Like", "💬 Comment", "🔁 Repost", "➡️ Send"]
+    for i, label in enumerate(actions):
+        cols_actions[i].button(label, key=f"{label}_{post['id']}", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Main function for page loading
-def main():
-    st.markdown("### Your Feed")
-    posts_data = generate_post_data()
-    for post in posts_data:
-        render_post(post)
 
-if __name__ == "__main__":
-    main()
+def render():
+    """The main function for the feed page."""
+    # A simple container to create a new post
+    with st.container(border=True):
+        st.text_area("What's on your mind?", placeholder="Share an update...", height=100)
+        st.button("Post", type="primary")
+
+    st.divider()
+
+    # Generate and display the feed
+    posts = generate_post_data(num_posts=15)
+    for post in posts:
+        _render_single_post(post)
