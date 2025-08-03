@@ -149,7 +149,7 @@ def main() -> None:
             color: white !important;
         }
         .main .block-container {
-            padding-top: 0px !important;
+            padding-top: 20px !important;
             padding-bottom: 90px !important;
         }
         
@@ -180,7 +180,7 @@ def main() -> None:
         /* Modern Search bar styling */
         [data-testid="stTextInput"] > div {
             background-color: #28282b !important;
-            border-radius: 20px !important;
+            border-radius: 9px !important;
             border: none !important;
         }
         [data-testid="stTextInput"] input {
@@ -210,7 +210,7 @@ def main() -> None:
         )
 
         # Clickable Logo - navigates to feed
-        if st.button("💫 sN_2177 💫", use_container_width=True):
+        if st.button("💫 superNova_2177 💫", use_container_width=True):
             # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
