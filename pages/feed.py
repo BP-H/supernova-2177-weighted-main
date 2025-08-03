@@ -5,12 +5,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Dict, List
 
 import streamlit as st
+import asyncpg
+from sqlalchemy.exc import OperationalError
 
 from frontend.theme import apply_theme
 from streamlit_helpers import (
@@ -20,9 +23,9 @@ from streamlit_helpers import (
     theme_toggle,
 )
 
+# Apply theme and global styles
 apply_theme("light")
 inject_global_styles()
-
 
 @dataclass
 class User:
@@ -30,7 +33,6 @@ class User:
     avatar: str
     bio: str
     badges: List[str] = field(default_factory=list)
-
 
 @dataclass
 class Post:
@@ -42,6 +44,66 @@ class Post:
     reactions: Dict[str, int] = field(default_factory=lambda: {"❤️": 0, "🔥": 0, "👍": 0})
     comments: List[Dict[str, str]] = field(default_factory=list)
 
+async def _fetch_users_from_db() -> List[User]:
+    """Fetch users from the database."""
+    try:
+        conn = await asyncpg.connect(
+            user="postgres",
+            password="your_password",  # Replace with your DB credentials
+            database="supernova_db",
+            host="localhost",
+            port=5432
+        )
+        rows = await conn.fetch("SELECT username, avatar, bio, badges FROM users LIMIT 3")
+        users = [
+            User(
+                username=row["username"],
+                avatar=row["avatar"],
+                bio=row["bio"],
+                badges=row["badges"] if row["badges"] else []
+            )
+            for row in rows
+        ]
+        await conn.close()
+        return users
+    except Exception as e:
+        st.error(f"Failed to fetch users from database: {e}")
+        return []
+
+async def _fetch_posts_from_db(count: int, start: int = 0) -> List[Post]:
+    """Fetch posts from the database."""
+    try:
+        conn = await asyncpg.connect(
+            user="postgres",
+            password="your_password",  # Replace with your DB credentials
+            database="supernova_db",
+            host="localhost",
+            port=5432
+        )
+        users = await _fetch_users_from_db()
+        user_map = {u.username: u for u in users}
+        rows = await conn.fetch(
+            "SELECT id, username, media, caption, timestamp, reactions, comments "
+            "FROM posts WHERE id >= $1 ORDER BY id LIMIT $2",
+            start, count
+        )
+        posts = [
+            Post(
+                id=row["id"],
+                user=user_map.get(row["username"], User("unknown", "https://placehold.co/48x48?text=U", "Unknown")),
+                media=row["media"],
+                caption=row["caption"],
+                timestamp=row["timestamp"],
+                reactions=row["reactions"] if row["reactions"] else {"❤️": 0, "🔥": 0, "👍": 0},
+                comments=row["comments"] if row["comments"] else []
+            )
+            for row in rows
+        ]
+        await conn.close()
+        return posts
+    except Exception as e:
+        st.error(f"Failed to fetch posts from database: {e}")
+        return []
 
 def _sample_users() -> List[User]:
     """Return three hard-coded demo users."""
@@ -50,7 +112,6 @@ def _sample_users() -> List[User]:
         User("bob", "https://placehold.co/48x48?text=B", "Creator", ["🥇 pro"]),
         User("carol", "https://placehold.co/48x48?text=C", "Hacker", ["💯 elite"]),
     ]
-
 
 def _generate_posts(count: int, start: int = 0) -> List[Post]:
     """Generate `count` pseudo-random demo posts."""
@@ -67,7 +128,6 @@ def _generate_posts(count: int, start: int = 0) -> List[Post]:
         for i in range(count)
     ]
 
-
 def _render_stories(users: List[User]) -> None:
     """Render the horizontal story-strip using st.columns as a robust alternative."""
     if not users:
@@ -77,7 +137,6 @@ def _render_stories(users: List[User]) -> None:
     for i, u in enumerate(users):
         with cols[i]:
             st.image(u.avatar, caption=sanitize_text(u.username), width=60)
-
 
 def _render_post(post: Post) -> None:
     """Render an individual post card."""
@@ -114,15 +173,22 @@ def _render_post(post: Post) -> None:
                 st.session_state["comments"][post.id] = comments
                 st.rerun()
 
-
 def _init_state() -> None:
     """Initialize the session state for the feed."""
     if "posts" not in st.session_state:
-        st.session_state["posts"] = _generate_posts(6)
+        # Try database first
+        try:
+            posts = asyncio.run(_fetch_posts_from_db(6))
+            if posts:
+                st.session_state["posts"] = posts
+            else:
+                st.session_state["posts"] = _generate_posts(6)
+        except Exception as e:
+            st.error(f"Database initialization failed: {e}")
+            st.session_state["posts"] = _generate_posts(6)
     st.session_state.setdefault("post_offset", 3)
     st.session_state.setdefault("reactions", {})
     st.session_state.setdefault("comments", {})
-
 
 def main(main_container=None) -> None:
     """Render the feed page."""
@@ -131,15 +197,18 @@ def main(main_container=None) -> None:
         _init_state()
         theme_toggle("Dark Mode", key_suffix="feed")
 
+        # Fetch users, try database first
+        users = asyncio.run(_fetch_users_from_db())
+        if not users:
+            users = _sample_users()
+
         posts = st.session_state["posts"]
-        users = _sample_users()
 
         _render_stories(users)
 
         for p in posts:
             _render_post(p)
             st.divider()
-
 
 if __name__ == "__main__":
     main()
