@@ -7,9 +7,8 @@ import sys
 from pathlib import Path
 import streamlit as st
 import importlib.util
-import numpy as np
+import numpy as np  # For random low stats
 import warnings
-import base64
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -30,12 +29,6 @@ except ImportError as e:
     def initialize_theme(theme): pass
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
-# Helper function to encode image to Base64
-def image_to_base64(path: Path) -> str:
-    """Encodes an image file to a Base64 string."""
-    with path.open("rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
-
 def load_page(page_name: str):
     # CORRECTED base_paths to include transcendental_resonance_frontend/pages
     base_paths = [
@@ -49,9 +42,11 @@ def load_page(page_name: str):
         if candidate.exists():
             module_path = candidate
             break
+
     if not module_path:
         st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
         return
+
     try:
         spec = importlib.util.spec_from_file_location(page_name, module_path)
         module = importlib.util.module_from_spec(spec)
@@ -67,7 +62,7 @@ def load_page(page_name: str):
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
 
-# Main function
+# Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
     st.set_page_config(
         page_title="supernNova_2177",
@@ -75,109 +70,155 @@ def main() -> None:
         initial_sidebar_state="expanded"
     )
     st.session_state.setdefault("theme", "dark")
-    st.session_state.setdefault("conversations", {})
-    st.session_state.setdefault("current_page", "feed")
+    st.session_state.setdefault("conversations", {})  # Fix NoneType
+    st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # --- MODIFICATION: New logic to safely load the image ---
-    img_b64 = ""
-    is_clickable = False
-    image_path = Path(__file__).parent / "assets" / "profile_pic.png"
-
-    if image_path.exists():
-        img_b64 = image_to_base64(image_path)
-        is_clickable = True
-    # The 'else' case is handled in the sidebar rendering below
-
-    st.markdown(f"""
+    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
+    st.markdown("""
     <style>
-        /* (All previous CSS styles remain the same) */
-        [data-testid="stSidebarNav"] {{ display: none !important; }}
-        [data-testid="stSidebar"] {{
-            position: sticky !important; top: 0 !important; height: 100vh !important;
-            overflow-y: auto !important; background-color: #18181b !important;
-            color: white !important; border-radius: 10px; padding: 20px;
-            margin: 0px; width: 300px; z-index: 98;
-        }}
+        /* Hide Streamlit's top navigation tabs */
+        [data-testid="stSidebarNav"] { display: none !important; }
+        
+        /* 🔥 STICKY SIDEBAR */
+        [data-testid="stSidebar"] {
+            position: sticky !important;
+            top: 0 !important;
+            height: 100vh !important;
+            overflow-y: auto !important;
+            background-color: #18181b !important;
+            color: white !important;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0px;
+            width: 300px;
+            z-index: 98;
+        }
+        
+        /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
         [data-testid="stSidebar"] .stButton,
         [data-testid="stSidebar"] .stSelectbox,
-        [data-testid="stSidebar"] > div {{ text-align: left !important; }}
-        [data-testid="stSidebar"] button {{
-            background-color: #18181b !important; color: white !important;
-            padding: 8px 12px !important; margin: 5px 0 !important;
-            width: 100% !important; height: 40px !important; border: none !important;
-            border-radius: 8px !important; font-size: 14px !important;
-            display: flex !important; justify-content: flex-start !important;
-            align-items: center !important; white-space: nowrap !important;
-            overflow: hidden !important; text-overflow: ellipsis !important;
-        }}
+        [data-testid="stSidebar"] > div {
+            text-align: left !important;
+        }
+        
+        /* 🔥 SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
+        [data-testid="stSidebar"] button {
+            background-color: #18181b !important; /* Match sidebar bg for invisibility */
+            color: white !important;
+            padding: 8px 12px !important;
+            margin: 5px 0 !important;
+            width: 100% !important;
+            height: 40px !important; /* Fixed height for uniformity */
+            border: none !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            white-space: nowrap !important; /* Prevent text wrapping */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        
+        /* Apply style on hover AND on focus, and remove the default focus outline */
         [data-testid="stSidebar"] button:hover,
-        [data-testid="stSidebar"] button:focus {{
+        [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
             box-shadow: 0 0 5px rgba(255, 20, 147, 0.3) !important;
             outline: none !important;
-        }}
-        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {{
-            font-size: 28px !important; font-weight: bold !important;
-            justify-content: center !important; padding: 15px 0px !important;
-            margin-bottom: 15px !important; height: auto !important;
-        }}
-        .stApp {{ background-color: #0a0a0a !important; color: white !important; }}
-
-        /* CSS for original, non-clickable image */
-        [data-testid="stSidebar"] img {{
+        }
+        
+        /* Special style for the logo button to make it look like a header */
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
+            font-size: 28px !important;
+            font-weight: bold !important;
+            justify-content: center !important;
+            padding: 15px 0px !important;
+            margin-bottom: 15px !important;
+            height: auto !important;
+        }
+        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
+            box-shadow: none !important; /* Remove glow from logo hover */
+        }
+        
+        /* 🔥 MAIN CONTENT AREA */
+        .stApp {
+            background-color: #0a0a0a !important;
+            color: white !important;
+        }
+        .main .block-container {
+            padding-top: 20px !important;
+            padding-bottom: 90px !important;
+        }
+        
+        /* Content cards */
+        .content-card {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+            color: white !important; /* Ensure text visible */
+        }
+        .content-card:hover {
+            border: 1px solid #ff1493;
+        }
+        
+        /* Metrics text visible */
+        [data-testid="stMetricLabel"] { color: white !important; }
+        [data-testid="stMetricValue"] { color: white !important; }
+        
+        /* Profile pic circular */
+        [data-testid="stSidebar"] img {
             border-radius: 50% !important;
-            margin: 0 auto 10px auto !important; /* Centered with margin-bottom */
+            margin: 0 auto !important;
             display: block !important;
-        }}
-
-        /* CSS for the clickable button version */
-        button[data-testid="stButton"][key="profile_pic_button"] {{
-            background-image: url("data:image/png;base64,{img_b64}");
-            background-size: cover;
-            background-position: center;
-            border-radius: 50% !important;
-            width: 100px !important;
-            height: 100px !important;
-            padding: 0 !important;
-            margin: 0 auto 10px auto !important;
-            display: block !important;
-            border: 2px solid #2a2a2e !important;
-        }}
-        button[data-testid="stButton"][key="profile_pic_button"]:hover,
-        button[data-testid="stButton"][key="profile_pic_button"]:focus {{
-            border-color: #ff1493 !important;
-            box-shadow: 0 0 8px rgba(255, 20, 147, 0.5) !important;
-        }}
-        button[data-testid="stButton"][key="profile_pic_button"] > div {{
-            display: none;
-        }}
+        }
+        
+        /* Modern Search bar styling */
+        [data-testid="stTextInput"] > div {
+            background-color: #28282b !important;
+            border-radius: 20px !important;
+            border: none !important;
+        }
+        [data-testid="stTextInput"] input {
+            background-color: transparent !important;
+            color: white !important;
+            padding-left: 10px;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            [data-testid="stSidebar"] button {
+                height: 35px !important;
+                font-size: 12px !important;
+            }
+        }
     </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar
+    # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
+        # Modern search bar
         st.text_input(
-            "Search", key="search_bar", placeholder="🔍 Search posts, people...",
+            "Search",
+            key="search_bar",
+            placeholder="🔍 Search posts, people...",
             label_visibility="collapsed"
         )
+
+        # Clickable Logo - navigates to feed
         if st.button("💫supernNova_2177💫", use_container_width=True):
+            # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
             st.rerun()
-
-        # --- MODIFICATION: New logic to show either the button or a fallback ---
-        if is_clickable:
-            # If the image was found, show the clickable button
-            if st.button("", key="profile_pic_button"):
-                st.session_state.current_page = "profile"
-                st.rerun()
-        else:
-            # If image was not found, show an error and the non-clickable original image
-            st.error(f"Clickable pic failed. File not found at: assets/profile_pic.png")
-            st.image("assets/profile_pic.png", width=100)
-
+        
+        # Profile pic (circular via CSS)
+        st.image("assets/profile_pic.png", width=100)
+        
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / will = ...")
@@ -187,25 +228,83 @@ def main() -> None:
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
-
-        # (Rest of sidebar buttons)
+        
+        # Manage pages with logical logos
         if st.button("🏠 Test Tech", key="manage_test_tech"):
             st.session_state.current_page = "test_tech"
             st.rerun()
+        if st.button("✨ supernNova_2177", key="manage_supernova"):
+            st.session_state.current_page = "supernova_2177"
+            st.rerun()
+        if st.button("🌍 GLOBALRUNWAY", key="manage_globalrunway"):
+            st.session_state.current_page = "globalrunway"
+            st.rerun()
+        if st.button("🖼️ Show all >", key="manage_showall"):
+            st.write("All pages (placeholder list).")
+        st.divider()
+
+
+        # Navigation - small shaded buttons
         if st.button("📰 Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
+            st.rerun()
+        if st.button("💬 Chat", key="nav_chat"):
+            st.session_state.current_page = "chat"
+            st.rerun()
+        if st.button("📬 Messages", key="nav_messages"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("🗳 Voting", key="nav_voting"):
+            st.session_state.current_page = "voting"
             st.rerun()
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
-        # Add other buttons as needed...
+            
+        st.divider()
+        
+        
+        # Enter Metaverse (clickable)
+        st.subheader("Premium features")
+        if st.button("🎶 Music", key="nav_music"):
+            st.session_state.current_page = "music"
+            st.rerun()
+        if st.button("🚀 Agents", key="nav_agents"):
+            st.session_state.current_page = "agents"
+            st.rerun()
+        if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
+            st.session_state.current_page = "enter_metaverse"
+            st.rerun()
+        st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
+        st.divider()
+        
 
-    # Main content area
+
+        
+
+        if st.button("⚙️ Settings", key="nav_settings"):
+            st.session_state.current_page = "settings"
+            st.rerun()
+        theme_selector()
+        
+    # Main content area - Load selected page or show search results
     with st.container():
+        # Prioritize search results over page navigation
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            st.info("Search results would appear here.")
+            st.info("This is where your database search results would appear. Connect this to your backend.")
+            # Placeholder for search results display
+            st.write("---")
+            st.subheader("Example Post Result")
+            st.write("**User:** taha_gungor")
+            st.write("This is a sample post that matches the search query. #streamlit #search")
+            st.write("---")
+            st.subheader("Example Profile Result")
+            st.write("**Profile:** artist_dev")
+            st.write("Software developer and digital artist.")
+
         else:
+            # Load the selected page if there is no active search
             load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
