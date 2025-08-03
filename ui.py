@@ -242,6 +242,27 @@ def main() -> None:
         if st.button("🖼️ Show all >", key="manage_showall"):
             st.write("All pages (placeholder list).")
         st.divider()
+
+
+        # Navigation - small shaded buttons
+        if st.button("📰 Feed", key="nav_feed"):
+            st.session_state.current_page = "feed"
+            st.rerun()
+        if st.button("💬 Chat", key="nav_chat"):
+            st.session_state.current_page = "chat"
+            st.rerun()
+        if st.button("📬 Messages", key="nav_messages"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("🗳 Voting", key="nav_voting"):
+            st.session_state.current_page = "messages"
+            st.rerun()
+        if st.button("👤 Profile", key="nav_voting"):
+            st.session_state.current_page = "profile"
+            st.rerun()
+            
+        st.divider()
+        
         
         # Enter Metaverse (clickable)
         st.subheader("Premium features")
@@ -260,21 +281,7 @@ def main() -> None:
 
 
         
-        # Navigation - small shaded buttons
-        if st.button("📰 Feed", key="nav_feed"):
-            st.session_state.current_page = "feed"
-            st.rerun()
-        if st.button("💬 Chat", key="nav_chat"):
-            st.session_state.current_page = "chat"
-            st.rerun()
-        if st.button("📬 Messages", key="nav_messages"):
-            st.session_state.current_page = "messages"
-            st.rerun()
-        if st.button("👤 Profile", key="nav_profile"):
-            st.session_state.current_page = "profile"
-            st.rerun()
-            
-        st.divider()
+
         if st.button("⚙️ Settings", key="nav_settings"):
             st.session_state.current_page = "settings"
             st.rerun()
