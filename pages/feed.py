@@ -27,15 +27,15 @@ def generate_post_data(num_posts=5):
         })
     return posts
 
-# UI Rendering for a single post (with uniform button sizes/spacing, integrated with pink/black theme)
+# UI Rendering for a single post (left-aligned, handle long text with ellipsis, modern button styling)
 def render_post(post):
     """Renders a single post card."""
-    st.markdown('<div class="content-card">', unsafe_allow_html=True)
+    st.markdown('<div class="content-card" style="text-align: left !important;">', unsafe_allow_html=True)
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
         st.image(post["author_avatar"], width=48)
     with col2:
-        st.subheader(post["author_name"])
+        st.subheader(post["author_name"], anchor=False)
         st.caption(post["author_title"])
     if post["promoted"]:
         st.caption("Promoted")
@@ -46,12 +46,12 @@ def render_post(post):
     st.caption(f"{post['likes']} likes • {post['comments']} comments • {post['reposts']} reposts{edited_text}")
     cols_actions = st.columns(4)
     for i, label in enumerate(["👍 Like", "💬 Comment", "🔁 Repost", "➡️ Send"]):
-        cols_actions[i].button(label, key=f"{label.split()[1].lower()}_{post['id']}", help=label)
+        cols_actions[i].button(label, key=f"{label.split()[1].lower()}_{post['id']}", help=label, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Main function for page loading
 def main():
-    st.markdown("### Your Feed")
+    st.markdown("### Your Feed", anchor=False)
     posts_data = generate_post_data()
     for post in posts_data:
         render_post(post)
