@@ -9,7 +9,7 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
-import streamlit.components.v1 as components  # for embed redirect & DOM tweaks
+import streamlit.components.v1 as components  # for embed redirect (hide Streamlit Cloud top bar)
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -71,7 +71,7 @@ def main() -> None:
         initial_sidebar_state="expanded"
     )
 
-    # --- Ensure Streamlit Cloud top bar is gone (load with ?embed=true) -----
+    # === Ensure Streamlit Cloud "top bar" is gone (load with ?embed=true) ===
     try:
         qp = st.query_params  # >=1.32
         ev = qp.get("embed")
@@ -94,14 +94,14 @@ def main() -> None:
         </script>
         """, height=0)
         st.stop()
-    # -----------------------------------------------------------------------
+    # =======================================================================
 
     st.session_state.setdefault("theme", "dark")
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Fixed CSS - narrower sidebar; keep arrow; hide header actions; match header bg
+    # Fixed CSS - narrower sidebar, keep arrow, hide header actions, no grey header
     st.markdown("""
     <style>
         /* Hide Streamlit's built-in sidebar page nav and app menu/footer */
@@ -109,15 +109,13 @@ def main() -> None:
         #MainMenu { visibility: hidden !important; }
         footer { visibility: hidden !important; }
 
-        /* Make the Streamlit header blend with the app (no grey strip) */
+        /* Blend header with app; remove grey strip + toolbar actions (Share, etc.) */
         header[data-testid="stHeader"],
         header[data-testid="stHeader"] > div {
-            background: #0a0a0a !important;   /* match .stApp background */
+            background: #0a0a0a !important;
             box-shadow: none !important;
             border: none !important;
         }
-
-        /* Hide any header/toolbar actions that Cloud/App may inject (Share, …) */
         header [data-testid*="Toolbar"],
         header :is(a,button,div)[title*="Share" i],
         header :is(a,button)[aria-label*="Share" i],
@@ -127,7 +125,7 @@ def main() -> None:
             display: none !important;
         }
 
-        /* Ensure the sidebar toggle arrow stays visible and clickable */
+        /* Keep the sidebar toggle arrow visible/clickable */
         header button[aria-label*="sidebar" i],
         [data-testid="collapsedControl"] button {
             display: inline-flex !important;
@@ -137,7 +135,7 @@ def main() -> None:
             z-index: 999 !important;
         }
 
-        /* 🔥 STICKY SIDEBAR (narrower) */
+        /* 🔥 STICKY SIDEBAR (narrowed to 160px) */
         @media (min-width: 768px){
           [data-testid="stSidebar"]{
               position: sticky !important;
@@ -149,11 +147,11 @@ def main() -> None:
               border-radius: 10px;
               padding: 0px;
               margin: 0px;
-              min-width: 160px !important;  /* set your target width here */
+              min-width: 160px !important;   /* TARGET WIDTH */
               max-width: 160px !important;
               z-index: 98;
           }
-          /* ensure the inner wrapper matches width */
+          /* ensure inner wrapper matches width */
           [data-testid="stSidebar"] > div { width: 160px !important; }
         }
 
@@ -169,10 +167,10 @@ def main() -> None:
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* blend with sidebar */
             color: white !important;
-            padding: 2px 5px !important;  /* compact */
+            padding: 2px 5px !important; /* compact */
             margin: 3px 0 !important;
             width: 100% !important;
-            height: 30px !important;      /* uniform height */
+            height: 30px !important; /* uniform height */
             border: none !important;
             border-radius: 8px !important;
             font-size: 14px !important;
@@ -206,81 +204,50 @@ def main() -> None:
         }
 
         /* 🔥 MAIN CONTENT AREA */
-        .stApp {
-            background-color: #0a0a0a !important;
-            color: white !important;
-        }
-        .main .block-container {
-            padding-top: 20px !important;
-            padding-bottom: 90px !important;
-        }
+        .stApp { background-color: #0a0a0a !important; color: white !important; }
+        .main .block-container { padding-top: 20px !important; padding-bottom: 90px !important; }
 
         /* Content cards */
-        .content-card {
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            transition: border 0.2s;
-            color: white !important; /* Ensure text visible */
-        }
+        .content-card { border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; transition: border 0.2s; color: white !important; }
         .content-card:hover { border: 1px solid #ff1493; }
 
         /* Metrics text visible */
-        [data-testid="stMetricLabel"] { color: white !important; }
-        [data-testid="stMetricValue"] { color: white !important; }
+        [data-testid="stMetricLabel"], [data-testid="stMetricValue"] { color: white !important; }
 
         /* Profile pic circular */
-        [data-testid="stSidebar"] img {
-            border-radius: 50% !important;
-            margin: 0 auto !important;
-            display: block !important;
-        }
+        [data-testid="stSidebar"] img { border-radius: 50% !important; margin: 0 auto !important; display: block !important; }
 
         /* Modern Search bar styling */
-        [data-testid="stTextInput"] > div {
-            background-color: #28282b !important;
-            border-radius: 9px !important;
-            border: none !important;
-        }
-        [data-testid="stTextInput"] input {
-            background-color: transparent !important;
-            color: white !important;
-            padding-left: 10px;
-        }
+        [data-testid="stTextInput"] > div { background-color: #28282b !important; border-radius: 9px !important; border: none !important; }
+        [data-testid="stTextInput"] input { background-color: transparent !important; color: white !important; padding-left: 10px; }
 
         /* Mobile responsiveness */
         @media (max-width: 768px) {
-            [data-testid="stSidebar"] button {
-                height: 35px !important;
-                font-size: 12px !important;
-            }
+            [data-testid="stSidebar"] button { height: 35px !important; font-size: 12px !important; }
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # As a safety net, remove any late-injected header chrome but keep the toggle.
+    # Safety net: if Cloud injects items later, hide them; keep the toggle
     components.html("""
     <script>
-    (function(){
-      const hideBits = () => {
-        // Hide any header actions that might slip through
-        document.querySelectorAll('header [data-testid*="Toolbar"], header [title*="Share"], header [aria-label*="Share"]').forEach(el => el.style.display='none');
-        // Keep the sidebar toggle visible
-        const t = document.querySelector('[data-testid="collapsedControl"] button') ||
-                  document.querySelector('header button[aria-label*="sidebar" i]');
-        if (t) {
-          t.style.display='inline-flex';
-          t.style.visibility='visible';
-          t.style.opacity='1';
-          t.style.pointerEvents='auto';
-          t.style.zIndex='999';
-        }
-      };
-      const mo = new MutationObserver(hideBits);
-      mo.observe(document.body,{subtree:true,childList:true});
-      hideBits();
-    })();
+      (function(){
+        const hideBits = () => {
+          document.querySelectorAll('header [data-testid*="Toolbar"], header [title*="Share"], header [aria-label*="Share"]').forEach(el => el.style.display='none');
+          const t = document.querySelector('[data-testid="collapsedControl"] button') ||
+                    document.querySelector('header button[aria-label*="sidebar" i]');
+          if (t) {
+              t.style.display='inline-flex';
+              t.style.visibility='visible';
+              t.style.opacity='1';
+              t.style.pointerEvents='auto';
+              t.style.zIndex='999';
+          }
+        };
+        const mo = new MutationObserver(hideBits);
+        mo.observe(document.body,{subtree:true,childList:true});
+        hideBits();
+      })();
     </script>
     """, height=0)
 
