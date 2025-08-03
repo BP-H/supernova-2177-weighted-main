@@ -9,6 +9,8 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+import streamlit.components.v1 as components  # for embed redirect (hide Streamlit Cloud top bar)
+
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
