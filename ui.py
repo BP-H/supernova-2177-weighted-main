@@ -81,7 +81,7 @@ def main() -> None:
         header[data-testid="stHeader"] {
             position: sticky !important;
             top: 0 !important;
-            z-index: 2147483647 !important;   /* header stays below sidebar */
+            z-index: 100 !important;   /* header stays below sidebar */
         }
 
         /* Hide Streamlit's top navigation tabs */
@@ -99,7 +99,7 @@ def main() -> None:
             padding: 0px;
             margin: 0px;
             width: 190px;
-            z-index: 10001 !important;  /* was 98 / ensure sidebar + arrow appear above header */
+            z-index: 2147483647 !important;  /* was 98 / ensure sidebar + arrow appear above header */
         }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
