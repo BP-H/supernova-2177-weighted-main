@@ -74,16 +74,9 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Fixed CSS
+    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
-        /* keep header visible but under the sidebar */
-        header[data-testid="stHeader"] {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 100 !important;   /* header stays below sidebar */
-        }
-
         /* Hide Streamlit's top navigation tabs */
         [data-testid="stSidebarNav"] { display: none !important; }
         
@@ -98,8 +91,8 @@ def main() -> None:
             border-radius: 10px;
             padding: 0px;
             margin: 0px;
-            width: 190px;
-            z-index: 10001 !important;  /* was 98 / ensure sidebar + arrow appear above header */
+            width: 210px !important;  /* CHANGED from 190px to 210px */
+            z-index: 98;
         }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
@@ -114,7 +107,7 @@ def main() -> None:
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 2px 5px !important;  /* 8-12 */
+            padding: 2px 5px !important;  #8-12
             margin: 3px 0 !important;
             width: 100% !important;
             height: 30px !important; /* Fixed height for uniformity */
@@ -133,7 +126,7 @@ def main() -> None:
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   /* 255, 20, 147, 0.3 */
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
             outline: none !important;
         }
         
@@ -206,8 +199,9 @@ def main() -> None:
     </style>
     """, unsafe_allow_html=True)
 
-    # Sidebar
+    # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
+        # Modern search bar
         st.text_input(
             "Search",
             key="search_bar",
@@ -215,11 +209,14 @@ def main() -> None:
             label_visibility="collapsed"
         )
 
+        # Clickable Logo - navigates to feed
         if st.button("💫 superNova_2177 💫", use_container_width=True):
+            # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
             st.rerun()
         
+        # Profile pic (circular via CSS)
         st.image("assets/profile_pic.png", width=100)
         
         st.subheader("taha_gungor")
@@ -232,6 +229,7 @@ def main() -> None:
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
         
+        # Manage pages with logical logos
         if st.button("🏠 Test Tech", key="manage_test_tech"):
             st.session_state.current_page = "test_tech"
             st.rerun()
@@ -245,6 +243,8 @@ def main() -> None:
             st.write("All pages (placeholder list).")
         st.divider()
 
+
+        # Navigation - small shaded buttons
         if st.button("📰 Feed", key="nav_feed"):
             st.session_state.current_page = "feed"
             st.rerun()
@@ -263,6 +263,8 @@ def main() -> None:
             
         st.divider()
         
+        
+        # Enter Metaverse (clickable)
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
             st.session_state.current_page = "music"
@@ -275,17 +277,23 @@ def main() -> None:
             st.rerun()
         st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
         st.divider()
+        
+
+
+        
 
         if st.button("⚙️ Settings", key="nav_settings"):
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
         
-    # Main content area
+    # Main content area - Load selected page or show search results
     with st.container():
+        # Prioritize search results over page navigation
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
             st.info("This is where your database search results would appear. Connect this to your backend.")
+            # Placeholder for search results display
             st.write("---")
             st.subheader("Example Post Result")
             st.write("**User:** taha_gungor")
@@ -294,7 +302,9 @@ def main() -> None:
             st.subheader("Example Profile Result")
             st.write("**Profile:** artist_dev")
             st.write("Software developer and digital artist.")
+
         else:
+            # Load the selected page if there is no active search
             load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
