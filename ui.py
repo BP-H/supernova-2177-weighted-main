@@ -199,24 +199,6 @@ def main() -> None:
     </style>
     """, unsafe_allow_html=True)
 
-    # ===================== 🚨 SIDEBAR WIDTH OVERRIDE — START 🚨 =====================
-    # Change this single value to set your sidebar width (px)
-    SIDEBAR_WIDTH = 230  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    st.markdown(f"""
-    <style>
-    /* Force the wider sidebar (outer container + inner wrapper) */
-    @media (min-width: 768px){{
-      [data-testid="stSidebar"]{{
-        min-width: {SIDEBAR_WIDTH}px !important;
-        max-width: {SIDEBAR_WIDTH}px !important;
-        width: {SIDEBAR_WIDTH}px !important;    /* overrides the earlier 200px */
-      }}
-      [data-testid="stSidebar"] > div {{
-        width: {SIDEBAR_WIDTH}px !important;     /* ensure inner container matches */
-      }}
-    }}
-
     /* Optional: slight padding bump so buttons feel balanced on wider bars */
     [data-testid="stSidebar"] button {{
       padding: 4px 8px !important;
