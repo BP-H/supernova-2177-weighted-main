@@ -1,4 +1,5 @@
 # pages/feed.py
+
 import streamlit as st
 import numpy as np
 from faker import Faker
@@ -12,11 +13,13 @@ def generate_post_data(num_posts=5):
     fake = Faker()
     posts = []
     for i in range(num_posts):
+        name = fake.name()
+        seed = name.replace(" ", "") + str(random.randint(0, 99999))
         posts.append({
             "id": f"post_{i}_{int(time.time())}",
-            "author_name": fake.name(),
+            "author_name": name,
             "author_title": f"{fake.job()} at {fake.company()} • {random.choice(['1st', '2nd', '3rd'])}",
-            "author_avatar": f"https://avatar.iran.liara.run/public/{np.random.randint(1, 100)}",
+            "author_avatar": f"https://api.dicebear.com/7.x/thumbs/svg?seed={seed}",
             "post_text": fake.paragraph(nb_sentences=random.randint(1, 4)),
             "image_url": random.choice([None, f"https://picsum.photos/800/400?random={np.random.randint(1, 1000)}"]),
             "edited": random.choice([True, False]),
@@ -33,7 +36,8 @@ def render_post(post):
     st.markdown('<div class="content-card">', unsafe_allow_html=True)
     col1, col2 = st.columns([0.15, 0.85])
     with col1:
-        st.image(post["author_avatar"], width=48)
+        if post["author_avatar"]:
+            st.image(post["author_avatar"], width=48)
     with col2:
         st.subheader(post["author_name"])
         st.caption(post["author_title"])
