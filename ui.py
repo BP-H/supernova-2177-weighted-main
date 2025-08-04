@@ -77,7 +77,8 @@ def main() -> None:
     # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
-
+        /* Hide Streamlit's top navigation tabs */
+        [data-testid="stSidebarNav"] { display: none !important; }
         
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
