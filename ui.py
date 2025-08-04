@@ -81,7 +81,7 @@ def main() -> None:
         header[data-testid="stHeader"] {
             position: sticky !important;
             top: 0 !important;
-            z-index: 100 !important;   /* header stays below sidebar */
+            z-index: 10001 !important;   /* header stays below sidebar */
         }
 
         /* Hide Streamlit's top navigation tabs */
