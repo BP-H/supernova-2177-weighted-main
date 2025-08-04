@@ -91,7 +91,7 @@ def main() -> None:
             border-radius: 10px;
             padding: 0px;
             margin: 0px;
-            width: 210px !important;  /* CHANGED from 190px to 210px */
+            width: 230px !important;  /* CHANGED from 190px to 210px */
             z-index: 98;
         }
         
