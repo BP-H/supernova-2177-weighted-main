@@ -74,18 +74,6 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
-    st.markdown("""
-    <style>
-        /* hide cloud toolbar but keep header + sidebar arrow */
-        header [data-testid="stToolbar"] { display: none !important; }          /* share/fork/github strip */
-        a[class*="viewerBadge"], div[class*="viewerBadge"] { display: none !important; }  /* manage app badge */
-        header [data-testid="collapsedControl"] button {                          /* make sure the toggle is visible */
-            display: inline-flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;
-        }
-
-        /* Hide Streamlit's top navigation tabs */
-        [data-testid="stSidebarNav"] { display: none !important; }
         
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
