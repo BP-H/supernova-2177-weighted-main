@@ -74,7 +74,25 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
+    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
+    st.markdown("""
+    <style>
+
         
+        /* 🔥 STICKY SIDEBAR */
+        [data-testid="stSidebar"] {
+            position: sticky !important;
+            top: 0 !important;
+            height: 100vh !important;
+            overflow-y: auto !important;
+            background-color: #18181b !important;
+            color: white !important;
+            border-radius: 10px;
+            padding: 0px;
+            margin: 0px;
+            width: 190px;
+            z-index: 98;
+        }
         
         /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
@@ -88,7 +106,7 @@ def main() -> None:
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 2px 5px !important; 
+            padding: 2px 5px !important;  #8-12
             margin: 3px 0 !important;
             width: 100% !important;
             height: 30px !important; /* Fixed height for uniformity */
@@ -107,7 +125,7 @@ def main() -> None:
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;  
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
             outline: none !important;
         }
         
