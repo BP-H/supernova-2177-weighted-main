@@ -107,7 +107,7 @@ def main() -> None:
         [data-testid="stSidebar"] button {
             background-color: #18181b !important; /* Match sidebar bg for invisibility */
             color: white !important;
-            padding: 2px 5px !important;  #8-12
+            padding: 2px 5px !important; 
             margin: 3px 0 !important;
             width: 100% !important;
             height: 30px !important; /* Fixed height for uniformity */
@@ -126,7 +126,7 @@ def main() -> None:
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   #255, 20, 147, 0.3
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;  
             outline: none !important;
         }
         
