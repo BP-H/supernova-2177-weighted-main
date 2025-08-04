@@ -30,7 +30,6 @@ except ImportError as e:
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
 def load_page(page_name: str):
-    # CORRECTED base_paths to include transcendental_resonance_frontend/pages
     base_paths = [
         Path("mount/src/pages"),
         Path(__file__).parent / "pages",
@@ -77,17 +76,12 @@ def main() -> None:
     # Fixed CSS
     st.markdown("""
     <style>
-        /* keep header visible but under the sidebar */
         header[data-testid="stHeader"] {
             position: sticky !important;
             top: 0 !important;
-            z-index: 100 !important;   /* header stays below sidebar */
+            z-index: 100 !important;
         }
-
-        /* Hide Streamlit's top navigation tabs */
         [data-testid="stSidebarNav"] { display: none !important; }
-        
-        /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
             top: 0 !important;
@@ -99,45 +93,37 @@ def main() -> None:
             padding: 0px;
             margin: 0px;
             width: 190px;
-            z-index: 2147483647 !important;  /* was 98 / ensure sidebar + arrow appear above header */
+            z-index: 2147483647 !important;
         }
-        
-        /* 🔥 LEFT ALIGN SIDEBAR CONTENT */
         [data-testid="stSidebar"] .stMarkdown,
         [data-testid="stSidebar"] .stButton,
         [data-testid="stSidebar"] .stSelectbox,
         [data-testid="stSidebar"] > div {
             text-align: left !important;
         }
-        
-        /* 🔥 SIDEBAR BUTTONS - Invisible (match bg), hover mid-grey, uniform height, no wrap */
         [data-testid="stSidebar"] button {
-            background-color: #18181b !important; /* Match sidebar bg for invisibility */
+            background-color: #18181b !important;
             color: white !important;
-            padding: 2px 5px !important;  /* 8-12 */
+            padding: 2px 5px !important;
             margin: 3px 0 !important;
             width: 100% !important;
-            height: 30px !important; /* Fixed height for uniformity */
+            height: 30px !important;
             border: none !important;
             border-radius: 8px !important;
             font-size: 14px !important;
             display: flex !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            white-space: nowrap !important; /* Prevent text wrapping */
+            white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        
-        /* Apply style on hover AND on focus, and remove the default focus outline */
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] button:focus {
             background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;   /* 255, 20, 147, 0.3 */
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
             outline: none !important;
         }
-        
-        /* Special style for the logo button to make it look like a header */
         [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
             font-size: 28px !important;
             font-weight: bold !important;
@@ -147,10 +133,8 @@ def main() -> None:
             height: auto !important;
         }
         [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
-            box-shadow: none !important; /* Remove glow from logo hover */
+            box-shadow: none !important;
         }
-        
-        /* 🔥 MAIN CONTENT AREA */
         .stApp {
             background-color: #0a0a0a !important;
             color: white !important;
@@ -159,32 +143,24 @@ def main() -> None:
             padding-top: 20px !important;
             padding-bottom: 90px !important;
         }
-        
-        /* Content cards */
         .content-card {
             border: 1px solid #333;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
             transition: border 0.2s;
-            color: white !important; /* Ensure text visible */
+            color: white !important;
         }
         .content-card:hover {
             border: 1px solid #ff1493;
         }
-        
-        /* Metrics text visible */
         [data-testid="stMetricLabel"] { color: white !important; }
         [data-testid="stMetricValue"] { color: white !important; }
-        
-        /* Profile pic circular */
         [data-testid="stSidebar"] img {
             border-radius: 50% !important;
             margin: 0 auto !important;
             display: block !important;
         }
-        
-        /* Modern Search bar styling */
         [data-testid="stTextInput"] > div {
             background-color: #28282b !important;
             border-radius: 9px !important;
@@ -195,8 +171,6 @@ def main() -> None:
             color: white !important;
             padding-left: 10px;
         }
-        
-        /* Mobile responsiveness */
         @media (max-width: 768px) {
             [data-testid="stSidebar"] button {
                 height: 35px !important;
@@ -208,6 +182,11 @@ def main() -> None:
 
     # Sidebar
     with st.sidebar:
+        if st.button("💫 superNova_2177 💫", use_container_width=True):
+            st.session_state.search_bar = ""
+            st.session_state.current_page = "feed"
+            st.rerun()
+
         st.text_input(
             "Search",
             key="search_bar",
@@ -215,13 +194,7 @@ def main() -> None:
             label_visibility="collapsed"
         )
 
-        if st.button("💫 superNova_2177 💫", use_container_width=True):
-            st.session_state.search_bar = ""
-            st.session_state.current_page = "feed"
-            st.rerun()
-        
         st.image("assets/profile_pic.png", width=100)
-        
         st.subheader("taha_gungor")
         st.caption("ceo / test_tech")
         st.caption("artist / will = ...")
@@ -231,7 +204,7 @@ def main() -> None:
         st.metric("Profile viewers", np.random.randint(2000, 2500))
         st.metric("Post impressions", np.random.randint(1400, 1600))
         st.divider()
-        
+
         if st.button("🏠 Test Tech", key="manage_test_tech"):
             st.session_state.current_page = "test_tech"
             st.rerun()
@@ -260,9 +233,8 @@ def main() -> None:
         if st.button("👤 Profile", key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
-            
         st.divider()
-        
+
         st.subheader("Premium features")
         if st.button("🎶 Music", key="nav_music"):
             st.session_state.current_page = "music"
@@ -280,7 +252,7 @@ def main() -> None:
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
-        
+
     # Main content area
     with st.container():
         if st.session_state.search_bar:
