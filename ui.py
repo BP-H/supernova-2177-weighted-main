@@ -9,8 +9,6 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
-import streamlit.components.v1 as components  # for embed redirect (hide Streamlit Cloud top bar)
-
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -76,59 +74,12 @@ def main() -> None:
     st.session_state.setdefault("current_page", "feed")  # Default page
     initialize_theme(st.session_state["theme"])
 
-    # CSS — keep your layout; skin the arrow as avatar; hide Cloud toolbar; blend header
+    # Fixed CSS - Invisible buttons (match background), hover mid-grey, uniform size, no wrapping, visible metric text, feed button text
     st.markdown("""
     <style>
-        /* Hide Streamlit's built-in sidebar page nav */
+        /* Hide Streamlit's top navigation tabs */
         [data-testid="stSidebarNav"] { display: none !important; }
-
-        /* Hide app menu/footer if present */
-        #MainMenu { visibility: hidden !important; }
-        footer { visibility: hidden !important; }
-
-        /* Blend header so there's no grey strip */
-        header[data-testid="stHeader"],
-        header[data-testid="stHeader"] > div {
-            background: #0a0a0a !important;  /* match app bg */
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* Keep the left sidebar toggle visible and turn it into a circular avatar */
-        [data-testid="collapsedControl"] button,
-        header button[aria-label*="sidebar" i]{
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: 50% !important;
-            padding: 0 !important;
-            background-image: url('assets/profile_pic.png') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.14) !important;
-            display: inline-flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 1001 !important;
-        }
-        /* Hide default chevrons inside the button */
-        [data-testid="collapsedControl"] button svg,
-        header button[aria-label*="sidebar" i] svg{
-            display: none !important;
-        }
-        /* Hover/focus ring for the avatar button */
-        [data-testid="collapsedControl"] button:hover,
-        [data-testid="collapsedControl"] button:focus,
-        header button[aria-label*="sidebar" i]:hover,
-        header button[aria-label*="sidebar" i]:focus{
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.35) !important;
-            outline: none !important;
-            transform: scale(1.02);
-        }
-
+        
         /* 🔥 STICKY SIDEBAR */
         [data-testid="stSidebar"] {
             position: sticky !important;
@@ -140,7 +91,7 @@ def main() -> None:
             border-radius: 10px;
             padding: 0px;
             margin: 0px;
-            width: 200px;
+            width: 190px;
             z-index: 98;
         }
         
@@ -248,77 +199,6 @@ def main() -> None:
     </style>
     """, unsafe_allow_html=True)
 
-
-
-    # Change this single value to set your sidebar width (px)
-    SIDEBAR_WIDTH = 220  # <<<<<<<<<<<<<<<<<<<<<<<<<<<  ADJUST THIS NUMBER  >>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    st.markdown(f"""
-    <style>
-    /* Force the wider sidebar (outer container + inner wrapper) */
-    @media (min-width: 768px){{
-      [data-testid="stSidebar"]{{
-        min-width: {SIDEBAR_WIDTH}px !important;
-        max-width: {SIDEBAR_WIDTH}px !important;
-        width: {SIDEBAR_WIDTH}px !important;    /* overrides the earlier 200px */
-      }}
-      [data-testid="stSidebar"] > div {{
-        width: {SIDEBAR_WIDTH}px !important;     /* ensure inner container matches */
-      }}
-    }}
-
-    /* Optional: slight padding bump so buttons feel balanced on wider bars */
-    [data-testid="stSidebar"] button {{
-      padding: 4px 8px !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ===== 🚧 SIDEBAR SPACING TUNER — AFTER the width-override CSS 🚧
-    SIDEBAR_GAP = 8  # <- tweak this (6–12 works well)
-    
-    st.markdown(f"""
-    <style>
-    /* st.divider() spacing */
-    [data-testid="stSidebar"] hr {{
-      margin: {SIDEBAR_GAP}px 0 !important;
-      opacity: 0.25;
-    }}
-    
-    /* st.metric spacing */
-    [data-testid="stSidebar"] [data-testid="stMetric"] {{
-      margin: {int(SIDEBAR_GAP * 0.75)}px 0 !important;
-    }}
-    [data-testid="stSidebar"] [data-testid="stMetricLabel"] {{
-      margin-bottom: {int(SIDEBAR_GAP * 0.25)}px !important;
-      line-height: 1.1 !important;
-    }}
-    [data-testid="stSidebar"] [data-testid="stMetricValue"] {{
-      line-height: 1.0 !important;
-      margin: 0 !important;
-    }}
-    
-    /* Paragraphs / captions under profile */
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stCaption,
-    [data-testid="stSidebar"] .stText {{
-      margin: {int(SIDEBAR_GAP * 0.6)}px 0 !important;
-    }}
-    
-    /* Avatar spacing */
-    [data-testid="stSidebar"] img {{
-      margin: {SIDEBAR_GAP}px auto !important;
-    }}
-    
-    /* Button vertical gap */
-    [data-testid="stSidebar"] button {{
-      margin: {int(SIDEBAR_GAP * 0.5)}px 0 !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-    # ===== 🚧 SIDEBAR SPACING TUNER — END 🚧
-
-    
     # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
         # Modern search bar
@@ -330,7 +210,7 @@ def main() -> None:
         )
 
         # Clickable Logo - navigates to feed
-        if st.button("💫superNova_2177💫", use_container_width=True):
+        if st.button("💫 superNova_2177 💫", use_container_width=True):
             # Clear search when clicking logo to return home
             st.session_state.search_bar = ""
             st.session_state.current_page = "feed"
@@ -374,7 +254,7 @@ def main() -> None:
         if st.button("📬 Messages", key="nav_messages"):
             st.session_state.current_page = "messages"
             st.rerun()
-        if st.button("🗳  Voting", key="nav_voting"):
+        if st.button("🗳 Voting", key="nav_voting"):
             st.session_state.current_page = "voting"
             st.rerun()
         if st.button("👤 Profile", key="nav_profile"):
