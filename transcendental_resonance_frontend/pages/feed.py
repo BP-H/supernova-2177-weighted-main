@@ -9,10 +9,10 @@ import random
 fake = Faker()
 
 @st.cache_data
-def generate_post_data(start_index=0, num_posts=5):
-    """Generates realistic post data for the feed."""
+def generate_post_data(num_posts=30):
+    """Generates a large batch of post data."""
     posts = []
-    for i in range(start_index, start_index + num_posts):
+    for i in range(num_posts):
         name = fake.name()
         seed = name.replace(" ", "") + str(random.randint(0, 99999))
         posts.append({
@@ -67,29 +67,27 @@ def render_post(post):
 
 def main():
     st.markdown("### Your Feed ↩️")
-    st.info("This is a prototype content stream. Posts below are AI-generated placeholders for testing visual flow.")
+    st.info("Prototype feed. All content below is AI-generated placeholder data for layout testing.")
 
-    # Init offset
-    if "feed_offset" not in st.session_state:
-        st.session_state.feed_offset = 0
-    if "feed_data" not in st.session_state:
-        st.session_state.feed_data = []
+    # Init session vars
+    if "feed_posts" not in st.session_state:
+        st.session_state.feed_posts = generate_post_data()
+    if "feed_page" not in st.session_state:
+        st.session_state.feed_page = 1
 
-    # Load initial or more
-    if st.session_state.feed_offset == 0 or st.session_state.get("load_more_trigger"):
-        new_posts = generate_post_data(start_index=st.session_state.feed_offset, num_posts=4)
-        st.session_state.feed_data.extend(new_posts)
-        st.session_state.feed_offset += 4
-        st.session_state.load_more_trigger = False
+    page_size = 5
+    max_page = (len(st.session_state.feed_posts) + page_size - 1) // page_size
+    start = 0
+    end = page_size * st.session_state.feed_page
 
-    # Render posts
-    for post in st.session_state.feed_data:
+    for post in st.session_state.feed_posts[start:end]:
         render_post(post)
 
-    st.write("")
-    if st.button("🔄 Load more"):
-        st.session_state.load_more_trigger = True
-        st.experimental_rerun()
+    if st.session_state.feed_page < max_page:
+        if st.button("🔄 Load more"):
+            st.session_state.feed_page += 1
+    else:
+        st.success("You've reached the end of the demo feed.")
 
 if __name__ == "__main__":
     main()
