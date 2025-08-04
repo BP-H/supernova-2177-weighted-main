@@ -199,16 +199,6 @@ def main() -> None:
     </style>
     """, unsafe_allow_html=True)
 
-    /* Optional: slight padding bump so buttons feel balanced on wider bars */
-    [data-testid="stSidebar"] button {{
-      padding: 4px 8px !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-    # ====================== 🚨 SIDEBAR WIDTH OVERRIDE — END 🚨 ======================
-
-
-
     # Sidebar - Search at top, profile pic circular, all in sidebar including notifications
     with st.sidebar:
         # Modern search bar
