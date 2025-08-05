@@ -10,9 +10,44 @@ import importlib.util
 import numpy as np  # For random low stats
 import warnings
 from ui_adapters import search_users
+import os
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# ---------------------------------------------------------------------------
+# Backend toggle
+# ---------------------------------------------------------------------------
+_USE_REAL_BACKEND = False
+_backend_module = None
+
+
+def _init_backend_toggle() -> None:
+    """Initialize backend usage from env vars or CLI flags."""
+    global _USE_REAL_BACKEND, _backend_module
+
+    env_flag = os.getenv("USE_REAL_BACKEND", "0").lower() in {"1", "true", "yes"}
+    cli_flags = {"--real-backend", "--use-real-backend"}
+    cli_flag = any(flag in sys.argv for flag in cli_flags)
+    if cli_flag:
+        sys.argv = [arg for arg in sys.argv if arg not in cli_flags]
+
+    _USE_REAL_BACKEND = env_flag or cli_flag
+    if _USE_REAL_BACKEND:
+        try:
+            import superNova_2177 as _backend_module  # noqa: F401
+        except Exception as e:  # pragma: no cover - import failure path
+            warnings.warn(f"Real backend requested but not available: {e}")
+            _USE_REAL_BACKEND = False
+            _backend_module = None
+
+
+def use_backend() -> bool:
+    """Return True when the real backend should be used."""
+    return _USE_REAL_BACKEND
+
+
+_init_backend_toggle()
 
 # Path for Cloud/local
 sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(__file__).parent.joinpath("mount/src").exists() else sys.path.insert(0, str(Path(__file__).parent))
