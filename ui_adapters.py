@@ -1,12 +1,20 @@
-import logging
 import os
+import logging
 from typing import Dict, List, Optional, Tuple
 
-import superNova_2177 as sn_mod
+logger = logging.getLogger(__name__)
+
+DUMMY_USERS: List[str] = ["taha_gungor", "artist_dev"]
+ERROR_MESSAGE = "Unable to fetch users"
 
 
-def search_users(query: str) -> Tuple[Optional[List[Dict[str, str]]], Optional[str]]:
-    """Search for users via the backend when enabled.
+def use_real_backend() -> bool:
+    """Return True if the real backend should be used."""
+    return os.getenv("USE_REAL_BACKEND", "").lower() in {"1", "true", "yes", "on"}
+
+
+def search_users_adapter(query: str) -> Tuple[Optional[List[str]], Optional[str]]:
+    """Search for users via backend or return stub results.
 
     Parameters
     ----------
@@ -15,22 +23,22 @@ def search_users(query: str) -> Tuple[Optional[List[Dict[str, str]]], Optional[s
 
     Returns
     -------
-    results, error_message:
-        ``results`` is a list of user dictionaries when the backend is
-        enabled and the call succeeds. ``None`` indicates that the caller
-        should display placeholder content. ``error_message`` contains a
-        friendly message for the UI when the backend call fails.
+    usernames, error_message:
+        List of usernames if available, or a stub list in fallback mode.
+        An error message if the backend call fails.
     """
     if not isinstance(query, str) or not query.strip():
-        raise ValueError("Query cannot be empty")
+        return None, "Query cannot be empty"
 
-    if os.getenv("ENABLE_SEARCH_BACKEND") != "1":
-        return None, None
+    if not use_real_backend():
+        return DUMMY_USERS, None
 
     try:
+        import superNova_2177 as sn_mod
         with sn_mod.SessionLocal() as db:
             results = sn_mod.search_users(query, db)
-        return results, None
-    except Exception:  # pragma: no cover - log the actual backend error
-        logging.exception("search_users backend error")
-        return None, "Unable to fetch search results. Please try again later."
+        return [r.get("username", "") for r in results], None
+    except Exception as exc:
+        logger.exception("search_users_adapter failed: %s", exc)
+        return None, ERROR_MESSAGE
+

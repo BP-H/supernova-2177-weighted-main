@@ -17,6 +17,7 @@ import os
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+from ui_adapters import search_users_adapter
 
 # ---------------------------------------------------------------------------
 # Backend toggle
@@ -349,28 +350,20 @@ def main() -> None:
                 st.error(msg)
 
     # Main content area
-    with st.container():
-        if st.session_state.search_bar:
-            st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            results, error = search_users(st.session_state.search_bar)
-            if error:
-                st.error(error)
-            if results is None:
-                st.info("This is where your database search results would appear. Connect this to your backend.")
-                st.write("---")
-                st.subheader("Example Post Result")
-                st.write("**User:** taha_gungor")
-                st.write("This is a sample post that matches the search query. #streamlit #search")
-                st.write("---")
-                st.subheader("Example Profile Result")
-                st.write("**Profile:** artist_dev")
-                st.write("Software developer and digital artist.")
-            else:
-                st.subheader("User Results")
-                for user in results:
-                    st.write(f"**{user['username']}**")
+with st.container():
+    if st.session_state.search_bar:
+        st.header(f"Searching for: \"{st.session_state.search_bar}\"")
+        usernames = search_users_adapter(st.session_state.search_bar)
+        if usernames == [ERROR_MESSAGE]:  # fallback error case
+            st.error("Unable to fetch users from backend.")
+        elif usernames:
+            st.subheader("User Results")
+            for name in usernames:
+                st.write(f"**{name}**")
         else:
-            load_page(st.session_state.current_page)
+            st.info("No users found.")
+    else:
+        load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
     main()
