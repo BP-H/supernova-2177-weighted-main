@@ -15,8 +15,10 @@ fi
 # to override this value.
 PORT="${STREAMLIT_PORT:-${PORT:-8888}}"
 
-echo "🚀 Launching Streamlit UI: $UI_FILE on port $PORT"
-streamlit run "$UI_FILE" \
-  --server.headless true \
-  --server.address 0.0.0.0 \
-  --server.port "$PORT"
+  echo "🚀 Launching Streamlit UI: $UI_FILE on port $PORT"
+  # Pass through any additional args (e.g. --real-backend)
+  streamlit run "$UI_FILE" \
+    --server.headless true \
+    --server.address 0.0.0.0 \
+    --server.port "$PORT" \
+    -- "$@"
