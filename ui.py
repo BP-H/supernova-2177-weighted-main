@@ -9,6 +9,7 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from ui_adapters import search_users
 import os
 
 # Suppress potential deprecation warnings
@@ -292,15 +293,23 @@ def main() -> None:
     with st.container():
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            st.info("This is where your database search results would appear. Connect this to your backend.")
-            st.write("---")
-            st.subheader("Example Post Result")
-            st.write("**User:** taha_gungor")
-            st.write("This is a sample post that matches the search query. #streamlit #search")
-            st.write("---")
-            st.subheader("Example Profile Result")
-            st.write("**Profile:** artist_dev")
-            st.write("Software developer and digital artist.")
+            results, error = search_users(st.session_state.search_bar)
+            if error:
+                st.error(error)
+            if results is None:
+                st.info("This is where your database search results would appear. Connect this to your backend.")
+                st.write("---")
+                st.subheader("Example Post Result")
+                st.write("**User:** taha_gungor")
+                st.write("This is a sample post that matches the search query. #streamlit #search")
+                st.write("---")
+                st.subheader("Example Profile Result")
+                st.write("**Profile:** artist_dev")
+                st.write("Software developer and digital artist.")
+            else:
+                st.subheader("User Results")
+                for user in results:
+                    st.write(f"**{user['username']}**")
         else:
             load_page(st.session_state.current_page)
 
