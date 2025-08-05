@@ -4,6 +4,7 @@
 """User identity hub with profile and activity overview."""
 
 import asyncio
+from typing import Any, Dict
 import streamlit as st
 from frontend.theme import apply_theme
 from streamlit_helpers import (
@@ -80,6 +81,8 @@ ensure_active_user()
 
 def _render_profile(username: str) -> None:
     data = {**DEFAULT_USER, "username": username}
+    followers: Dict[str, Any] = {"followers": []}
+    following: Dict[str, Any] = {"following": []}
     if _load_profile is None:
         st.error("Profile services unavailable")
     else:
@@ -104,6 +107,11 @@ def _render_profile(username: str) -> None:
         st.switch_page("pages/messages.py")
     if st.button("Video Chat", key="vc"):
         st.switch_page("pages/video_chat.py")
+    # Display follower/following lists below the card
+    st.markdown("**Followers**")
+    st.write(followers.get("followers", []))
+    st.markdown("**Following**")
+    st.write(following.get("following", []))
 
 
 def main(main_container=None) -> None:
@@ -160,6 +168,16 @@ def main(main_container=None) -> None:
             {**DEFAULT_USER, "username": username},
         )
         render_profile_card(data)
+        followers = st.session_state.get(
+            "profile_followers", {"count": 0, "followers": []}
+        )
+        following = st.session_state.get(
+            "profile_following", {"count": 0, "following": []}
+        )
+        st.markdown("**Followers**")
+        st.write(followers.get("followers", []))
+        st.markdown("**Following**")
+        st.write(following.get("following", []))
 
 
 def render() -> None:

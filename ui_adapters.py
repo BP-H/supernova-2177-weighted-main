@@ -3,32 +3,84 @@
 # Legal & Ethical Safeguards
 """Adapters bridging UI events to backend services.
 
-Currently provides :func:`follow_adapter` which mirrors the toggle style of
-search related adapters.  The function attempts to use the real backend via the
-``utils.api`` module but falls back to a lightweight in-memory stub when the
-backend is unavailable.  All outcomes are logged and a concise status message is
-returned for display in the UI.
+This module provides:
+- `search_users_adapter(query)` to fetch matching users
+- `follow_adapter(username)` to toggle follow state
+- `use_real_backend()` to detect backend mode
+
+All functions gracefully fall back to stub mode when the backend is unavailable.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Tuple, Dict, Any
-
-try:  # pragma: no cover - optional backend
-    from utils.api import toggle_follow  # type: ignore
-except Exception:  # pragma: no cover - backend not available
-    toggle_follow = None  # type: ignore
+import os
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-# Simple in-memory follow set used when ``toggle_follow`` is unavailable.
+# ---------------------------
+# Config and Shared Constants
+# ---------------------------
+
+DUMMY_USERS: List[str] = ["taha_gungor", "artist_dev"]
+ERROR_MESSAGE = "Unable to fetch users"
 _STUB_FOLLOWING: set[str] = set()
 
+# Try to import the follow toggle API (optional)
+try:
+    from utils.api import toggle_follow  # type: ignore
+except Exception:
+    toggle_follow = None  # fallback to stub
+
+# ---------------------------
+# Backend Toggle
+# ---------------------------
+
+def use_real_backend() -> bool:
+    """Return True if the real backend should be used."""
+    return os.getenv("USE_REAL_BACKEND", "").strip().lower() in {"1", "true", "yes", "on"}
+
+# ---------------------------
+# User Search Adapter
+# ---------------------------
+
+def search_users_adapter(query: str) -> Tuple[Optional[List[str]], Optional[str]]:
+    """Search for users via backend or return stub results.
+
+    Parameters
+    ----------
+    query:
+        The raw query string from the UI.
+
+    Returns
+    -------
+    usernames, error_message:
+        List of usernames if available, or a stub list in fallback mode.
+        An error message if the backend call fails.
+    """
+    if not isinstance(query, str) or not query.strip():
+        return None, "Query cannot be empty"
+
+    if not use_real_backend():
+        return DUMMY_USERS, None
+
+    try:
+        import superNova_2177 as sn_mod
+        with sn_mod.SessionLocal() as db:
+            results = sn_mod.search_users(query, db)
+        return [r.get("username", "") for r in results], None
+    except Exception as exc:
+        logger.exception("search_users_adapter failed: %s", exc)
+        return None, ERROR_MESSAGE
+
+# ---------------------------
+# Follow/Unfollow Adapter
+# ---------------------------
 
 def _run_async(coro):
-    """Execute ``coro`` whether or not an event loop is running."""
+    """Execute `coro` whether or not an event loop is already running."""
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -40,13 +92,13 @@ def _run_async(coro):
 
 
 def follow_adapter(target_username: str) -> Tuple[bool, str]:
-    """Toggle following ``target_username``.
+    """Toggle following `target_username`.
 
-    Returns a ``(success, message)`` tuple. Success is ``True`` when the follow
-    state was toggled either via the backend or the local stub. When the backend
-    is unavailable a lightweight in-memory toggle is used instead.
+    Returns
+    -------
+    success, message:
+        Whether the operation succeeded, and the status message.
     """
-
     if not target_username:
         logger.warning("follow_adapter called without a username")
         return False, "No username provided"
@@ -67,10 +119,13 @@ def follow_adapter(target_username: str) -> Tuple[bool, str]:
         message = (resp or {}).get("message", "Updated")
         logger.info("Follow toggle for %s succeeded: %s", target_username, message)
         return True, message
-    except Exception as exc:  # pragma: no cover - runtime errors
+    except Exception as exc:
         logger.exception("Follow toggle failed for %s", target_username)
         return False, f"Follow failed: {exc}"
 
+# ---------------------------
+# Public API
+# ---------------------------
 
-__all__ = ["follow_adapter"]
+__all__ = ["search_users_adapter", "follow_adapter", "use_real_backend"]
 
