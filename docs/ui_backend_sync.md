@@ -3,22 +3,20 @@ STRICTLY A SOCIAL MEDIA PLATFORM
 Intellectual Property & Artistic Inspiration
 Legal & Ethical Safeguards
 -->
+
 # UI Backend Sync Toggle
 
-`ui.py` now supports an optional connection to the real backend. By default,
-it uses local stubs to preserve existing behaviour.
+The Streamlit UI can connect to either a **mock backend** or the **real backend service**.  
+By default, it operates in **mocked mode** to ensure a smooth dev experience.
 
-Enable the backend by setting an environment variable or passing a CLI flag:
+This toggle allows developers to enable or disable backend integration using either an environment variable or command line flags.
+
+---
+
+## 🔧 Enable Backend with Environment Variable
+
+Set this in your terminal before launching the UI:
 
 ```bash
-USE_REAL_BACKEND=1 streamlit run ui.py
-# or
-streamlit run ui.py -- --real-backend
-# start script examples
-USE_REAL_BACKEND=1 ./start.sh
-./start.sh --real-backend
-```
-
-Call the `use_backend()` helper within `ui.py` to check whether the real
-backend is active. When enabled, the module imports functions from
-`superNova_2177`.
+export USE_REAL_BACKEND=1
+streamlit run ui.py
