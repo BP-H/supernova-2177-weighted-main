@@ -417,7 +417,7 @@ accessible from the navigation bar. These sections provide early scaffolding
 for governance, AI insights, and community interaction.
 
 Full implementations for these pages live in
-`transcendental_resonance_frontend/pages/`. The lightweight files under the
+`transcendental_resonance_frontend/tr_pages/`. The lightweight files under the
 top-level `pages/` directory simply import and call those modules.
 
 

@@ -18,7 +18,7 @@ from streamlit.testing.v1 import AppTest
 
 
 def run_validation_page():
-    from transcendental_resonance_frontend.pages.validation import main
+    from transcendental_resonance_frontend.tr_pages.validation import main
     main()
 
 
@@ -31,7 +31,7 @@ def test_validation_page_renders(monkeypatch):
     dummy_ui.render_validation_ui = render_validation_ui
     sys.modules["ui"] = dummy_ui
     import importlib
-    import transcendental_resonance_frontend.pages.validation as validation
+    import transcendental_resonance_frontend.tr_pages.validation as validation
     importlib.reload(validation)
     at = AppTest.from_function(run_validation_page)
     at.run()

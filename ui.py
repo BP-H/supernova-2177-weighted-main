@@ -13,7 +13,6 @@ import numpy as np  # For random low stats
 import warnings
 from ui_adapters import follow_adapter
 from signup_adapter import register_user
-from ui_adapters import search_users
 import os
 
 # Suppress potential deprecation warnings
@@ -116,7 +115,7 @@ def load_page(page_name: str):
     base_paths = [
         Path("mount/src/pages"),
         Path(__file__).parent / "pages",
-        Path(__file__).parent / "transcendental_resonance_frontend/pages"
+        Path(__file__).parent / "transcendental_resonance_frontend/tr_pages"
     ]
     module_path = None
     for base in base_paths:
@@ -143,6 +142,31 @@ def load_page(page_name: str):
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
+
+
+def build_pages(pages_dir: Path) -> dict[str, str]:
+    """Return a mapping of page labels to slugs."""
+    pages = {}
+    for path in pages_dir.glob("*.py"):
+        slug = path.stem
+        label = slug.replace("_", " ").title()
+        pages[label] = slug
+    return pages
+
+
+def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
+    """Placeholder for legacy fallback loader."""
+    pass
+
+
+def _render_fallback(choice: str) -> None:
+    """Fallback renderer stub used in tests."""
+    pass
+
+
+def show_preview_badge(text: str) -> None:
+    """Display a simple preview badge."""
+    st.write(text)
 
 # Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
@@ -350,25 +374,26 @@ def main() -> None:
             else:
                 st.error(msg)
 
-# Main content area
-with st.container():
-    if st.session_state.search_bar:
-        st.header(f'Searching for: "{st.session_state.search_bar}"')
-        usernames = search_users_adapter(st.session_state.search_bar)
+    # Main content area
+    with st.container():
+        search_query = st.session_state.get("search_bar")
+        if search_query:
+            st.header(f'Searching for: "{search_query}"')
+            usernames = search_users_adapter(search_query)
 
-        if usernames == [ERROR_MESSAGE]:  # backend failure fallback
-            st.error("Unable to fetch users from backend.")
-        elif usernames:
-            st.subheader("User Results")
-            for name in usernames:
-                st.write(f"**{name}**")
-                if st.button(f"Follow/Unfollow {name}", key=f"follow_{name}"):
-                    success, msg = follow_adapter(name)
-                    (st.success if success else st.error)(msg)
+            if usernames == [ERROR_MESSAGE]:  # backend failure fallback
+                st.error("Unable to fetch users from backend.")
+            elif usernames:
+                st.subheader("User Results")
+                for name in usernames:
+                    st.write(f"**{name}**")
+                    if st.button(f"Follow/Unfollow {name}", key=f"follow_{name}"):
+                        success, msg = follow_adapter(name)
+                        (st.success if success else st.error)(msg)
+            else:
+                st.info("No users found.")
         else:
-            st.info("No users found.")
-    else:
-        load_page(st.session_state.current_page)
+            load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
     main()

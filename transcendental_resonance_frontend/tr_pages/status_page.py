@@ -30,5 +30,10 @@ def render() -> None:
     main()
 
 
+async def status_page() -> None:
+    """NiceGUI-compatible async wrapper."""
+    main()
+
+
 if __name__ == "__main__":
     main()

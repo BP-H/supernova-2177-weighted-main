@@ -1,4 +1,4 @@
-# transcendental_resonance_frontend/pages/animate_gaussian.py
+# transcendental_resonance_frontend/tr_pages/animate_gaussian.py
 """Diagnostics and Gaussian animation page for supernNova_2177."""
 
 import streamlit as st

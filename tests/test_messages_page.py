@@ -31,7 +31,7 @@ from disclaimers import (
 
 def test_messages_page_has_main_and_disclaimers():
     messages = importlib.import_module(
-        "transcendental_resonance_frontend.pages.messages"
+        "transcendental_resonance_frontend.tr_pages.messages"
     )
     assert callable(getattr(messages, "main", None))
 

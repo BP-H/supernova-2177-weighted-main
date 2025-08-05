@@ -7,7 +7,7 @@ pytest.importorskip("nicegui")
 pytestmark = pytest.mark.requires_nicegui
 
 import inspect
-from transcendental_resonance_frontend.pages.ai_assist_page import ai_assist_page
+from transcendental_resonance_frontend.tr_pages.ai_assist_page import ai_assist_page
 
 def test_ai_assist_page_is_async():
     assert inspect.iscoroutinefunction(ai_assist_page)

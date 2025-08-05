@@ -40,7 +40,7 @@ The module aims to provide video chat with live translation, lip-sync overlays, 
   methods to translate audio using Google TTS when available.
 - Translation overlays are updated in real time and synthesized speech is played
   back through `pygame` when audio output is enabled.
-- A demo page lives in `transcendental_resonance_frontend/pages/video_chat.py`
+- A demo page lives in `transcendental_resonance_frontend/tr_pages/video_chat.py`
   which starts and stops sessions via the router.
 
 ## Configuration Steps
