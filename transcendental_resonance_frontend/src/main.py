@@ -10,7 +10,7 @@ import time
 
 from nicegui import background_tasks, ui
 
-from transcendental_resonance_frontend.pages import (
+from transcendental_resonance_frontend.tr_pages import (
     login_page,
     register_page,
     profile_page,

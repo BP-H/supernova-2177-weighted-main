@@ -7,7 +7,7 @@ pytest.importorskip("nicegui")
 pytestmark = pytest.mark.requires_nicegui
 
 import inspect
-from transcendental_resonance_frontend.pages.feed_page import feed_page
+from transcendental_resonance_frontend.tr_pages.feed_page import feed_page
 
 
 def test_feed_page_is_async():

@@ -53,7 +53,7 @@ with col1:
         load_page_with_fallback(
             "Voting",
             [
-                f"transcendental_resonance_frontend.pages.{PAGES.get('Voting', 'voting')}",
+                f"transcendental_resonance_frontend.tr_pages.{PAGES.get('Voting', 'voting')}",
                 f"pages.{PAGES.get('Voting', 'voting')}",
             ],
         )
@@ -74,7 +74,7 @@ if not module:
         _render_fallback(choice)
     return
 module_paths = [
-    f"transcendental_resonance_frontend.pages.{module}",
+    f"transcendental_resonance_frontend.tr_pages.{module}",
     f"pages.{module}",
 ]
 PAGES_DIR = get_pages_dir()
@@ -1047,7 +1047,7 @@ with center_col:
             page_key = PAGES.get(canonical, canonical.lower())
             if page_key:
                 module_paths = [
-                    f"transcendental_resonance_frontend.pages.{page_key}",
+                    f"transcendental_resonance_frontend.tr_pages.{page_key}",
                     f"pages.{page_key}",
                 ]
                 try:

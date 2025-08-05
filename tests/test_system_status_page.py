@@ -14,7 +14,7 @@ root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
-import transcendental_resonance_frontend.pages.status_page as status_page  # noqa: E402
+import transcendental_resonance_frontend.tr_pages.status_page as status_page  # noqa: E402
 
 
 def test_status_page_placeholders_when_disabled(monkeypatch):

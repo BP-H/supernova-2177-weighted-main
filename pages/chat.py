@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from transcendental_resonance_frontend.pages import chat as real_page
+from transcendental_resonance_frontend.tr_pages import chat as real_page
 
 
 def main() -> None:

@@ -48,6 +48,6 @@ def __getattr__(name):
             "network_page": "network_analysis_page",
         }
         module_name = module_map.get(name, name)
-        module = __import__(f"transcendental_resonance_frontend.pages.{module_name}", fromlist=[name])
+        module = __import__(f"transcendental_resonance_frontend.tr_pages.{module_name}", fromlist=[name])
         return getattr(module, name if hasattr(module, name) else "main")
     raise AttributeError(name)
