@@ -71,3 +71,23 @@ def test_search_users_result_limit(client):
     with sn_mod.SessionLocal() as db:
         resp = sn_mod.search_users("user", db)
     assert len(resp) <= 5
+
+
+def test_ui_adapter_backend_on(client, monkeypatch):
+    import importlib
+    monkeypatch.setenv("ENABLE_SEARCH_BACKEND", "1")
+    import ui_adapters
+    ui_adapters = importlib.reload(ui_adapters)
+    results, err = ui_adapters.search_users("al")
+    assert err is None
+    usernames = [u["username"] for u in results]
+    assert "alice" in usernames
+
+
+def test_ui_adapter_backend_off(client, monkeypatch):
+    import importlib
+    monkeypatch.delenv("ENABLE_SEARCH_BACKEND", raising=False)
+    import ui_adapters
+    ui_adapters = importlib.reload(ui_adapters)
+    results, err = ui_adapters.search_users("al")
+    assert results is None and err is None

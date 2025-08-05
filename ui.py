@@ -5,14 +5,53 @@
 """Main Streamlit UI entry point for supernNova_2177."""
 import sys
 from pathlib import Path
+import os
+import argparse
 import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from signup_adapter import register_user
+from ui_adapters import search_users
+import os
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 from ui_adapters import search_users_adapter
+
+# ---------------------------------------------------------------------------
+# Backend toggle
+# ---------------------------------------------------------------------------
+_USE_REAL_BACKEND = False
+_backend_module = None
+
+
+def _init_backend_toggle() -> None:
+    """Initialize backend usage from env vars or CLI flags."""
+    global _USE_REAL_BACKEND, _backend_module
+
+    env_flag = os.getenv("USE_REAL_BACKEND", "0").lower() in {"1", "true", "yes"}
+    cli_flags = {"--real-backend", "--use-real-backend"}
+    cli_flag = any(flag in sys.argv for flag in cli_flags)
+    if cli_flag:
+        sys.argv = [arg for arg in sys.argv if arg not in cli_flags]
+
+    _USE_REAL_BACKEND = env_flag or cli_flag
+    if _USE_REAL_BACKEND:
+        try:
+            import superNova_2177 as _backend_module  # noqa: F401
+        except Exception as e:  # pragma: no cover - import failure path
+            warnings.warn(f"Real backend requested but not available: {e}")
+            _USE_REAL_BACKEND = False
+            _backend_module = None
+
+
+def use_backend() -> bool:
+    """Return True when the real backend should be used."""
+    return _USE_REAL_BACKEND
+
+
+_init_backend_toggle()
 
 # Path for Cloud/local
 sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(__file__).parent.joinpath("mount/src").exists() else sys.path.insert(0, str(Path(__file__).parent))
@@ -29,6 +68,48 @@ except ImportError as e:
     def safe_container(): return st.container()
     def initialize_theme(theme): pass
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
+
+
+def _determine_backend(argv=None, env=None) -> bool:
+    """Return True if the real backend should be used.
+
+    CLI flags take precedence over environment variables. Supported
+    environment variable values are case-insensitive variants of
+    ``1/true/yes/on`` and ``0/false/no/off``.
+    """
+
+    if argv is None:
+        argv = sys.argv[1:]
+    if env is None:
+        env = os.environ
+
+    parser = argparse.ArgumentParser(add_help=False)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--use-backend", dest="use_backend", action="store_true")
+    group.add_argument("--no-backend", dest="use_backend", action="store_false")
+    parser.set_defaults(use_backend=None)
+    args, _ = parser.parse_known_args(argv)
+
+    if args.use_backend is not None:
+        return args.use_backend
+
+    env_val = env.get("USE_REAL_BACKEND")
+    if env_val is not None:
+        lowered = env_val.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+
+    return False
+
+
+_USE_REAL_BACKEND = _determine_backend()
+
+
+def use_real_backend() -> bool:
+    """Return whether the UI should connect to the real backend."""
+    return _USE_REAL_BACKEND
 
 def load_page(page_name: str):
     base_paths = [
@@ -254,18 +335,35 @@ def main() -> None:
             st.rerun()
         theme_selector()
 
-    # Main content area
-    with st.container():
-        if st.session_state.search_bar:
-            st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            usernames = search_users_adapter(st.session_state.search_bar)
-            if usernames:
-                for name in usernames:
-                    st.write(name)
+        st.divider()
+        st.subheader("Sign up")
+        with st.form("signup_form"):
+            new_user = st.text_input("Username")
+            new_email = st.text_input("Email")
+            new_pass = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Create account")
+        if submitted:
+            ok, msg = register_user(new_user, new_email, new_pass)
+            if ok:
+                st.success("Account created")
             else:
-                st.info("No users found.")
+                st.error(msg)
+
+    # Main content area
+with st.container():
+    if st.session_state.search_bar:
+        st.header(f"Searching for: \"{st.session_state.search_bar}\"")
+        usernames = search_users_adapter(st.session_state.search_bar)
+        if usernames == [ERROR_MESSAGE]:  # fallback error case
+            st.error("Unable to fetch users from backend.")
+        elif usernames:
+            st.subheader("User Results")
+            for name in usernames:
+                st.write(f"**{name}**")
         else:
-            load_page(st.session_state.current_page)
+            st.info("No users found.")
+    else:
+        load_page(st.session_state.current_page)
 
 if __name__ == "__main__":
     main()
