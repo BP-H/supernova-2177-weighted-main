@@ -56,7 +56,7 @@ The module aims to provide video chat with live translation, lip-sync overlays, 
    ```
 4. Launch the Streamlit UI and open the **Video Chat** page:
    ```bash
-   streamlit run ui.py
+     USE_REAL_BACKEND=1 streamlit run ui.py
    ```
 5. Click **Start Session** to begin a call and choose the target language for
    live subtitles and voice.

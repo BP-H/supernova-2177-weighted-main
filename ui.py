@@ -11,9 +11,46 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from signup_adapter import register_user
+from ui_adapters import search_users
+import os
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# ---------------------------------------------------------------------------
+# Backend toggle
+# ---------------------------------------------------------------------------
+_USE_REAL_BACKEND = False
+_backend_module = None
+
+
+def _init_backend_toggle() -> None:
+    """Initialize backend usage from env vars or CLI flags."""
+    global _USE_REAL_BACKEND, _backend_module
+
+    env_flag = os.getenv("USE_REAL_BACKEND", "0").lower() in {"1", "true", "yes"}
+    cli_flags = {"--real-backend", "--use-real-backend"}
+    cli_flag = any(flag in sys.argv for flag in cli_flags)
+    if cli_flag:
+        sys.argv = [arg for arg in sys.argv if arg not in cli_flags]
+
+    _USE_REAL_BACKEND = env_flag or cli_flag
+    if _USE_REAL_BACKEND:
+        try:
+            import superNova_2177 as _backend_module  # noqa: F401
+        except Exception as e:  # pragma: no cover - import failure path
+            warnings.warn(f"Real backend requested but not available: {e}")
+            _USE_REAL_BACKEND = False
+            _backend_module = None
+
+
+def use_backend() -> bool:
+    """Return True when the real backend should be used."""
+    return _USE_REAL_BACKEND
+
+
+_init_backend_toggle()
 
 # Path for Cloud/local
 sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(__file__).parent.joinpath("mount/src").exists() else sys.path.insert(0, str(Path(__file__).parent))
@@ -297,19 +334,41 @@ def main() -> None:
             st.rerun()
         theme_selector()
 
+        st.divider()
+        st.subheader("Sign up")
+        with st.form("signup_form"):
+            new_user = st.text_input("Username")
+            new_email = st.text_input("Email")
+            new_pass = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Create account")
+        if submitted:
+            ok, msg = register_user(new_user, new_email, new_pass)
+            if ok:
+                st.success("Account created")
+            else:
+                st.error(msg)
+
     # Main content area
     with st.container():
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            st.info("This is where your database search results would appear. Connect this to your backend.")
-            st.write("---")
-            st.subheader("Example Post Result")
-            st.write("**User:** taha_gungor")
-            st.write("This is a sample post that matches the search query. #streamlit #search")
-            st.write("---")
-            st.subheader("Example Profile Result")
-            st.write("**Profile:** artist_dev")
-            st.write("Software developer and digital artist.")
+            results, error = search_users(st.session_state.search_bar)
+            if error:
+                st.error(error)
+            if results is None:
+                st.info("This is where your database search results would appear. Connect this to your backend.")
+                st.write("---")
+                st.subheader("Example Post Result")
+                st.write("**User:** taha_gungor")
+                st.write("This is a sample post that matches the search query. #streamlit #search")
+                st.write("---")
+                st.subheader("Example Profile Result")
+                st.write("**Profile:** artist_dev")
+                st.write("Software developer and digital artist.")
+            else:
+                st.subheader("User Results")
+                for user in results:
+                    st.write(f"**{user['username']}**")
         else:
             load_page(st.session_state.current_page)
 

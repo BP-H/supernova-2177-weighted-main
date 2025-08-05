@@ -2,5 +2,5 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-streamlit run ui.py
+streamlit run ui.py -- "$@"
 
