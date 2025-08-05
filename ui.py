@@ -9,6 +9,7 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from ui_adapters import follow_adapter
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -257,15 +258,22 @@ def main() -> None:
     with st.container():
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            st.info("This is where your database search results would appear. Connect this to your backend.")
+            st.info(
+                "This is where your database search results would appear. Connect this to your backend."
+            )
             st.write("---")
             st.subheader("Example Post Result")
             st.write("**User:** taha_gungor")
-            st.write("This is a sample post that matches the search query. #streamlit #search")
+            st.write(
+                "This is a sample post that matches the search query. #streamlit #search"
+            )
             st.write("---")
             st.subheader("Example Profile Result")
             st.write("**Profile:** artist_dev")
             st.write("Software developer and digital artist.")
+            if st.button("Follow/Unfollow", key="search_follow_artist_dev"):
+                success, msg = follow_adapter("artist_dev")
+                (st.success if success else st.error)(msg)
         else:
             load_page(st.session_state.current_page)
 
