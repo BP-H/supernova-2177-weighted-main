@@ -11,6 +11,7 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from ui_adapters import follow_adapter
 from signup_adapter import register_user
 from ui_adapters import search_users
 import os
@@ -349,17 +350,21 @@ def main() -> None:
             else:
                 st.error(msg)
 
-    # Main content area
+# Main content area
 with st.container():
     if st.session_state.search_bar:
-        st.header(f"Searching for: \"{st.session_state.search_bar}\"")
+        st.header(f'Searching for: "{st.session_state.search_bar}"')
         usernames = search_users_adapter(st.session_state.search_bar)
-        if usernames == [ERROR_MESSAGE]:  # fallback error case
+
+        if usernames == [ERROR_MESSAGE]:  # backend failure fallback
             st.error("Unable to fetch users from backend.")
         elif usernames:
             st.subheader("User Results")
             for name in usernames:
                 st.write(f"**{name}**")
+                if st.button(f"Follow/Unfollow {name}", key=f"follow_{name}"):
+                    success, msg = follow_adapter(name)
+                    (st.success if success else st.error)(msg)
         else:
             st.info("No users found.")
     else:
@@ -367,3 +372,4 @@ with st.container():
 
 if __name__ == "__main__":
     main()
+
