@@ -9,6 +9,7 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
+from signup_adapter import register_user
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -252,6 +253,20 @@ def main() -> None:
             st.session_state.current_page = "settings"
             st.rerun()
         theme_selector()
+
+        st.divider()
+        st.subheader("Sign up")
+        with st.form("signup_form"):
+            new_user = st.text_input("Username")
+            new_email = st.text_input("Email")
+            new_pass = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Create account")
+        if submitted:
+            ok, msg = register_user(new_user, new_email, new_pass)
+            if ok:
+                st.success("Account created")
+            else:
+                st.error(msg)
 
     # Main content area
     with st.container():
