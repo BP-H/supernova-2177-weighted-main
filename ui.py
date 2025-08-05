@@ -5,6 +5,8 @@
 """Main Streamlit UI entry point for supernNova_2177."""
 import sys
 from pathlib import Path
+import os
+import argparse
 import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
@@ -28,6 +30,48 @@ except ImportError as e:
     def safe_container(): return st.container()
     def initialize_theme(theme): pass
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
+
+
+def _determine_backend(argv=None, env=None) -> bool:
+    """Return True if the real backend should be used.
+
+    CLI flags take precedence over environment variables. Supported
+    environment variable values are case-insensitive variants of
+    ``1/true/yes/on`` and ``0/false/no/off``.
+    """
+
+    if argv is None:
+        argv = sys.argv[1:]
+    if env is None:
+        env = os.environ
+
+    parser = argparse.ArgumentParser(add_help=False)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--use-backend", dest="use_backend", action="store_true")
+    group.add_argument("--no-backend", dest="use_backend", action="store_false")
+    parser.set_defaults(use_backend=None)
+    args, _ = parser.parse_known_args(argv)
+
+    if args.use_backend is not None:
+        return args.use_backend
+
+    env_val = env.get("USE_REAL_BACKEND")
+    if env_val is not None:
+        lowered = env_val.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+
+    return False
+
+
+_USE_REAL_BACKEND = _determine_backend()
+
+
+def use_real_backend() -> bool:
+    """Return whether the UI should connect to the real backend."""
+    return _USE_REAL_BACKEND
 
 def load_page(page_name: str):
     base_paths = [
