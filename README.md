@@ -57,6 +57,7 @@ pip install -r requirements.txt
 # python setup_env.py --launch-ui
 # or run manually with
 ./start.sh       # launches ui.py on port 8888
+# pass --real-backend or set USE_REAL_BACKEND=1 to sync with the backend
 streamlit run app.py  # launch the Streamlit server
 # or use the CLI directly
 
@@ -86,6 +87,7 @@ To launch the Streamlit UI:
 ```bash
 chmod +x start.sh
 ./start.sh  # launches ui.py
+# enable the real backend via ./start.sh --real-backend or USE_REAL_BACKEND=1
 streamlit run app.py  # same as above
 ```
 

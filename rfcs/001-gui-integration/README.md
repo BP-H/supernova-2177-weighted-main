@@ -11,4 +11,4 @@ Introduce a `ui.py` module built with Streamlit that exposes the existing `valid
 - Build a custom React or Django front‑end instead of Streamlit.
 
 ## Impact
-A lightweight GUI makes the validation pipeline more accessible and provides a starting point for future web-based features. Deployment can be as easy as running `streamlit run ui.py` on a server or container.
+A lightweight GUI makes the validation pipeline more accessible and provides a starting point for future web-based features. Deployment can be as easy as running `streamlit run ui.py` (use `-- --real-backend` or set `USE_REAL_BACKEND=1` to sync with the backend) on a server or container.
