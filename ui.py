@@ -12,6 +12,7 @@ import warnings
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+from ui_adapters import search_users_adapter
 
 # Path for Cloud/local
 sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(__file__).parent.joinpath("mount/src").exists() else sys.path.insert(0, str(Path(__file__).parent))
@@ -257,15 +258,12 @@ def main() -> None:
     with st.container():
         if st.session_state.search_bar:
             st.header(f"Searching for: \"{st.session_state.search_bar}\"")
-            st.info("This is where your database search results would appear. Connect this to your backend.")
-            st.write("---")
-            st.subheader("Example Post Result")
-            st.write("**User:** taha_gungor")
-            st.write("This is a sample post that matches the search query. #streamlit #search")
-            st.write("---")
-            st.subheader("Example Profile Result")
-            st.write("**Profile:** artist_dev")
-            st.write("Software developer and digital artist.")
+            usernames = search_users_adapter(st.session_state.search_bar)
+            if usernames:
+                for name in usernames:
+                    st.write(name)
+            else:
+                st.info("No users found.")
         else:
             load_page(st.session_state.current_page)
 
