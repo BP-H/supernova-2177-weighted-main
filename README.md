@@ -360,8 +360,23 @@ python setup_env.py --build-ui --launch-ui
 This command compiles the UI assets and starts the app on
 [http://localhost:8888](http://localhost:8888).
 You can still run `make ui` from the repository root to launch the demo only.
-`ui.py` provides the full dashboard while `app.py` offers a minimal demo
-powered by `render_modern_layout`.  Common UI patterns like alerts, theme
+`ui.py` provides the full dashboard and loads pages from
+`transcendental_resonance_frontend/pages/`. Launch it with:
+
+```bash
+python transcendental_resonance_frontend/ui.py
+# or
+python -m transcendental_resonance_frontend
+```
+
+The lightweight `app.py` instead reads the thin wrappers under the top-level
+`pages/` directory:
+
+```bash
+streamlit run app.py
+```
+
+Both entry points are powered by `render_modern_layout`. Common UI patterns like alerts, theme
 switching and layout containers live in `streamlit_helpers.py`:
 
 ```python
@@ -369,10 +384,8 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 ```
 
 Import these helpers at the top of your Streamlit files to keep the UI code
-clean and consistent.
-Run these commands from the repository root. `ui.py` remains the primary
-launcher, but you can also try the streamlined `app.py` with
-`streamlit run app.py`.
+clean and consistent. Run these commands from the repository root; `ui.py`
+remains the primary launcher while `app.py` offers a streamlined demo.
 
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.

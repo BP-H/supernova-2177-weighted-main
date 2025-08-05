@@ -1,5 +1,21 @@
 # Extending the Streamlit UI
 
+The project exposes two Streamlit frontends:
+
+- `app.py` loads the thin wrappers in the top-level `pages/` directory and can be launched with:
+
+  ```bash
+  streamlit run app.py
+  ```
+
+- `transcendental_resonance_frontend/ui.py` (or `python -m transcendental_resonance_frontend`) pulls in the full pages from `transcendental_resonance_frontend/pages/`:
+
+  ```bash
+  python transcendental_resonance_frontend/ui.py
+  # or
+  python -m transcendental_resonance_frontend
+  ```
+
 `streamlit_helpers.py` exposes small utilities used by `ui.py` for common tasks.
 Import these helpers in your own modules to keep layouts consistent. Header
 labels can include emoji characters and are sanitized automatically to prevent
