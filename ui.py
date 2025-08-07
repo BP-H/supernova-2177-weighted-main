@@ -1,469 +1,304 @@
-# ui.py
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-"""Main Streamlit UI entry point for supernNova_2177."""
-import sys
+﻿from __future__ import annotations
 
-from typing import Dict
-try:
-    from utils.paths import PAGES_DIR
-    from utils.page_registry import ensure_pages, sync_external_into_pages
-except Exception as _exc:
-    from pathlib import Path as _P
-    PAGES_DIR = (_P(__file__).resolve().parent / 'pages')
-from pathlib import Path
 import os
-import argparse
-import streamlit as st
+import importlib
 import importlib.util
-import numpy as np  # For random low stats
-import warnings
-from ui_adapters import follow_adapter, search_users_adapter, ERROR_MESSAGE
-from signup_adapter import register_user
+from pathlib import Path
+from typing import Dict
 
-# Suppress potential deprecation warnings
-warnings.filterwarnings("ignore", category=UserWarning)
+import numpy as np
+import streamlit as st
 
-# ---------------------------------------------------------------------------
-# Backend toggle
-# ---------------------------------------------------------------------------
-_USE_REAL_BACKEND = False
-_backend_module = None
+# ──────────────────────────────────────────────────────────────────────────────
+# App constants
+# ──────────────────────────────────────────────────────────────────────────────
+APP_TITLE = "superNova_2177"
+APP_BRAND = "💫 superNova_2177 💫"
 
+# Primary logical page -> python module. (We also auto-discover ./pages/*.py.)
+PRIMARY_PAGES: Dict[str, str] = {
+    "Feed": "pages.feed",
+    "Chat": "pages.chat",
+    "Messages": "pages.messages",
+    "Profile": "pages.profile",
+    "Proposals": "pages.proposals",
+    "Decisions": "pages.decisions",
+    "Execution": "pages.execution",
+    # Example to enable the 3D page:
+    # "Enter Metaverse": "pages.enter_metaverse",
+}
 
-def _init_backend_toggle() -> None:
-    """Initialize backend usage from env vars or CLI flags."""
-    global _USE_REAL_BACKEND, _backend_module
-
-    env_flag = os.getenv("USE_REAL_BACKEND", "0").lower() in {"1", "true", "yes"}
-    cli_flags = {"--real-backend", "--use-real-backend"}
-    cli_flag = any(flag in sys.argv for flag in cli_flags)
-    if cli_flag:
-        sys.argv = [arg for arg in sys.argv if arg not in cli_flags]
-
-    _USE_REAL_BACKEND = env_flag or cli_flag
-    if _USE_REAL_BACKEND:
-        try:
-            import superNova_2177 as _backend_module  # noqa: F401
-        except Exception as e:  # pragma: no cover - import failure path
-            warnings.warn(f"Real backend requested but not available: {e}")
-            _USE_REAL_BACKEND = False
-            _backend_module = None
+PAGES_DIR = Path(__file__).parent / "pages"
 
 
-def use_backend() -> bool:
-    """Return True when the real backend should be used."""
-    return _USE_REAL_BACKEND
+# ──────────────────────────────────────────────────────────────────────────────
+# Backend flags & env
+# ──────────────────────────────────────────────────────────────────────────────
+def _bool_env(name: str, default: bool = False) -> bool:
+    val = os.environ.get(name, "")
+    return default if not val else val.strip().lower() in {"1", "true", "yes", "on"}
 
 
-_init_backend_toggle()
-
-# Path for Cloud/local
-sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(
-    __file__
-).parent.joinpath("mount/src").exists() else sys.path.insert(
-    0, str(Path(__file__).parent)
-)
-
-# Imports
-try:
-    from streamlit_helpers import (
-        alert,
-        header,
-        theme_selector,
-        safe_container,
-        shared_header,
-        shared_footer,
-    )
-    from frontend.theme import initialize_theme
-except ImportError as e:
-    # Use fallback functions instead of stopping
-    def alert(text):
-        st.info(text)
-
-    def header(text):
-        st.header(text)
-
-    def theme_selector():
-        st.selectbox("Theme", ["dark"], key="theme")
-
-    def safe_container():
-        return st.container()
-
-    def shared_header(title="superNova_2177"):
-        st.header(title)
-
-    def shared_footer(text="© 2024 superNova_2177"):
-        st.caption(text)
-
-    def initialize_theme(theme):
-        pass
-
-    st.warning(f"Helpers import failed: {e}, using fallbacks.")
+def _apply_backend_env(use_real: bool, url: str) -> None:
+    os.environ["USE_REAL_BACKEND"] = "1" if use_real else "0"
+    if url:
+        os.environ["BACKEND_URL"] = url
 
 
-def _determine_backend(argv=None, env=None) -> bool:
-    """Return True if the real backend should be used.
-
-    CLI flags take precedence over environment variables. Supported
-    environment variable values are case-insensitive variants of
-    ``1/true/yes/on`` and ``0/false/no/off``.
-    """
-
-    if argv is None:
-        argv = sys.argv[1:]
-    if env is None:
-        env = os.environ
-
-    parser = argparse.ArgumentParser(add_help=False)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--use-backend", dest="use_backend", action="store_true")
-    group.add_argument("--no-backend", dest="use_backend", action="store_false")
-    parser.set_defaults(use_backend=None)
-    args, _ = parser.parse_known_args(argv)
-
-    if args.use_backend is not None:
-        return args.use_backend
-
-    env_val = env.get("USE_REAL_BACKEND")
-    if env_val is not None:
-        lowered = env_val.strip().lower()
-        if lowered in {"1", "true", "yes", "on"}:
-            return True
-        if lowered in {"0", "false", "no", "off"}:
-            return False
-
-    return False
+def _using_real_backend() -> bool:
+    return st.session_state.get("use_real_backend", _bool_env("USE_REAL_BACKEND", False))
 
 
-_USE_REAL_BACKEND = _determine_backend()
+def _current_backend_url() -> str:
+    return st.session_state.get("backend_url", os.environ.get("BACKEND_URL", "http://127.0.0.1:8000"))
 
 
-def use_real_backend() -> bool:
-    """Return whether the UI should connect to the real backend."""
-    return st.session_state.get("use_real_backend", _USE_REAL_BACKEND)
-
-
-def load_page(page_name: str):
-    base_paths = [
-        Path("mount/src/pages"),
-        Path(__file__).parent / "pages",
-        Path(__file__).parent / "transcendental_resonance_frontend/tr_pages",
-    ]
-    module_path = None
-    for base in base_paths:
-        candidate = base / f"{page_name}.py"
-        if candidate.exists():
-            module_path = candidate
-            break
-
-    if not module_path:
-        st.info(f"Page '{page_name}' is coming soon! Stay tuned for updates.")
-        return
-
-    try:
-        spec = importlib.util.spec_from_file_location(page_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        if hasattr(module, "main"):
-            module.main()
-        elif hasattr(module, "render"):
-            module.render()
-        else:
-            st.warning(f"No main/render in {page_name}.py - showing placeholder.")
-            st.write(
-                f"Placeholder for {page_name.capitalize()} "
-                f"(add main() to {page_name}.py)"
-            )
-    except Exception as e:
-        st.error(f"Error loading {page_name}: {e}")
-        st.exception(e)
-
-
-def build_pages(pages_dir: Path) -> dict[str, str]:
-    """Return a mapping of page labels to slugs."""
-    pages = {}
-    for path in pages_dir.glob("*.py"):
-        slug = path.stem
-        label = slug.replace("_", " ").title()
-        pages[label] = slug
+# ──────────────────────────────────────────────────────────────────────────────
+# Page discovery & safe import
+# ──────────────────────────────────────────────────────────────────────────────
+def _discover_pages() -> Dict[str, str]:
+    """PRIMARY_PAGES first, then fill any gaps by scanning ./pages/*.py."""
+    pages = dict(PRIMARY_PAGES)
+    if PAGES_DIR.exists():
+        for py in PAGES_DIR.glob("*.py"):
+            slug = py.stem
+            if slug.startswith("_"):
+                continue
+            label = slug.replace("_", " ").title()
+            mod = f"pages.{slug}"
+            pages.setdefault(label, mod)
     return pages
 
 
-# Preload available pages for navigation and tests
-PAGES = build_pages(Path(__file__).parent / "pages")
-
-
-def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
-    """Placeholder for legacy fallback loader."""
-    pass
-
-
-def _render_fallback(choice: str) -> None:
-    """Fallback renderer stub used in tests."""
-    pass
-
-
-def show_preview_badge(text: str) -> None:
-    """Display a simple preview badge."""
-    st.write(text)
-
-
-# Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
-
-
-def _bootstrap_pages() -> None:
-    PAGES: Dict[str, str] = {}
+def _import_module(mod_str: str):
+    """Import by module string; fallback to direct file import from ./pages."""
     try:
-        ensure_pages(PAGES)
-        sync_external_into_pages(verbose=False)
-    except Exception as exc:
-        try:
-            import streamlit as st
-            st.sidebar.error(f'page registry issue: {exc}')
-        except Exception:
-            print('page registry issue:', exc)
-def main() -> None:
-    global _USE_REAL_BACKEND
-    st.set_page_config(
-        page_title="supernNova_2177", layout="wide", initial_sidebar_state="expanded"
-    )
-    st.session_state.setdefault("theme", "dark")
-    st.session_state.setdefault("conversations", {})  # Fix NoneType
-    st.session_state.setdefault("current_page", "feed")  # Default page
-    st.session_state.setdefault("use_real_backend", _USE_REAL_BACKEND)
-    initialize_theme(st.session_state["theme"])
+        return importlib.import_module(mod_str)
+    except Exception:
+        last = mod_str.split(".")[-1]
+        candidate = PAGES_DIR / f"{last}.py"
+        if candidate.exists():
+            spec = importlib.util.spec_from_file_location(mod_str, candidate)
+            module = importlib.util.module_from_spec(spec)  # type: ignore
+            assert spec and spec.loader
+            spec.loader.exec_module(module)  # type: ignore
+            return module
+    return None
 
-    # Fixed CSS
+
+def _call_entry(module) -> None:
+    fn = getattr(module, "render", None) or getattr(module, "main", None)
+    if callable(fn):
+        fn()
+    else:
+        st.warning("This page is missing a render()/main() function.")
+        st.write("Add a `render()` or `main()` to the page module to display content.")
+
+
+def render_page(label: str) -> None:
+    pages = st.session_state["__pages_map__"]
+    mod_str = pages.get(label)
+    if not mod_str:
+        st.error(f"Unknown page: {label}")
+        return
+    module = _import_module(mod_str)
+    if module is None:
+        st.error(f"Could not load {mod_str} for '{label}'.")
+        return
+    try:
+        _call_entry(module)
+    except Exception as e:
+        st.error(f"Error rendering {label}: {e}")
+        st.exception(e)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Polished UI pieces
+# ──────────────────────────────────────────────────────────────────────────────
+def _init_state() -> None:
+    st.session_state.setdefault("theme", "dark")
+    st.session_state.setdefault("current_page", "Feed")
+    st.session_state.setdefault("use_real_backend", _bool_env("USE_REAL_BACKEND", False))
+    st.session_state.setdefault("backend_url", os.environ.get("BACKEND_URL", "http://127.0.0.1:8000"))
+    st.session_state.setdefault("__pages_map__", _discover_pages())
+    st.session_state.setdefault("search_query", "")
+
+
+def _inject_css() -> None:
     st.markdown(
         """
-    <style>
-        header[data-testid="stHeader"] {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 100 !important;
-        }
-        [data-testid="stSidebarNav"] { display: none !important; }
-        [data-testid="stSidebar"] {
-            position: sticky !important;
-            top: 0 !important;
-            height: 100vh !important;
-            overflow-y: auto !important;
-            background-color: #18181b !important;
-            color: white !important;
-            border-radius: 10px;
-            padding: 0px;
-            margin: 0px;
-            width: 190px;
-            z-index: 2147483647 !important;
-        }
-        [data-testid="stSidebar"] .stMarkdown,
-        [data-testid="stSidebar"] .stButton,
-        [data-testid="stSidebar"] .stSelectbox,
-        [data-testid="stSidebar"] > div {
-            text-align: left !important;
-        }
-        [data-testid="stSidebar"] button {
-            background-color: #18181b !important;
-            color: white !important;
-            padding: 2px 5px !important;
-            margin: 3px 0 !important;
-            width: 100% !important;
-            height: 30px !important;
-            border: none !important;
-            border-radius: 8px !important;
-            font-size: 14px !important;
-            display: flex !important;
-            justify-content: flex-start !important;
-            align-items: center !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-        [data-testid="stSidebar"] button:hover,
-        [data-testid="stSidebar"] button:focus {
-            background-color: #2a2a2e !important;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
-            outline: none !important;
-        }
-        [data-testid="stSidebar"] button[kind="secondary"]
-        :has(span:contains("supernNova")) {
-            font-size: 28px !important;
-            font-weight: bold !important;
-            justify-content: center !important;
-            padding: 15px 0px !important;
-            margin-bottom: 15px !important;
-            height: auto !important;
-        }
-        [data-testid="stSidebar"] button[kind="secondary"]
-        :has(span:contains("supernNova")):hover {
-            box-shadow: none !important;
-        }
-        .stApp {
-            background-color: #0a0a0a !important;
-            color: white !important;
-        }
-        .main .block-container {
-            padding-top: 20px !important;
-            padding-bottom: 90px !important;
-        }
-        .content-card {
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            transition: border 0.2s;
-            color: white !important;
-        }
-        .content-card:hover {
-            border: 1px solid #ff1493;
-        }
-        [data-testid="stMetricLabel"] { color: white !important; }
-        [data-testid="stMetricValue"] { color: white !important; }
-        [data-testid="stSidebar"] img {
-            border-radius: 50% !important;
-            margin: 0 auto !important;
-            display: block !important;
-        }
-        [data-testid="stTextInput"] > div {
-            background-color: #28282b !important;
-            border-radius: 9px !important;
-            border: none !important;
-        }
-        [data-testid="stTextInput"] input {
-            background-color: transparent !important;
-            color: white !important;
-            padding-left: 10px;
-        }
-        @media (max-width: 768px) {
-            [data-testid="stSidebar"] button {
-                height: 35px !important;
-                font-size: 12px !important;
-            }
-        }
-    </style>
-    """,
+<style>
+/* Base */
+.stApp { background-color:#0a0a0a !important; color:#fff !important; }
+.main .block-container { padding-top:18px !important; padding-bottom:96px !important; }
+
+/* Sidebar */
+[data-testid="stSidebar"]{
+  background:#18181b !important; border-right:1px solid #222 !important; color:#fff !important;
+}
+[data-testid="stSidebar"] .stButton>button{
+  background:#1f1f23 !important; color:#fff !important; border:0 !important;
+  width:100% !important; height:36px !important; border-radius:10px !important;
+  text-align:left !important; padding-left:12px !important; margin:3px 0 !important;
+}
+[data-testid="stSidebar"] .stButton>button:hover { background:#2a2a31 !important; }
+[data-testid="stSidebar"] img { border-radius:50% !important }
+
+/* Top “tiles” */
+div[data-testid="column"] .stButton>button{
+  background:#1b1b1f !important; color:#fff !important; border-radius:10px !important;
+  border:1px solid #2c2c32 !important;
+}
+div[data-testid="column"] .stButton>button:hover{ border-color:#ff1493 !important; }
+
+/* Inputs */
+[data-testid="stTextInput"]>div { background:#242428 !important; border-radius:10px !important; }
+[data-testid="stTextInput"] input { background:transparent !important; color:#fff !important; }
+</style>
+""",
         unsafe_allow_html=True,
     )
 
-    # Sidebar
+
+def _brand_header() -> None:
+    st.markdown(
+        f"""<div style="display:flex;gap:10px;align-items:center;">
+                <h1 style="margin:0;">{APP_TITLE}</h1>
+            </div>""",
+        unsafe_allow_html=True,
+    )
+
+
+def _nav_tile(icon: str, label: str) -> None:
+    key = f"top_{label.lower().replace(' ', '_')}"
+    if st.button(f"{icon} {label}", key=key, use_container_width=True):
+        _goto(label)
+
+
+def _top_shortcuts() -> None:
+    cols = st.columns([1, 1, 1, 1, 6])
+    tiles = [("🗳️", "Voting"), ("📄", "Proposals"), ("✅", "Decisions"), ("⚙️", "Execution")]
+    for (icon, label), col in zip(tiles, cols):
+        with col:
+            _nav_tile(icon, label)
+
+
+def _sidebar_profile() -> None:
+    img = Path("assets/profile_pic.png")
+    if img.exists():
+        st.image(str(img), width=96)
+    else:
+        st.markdown("![avatar](https://placehold.co/96x96?text=👤)")
+    st.subheader("taha_gungor")
+    st.caption("ceo / test_tech")
+    st.caption("artist / will = …")
+    st.caption("New York, New York, United States")
+    st.caption("test_tech")
+    st.divider()
+    st.metric("Profile viewers", int(np.random.randint(2100, 2450)))
+    st.metric("Post impressions", int(np.random.randint(1400, 1650)))
+    st.divider()
+
+
+def _sidebar_nav_buttons() -> None:
+    def _btn(label: str, icon: str = "", sect: str = "nav"):
+        key = f"{sect}_{label.lower().replace(' ', '_')}"
+        if st.button((icon + " " if icon else "") + label, key=key, use_container_width=True):
+            _goto(label)
+
+    # Workspaces
+    _btn("Test Tech", "🏠", "ws")
+    _btn("superNova_2177", "✨", "ws")
+    _btn("GLOBALRUNWAY", "🌍", "ws")
+    st.caption(" ")
+    st.divider()
+
+    # Main pages
+    _btn("Feed", "📰")
+    _btn("Chat", "💬")
+    _btn("Messages", "📬")
+    _btn("Profile", "👤")
+    _btn("Proposals", "📑")
+    _btn("Decisions", "✅")
+    _btn("Execution", "⚙️")
+
+    st.divider()
+    st.subheader("Premium features")
+    _btn("Music", "🎶", "premium")
+    _btn("Agents", "🚀", "premium")
+    _btn("Enter Metaverse", "🌌", "premium")
+    st.caption("Mathematically sucked into a superNova_2177 void – stay tuned for 3D immersion")
+    st.divider()
+
+    _btn("Settings", "⚙️", "system")
+
+
+def _backend_controls() -> None:
+    use_real = st.toggle("Use real backend", value=_using_real_backend(), key="toggle_real_backend")
+    url = st.text_input("Backend URL", value=_current_backend_url(), key="backend_url_input")
+    st.session_state["use_real_backend"] = use_real
+    st.session_state["backend_url"] = url
+    _apply_backend_env(use_real, url)
+
+
+def _search_box() -> None:
+    st.text_input("Search posts, people…", key="search_query", label_visibility="collapsed", placeholder="🔍 Search…")
+
+
+def _goto(page_label: str) -> None:
+    """Set the current page and rerun using the stable API."""
+    pages = st.session_state["__pages_map__"]
+    if page_label not in pages and page_label.title() in pages:
+        page_label = page_label.title()
+    if page_label in pages:
+        st.session_state["current_page"] = page_label
+        st.rerun()  # stable replacement for deprecated st.experimental_rerun
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Main
+# ──────────────────────────────────────────────────────────────────────────────
+def main() -> None:
+    # IMPORTANT: run THIS script (not Streamlit's built-in multipage runner), so
+    # our router is used and the default “radio-list” nav never appears.
+    st.set_page_config(page_title=APP_TITLE, layout="wide", initial_sidebar_state="expanded")
+
+    _inject_css()
+    _init_state()
+
+    # Sidebar (reordered as requested: avatar -> brand -> search -> backend -> nav)
     with st.sidebar:
-        if st.button("💫 superNova_2177 💫", use_container_width=True):
-            st.session_state.search_bar = ""
-            st.session_state.current_page = "feed"
-            st.rerun()
+        _sidebar_profile()
+        if st.button(APP_BRAND, key="brand_btn", use_container_width=True):
+            _goto("Feed")
+        _search_box()
+        _backend_controls()
+        _sidebar_nav_buttons()
 
-        st.text_input(
-            "Search",
-            key="search_bar",
-            placeholder="🔍 Search posts, people...",
-            label_visibility="collapsed",
-        )
+    # Top
+    _brand_header()
+    _top_shortcuts()
 
-        use_backend = st.toggle("Use real backend", value=use_real_backend())
-        _USE_REAL_BACKEND = use_backend
-        os.environ["USE_REAL_BACKEND"] = "1" if use_backend else "0"
-        st.session_state.use_real_backend = use_backend
+    # Search mode (placeholder)
+    query = st.session_state.get("search_query", "").strip()
+    if query:
+        st.subheader(f'Searching for: "{query}"')
+        st.info("Search results placeholder – wire this up to your backend when ready.")
+        st.write("• Users:")
+        for i in range(3):
+            st.write(f"  - user_{i}_{query}")
+        st.write("• Posts:")
+        for i in range(3):
+            st.write(f"  - post_{i}_{query}")
+        return
 
-        st.image("assets/profile_pic.png", width=100)
-        st.subheader("taha_gungor")
-        st.caption("ceo / test_tech")
-        st.caption("artist / will = ...")
-        st.caption("New York, New York, United States")
-        st.caption("test_tech")
-        st.divider()
-        st.metric("Profile viewers", np.random.randint(2000, 2500))
-        st.metric("Post impressions", np.random.randint(1400, 1600))
-        st.divider()
-
-        if st.button("🏠 Test Tech", key="manage_test_tech"):
-            st.session_state.current_page = "test_tech"
-            st.rerun()
-        if st.button("✨ supernNova_2177", key="manage_supernova"):
-            st.session_state.current_page = "supernova_2177"
-            st.rerun()
-        if st.button("🌍 GLOBALRUNWAY", key="manage_globalrunway"):
-            st.session_state.current_page = "globalrunway"
-            st.rerun()
-        if st.button("🖼️ Show all >", key="manage_showall"):
-            st.write("All pages (placeholder list).")
-        st.divider()
-
-        if st.button("📰 Feed", key="nav_feed"):
-            st.session_state.current_page = "feed"
-            st.rerun()
-        if st.button("💬 Chat", key="nav_chat"):
-            st.session_state.current_page = "chat"
-            st.rerun()
-        if st.button("📬 Messages", key="nav_messages"):
-            st.session_state.current_page = "messages"
-            st.rerun()
-        if st.button("🗳 Voting", key="nav_voting"):
-            st.session_state.current_page = "voting"
-            st.rerun()
-        if st.button("👤 Profile", key="nav_profile"):
-            st.session_state.current_page = "profile"
-            st.rerun()
-        st.divider()
-
-        st.subheader("Premium features")
-        if st.button("🎶 Music", key="nav_music"):
-            st.session_state.current_page = "music"
-            st.rerun()
-        if st.button("🚀 Agents", key="nav_agents"):
-            st.session_state.current_page = "agents"
-            st.rerun()
-        if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
-            st.session_state.current_page = "enter_metaverse"
-            st.rerun()
-        st.caption(
-            "Mathematically sucked into a supernNova_2177 void - "
-            "stay tuned for 3D immersion"
-        )
-        st.divider()
-
-        if st.button("⚙️ Settings", key="nav_settings"):
-            st.session_state.current_page = "settings"
-            st.rerun()
-        theme_selector()
-
-        st.divider()
-        st.subheader("Sign up")
-        with st.form("signup_form"):
-            new_user = st.text_input("Username")
-            new_email = st.text_input("Email")
-            new_pass = st.text_input("Password", type="password")
-            submitted = st.form_submit_button("Create account")
-        if submitted:
-            ok, msg = register_user(new_user, new_email, new_pass)
-            if ok:
-                st.success("Account created")
-            else:
-                st.error(msg)
-
-    # Main content area
-    with st.container():
-        shared_header()
-        search_query = st.session_state.get("search_bar")
-        if search_query:
-            st.header(f'Searching for: "{search_query}"')
-            usernames = search_users_adapter(search_query)
-
-            if usernames == [ERROR_MESSAGE]:  # backend failure fallback
-                st.error("Unable to fetch users from backend.")
-            elif usernames:
-                st.subheader("User Results")
-                for name in usernames:
-                    st.write(f"**{name}**")
-                    if st.button(f"Follow/Unfollow {name}", key=f"follow_{name}"):
-                        success, msg = follow_adapter(name)
-                        (st.success if success else st.error)(msg)
-            else:
-                st.info("No users found.")
-        else:
-            load_page(st.session_state.current_page)
-        shared_footer()
+    # Page render
+    current = st.session_state.get("current_page", "Feed")
+    pages = st.session_state["__pages_map__"]
+    if current not in pages:
+        current = "Feed"
+        st.session_state["current_page"] = current
+    render_page(current)
 
 
 if __name__ == "__main__":

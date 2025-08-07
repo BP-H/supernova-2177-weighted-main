@@ -5,7 +5,7 @@ import streamlit as st
 
 # --- status icon wrapper: works with 0-arg or 1-arg implementations ---
 try:
-    st.markdown(f"<div style='text-align:right'>{_status_icon('offline')}</div>", unsafe_allow_html=True)
+    from status_indicator import render_status_icon  # may take 0 or 1 arg
 except Exception:
     def render_status_icon(*args, **kwargs):
         return "🔴"

@@ -3,7 +3,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 def main():
-    # ❗️Do NOT call st.set_page_config here; it's already set in ui.py.
+    # Do NOT call set_page_config here; ui.py already handles it.
 
     # --- Session state defaults ---
     st.session_state.setdefault("metaverse_launched", False)
@@ -45,7 +45,6 @@ def main():
         col1, col2, col3 = st.columns([1.5, 2, 1.5])
         with col2:
             st.markdown("<h3 style='text-align:center; color:#00ffff;'>🎛️ GAME SETUP</h3>", unsafe_allow_html=True)
-            # update settings
             difficulty = st.select_slider("🔥 Difficulty", ["Easy", "Normal", "Hard"], value=st.session_state.settings["difficulty"])
             volume = st.slider("🔊 Music Volume", 0, 100, st.session_state.settings["volume"])
             st.session_state.settings.update({"difficulty": difficulty, "volume": volume})
@@ -53,7 +52,6 @@ def main():
             st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
             st.markdown('<div style="display:flex; justify-content:center;">', unsafe_allow_html=True)
 
-            # ✅ explicit click handler + rerun
             if st.button("🚀 ENTER THE METAVERSE 🚀", use_container_width=True):
                 st.session_state.metaverse_launched = True
                 st.rerun()
@@ -62,14 +60,10 @@ def main():
 
         return  # stop here in lobby
 
-    # --- Stage 2: Metaverse ---
+    # --- Stage 2: Metaverse (responsive Three.js canvas) ---
     settings = st.session_state.settings
-    three_js_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    three_js_code = f"""<!DOCTYPE html><html><head>
+      <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <style>
         body {{ margin:0; overflow:hidden; background:#000; cursor:crosshair; }}
         #canvas-container {{ width:100vw; height:100vh; position:fixed; top:0; left:0; }}
@@ -104,23 +98,10 @@ def main():
     </head>
     <body>
       <div id="loading-screen"><div class="loader"></div><div id="loading-text">INITIALIZING</div></div>
-      <div id="game-over-screen">
-        <div id="game-over-title">SYSTEM FAILURE</div>
-        <div id="final-score">SCORE: 0</div>
-        <button id="restart-button">REINITIALIZE</button>
-      </div>
+      <div id="game-over-screen"><div id="game-over-title">SYSTEM FAILURE</div><div id="final-score">SCORE: 0</div><button id="restart-button">REINITIALIZE</button></div>
       <div id="canvas-container"></div>
-      <div id="hud">
-        <div id="score">SCORE: 0</div>
-        <div id="health-bar"><div id="health-fill"></div></div>
-      </div>
-      <div id="mobile-controls">
-        <div id="joystick-zone"></div>
-        <div id="mobile-actions">
-          <div id="mobile-dash" class="mobile-button"></div>
-          <div id="mobile-jump" class="mobile-button"></div>
-        </div>
-      </div>
+      <div id="hud"><div id="score">SCORE: 0</div><div id="health-bar"><div id="health-fill"></div></div></div>
+      <div id="mobile-controls"><div id="joystick-zone"></div><div id="mobile-actions"><div id="mobile-dash" class="mobile-button"></div><div id="mobile-jump" class="mobile-button"></div></div></div>
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
@@ -135,12 +116,13 @@ def main():
         class AudioManager {{
           constructor(){{
             this.sounds = new Howl({{
-              src: ['data:audio/mp3;base64,SUQzBAAAAAA…'],  /* tiny silent loop placeholder */
+              // tiny silent loop placeholder, replace with your own sprites later
+              src: ['data:audio/mp3;base64,SUQzBAAAAAA='],
               sprite: {{ music:[0,60000,true], jump:[1000,200], dash:[2000,500], collect:[3000,300], damage:[4000,400], gameOver:[5000,1000] }},
               volume: CONFIG.volume
             }});
           }}
-          play(n){{ this.sounds.play(n); }}
+          play(n){{ try{{ this.sounds.play(n); }}catch(_){{}} }}
         }}
 
         class Player {{
@@ -211,8 +193,7 @@ def main():
           audioManager = new AudioManager(); gameManager = new GameManager();
           scene = new THREE.Scene();
           camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-          renderer = new THREE.WebGLRenderer({{ antialias:true }});
-          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer = new THREE.WebGLRenderer({{ antialias:true }}); renderer.setSize(window.innerWidth, window.innerHeight);
           document.getElementById('canvas-container').appendChild(renderer.domElement);
           clock = new THREE.Clock();
 
@@ -241,25 +222,16 @@ def main():
           document.addEventListener('keydown', e=> keyMap[e.code]=true);
           document.addEventListener('keyup', e=> keyMap[e.code]=false);
           document.getElementById('restart-button').onclick = ()=> gameManager.restart();
-          window.addEventListener('resize', ()=>{{
-            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-          }});
+          window.addEventListener('resize', ()=>{{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }});
 
           const loading = document.getElementById('loading-screen');
           loading.style.opacity = '0';
-          setTimeout(()=>{{
-            loading.style.display='none';
-            audioManager.play('music');
-            if(!isMobile) p_controls.lock();
-            animate();
-          }}, 1500);
+          setTimeout(()=>{{ loading.style.display='none'; audioManager.play('music'); if(!isMobile) p_controls.lock(); animate(); }}, 1200);
         }}
 
         function animate(){{
           if(gameManager.isGameOver) return;
           requestAnimationFrame(animate);
-
           const delta = Math.min(clock.getDelta(), 0.1);
           const dir = new THREE.Vector3();
           const speed = 10 * delta;
@@ -298,10 +270,8 @@ def main():
 
         init();
       </script>
-    </body>
-    </html>
-    """
-    components.html(three_js_code, height=1000, scrolling=False)
+    </body></html>"""
+    components.html(three_js_code, height=800, scrolling=False)
 
 if __name__ == "__main__":
     main()

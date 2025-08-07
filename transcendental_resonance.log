@@ -100,3 +100,5 @@ Traceback (most recent call last):
     version = _bcrypt.__about__.__version__
               ^^^^^^^^^^^^^^^^^
 AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-08-07 18:38:18,824 | INFO | ScriptRunner.scriptThread | {"version": "1.0", "positional_args": [8001], "event": "Prometheus metrics server listening on port %s", "level": "info", "logger": "TranscendentalResonance", "timestamp": "2025-08-07T22:38:18.824037Z"} (superNova_2177.py:646) | 감사합니다!
+2025-08-07 18:38:18,824 | INFO | ScriptRunner.scriptThread | {"version": "1.0", "positional_args": [8001], "event": "Prometheus metrics server listening on port %s", "level": "info", "logger": "TranscendentalResonance", "timestamp": "2025-08-07T22:38:18.824037Z"} (superNova_2177.py:646) | 감사합니다!
