@@ -45,6 +45,19 @@ _CSS = """
 </style>
 """
 
+# Default placeholder profile used by pages when no user data is available.
+DEFAULT_USER = {
+    "username": "JaneDoe",
+    "bio": "Dreaming across dimensions and sharing vibes.",
+    "followers": 128,
+    "following": 75,
+    "posts": 34,
+    "avatar_url": "https://placehold.co/150x150",
+    "website": "https://example.com",
+    "location": "Wonderland",
+    "feed": [f"https://placehold.co/300x300?text=Post+{i}" for i in range(1, 7)],
+}
+
 # ------------------------------------------------------------------  Helpers
 def _ensure_css():
     if not st.session_state.get(_CSS_KEY):
@@ -102,4 +115,4 @@ def render_profile_card(
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-__all__ = ["render_profile_card"]
+__all__ = ["render_profile_card", "DEFAULT_USER"]
