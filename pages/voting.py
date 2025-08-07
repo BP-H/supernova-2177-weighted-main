@@ -1,19 +1,33 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Thin wrapper for the Validation page."""
+"""Governance and voting page."""
 
-from __future__ import annotations
+import streamlit as st
+from frontend.theme import apply_theme
+from voting_ui import render_voting_tab
+from streamlit_helpers import safe_container, theme_toggle, inject_global_styles
 
-from transcendental_resonance_frontend.tr_pages import voting as real_page
+# Initialize theme & global styles once
+apply_theme("light")
+inject_global_styles()
 
 
-def main() -> None:
-    real_page.main()
+def main(main_container=None) -> None:
+    """Render the Governance and Voting page inside ``main_container``."""
+    if main_container is None:
+        main_container = st
+
+    theme_toggle("Dark Mode", key_suffix="voting")
+
+    container_ctx = safe_container(main_container)
+    with container_ctx:
+        render_voting_tab(main_container=main_container)
 
 
 def render() -> None:
-    real_page.main()
+    """Wrapper to keep page loading consistent."""
+    main()
 
 
 if __name__ == "__main__":

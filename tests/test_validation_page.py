@@ -14,7 +14,7 @@ root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
-from transcendental_resonance_frontend.tr_pages import validation
+from pages import validation
 
 
 def test_validation_main_runs(monkeypatch):
