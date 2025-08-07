@@ -1,95 +1,74 @@
 ﻿# STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""User profile page (safe, standalone)."""
+"""Profile page — standalone + works with fake backend."""
 
-from inspect import signature, Parameter
 import streamlit as st
 
-# --- Try to import the real profile card renderer ---
+# --- fake backend (Option C). If not present, use safe fallbacks ---
 try:
-    from frontend.profile_card import (
-        DEFAULT_USER,
-        render_profile_card as _render_profile_card,  # alias the real function
-    )
+    from external_services.fake_api import get_profile, save_profile  # C step
 except Exception:
-    # Fallbacks if that module isn't available
-    DEFAULT_USER = {"username": "guest", "avatar_url": "", "bio": "", "location": "", "website": ""}
-    def _render_profile_card(**kwargs):
-        st.info(f"[placeholder] profile for {kwargs.get('username','guest')}")
+    def get_profile(username: str):
+        return {"username": username, "avatar_url": "", "bio": "", "location": "", "website": ""}
+    def save_profile(data: dict):
+        return True
 
-# Optional: status icon; safe no-op if missing
-try:
-    from status_indicator import render_status_icon
-except Exception:
-    def render_status_icon(*args, **kwargs):
-        return
+DEFAULT_USER = {
+    "username": "guest",
+    "avatar_url": "",
+    "bio": "This is a demo profile.",
+    "location": "Earth",
+    "website": "https://example.com",
+}
 
-# --- Safe caller: works whether the real function wants kwargs or a dict or nothing ---
-def _call_profile_card(data=None):
-    merged = {**DEFAULT_USER, **(data or {})}
+def render_profile_card_ui(profile: dict) -> None:
+    """Local UI renderer so we never crash on imports/signatures."""
+    st.markdown(f"### @{profile.get('username','guest')}")
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        url = profile.get("avatar_url") or ""
+        if url:
+            st.image(url, width=96)
+        else:
+            st.write("🧑‍🚀")
+    with col2:
+        st.write(profile.get("bio", ""))
+        loc = profile.get("location", "")
+        web = profile.get("website", "")
+        if loc: st.write(f"📍 {loc}")
+        if web: st.write(f"🔗 {web}")
 
-    # Try to understand the real function's signature
-    try:
-        sig = signature(_render_profile_card)
-    except Exception:
-        # unknown signature; try dict then no-arg
-        try:
-            return _render_profile_card(merged)
-        except TypeError:
-            return _render_profile_card()
-
-    params = list(sig.parameters.values())
-    if not params:
-        # takes no args
-        return _render_profile_card()
-
-    # If first parameter is a required positional arg, assume it's a dict
-    first = params[0]
-    if first.kind in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD) and first.default is Parameter.empty:
-        try:
-            return _render_profile_card(merged)
-        except TypeError:
-            pass  # fall through
-
-    # Build kwargs for whatever names the function wants
-    kwargs = {}
-    for name, p in sig.parameters.items():
-        if name == "self":
-            continue
-        if p.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
-            if name in merged:
-                kwargs[name] = merged[name]
-
-    # Prefer kwargs; fall back to dict; then no-arg
-    try:
-        return _render_profile_card(**kwargs)
-    except TypeError:
-        try:
-            return _render_profile_card(merged)
-        except TypeError:
-            return _render_profile_card()
-
-# --- Streamlit page ---
-def main() -> None:
+def main():
     st.title("superNova_2177")
     st.subheader("Profile")
 
+    # --- Username INPUT FIRST (so it's defined) ---
     username = st.text_input("Username", st.session_state.get("profile_username", "guest"))
     st.session_state["profile_username"] = username
 
-    demo_data = {
-        "username": username,
-        "avatar_url": "",                     # add URLs/fields here as you wire real data
-        "bio": "This is a demo profile.",
-        "location": "Earth",
-        "website": "https://example.com",
-    }
+    # --- Load from fake backend, then merge defaults ---
+    loaded = get_profile(username) or {}
+    profile = {**DEFAULT_USER, **loaded, "username": username}
 
+    # --- Edit fields (simple) ---
+    with st.expander("Edit", expanded=False):
+        profile["avatar_url"] = st.text_input("Avatar URL", profile.get("avatar_url", ""))
+        profile["bio"] = st.text_area("Bio", profile.get("bio", ""))
+        profile["location"] = st.text_input("Location", profile.get("location", ""))
+        profile["website"] = st.text_input("Website", profile.get("website", ""))
+
+        if st.button("Save Profile"):
+            if save_profile(profile):
+                st.success("Saved (fake API, in-memory).")
+            else:
+                st.error("Could not save profile.")
+
+    # --- Render the card ---
     try:
-        _call_profile_card(demo_data)
+        render_profile_card_ui(profile)
     except Exception as e:
-        st.error(f"Could not render profile card: {e}")
+        st.error(f"Render error: {e}")
 
 def render() -> None:
     main()
