@@ -11,13 +11,11 @@ import streamlit as st
 import importlib.util
 import numpy as np  # For random low stats
 import warnings
-from ui_adapters import follow_adapter
+from ui_adapters import follow_adapter, search_users_adapter, ERROR_MESSAGE
 from signup_adapter import register_user
-import os
 
 # Suppress potential deprecation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
-from ui_adapters import search_users_adapter
 
 # ---------------------------------------------------------------------------
 # Backend toggle
@@ -54,19 +52,46 @@ def use_backend() -> bool:
 _init_backend_toggle()
 
 # Path for Cloud/local
-sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(__file__).parent.joinpath("mount/src").exists() else sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / "mount/src")) if Path(
+    __file__
+).parent.joinpath("mount/src").exists() else sys.path.insert(
+    0, str(Path(__file__).parent)
+)
 
 # Imports
 try:
-    from streamlit_helpers import alert, header, theme_selector, safe_container
+    from streamlit_helpers import (
+        alert,
+        header,
+        theme_selector,
+        safe_container,
+        shared_header,
+        shared_footer,
+    )
     from frontend.theme import initialize_theme
 except ImportError as e:
     # Use fallback functions instead of stopping
-    def alert(text): st.info(text)
-    def header(text): st.header(text)
-    def theme_selector(): st.selectbox("Theme", ["dark"], key="theme")
-    def safe_container(): return st.container()
-    def initialize_theme(theme): pass
+    def alert(text):
+        st.info(text)
+
+    def header(text):
+        st.header(text)
+
+    def theme_selector():
+        st.selectbox("Theme", ["dark"], key="theme")
+
+    def safe_container():
+        return st.container()
+
+    def shared_header(title="superNova_2177"):
+        st.header(title)
+
+    def shared_footer(text="© 2024 superNova_2177"):
+        st.caption(text)
+
+    def initialize_theme(theme):
+        pass
+
     st.warning(f"Helpers import failed: {e}, using fallbacks.")
 
 
@@ -109,13 +134,14 @@ _USE_REAL_BACKEND = _determine_backend()
 
 def use_real_backend() -> bool:
     """Return whether the UI should connect to the real backend."""
-    return _USE_REAL_BACKEND
+    return st.session_state.get("use_real_backend", _USE_REAL_BACKEND)
+
 
 def load_page(page_name: str):
     base_paths = [
         Path("mount/src/pages"),
         Path(__file__).parent / "pages",
-        Path(__file__).parent / "transcendental_resonance_frontend/tr_pages"
+        Path(__file__).parent / "transcendental_resonance_frontend/tr_pages",
     ]
     module_path = None
     for base in base_paths:
@@ -132,13 +158,16 @@ def load_page(page_name: str):
         spec = importlib.util.spec_from_file_location(page_name, module_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        if hasattr(module, 'main'):
+        if hasattr(module, "main"):
             module.main()
-        elif hasattr(module, 'render'):
+        elif hasattr(module, "render"):
             module.render()
         else:
             st.warning(f"No main/render in {page_name}.py - showing placeholder.")
-            st.write(f"Placeholder for {page_name.capitalize()} (add main() to {page_name}.py)")
+            st.write(
+                f"Placeholder for {page_name.capitalize()} "
+                f"(add main() to {page_name}.py)"
+            )
     except Exception as e:
         st.error(f"Error loading {page_name}: {e}")
         st.exception(e)
@@ -152,6 +181,10 @@ def build_pages(pages_dir: Path) -> dict[str, str]:
         label = slug.replace("_", " ").title()
         pages[label] = slug
     return pages
+
+
+# Preload available pages for navigation and tests
+PAGES = build_pages(Path(__file__).parent / "pages")
 
 
 def load_page_with_fallback(choice: str, module_paths: list[str] | None = None) -> None:
@@ -168,20 +201,22 @@ def show_preview_badge(text: str) -> None:
     """Display a simple preview badge."""
     st.write(text)
 
+
 # Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
 def main() -> None:
+    global _USE_REAL_BACKEND
     st.set_page_config(
-        page_title="supernNova_2177",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        page_title="supernNova_2177", layout="wide", initial_sidebar_state="expanded"
     )
     st.session_state.setdefault("theme", "dark")
     st.session_state.setdefault("conversations", {})  # Fix NoneType
     st.session_state.setdefault("current_page", "feed")  # Default page
+    st.session_state.setdefault("use_real_backend", _USE_REAL_BACKEND)
     initialize_theme(st.session_state["theme"])
 
     # Fixed CSS
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         header[data-testid="stHeader"] {
             position: sticky !important;
@@ -231,7 +266,8 @@ def main() -> None:
             box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
             outline: none !important;
         }
-        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")) {
+        [data-testid="stSidebar"] button[kind="secondary"]
+        :has(span:contains("supernNova")) {
             font-size: 28px !important;
             font-weight: bold !important;
             justify-content: center !important;
@@ -239,7 +275,8 @@ def main() -> None:
             margin-bottom: 15px !important;
             height: auto !important;
         }
-        [data-testid="stSidebar"] button[kind="secondary"]:has(span:contains("supernNova")):hover {
+        [data-testid="stSidebar"] button[kind="secondary"]
+        :has(span:contains("supernNova")):hover {
             box-shadow: none !important;
         }
         .stApp {
@@ -285,7 +322,9 @@ def main() -> None:
             }
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Sidebar
     with st.sidebar:
@@ -298,8 +337,13 @@ def main() -> None:
             "Search",
             key="search_bar",
             placeholder="🔍 Search posts, people...",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
+
+        use_backend = st.toggle("Use real backend", value=use_real_backend())
+        _USE_REAL_BACKEND = use_backend
+        os.environ["USE_REAL_BACKEND"] = "1" if use_backend else "0"
+        st.session_state.use_real_backend = use_backend
 
         st.image("assets/profile_pic.png", width=100)
         st.subheader("taha_gungor")
@@ -352,7 +396,10 @@ def main() -> None:
         if st.button("🌌 Enter Metaverse", key="nav_metaverse"):
             st.session_state.current_page = "enter_metaverse"
             st.rerun()
-        st.caption("Mathematically sucked into a supernNova_2177 void - stay tuned for 3D immersion")
+        st.caption(
+            "Mathematically sucked into a supernNova_2177 void - "
+            "stay tuned for 3D immersion"
+        )
         st.divider()
 
         if st.button("⚙️ Settings", key="nav_settings"):
@@ -376,6 +423,7 @@ def main() -> None:
 
     # Main content area
     with st.container():
+        shared_header()
         search_query = st.session_state.get("search_bar")
         if search_query:
             st.header(f'Searching for: "{search_query}"')
@@ -394,7 +442,8 @@ def main() -> None:
                 st.info("No users found.")
         else:
             load_page(st.session_state.current_page)
+        shared_footer()
+
 
 if __name__ == "__main__":
     main()
-
