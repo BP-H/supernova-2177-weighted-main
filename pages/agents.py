@@ -1,58 +1,66 @@
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-
+# pages/agents.py
+from __future__ import annotations
+import asyncio
 import streamlit as st
-from frontend.theme import apply_theme
+from typing import Any, Dict
 
-from agent_ui import render_agent_insights_tab
-from streamlit_helpers import theme_toggle, inject_global_styles
+# Your async bridge
+from frontend_bridge import dispatch_route
 
-__all__ = ["main", "render"]
+st.header("🤖 Agents")
 
-apply_theme("light")
-inject_global_styles()
+def call(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    # Streamlit is sync; wrap the async bridge call
+    return asyncio.run(dispatch_route(route, payload))
 
+# --- API key (session only; no persistence yet) -------------------------------
+st.subheader("API key")
+st.caption("Paste your OpenAI key once; we pass it to the launcher for this session.")
 
-def main(main_container=None) -> None:
-    """
-    Render the Agents UI safely, with container fallback.
+openai_key = st.text_input(
+    "OPENAI_API_KEY",
+    type="password",
+    value=st.session_state.get("openai_key", ""),
+    key="agents_openai_key_input_v1",       # <-- UNIQUE KEY
+)
 
-    If no main_container is provided, uses Streamlit root context.
-    """
-    container = main_container if main_container is not None else st
-    theme_toggle("Dark Mode", key_suffix="agents")
+if st.button("Save key (session)", key="agents_save_key_btn"):
+    st.session_state["openai_key"] = openai_key
+    st.success("Saved to this session.")
 
-    try:
-        container.title("🤖 Agents")
+# --- discover agents ----------------------------------------------------------
+st.subheader("Available agents")
+resp = call("protocol_agents_list", {})  # or "list_agents"
+agents = resp.get("agents", []) if isinstance(resp, dict) else []
+chosen = st.multiselect(
+    "Pick agents to run",
+    options=agents,
+    default=agents[:1],
+    key="agents_pick_multiselect_v1",       # <-- UNIQUE KEY
+)
 
-        agents = ["MetaValidator", "Guardian", "Resonance"]
-        selected_agent = container.selectbox("Select Agent", agents, key="agent_select")
+# --- pick backend -------------------------------------------------------------
+st.subheader("Backend (optional)")
+st.caption("Leave empty to use the agent default. Example: openai:gpt-4o-mini")
+llm_backend = st.text_input(
+    "LLM backend",
+    value="openai:gpt-4o-mini",
+    key="agents_backend_input_v1",          # <-- UNIQUE KEY
+)
 
-        if container.button("Test Agent", key="test_agent"):
-            container.success(f"✅ {selected_agent} agent test complete")
-            container.json(
-                {
-                    "agent": selected_agent,
-                    "status": "ok",
-                    "test": True,
-                }
-            )
-    except Exception as e:
-        container.error(f"❌ Failed to render Agents UI: {e}")
+c1, c2 = st.columns(2)
+with c1:
+    if st.button("🚀 Launch", key="agents_launch_btn"):
+        payload = {
+            "provider": "openai",
+            "api_key": st.session_state.get("openai_key", ""),
+            "agents": chosen,
+            "llm_backend": llm_backend.strip() or None,
+        }
+        out = call("protocol_agents_launch", payload)  # or "launch_agents"
+        st.success(f"Launched: {out.get('launched', [])}")
 
-    try:
-        render_agent_insights_tab(main_container=main_container)
-    except Exception as e:  # pragma: no cover - UI
-        st.error(f"Agent page error: {e}")
-        if st.button("Reset", key="agent_reset"):
-            st.rerun()
-
-
-def render() -> None:
-    """Wrapper to keep page loading consistent."""
-    main()
-
-
-if __name__ == "__main__":
-    main()
+with c2:
+    if st.button("⏭️ Step all", key="agents_step_btn"):
+        out = call("protocol_agents_step", {})  # or "step_agents"
+        st.info(f"Stepped: {out.get('stepped', [])}")

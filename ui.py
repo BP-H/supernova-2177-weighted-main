@@ -9,6 +9,15 @@ from typing import Dict
 import numpy as np
 import streamlit as st
 
+with st.sidebar:
+    st.selectbox(
+    "I am a…",
+    ["human", "company", "ai"],
+    index={"human":0, "company":1, "ai":2}[st.session_state.get("species","human")],
+    key="species",
+)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # App constants
 # ──────────────────────────────────────────────────────────────────────────────

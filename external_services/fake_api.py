@@ -56,3 +56,30 @@ def create_run(decision_id: int):
 
 def list_runs():
     return sorted(_DB["runs"].values(), key=lambda x: x["id"], reverse=True)
+
+# --- weighted voting (non-breaking additions) ---
+try:
+    from voting_engine import Vote, decide_weighted as _decide_w, tally_weighted as _tally_w
+except Exception:
+    Vote = None  # type: ignore
+
+_WEIGHTS: list = []  # List[Vote]-like dicts
+
+def vote_weighted(proposal_id: int, voter: str, choice: str, species: str = "human"):
+    if proposal_id not in _DB["proposals"]: return {"ok": False}
+    if choice not in {"up","down"}: return {"ok": False}
+    if species not in {"human","company","agent"}: species = "human"
+    _WEIGHTS.append({"proposal_id": proposal_id, "voter": voter, "choice": choice, "species": species})
+    return {"ok": True}
+
+def tally_proposal_weighted(proposal_id: int):
+    if Vote is None: return {"up": 0.0, "down": 0.0, "total": 0.0}
+    votes = [Vote(**v) for v in _WEIGHTS if v["proposal_id"] == proposal_id]
+    up, down, total, _ = _tally_w(votes, proposal_id)
+    return {"up": up, "down": down, "total": total}
+
+def decide_weighted_api(proposal_id: int, level: str = "standard"):
+    if Vote is None: return {"proposal_id": proposal_id, "status": "rejected"}
+    votes = [Vote(**v) for v in _WEIGHTS if v["proposal_id"] == proposal_id]
+    return _decide_w(votes, proposal_id, level if level in {"standard","important"} else "standard")
+
