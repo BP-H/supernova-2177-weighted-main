@@ -13,8 +13,10 @@ from __future__ import annotations
 import random
 from typing import Any, Dict, List
 
+import streamlit as st
+
 from external_services.llm_client import LLMClient, get_speculative_futures
-from external_services.vision_client import VisionClient
+from external_services.vision_client import VisionClient, analyze_timeline
 
 # Satirical disclaimer appended to all speculative output
 DISCLAIMER = "This is a satirical simulation, not advice or prediction."
@@ -32,6 +34,7 @@ def _entropy_tag() -> float:
     return random.random()  # nosec B311
 
 
+@st.cache_data(show_spinner=False)
 async def generate_speculative_futures(
     node: Dict[str, Any], num_variants: int = 3
 ) -> List[Dict[str, str]]:
@@ -46,6 +49,7 @@ async def generate_speculative_futures(
     return futures
 
 
+@st.cache_data(show_spinner=False)
 async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
     """Return text, video, and vision analysis pairs with a disclaimer."""
 
@@ -69,6 +73,7 @@ async def generate_speculative_payload(description: str) -> List[Dict[str, str]]
             }
         )
     return results
+
 
 def quantum_video_stub(*_args, **_kwargs) -> None:
     """Placeholder for future WebGL/AI-video integration."""
