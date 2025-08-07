@@ -1,4 +1,4 @@
-# STRICTLY A SOCIAL MEDIA PLATFORM
+﻿# STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 """User identity hub with profile and activity overview."""
@@ -14,13 +14,11 @@ from streamlit_helpers import (
     get_active_user,
     ensure_active_user,
     inject_global_styles,
-)
-from api_key_input import render_api_key_ui
-from frontend.profile_card import (
-    DEFAULT_USER,
-    render_profile_card,
-)
+
+
 from status_indicator import render_status_icon
+
+
 
 try:
     from social_tabs import _load_profile
@@ -45,6 +43,70 @@ except Exception:  # pragma: no cover - optional dependency
 
     def seed_default_users() -> None:  # type: ignore
         pass
+
+
+)
+from frontend.profile_card import (
+    DEFAULT_USER,
+    render_profile_card as _render_profile_card,  # keep this alias
+)
+
+
+
+# --- SAFE WRAPPER FOR PROFILE CARD ---
+from inspect import signature, Parameter
+
+def render_profile_card(data=None):
+    """
+    Calls the real profile card function no matter its signature:
+    - If it takes 0 args -> call without args
+    - If it takes 1 positional arg (a dict) -> pass merged dict
+    - If it takes keyword-only args (e.g., username, avatar_url) -> pass **kwargs
+    """
+    merged = {**DEFAULT_USER, **(data or {})}
+
+    try:
+        sig = signature(_render_profile_card)
+    except Exception:
+        # Unknown signature; best attempt with dict, else no-arg
+        try:
+            return _render_profile_card(merged)
+        except TypeError:
+            return _render_profile_card()
+
+    params = list(sig.parameters.values())
+
+    # 0 parameters → just call it
+    if not params:
+        return _render_profile_card()
+
+    # 1 positional parameter → likely expects a dict
+    first = params[0]
+    if first.kind in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD) and first.default is Parameter.empty:
+        try:
+            return _render_profile_card(merged)
+        except TypeError:
+            pass  # fall through to kwargs path
+
+    # Build kwargs for whatever names it wants
+    kwargs = {}
+    for name, p in sig.parameters.items():
+        if name == "self":
+            continue
+        if p.kind in (Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD):
+            if name in merged:
+                kwargs[name] = merged[name]
+
+    try:
+        return _render_profile_card(**kwargs)
+    except TypeError:
+        # last resort
+        try:
+            return _render_profile_card(merged)
+        except TypeError:
+            return _render_profile_card()
+# --- END WRAPPER ---
+
 
 
 def _run_async(coro):
@@ -125,7 +187,7 @@ def main(main_container=None) -> None:
         # Header with status icon
         header_col, status_col = st.columns([8, 1])
         with header_col:
-            header("👤 Profile")
+            header("ðŸ‘¤ Profile")
         with status_col:
             render_status_icon()
 
