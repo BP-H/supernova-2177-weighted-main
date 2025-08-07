@@ -1,3 +1,9 @@
+from pathlib import Path
+
+p = Path("pages/profile.py")
+p.parent.mkdir(parents=True, exist_ok=True)
+
+content = r'''
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
@@ -77,3 +83,6 @@ def render() -> None:
 
 if __name__ == "__main__":
     main()
+'''
+p.write_text(content.strip() + "\n", encoding="utf-8")
+print("wrote", p)
