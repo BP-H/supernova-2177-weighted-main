@@ -88,3 +88,15 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-08-02 01:16:39,847 | WARNING | MainThread | Case-insensitive file collision for 'foo': Foo.py, foo.py (page_registry.py:83) | 감사합니다!
 2025-08-02 01:16:39,847 | WARNING | MainThread | Case-insensitive file collision for 'foo': Foo.py, foo.py (page_registry.py:83) | 감사합니다!
 2025-08-02 01:16:39,847 | WARNING | MainThread | Case-insensitive file collision for 'foo': Foo.py, foo.py (page_registry.py:83) | 감사합니다!
+2025-08-07 16:27:42,472 | WARNING | ScriptRunner.scriptThread | (trapped) error reading bcrypt version (bcrypt.py:622) | 감사합니다!
+Traceback (most recent call last):
+  File "C:\Users\tahag\Desktop\gptcmon\streamlit-test\.venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-08-07 16:27:42,472 | WARNING | ScriptRunner.scriptThread | (trapped) error reading bcrypt version (bcrypt.py:622) | 감사합니다!
+Traceback (most recent call last):
+  File "C:\Users\tahag\Desktop\gptcmon\streamlit-test\.venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'

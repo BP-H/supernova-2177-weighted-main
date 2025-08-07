@@ -4,6 +4,14 @@
 # Legal & Ethical Safeguards
 """Main Streamlit UI entry point for supernNova_2177."""
 import sys
+
+from typing import Dict
+try:
+    from utils.paths import PAGES_DIR
+    from utils.page_registry import ensure_pages, sync_external_into_pages
+except Exception as _exc:
+    from pathlib import Path as _P
+    PAGES_DIR = (_P(__file__).resolve().parent / 'pages')
 from pathlib import Path
 import os
 import argparse
@@ -203,6 +211,19 @@ def show_preview_badge(text: str) -> None:
 
 
 # Main - Dark theme with subtle pink polish, FIXED STICKY LAYOUT
+
+
+def _bootstrap_pages() -> None:
+    PAGES: Dict[str, str] = {}
+    try:
+        ensure_pages(PAGES)
+        sync_external_into_pages(verbose=False)
+    except Exception as exc:
+        try:
+            import streamlit as st
+            st.sidebar.error(f'page registry issue: {exc}')
+        except Exception:
+            print('page registry issue:', exc)
 def main() -> None:
     global _USE_REAL_BACKEND
     st.set_page_config(

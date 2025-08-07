@@ -56,7 +56,7 @@ def main():
             # ✅ explicit click handler + rerun
             if st.button("🚀 ENTER THE METAVERSE 🚀", use_container_width=True):
                 st.session_state.metaverse_launched = True
-                st.experimental_rerun()
+                st.rerun()
 
             st.markdown('</div>', unsafe_allow_html=True)
 

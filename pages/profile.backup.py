@@ -18,24 +18,8 @@ from streamlit_helpers import (
 from api_key_input import render_api_key_ui
 from frontend.profile_card import (
     DEFAULT_USER,
-    render_profile_card as _render_profile_card,
+    render_profile_card,
 )
-
-
-
-# --- compatibility wrapper for render_profile_card (SAFE) ---
-import inspect as _inspect
-
-def render_profile_card_compat(data):
-    try:
-        n = len(_inspect.signature(_render_profile_card).parameters)
-    except Exception:
-        n = 0
-    if n >= 1:
-        return _render_profile_card_compat(data)
-    else:
-        return _render_profile_card()
-# --- end wrapper ---
 from status_indicator import render_status_icon
 
 try:
@@ -111,7 +95,7 @@ def _render_profile(username: str) -> None:
             }
         except Exception as exc:  # pragma: no cover - runtime fetch may fail
             st.warning(f"Profile fetch failed: {exc}, using placeholder")
-    render_profile_card_compat(data)
+    render_profile_card(data)
     if dispatch_route is not None and st.button("Follow/Unfollow", key="follow"):
         with st.spinner("Updating..."):
             try:
@@ -183,7 +167,7 @@ def main(main_container=None) -> None:
             "profile_data",
             {**DEFAULT_USER, "username": username},
         )
-        render_profile_card_compat(data)
+        render_profile_card(data)
         followers = st.session_state.get(
             "profile_followers", {"count": 0, "followers": []}
         )

@@ -1,22 +1,12 @@
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-"""Common path constants for the Streamlit frontend."""
-
-from __future__ import annotations
-
 from pathlib import Path
-
-# Repository root directory
-ROOT_DIR = Path(__file__).resolve().parent.parent
-
-# Default directory where Streamlit pages are located
-PAGES_DIR = ROOT_DIR / "pages"
-
-
-def get_pages_dir() -> Path:
-    """Return the canonical directory for Streamlit page modules."""
-    return PAGES_DIR
-
-
-__all__ = ["ROOT_DIR", "PAGES_DIR", "get_pages_dir"]
+ROOT_DIR = Path(__file__).resolve().parents[1]
+PAGES_DIR = ROOT_DIR / 'pages'
+EXTERNAL_PAGE_DIRS = [
+    ROOT_DIR / 'transcendental_resonance_frontend' / 'pages',
+    ROOT_DIR / 'app' / 'pages',
+]
+def ensure_dirs():
+    PAGES_DIR.mkdir(parents=True, exist_ok=True)
+    for p in EXTERNAL_PAGE_DIRS:
+        if p.exists():
+            p.mkdir(parents=True, exist_ok=True)

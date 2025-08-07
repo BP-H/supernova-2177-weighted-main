@@ -1,18 +1,6 @@
-# Python virtual environment
-venv/
-
-# Test files
-tests/
-!tests/
-!transcendental_resonance_frontend/tests/
-!tests/conftest.py
-
-# Python cache
+﻿.venv/
 __pycache__/
-.pytest_cache/
-
-# Additional ignores
-*.py[cod]
-.DS_Store
-.idea/
-.env/
+.streamlit/
+*.pyc
+*.pyo
+*.DS_Store
