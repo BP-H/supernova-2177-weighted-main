@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 # Default directory where Streamlit pages are located
-PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = ROOT_DIR / "pages"
 
 
 def get_pages_dir() -> Path:
