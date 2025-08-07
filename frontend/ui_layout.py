@@ -127,7 +127,7 @@ try:
     PAGES_DIR: Path = _paths.PAGES_DIR
 except Exception:  # pragma: no cover
     ROOT_DIR = Path(__file__).resolve().parents[1]
-    PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+    PAGES_DIR = ROOT_DIR / "pages"
 
 # optional pretty-sidebar package
 try:
@@ -490,7 +490,6 @@ def render_bottom_tab_bar(position: str = "fixed") -> None:
         )
     except Exception:
         return
-
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

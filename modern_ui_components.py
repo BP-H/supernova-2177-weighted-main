@@ -19,7 +19,7 @@ try:
     get_pages_dir = _paths.get_pages_dir
 except Exception:  # pragma: no cover – fallback for isolated execution
     ROOT_DIR = Path(__file__).resolve().parents[1]  # repo root
-    PAGES_DIR = ROOT_DIR / "transcendental_resonance_frontend" / "pages"
+    PAGES_DIR = ROOT_DIR / "pages"
 
     def get_pages_dir() -> Path:
         return PAGES_DIR
@@ -181,7 +181,6 @@ def render_modern_layout() -> None:
         """,
         unsafe_allow_html=True,
     )
-
 
 
 def render_modern_header(title: str) -> None:
@@ -393,7 +392,6 @@ def render_stats_section(stats: dict) -> None:
         accent = theme.get_accent_color()
     except Exception:
         accent = theme.LIGHT_THEME.accent  # Safe fallback to known value
-
 
     try:
         st.markdown(

@@ -9,7 +9,6 @@ from pathlib import Path
 import logging
 import os
 import sys
-import streamlit as st
 from disclaimers import (
     STRICTLY_SOCIAL_MEDIA,
     INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION,
@@ -18,7 +17,6 @@ from disclaimers import (
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
-
 
 
 def clean_duplicate_pages(pages_dir: Path) -> list[str]:
@@ -103,11 +101,13 @@ def ensure_pages(pages: dict[str, str], pages_dir: Path) -> None:
             )
             logger.info("Created placeholder page module %s", file_path.name)
 
+
 try:
     from utils.paths import get_pages_dir as _get_pages_dir
 except Exception:  # pragma: no cover - fallback when utils.paths is missing
+
     def _get_pages_dir() -> Path:
-        return Path(__file__).resolve().parents[2] / "pages"
+        return Path(__file__).resolve().parents[3] / "pages"
 
 
 def get_pages_dir() -> Path:
@@ -116,4 +116,3 @@ def get_pages_dir() -> Path:
 
 
 __all__ = ["ensure_pages", "get_pages_dir", "clean_duplicate_pages"]
-
