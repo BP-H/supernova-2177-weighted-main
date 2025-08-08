@@ -46,3 +46,20 @@ def main():
         st.write(f"#{d['id']} — proposal {d['proposal_id']} → **{d['status']}**")
 
 def render(): main()
+
+# --- WEIGHTED DECISION PANEL (auto-added) ------------------------------------
+try:
+    from superNova_2177 import tally_proposal_weighted, decide_weighted_api
+except Exception:
+    from supernova_2177 import tally_proposal_weighted, decide_weighted_api  # type: ignore
+
+def _weighted_decide_block(pid: int):
+    import streamlit as st
+    level = st.selectbox("Decision level", ["standard","important"], index=0, key=f"dec_level_{pid}")
+    t = tally_proposal_weighted(pid)
+    pct = (t['up']/t['total']*100) if t['total'] else 0.0
+    st.caption(f"Weighted: {t['up']:.3f} ↑ / {t['down']:.3f} ↓ — total {t['total']:.3f}  ({pct:.1f}% yes)")
+    if st.button(f"Decide (weighted) #{pid}", key=f"wdec_{pid}"):
+        res = decide_weighted_api(pid, level)
+        st.success(f\"{res['status'].upper()} at {int(res['threshold']*100)}% threshold\")
+# --- END WEIGHTED DECISION PANEL ---------------------------------------------

@@ -60,3 +60,26 @@ def main():
             col3.metric("Votes", f"{tally.get('up',0)} 👍 / {tally.get('down',0)} 👎")
 
 def render(): main()
+
+# --- WEIGHTED VOTING PANEL (auto-added) --------------------------------------
+try:
+    from superNova_2177 import vote_weighted, tally_proposal_weighted  # engine lives here
+except Exception:  # fallback if renamed
+    from supernova_2177 import vote_weighted, tally_proposal_weighted  # type: ignore
+
+def _weighted_panel_for_proposal(pid: int):
+    import streamlit as st
+    species = st.session_state.get("species", "human")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button(f"👍 Vote UP (weighted) #{pid}", key=f"wup_{pid}"):
+            vote_weighted(pid, st.session_state.get('username','anon'), 'up', species)
+            st.rerun()
+    with c2:
+        if st.button(f"👎 Vote DOWN (weighted) #{pid}", key=f"wdown_{pid}"):
+            vote_weighted(pid, st.session_state.get('username','anon'), 'down', species)
+            st.rerun()
+    t = tally_proposal_weighted(pid)
+    pct = (t['up']/t['total']*100) if t['total'] else 0.0
+    st.caption(f"Weighted: {t['up']:.3f} ↑ / {t['down']:.3f} ↓ — total {t['total']:.3f}  ({pct:.1f}% yes)")
+# --- END WEIGHTED VOTING PANEL -----------------------------------------------

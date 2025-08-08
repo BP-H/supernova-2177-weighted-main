@@ -21,10 +21,10 @@ openai_key = st.text_input(
     "OPENAI_API_KEY",
     type="password",
     value=st.session_state.get("openai_key", ""),
-    key="agents_openai_key_input_v1",       # <-- UNIQUE KEY
+    key="agents_openai_key_input_v1_v2",       # <-- UNIQUE KEY
 )
 
-if st.button("Save key (session)", key="agents_save_key_btn"):
+if st.button("Save key (session)", key="agents_save_key_btn_v2"):
     st.session_state["openai_key"] = openai_key
     st.success("Saved to this session.")
 
@@ -36,7 +36,7 @@ chosen = st.multiselect(
     "Pick agents to run",
     options=agents,
     default=agents[:1],
-    key="agents_pick_multiselect_v1",       # <-- UNIQUE KEY
+    key="agents_pick_multiselect_v1_v2",       # <-- UNIQUE KEY
 )
 
 # --- pick backend -------------------------------------------------------------
@@ -45,12 +45,12 @@ st.caption("Leave empty to use the agent default. Example: openai:gpt-4o-mini")
 llm_backend = st.text_input(
     "LLM backend",
     value="openai:gpt-4o-mini",
-    key="agents_backend_input_v1",          # <-- UNIQUE KEY
+    key="agents_backend_input_v1_v2",          # <-- UNIQUE KEY
 )
 
 c1, c2 = st.columns(2)
 with c1:
-    if st.button("🚀 Launch", key="agents_launch_btn"):
+    if st.button("🚀 Launch", key="agents_launch_btn_v2"):
         payload = {
             "provider": "openai",
             "api_key": st.session_state.get("openai_key", ""),
@@ -61,6 +61,6 @@ with c1:
         st.success(f"Launched: {out.get('launched', [])}")
 
 with c2:
-    if st.button("⏭️ Step all", key="agents_step_btn"):
+    if st.button("⏭️ Step all", key="agents_step_btn_v2"):
         out = call("protocol_agents_step", {})  # or "step_agents"
         st.info(f"Stepped: {out.get('stepped', [])}")

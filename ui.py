@@ -10,6 +10,8 @@ import numpy as np
 import streamlit as st
 
 with st.sidebar:
+    # --- identity (species) ---
+    st.selectbox("I am a…", ["human","company","ai"], key="species")
     st.selectbox(
     "I am a…",
     ["human", "company", "ai"],

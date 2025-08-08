@@ -4141,3 +4141,55 @@ if __name__ == "__main__":
 [1] Shannon, C. E. "A Mathematical Theory of Communication". Bell System Technical Journal (1948).
 [2] Brin, S., & Page, L. "The anatomy of a large-scale hypertextual Web search engine". (1998).
 """
+
+# === WEIGHTED VOTING ENGINE (auto-added) =====================================
+from dataclasses import dataclass
+from typing import Literal, Dict, List
+
+Species = Literal["human","company","ai"]
+DecisionLevel = Literal["standard","important"]
+THRESHOLDS: Dict[DecisionLevel, float] = {"standard": 0.60, "important": 0.90}
+
+@dataclass
+class Vote:
+    proposal_id: int
+    voter: str
+    choice: Literal["up","down"]
+    species: Species
+
+_WEIGHTED_VOTES: List[Vote] = []
+
+def vote_weighted(proposal_id: int, voter: str, choice: str, species: str="human"):
+    c = "up" if str(choice).lower() in {"up","yes","y","approve"} else "down"
+    s = str(species).lower()
+    if s not in {"human","company","ai"}: s = "human"
+    _WEIGHTED_VOTES.append(Vote(int(proposal_id), str(voter or "anon"), c, s))
+    return {"ok": True}
+
+def _species_shares(active: List[Species]) -> Dict[Species, float]:
+    present = sorted(set(active))
+    if not present: return {}
+    share = 1.0 / len(present)  # ⅓ each if all present; renormalized if not
+    return {s: share for s in present}
+
+def tally_proposal_weighted(proposal_id: int):
+    V = [v for v in _WEIGHTED_VOTES if v.proposal_id == int(proposal_id)]
+    if not V:
+        return {"up": 0.0, "down": 0.0, "total": 0.0, "per_voter_weights": {}, "counts": {}}
+    shares = _species_shares([v.species for v in V])
+    counts: Dict[Species, int] = {s: 0 for s in shares}
+    for v in V:
+        counts[v.species] = counts.get(v.species, 0) + 1
+    per_voter = {s: (shares[s] / counts[s]) for s in counts if counts[s] > 0}
+    up = sum(per_voter.get(v.species,0.0) for v in V if v.choice=="up")
+    down = sum(per_voter.get(v.species,0.0) for v in V if v.choice=="down")
+    total = up + down
+    return {"up": up, "down": down, "total": total, "per_voter_weights": per_voter, "counts": counts}
+
+def decide_weighted_api(proposal_id: int, level: str="standard"):
+    t = tally_proposal_weighted(proposal_id)
+    thr = THRESHOLDS["important" if level=="important" else "standard"]
+    status = "accepted" if (t["total"]>0 and (t["up"]/t["total"])>=thr) else "rejected"
+    t.update({"proposal_id": int(proposal_id), "status": status, "threshold": thr})
+    return t
+# === END WEIGHTED VOTING ENGINE ==============================================
