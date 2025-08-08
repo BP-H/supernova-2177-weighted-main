@@ -1,7 +1,24 @@
-﻿.venv/
+﻿# Python
+.venv/
 __pycache__/
-.streamlit/
 *.pyc
 *.pyo
-*.DS_Store
-.env
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Streamlit cache & configs generated at runtime
+.streamlit/
+
+# Node (if any)
+node_modules/
+
+# Builds
+dist/
+build/
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
